@@ -1,0 +1,154 @@
+{
+  parserClass="org.domaframework.doma.intellij.SqlParser"
+  parserUtilClass="org.domaframework.doma.intellij.setting.SqlParserUtil"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Sql"
+  psiImplClassSuffix="Impl"
+  psiPackage="org.domaframework.doma.intellij.psi"
+  psiImplPackage = "org.domaframework.doma.intellij.impl"
+
+  elementTypeHolderClass = "org.domaframework.doma.intellij.psi.SqlTypes"
+  elementTypeClass="org.domaframework.doma.intellij.psi.SqlElementType"
+  tokenTypeClass = "org.domaframework.doma.intellij.psi.SqlTokenType"
+
+  //noinspection RegExpRedundantEscape
+  tokens=[
+    STRING
+    NUMBER
+    KEYWORD
+    WORD
+    OTHER
+    BLOCK_COMMENT_START = "/*"
+    BLOCK_COMMENT_END = "*/"
+    BLOCK_COMMENT_CONTENT
+    LINE_COMMENT
+
+    EL_IF = "%if"
+    EL_ELSEIF = "%elseif"
+    EL_ELSE = "%else"
+    EL_FOR = "%for"
+    EL_EXPAND = "%expand"
+    EL_POPULATE = "%populate"
+    EL_PARSER_LEVEL_COMMENT = "%!"
+    EL_END = "%end"
+    EL_HASH = "#"
+    EL_CARET = "^"
+    EL_SEPARATOR = ":"
+    EL_NULL = "null"
+    EL_BOOLEAN = "regexp:(true|false)"
+    EL_DOT = "."
+    EL_PLUS = "+"
+    EL_MINUS = "-"
+    EL_ASTERISK = "*"
+    EL_SLASH = "/"
+    EL_PERCENT = "%"
+    EL_EQ = "=="
+    EL_NE = "!="
+    EL_LT = "<"
+    EL_LE = "<="
+    EL_GT = ">"
+    EL_GE = ">="
+    EL_NOT = "!"
+    EL_AND = "&&"
+    EL_OR = "||"
+    EL_COMMA = ","
+    EL_LEFT_PAREN = "("
+    EL_RIGHT_PAREN = ")"
+    EL_AT_SIGN = "@"
+    EL_NEW = "new"
+    EL_NUMBER = "regexp:\d+(L|(\.\d+)?[FDB])?"
+    EL_STRING = "regexp:\"([^\"\\]|\\\"|\\)*\""
+    EL_CHAR = "regexp:'([^\'\\]|\\\')'"
+    EL_IDENTIFIER = "regexp:\w+"
+  ]
+
+  extends("el_literal_expr|el_id_expr|el_paren_expr")=el_primary_expr
+  extends("el_invocation_expr_group|el_primary_expr")=el_factor_expr
+  extends("el_logical_expr_group|el_factor_expr")=el_term_expr
+  extends(".*expr")=el_expr
+  consumeTokenMethod("literal|word|.*directive|.*expr")="consumeTokenFast"
+}
+
+sql_file ::= content *
+
+private content ::= !<<eof>> item {pin=1 recoverWhile=content_recover}
+private item ::= (comment | literal | word | OTHER)
+private comment ::= (block_comment | LINE_COMMENT)
+private literal ::= (STRING | NUMBER)
+private word ::= (KEYWORD | WORD)
+block_comment ::= "/*" (el_directive | BLOCK_COMMENT_CONTENT?) "*/" {
+    pin=1
+    mixin="org.domaframework.doma.intellij.psi.SqlElCommentExprImpl"
+}
+// Detect errors for each item
+private content_recover ::= !item
+
+private el_directive ::= el_bind_variable_directive
+    | el_literal_variable_directive
+    | el_embedded_variable_directive
+    | el_percent_directive
+    | el_if_directive
+    | el_elseif_directive
+    | el_else_directive
+    | el_for_directive
+    | el_end_directive
+    | el_expand_directive
+    | el_populate_directive
+    | el_parser_level_comment_directive
+
+private el_bind_variable_directive ::= el_expr
+private el_literal_variable_directive ::= "^" el_expr {pin=1}
+private el_embedded_variable_directive ::= "#" el_expr {pin=1}
+private el_percent_directive ::= EL_PERCENT STRING {pin=1}
+el_if_directive ::= "%if" el_expr {pin=1}
+el_elseif_directive ::= "%elseif" el_expr {pin=1}
+private el_else_directive ::= "%else"
+el_for_directive ::= "%for" el_id_expr ":" el_expr {pin=1}
+private el_end_directive ::= "%end"
+private el_expand_directive ::= "%expand" el_expr? {pin=1}
+private el_populate_directive ::= "%populate"
+private el_parser_level_comment_directive ::= "%!" BLOCK_COMMENT_CONTENT* {pin=1}
+
+// expr
+el_expr ::= el_logical_expr_group | el_term_expr
+private el_logical_expr_group ::= el_not_expr | el_and_expr | el_or_expr
+el_not_expr ::= "!" el_expr {pin=1}
+el_and_expr ::= el_expr "&&" el_expr
+el_or_expr ::= el_expr "||" el_expr
+
+// term
+el_term_expr ::= el_comparison_expr_group | el_arithmetic_expr_group | el_factor_expr
+private el_comparison_expr_group ::= el_eq_expr | el_ne_expr | el_lt_expr | el_le_expr | el_gt_expr | el_ge_expr
+private el_arithmetic_expr_group ::= el_add_expr | el_subtract_expr | el_multiply_expr | el_divide_expr | el_mod_expr
+el_eq_expr ::= el_factor_expr "==" el_factor_expr
+el_ne_expr ::= el_factor_expr "!=" el_factor_expr
+el_lt_expr ::= el_factor_expr "<" el_factor_expr
+el_le_expr ::= el_factor_expr "<=" el_factor_expr
+el_gt_expr ::= el_factor_expr ">" el_factor_expr
+el_ge_expr ::= el_factor_expr ">=" el_factor_expr
+el_add_expr ::= el_factor_expr "+" el_term_expr
+el_subtract_expr ::= el_factor_expr "-" el_term_expr
+el_multiply_expr ::= el_factor_expr "*" el_term_expr
+el_divide_expr ::= el_factor_expr "/" el_term_expr
+el_mod_expr ::= el_factor_expr "%" el_term_expr
+
+// factor
+el_factor_expr ::= el_invocation_expr_group | el_primary_expr
+private el_invocation_expr_group ::=  el_static_field_access_expr | el_field_access_expr| el_function_call_expr | el_new_expr
+el_static_field_access_expr ::= el_static_member_access
+el_function_call_expr ::= !el_class "@" el_id_expr el_parameters
+el_new_expr ::= "new" el_class el_parameters {pin=1}
+private el_static_member_access ::= el_class_ref el_id_expr (el_parameters)? ("." (el_id_expr el_parameters?))* {pin=1}
+el_field_access_expr ::= el_instance_member_access
+private el_instance_member_access ::= el_primary_expr ("." (el_id_expr (el_parameters)?))+
+private el_class_ref ::= "@" el_class "@"
+el_class ::= el_id_expr ("." el_id_expr)*
+el_parameters ::= "(" (el_expr ("," el_expr)*)? ")" {pin=1}
+
+// primary
+el_primary_expr ::= el_literal_expr | el_id_expr | el_paren_expr
+private el_literal_expr ::= EL_NULL | EL_BOOLEAN | (EL_PLUS | EL_MINUS)? EL_NUMBER | EL_STRING | EL_CHAR
+private el_id_expr ::= EL_IDENTIFIER
+private el_paren_expr ::= "(" el_expr ")" {pin=1}

@@ -1,0 +1,104 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+  <id>org.domaframework.doma</id>
+  <name>Doma Tools</name>
+  <vendor>domaframework</vendor>
+
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.lang</depends>
+  <depends>com.intellij.modules.java</depends>
+  <depends>org.intellij.intelliLang</depends>
+  <depends>org.toml.lang</depends>
+  <depends optional="true" config-file="kotlin.xml">org.jetbrains.kotlin</depends>
+  <idea-version since-build="231" until-build="243.*"/>
+
+  <resource-bundle>messages.DomaToolsBundle</resource-bundle>
+  <resource-bundle>messages.LLMInstallerBundle</resource-bundle>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <postStartupActivity implementation="org.domaframework.doma.intellij.setting.DomaToolStartupActivity"/>
+
+    <!-- Gutter -->
+    <codeInsight.lineMarkerProvider language="JAVA"
+      implementationClass="org.domaframework.doma.intellij.gutter.dao.DaoMethodProvider"/>
+    <codeInsight.lineMarkerProvider language="DomaSql"
+      implementationClass="org.domaframework.doma.intellij.gutter.sql.SqlLineMakerProvider"/>
+
+    <!-- Refactoring -->
+    <renamePsiElementProcessor implementation="org.domaframework.doma.intellij.refactoring.dao.DaoRenameProcessor" order="first"/>
+    <renamePsiElementProcessor implementation="org.domaframework.doma.intellij.refactoring.dao.DaoMethodRenameProcessor" order="first"/>
+    <refactoring.elementListenerProvider implementation="org.domaframework.doma.intellij.refactoring.dao.DaoPackageRenameListenerProcessor"/>
+
+    <!-- Inspection -->
+    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.dao.provider.SqlFileExistProvider" />
+    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.sql.provider.SqlBindVariableValidProvider" />
+    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.dao.provider.DaoMethodVariableProvider" />
+
+    <!-- Completion -->
+    <completion.contributor language="DomaSql"
+      implementationClass="org.domaframework.doma.intellij.contributor.sql.SqlCompletionContributor" order="first" />
+
+    <!-- CustomLanguage -->
+    <fileType
+      name="DomaSql"
+      implementationClass="org.domaframework.doma.intellij.setting.SqlFileType"
+      fieldName="INSTANCE"
+      language="DomaSql"
+      extensions="sql"/>
+    <lang.parserDefinition
+      language="DomaSql"
+      implementationClass="org.domaframework.doma.intellij.setting.SqlParserDefinition"/>
+    <lang.syntaxHighlighterFactory
+      language="DomaSql"
+      implementationClass="org.domaframework.doma.intellij.highlighter.SqlSyntaxHighlighterFactory"/>
+    <colorSettingsPage
+      implementation="org.domaframework.doma.intellij.highlighter.SqlColorSettingsPage"/>
+  </extensions>
+
+  <extensions defaultExtensionNs="org.intellij.intelliLang">
+    <injectionConfig config="META-INF/injections.xml"/>
+  </extensions>
+
+  <extensions defaultExtensionNs="org.jetbrains.kotlin">
+    <supportsKotlinPluginMode supportsK2="true"/>
+  </extensions>
+
+  <!-- Action -->
+  <actions>
+    <group
+      id="org.domaframework.doma.intellij.DomaToolGroupActions"
+      text="Doma Tools"
+      popup="true"
+      icon="AllIcons.Nodes.AbstractClass">
+      <add-to-group
+        group-id="EditorPopupMenu"
+        anchor="last"
+       />
+      <action
+        id="org.domaframework.doma.intellij.action.JumpToSQLFromDao"
+        class="org.domaframework.doma.intellij.action.dao.JumpToSQLFromDaoAction"
+        text="Jump to SQL"
+        description="Jump from Dao file to SQL file">
+        <keyboard-shortcut keymap="$default" first-keystroke="alt D"/>
+      </action>
+      <action id="org.domaframework.doma.intellij.JumpToDaoFromSQL"
+        class="org.domaframework.doma.intellij.action.sql.JumpToDaoFromSQLAction"
+        text="Jump to Dao"
+        description="Jump from SQL file to Dao method definition">
+        <keyboard-shortcut keymap="$default" first-keystroke="alt D"/>
+      </action>
+      <action id="org.domaframework.doma.intellij.JumpToDeclarationFromSql"
+        class="org.domaframework.doma.intellij.action.sql.JumpToDeclarationFromSqlAction"
+        text="Jump to Declaration"
+        description="Jump from SQL bind variable to declaration">
+        <keyboard-shortcut keymap="$default" first-keystroke="alt E"/>
+      </action>
+      <action id="org.domaframework.doma.intellij.GenerateSqlAction"
+        class="org.domaframework.doma.intellij.action.dao.GenerateSqlAction"
+        text="Generate SQL"
+        description="Generate SQL file from Dao method">
+        <keyboard-shortcut keymap="$default" first-keystroke="control alt G"/>
+      </action>
+    </group>
+  </actions>
+</idea-plugin>

@@ -1,0 +1,30 @@
+package doma.example.entity;
+
+import java.time.LocalDate;
+import org.seasar.doma.Entity;
+import org.seasar.doma.Id;
+import doma.example.entity.*;
+
+@Entity
+public class Employee extends User {
+
+  @Id
+  public Integer employeeId;
+  public String employeeName;
+  private String department;
+  private String rank;
+  public  List<Project> projects;
+
+  public Integer managerId;
+
+  // accessible instance methods
+  public Project getFirstProject() {
+    return projects.get(0);
+  }
+
+  // Inaccessible instance methods
+  private String getEmployeeRank() {
+    return rank;
+  }
+
+}

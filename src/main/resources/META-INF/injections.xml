@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="LanguageInjectionConfiguration">
+  <injection language="DomaSql" injector-id="java">
+    <display-name>Sql.value (org.seasar.doma)</display-name>
+    <descr>Inject @Sql value as SQL</descr>
+    <place><![CDATA[
+      psiMethod().withName("value").withParameters().definedInClass("org.seasar.doma.Sql")
+      ]]></place>
+  </injection>
+</component>

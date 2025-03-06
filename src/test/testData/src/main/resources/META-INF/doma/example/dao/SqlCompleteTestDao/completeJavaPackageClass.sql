@@ -1,0 +1,1 @@
+insert into employee (id, name) values (/* employee.employeeId */0, /* employee.employeeName.<caret> */'test')

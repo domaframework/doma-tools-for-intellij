@@ -1,0 +1,181 @@
+/*
+ * Copyright Doma Tools Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.domaframework.doma.intellij.common.psi
+
+import com.intellij.lang.Language
+import com.intellij.lang.injection.InjectedLanguageManager
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiAnnotation
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.PsiLiteralExpression
+import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiNameValuePair
+import com.intellij.util.IncorrectOperationException
+import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.RESOURCES_PATH
+import org.domaframework.doma.intellij.common.dao.formatSqlPathFromDaoPath
+import org.domaframework.doma.intellij.extension.findFile
+import org.domaframework.doma.intellij.extension.getContentRoot
+import org.domaframework.doma.intellij.extension.getModule
+import org.domaframework.doma.intellij.extension.getResourcesSQLFile
+import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
+import org.domaframework.doma.intellij.setting.SqlLanguage
+import java.io.File
+import java.io.IOException
+
+/**
+ * Class that handles Dao method information
+ */
+class PsiDaoMethod(
+    val psiProject: Project,
+    val psiMethod: PsiMethod,
+) {
+    private val isTest = false
+    var sqlFile: VirtualFile? = null
+    private var sqlFilePath: String = ""
+
+    private val daoFile: VirtualFile = psiMethod.containingFile.virtualFile
+    var daoType: DomaAnnotationType = DomaAnnotationType.Unknown
+    private var sqlFileOption: Boolean = false
+
+    init {
+        setDaoAnnotationType()
+        setSqlFileOption()
+        setSqlFilePath()
+        setSqlFile()
+    }
+
+    private fun setSqlFileOption() {
+        val useSqlFileOptionAnnotation = daoType.getPsiAnnotation(psiMethod) ?: return
+        val isSqlFile = daoType.getSqlFileVal(useSqlFileOptionAnnotation)
+        sqlFileOption = isSqlFile == true
+    }
+
+    private fun setDaoAnnotationType() {
+        DomaAnnotationType.entries.forEach { type ->
+            if (type != DomaAnnotationType.Sql &&
+                type != DomaAnnotationType.Unknown &&
+                type.getPsiAnnotation(psiMethod) != null
+            ) {
+                daoType = type
+                return
+            }
+        }
+        daoType = DomaAnnotationType.Unknown
+    }
+
+    fun isUseSqlFileMethod(): Boolean =
+        when {
+            useSqlAnnotation() -> false
+            daoType.isRequireSqlTemplate() -> true
+            else -> sqlFileOption
+        }
+
+    private fun getSqlAnnotation(): PsiAnnotation? = DomaAnnotationType.Sql.getPsiAnnotation(psiMethod)
+
+    fun useSqlAnnotation(): Boolean = getSqlAnnotation() != null
+
+    private fun setSqlFilePath() {
+        val methodName = psiMethod.name
+
+        val sqlExtension = daoType.extension
+        val contentRoot = this.psiProject.getContentRoot(daoFile)?.path
+
+        sqlFilePath = contentRoot?.let {
+            formatSqlPathFromDaoPath(it, daoFile)
+                .replace("main/", "")
+                .plus("/$methodName.$sqlExtension")
+        } ?: ""
+    }
+
+    private fun setSqlFile() {
+        if (isUseSqlFileMethod()) {
+            val module = psiProject.getModule(daoFile)
+            sqlFile =
+                module?.getResourcesSQLFile(
+                    sqlFilePath,
+                    isTest,
+                )
+            return
+        }
+        // the injection part as a custom language file
+        getSqlAnnotation()?.let { annotation ->
+            InjectedLanguageManager.getInstance(psiProject)
+            annotation.parameterList.children
+                .firstOrNull { it is PsiNameValuePair }
+                ?.let { sql ->
+                    val valuePair = sql as PsiNameValuePair
+                    val valueExpression =
+                        valuePair.value as? PsiLiteralExpression ?: return
+                    val valueText = valueExpression.value as? String ?: return
+                    val psiFileFactory = PsiFileFactory.getInstance(psiProject)
+                    sqlFile =
+                        psiFileFactory
+                            .createFileFromText(
+                                "tempFile",
+                                Language.findLanguageByID(SqlLanguage.INSTANCE.id)!!,
+                                valueText,
+                            ).virtualFile
+                }
+        }
+    }
+
+    fun generateSqlFile() {
+        ApplicationManager.getApplication().runReadAction {
+            val rootDir = psiProject.getContentRoot(daoFile) ?: return@runReadAction
+            val sqlFile = File(sqlFilePath)
+            val sqlFileName = sqlFile.name
+            val parentDir = "${RESOURCES_PATH}/${sqlFile.parent.replace("\\", "/")}"
+            val parenDirPathSpirit = parentDir.split("/").toTypedArray()
+
+            WriteCommandAction.runWriteCommandAction(psiProject) {
+                try {
+                    VfsUtil.createDirectoryIfMissing(rootDir, parentDir)
+                } catch (e: IOException) {
+                    throw IncorrectOperationException(e)
+                }
+
+                val sqlOutputDirPath =
+                    PsiManager
+                        .getInstance(psiProject)
+                        .findDirectory(VfsUtil.findRelativeFile(rootDir, *parenDirPathSpirit)!!)
+                val sqlVirtualFile = sqlOutputDirPath!!.createFile(sqlFileName).virtualFile
+                FileEditorManager
+                    .getInstance(psiProject)
+                    .openFile(sqlVirtualFile, true)
+                writeEmptyElementSqlFile(sqlVirtualFile)
+            }
+        }
+    }
+
+    /**
+     * Add one line to display Gutter in the newly created SQL file
+     */
+    private fun writeEmptyElementSqlFile(sqlVirtualFile: VirtualFile) {
+        val psiFile = psiProject.findFile(sqlVirtualFile) ?: return
+        val document =
+            PsiDocumentManager.getInstance(psiProject).getDocument(psiFile) ?: return
+        WriteCommandAction.runWriteCommandAction(psiProject) {
+            document.insertString(0, "-- Generated By Doma Tools")
+        }
+    }
+}
