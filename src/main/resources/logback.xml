@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+  <property resource="logback.properties" />
+  <property name="LOG_FILE_BASE_DIR" value="${org.domaframework.doma.intellij.log.path:-/doma-tools}" />
+  <property name="LOG_FILE_VERSION" value="${org.domaframework.doma.intellij.plugin.version:-0.3.0}" />
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>
+        %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+      </pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+  </appender>
+
+  <appender name="DOMATOOLS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_FILE_BASE_DIR:-/domatoolslog}/${LOG_FILE_BASENAME:-doma-tools}-${LOG_FILE_VERSION:-0.3.0}.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_FILE_BASENAME:-doma-tools}-${LOG_FILE_VERSION:-0.3.0}-%d{yyyy-MM-dd}.log</fileNamePattern>
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>"%date",%msg%n</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+  </appender>
+
+  <root level="DEBUG">
+    <appender-ref ref="STDOUT"/>
+  </root>
+
+  <logger name="org.domaframework.doma.intellij.common.PluginLoggerUtil" level="INFO" additivity="false">
+    <appender-ref ref="DOMATOOLS"/>
+  </logger>
+</configuration>

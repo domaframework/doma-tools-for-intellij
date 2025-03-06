@@ -1,0 +1,16 @@
+.gradle
+.idea
+.intellijPlatform
+.qodana
+build
+.run/
+out/
+.../*.jar
+/src/main/gen/
+/java_pid**.hprof
+*.iml
+*.ipr
+*.iws
+.kotlin
+secrets.properties
+/certificate/**

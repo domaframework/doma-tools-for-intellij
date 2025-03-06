@@ -1,0 +1,17 @@
+<svg
+  width="16" height="16"
+  viewBox="0 0 16 16"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <circle cx="8" cy="8" r="8" fill="#F8CBAD"/>
+  <circle cx="8" cy="8" r="6" fill="#ED7D31"/>
+  <text
+    x="0%" y="54%"
+    font-size="7.5"
+    font-weight="bold"
+    font-family="Arial, sans-serif"
+    text-anchor="start"
+    dominant-baseline="middle"
+    fill="black"
+  >SQL</text>
+</svg>
