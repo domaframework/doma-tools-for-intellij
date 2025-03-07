@@ -94,7 +94,7 @@ class DaoMethodVariableInspector : AbstractBaseJavaLocalInspectionTool() {
             object : PsiRecursiveElementVisitor() {
                 // Recursively explore child elements in a file with PsiRecursiveElementVisitor.
                 override fun visitElement(element: PsiElement) {
-                    if (element !is SqlElPrimaryExpr) {
+                    if (element is SqlElPrimaryExpr) {
                         iterator = args.minus(elements.toSet()).iterator()
                         while (iterator.hasNext()) {
                             val arg = iterator.next()
