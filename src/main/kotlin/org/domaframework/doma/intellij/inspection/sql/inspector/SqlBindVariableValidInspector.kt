@@ -84,11 +84,13 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
         END,
     }
 
+    override fun runForWholeFile(): Boolean = true
+
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
     ): SqlVisitor {
-        val topElm = holder.file.firstChild
+        val topElm = holder.file.firstChild ?: return object : SqlVisitor() {}
         val directiveBlocks =
             topElm.nextLeafs
                 .filter { elm ->
