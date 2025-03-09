@@ -15,7 +15,7 @@ grammarkit = "2022.3.2.2"
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
-slf4j = { group = "org.slf4j", name = "slf4j-api", version = "2.0.16" }
+slf4j = { group = "org.slf4j", name = "slf4j-api", version = "2.0.17" }
 kotlinTest = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
 domacore = { module = "org.seasar.doma:doma-core", version.ref = "doma" }
 google-java-format = { module = "com.google.googlejavaformat:google-java-format", version = "1.25.2" }
