@@ -10,7 +10,7 @@
   <depends>org.intellij.intelliLang</depends>
   <depends>org.toml.lang</depends>
   <depends optional="true" config-file="kotlin.xml">org.jetbrains.kotlin</depends>
-  <idea-version since-build="231" until-build="243.*"/>
+  <idea-version since-build="231"/>
 
   <resource-bundle>messages.DomaToolsBundle</resource-bundle>
   <resource-bundle>messages.LLMInstallerBundle</resource-bundle>
