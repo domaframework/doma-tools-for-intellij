@@ -27,6 +27,7 @@ import com.intellij.profile.codeInspection.InspectionProfileManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiType
@@ -36,6 +37,7 @@ import com.intellij.psi.util.elementType
 import com.intellij.psi.util.nextLeafs
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
+import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.extension.expr.accessElements
@@ -89,36 +91,48 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
-    ): SqlVisitor {
-        val topElm = holder.file.firstChild ?: return object : SqlVisitor() {}
-        val directiveBlocks =
-            topElm.nextLeafs
-                .filter { elm ->
-                    elm.elementType == SqlTypes.EL_FOR ||
-                        elm.elementType == SqlTypes.EL_IF ||
-                        elm.elementType == SqlTypes.EL_END
-                }.map {
-                    when (it.elementType) {
-                        SqlTypes.EL_FOR -> {
-                            val item = (it.parent as? SqlElForDirective)?.getForItem()
-                            BlockToken(BlockType.FOR, item?.text ?: "for", item?.textOffset ?: 0)
-                        }
+    ): SqlVisitor = sqlVisitor(holder)
 
-                        SqlTypes.EL_IF -> BlockToken(BlockType.IF, "if", it.textOffset)
-                        else -> BlockToken(BlockType.END, "end", it.textOffset)
+    fun sqlVisitor(holder: ProblemsHolder): SqlVisitor {
+        return object : SqlVisitor() {
+            override fun visitElement(o: PsiElement) {
+                var file = o.containingFile ?: return
+                if (isJavaOrKotlinFileType(file) && o is PsiLiteralExpression) {
+                    val injectionFile = initInjectionElement(file, o.project, o)
+                    if (injectionFile == null) return
+
+                    injectionFile.accept(this)
+                    super.visitElement(o)
+                }
+                if (isInjectionSqlFile(file)) {
+                    o.acceptChildren(this)
+                }
+            }
+
+            /**
+             * For processing inside Sql annotations, get it as an injected custom language
+             */
+            fun initInjectionElement(
+                basePsiFile: PsiFile,
+                project: Project,
+                literal: PsiLiteralExpression,
+            ): PsiFile? =
+                when (isJavaOrKotlinFileType(basePsiFile)) {
+                    true -> {
+                        val injectedLanguageManager =
+                            InjectedLanguageManager.getInstance(project)
+                        injectedLanguageManager
+                            .getInjectedPsiFiles(literal)
+                            ?.firstOrNull()
+                            ?.first as? PsiFile
                     }
+
+                    false -> null
                 }
 
-        return object : SqlVisitor() {
             override fun visitElStaticFieldAccessExpr(o: SqlElStaticFieldAccessExpr) {
                 super.visitElStaticFieldAccessExpr(o)
-                var file = o.containingFile ?: return
                 var targetElement = o
-                initInjectionElement(file, o.project, o.textOffset)
-                    ?.let {
-                        targetElement = it as SqlElStaticFieldAccessExpr
-                        file = it.containingFile
-                    }
                 checkStaticFieldAndMethodAccess(targetElement, holder)
             }
 
@@ -126,12 +140,6 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
                 super.visitElFieldAccessExpr(o)
                 var file = o.containingFile ?: return
                 var targetElement = o
-
-                initInjectionElement(file, o.project, o.textOffset)
-                    ?.let {
-                        targetElement = it as SqlElFieldAccessExpr
-                        file = it.containingFile
-                    }
 
                 // Get element inside block comment
                 val blockElement =
@@ -157,11 +165,6 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
                 var file = o.containingFile ?: return
                 var targetElement = o
                 val project = o.project
-                initInjectionElement(file, o.project, o.textOffset)
-                    ?.let {
-                        targetElement = it as SqlElPrimaryExpr
-                        file = it.containingFile
-                    }
 
                 // Exclude fixed Literal
                 if (isLiteralOrStatic(targetElement)) return
@@ -203,24 +206,6 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
                 }
             }
 
-            /**
-             * For processing inside Sql annotations, get it as an injected custom language
-             */
-            private fun initInjectionElement(
-                basePsiFile: PsiFile,
-                project: Project,
-                caretOffset: Int,
-            ): PsiElement? =
-                when (isJavaOrKotlinFileType(basePsiFile)) {
-                    true ->
-                        {
-                            val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
-                            injectedLanguageManager.findInjectedElementAt(basePsiFile, caretOffset)
-                        }
-
-                    false -> null
-                }
-
             private fun checkInForDirectiveBlock(targetElement: PsiElement): Boolean {
                 val forBlocks = getForDirectiveBlock(targetElement)
                 val forItemNames = forBlocks.map { it.item }
@@ -237,6 +222,28 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
              * and obtain the `for` block information to which the `targetElement` belongs.
              */
             fun getForDirectiveBlock(targetElement: PsiElement): List<BlockToken> {
+                val topElm = targetElement.containingFile.firstChild ?: return emptyList()
+                val directiveBlocks =
+                    topElm.nextLeafs
+                        .filter { elm ->
+                            elm.elementType == SqlTypes.EL_FOR ||
+                                elm.elementType == SqlTypes.EL_IF ||
+                                elm.elementType == SqlTypes.EL_END
+                        }.map {
+                            when (it.elementType) {
+                                SqlTypes.EL_FOR -> {
+                                    val item = (it.parent as? SqlElForDirective)?.getForItem()
+                                    BlockToken(
+                                        BlockType.FOR,
+                                        item?.text ?: "for",
+                                        item?.textOffset ?: 0,
+                                    )
+                                }
+
+                                SqlTypes.EL_IF -> BlockToken(BlockType.IF, "if", it.textOffset)
+                                else -> BlockToken(BlockType.END, "end", it.textOffset)
+                            }
+                        }
                 val preBlocks =
                     directiveBlocks
                         .filter { it.position <= targetElement.textOffset }
@@ -397,7 +404,13 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
                 if (validDaoParam == null) {
                     if (checkInForDirectiveBlock(element)) return true
                     val highlightRange = TextRange(0, element.textRange.length)
-                    setHighlightDaoMethodBind(highlightRange, element, holder, daoMethod, element.project)
+                    setHighlightDaoMethodBind(
+                        highlightRange,
+                        element,
+                        holder,
+                        daoMethod,
+                        element.project,
+                    )
                     return false
                 }
                 return true

@@ -29,6 +29,7 @@ import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoFile
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.dao.jumpToDaoMethod
+import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isSupportFileType
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import java.awt.event.MouseEvent
@@ -43,18 +44,18 @@ class SqlLineMakerProvider : RelatedItemLineMarkerProvider() {
         result: MutableCollection<in RelatedItemLineMarkerInfo<*>>,
     ) {
         val project = e.project
-        val virtualFile = e.containingFile.virtualFile
-        if (!isSupportFileType(virtualFile)) return
+        val file = e.containingFile ?: return
+        if (!isSupportFileType(file) || isInjectionSqlFile(file)) return
         // Display only on the first line
         if (e.originalElement.parent.originalElement !is PsiFile ||
-            e.textRange.startOffset != e.containingFile.textRange.startOffset
+            e.textRange.startOffset != file.textRange.startOffset
         ) {
             return
         }
 
         val identifier = e.firstChild ?: e
         val daoFile =
-            findDaoFile(project, virtualFile)?.let {
+            findDaoFile(project, file)?.let {
                 findDaoMethod(e.containingFile) ?: return
                 it
             } ?: return
@@ -65,7 +66,7 @@ class SqlLineMakerProvider : RelatedItemLineMarkerProvider() {
                 identifier.textRange,
                 getIcon(daoFile.toPsiFile(project)),
                 getToolTipTitle(daoFile.toPsiFile(project)),
-                getHandler(daoFile, identifier, virtualFile.nameWithoutExtension),
+                getHandler(daoFile, identifier, file.virtualFile.nameWithoutExtension),
                 GutterIconRenderer.Alignment.RIGHT,
             ) {
                 ArrayList<GotoRelatedItem>()
