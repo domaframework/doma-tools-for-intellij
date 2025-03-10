@@ -2,5 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "local>domaframework/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "org.seasar.doma:doma-core"
+      ],
+      "enabled": false
+    }
   ]
 }
