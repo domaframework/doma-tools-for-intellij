@@ -101,8 +101,8 @@ class JumpToDeclarationFromSqlAction : AnAction() {
 
     private fun countLeadingDoubleQuotes(s: String): Int {
         var count = 0
-        for (i in 0..<s.length) {
-            if (s[i] == '"') {
+        for (char in s) {
+            if (char == '"') {
                 count++
             } else {
                 break

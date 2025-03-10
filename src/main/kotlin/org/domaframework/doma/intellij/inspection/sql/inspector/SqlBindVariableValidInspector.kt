@@ -93,19 +93,17 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
         isOnTheFly: Boolean,
     ): SqlVisitor = sqlVisitor(holder)
 
-    fun sqlVisitor(holder: ProblemsHolder): SqlVisitor {
+    private fun sqlVisitor(holder: ProblemsHolder): SqlVisitor {
         return object : SqlVisitor() {
-            override fun visitElement(o: PsiElement) {
-                var file = o.containingFile ?: return
-                if (isJavaOrKotlinFileType(file) && o is PsiLiteralExpression) {
-                    val injectionFile = initInjectionElement(file, o.project, o)
-                    if (injectionFile == null) return
-
+            override fun visitElement(element: PsiElement) {
+                val file = element.containingFile ?: return
+                if (isJavaOrKotlinFileType(file) && element is PsiLiteralExpression) {
+                    val injectionFile = initInjectionElement(file, element.project, element) ?: return
                     injectionFile.accept(this)
-                    super.visitElement(o)
+                    super.visitElement(element)
                 }
                 if (isInjectionSqlFile(file)) {
-                    o.acceptChildren(this)
+                    element.acceptChildren(this)
                 }
             }
 
@@ -130,21 +128,19 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
                     false -> null
                 }
 
-            override fun visitElStaticFieldAccessExpr(o: SqlElStaticFieldAccessExpr) {
-                super.visitElStaticFieldAccessExpr(o)
-                var targetElement = o
-                checkStaticFieldAndMethodAccess(targetElement, holder)
+            override fun visitElStaticFieldAccessExpr(element: SqlElStaticFieldAccessExpr) {
+                super.visitElStaticFieldAccessExpr(element)
+                checkStaticFieldAndMethodAccess(element, holder)
             }
 
-            override fun visitElFieldAccessExpr(o: SqlElFieldAccessExpr) {
-                super.visitElFieldAccessExpr(o)
-                var file = o.containingFile ?: return
-                var targetElement = o
+            override fun visitElFieldAccessExpr(element: SqlElFieldAccessExpr) {
+                super.visitElFieldAccessExpr(element)
+                val file = element.containingFile ?: return
 
                 // Get element inside block comment
                 val blockElement =
                     PsiTreeUtil
-                        .getChildrenOfTypeAsList(targetElement, PsiElement::class.java)
+                        .getChildrenOfTypeAsList(element, PsiElement::class.java)
                         .filter {
                             it.elementType != SqlTypes.EL_DOT &&
                                 it.elementType != SqlTypes.EL_LEFT_PAREN &&
@@ -160,30 +156,29 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
                 checkAccessFieldAndMethod(holder, blockElement, file)
             }
 
-            override fun visitElPrimaryExpr(o: SqlElPrimaryExpr) {
-                super.visitElPrimaryExpr(o)
-                var file = o.containingFile ?: return
-                var targetElement = o
-                val project = o.project
+            override fun visitElPrimaryExpr(element: SqlElPrimaryExpr) {
+                super.visitElPrimaryExpr(element)
+                val file = element.containingFile ?: return
+                val project = element.project
 
                 // Exclude fixed Literal
-                if (isLiteralOrStatic(targetElement)) return
+                if (isLiteralOrStatic(element)) return
 
                 // TODO Check function parameters in the same way as bind variables.
-                if (targetElement.findNodeParent(SqlTypes.EL_PARAMETERS) != null) return
+                if (element.findNodeParent(SqlTypes.EL_PARAMETERS) != null) return
 
                 // For static property references, match against properties in the class definition
-                if (targetElement.parent is SqlElStaticFieldAccessExpr) {
+                if (element.parent is SqlElStaticFieldAccessExpr) {
                     checkStaticFieldAndMethodAccess(
-                        targetElement.parent as SqlElStaticFieldAccessExpr,
+                        element.parent as SqlElStaticFieldAccessExpr,
                         holder,
                     )
                     return
                 }
-                if (checkInForDirectiveBlock(targetElement)) return
+                if (checkInForDirectiveBlock(element)) return
                 val identify =
                     PsiTreeUtil
-                        .getChildrenOfType(targetElement, PsiElement::class.java)
+                        .getChildrenOfType(element, PsiElement::class.java)
                         ?.firstOrNull() ?: return
                 val daoMethod = findDaoMethod(file) ?: return
                 val params = daoMethod.methodParameters
