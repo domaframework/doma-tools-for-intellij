@@ -15,7 +15,6 @@
  */
 package org.domaframework.doma.intellij.common.dao
 
-import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -27,6 +26,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.RESOURCES_PATH
 import org.domaframework.doma.intellij.common.getExtension
+import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.common.searchDaoFile
 import org.domaframework.doma.intellij.extension.findFile
@@ -40,15 +40,18 @@ import org.domaframework.doma.intellij.extension.getModule
 fun findDaoMethod(originalFile: PsiFile): PsiMethod? {
     val project = originalFile.project
     val module = project.getModule(originalFile.virtualFile) ?: return null
-    val fileType = FileTypeManager.getInstance().getFileTypeByFile(originalFile.virtualFile)
 
-    if (isSupportFileType(originalFile.virtualFile)) {
+    if (isInjectionSqlFile(originalFile)) {
+        originalFile.let {
+            return PsiTreeUtil.getParentOfType(originalFile.context, PsiMethod::class.java)
+        }
+    } else if (isSupportFileType(originalFile)) {
         // TODO: Add Support Kotlin
         val fileTypeName = "JAVA"
-        val daoFile = findDaoFile(project, originalFile.virtualFile) ?: return null
+        val daoFile = findDaoFile(project, originalFile) ?: return null
         val relativePath =
             formatDaoPathFromSqlFilePath(
-                originalFile.virtualFile,
+                originalFile,
                 project.getContentRoot(originalFile.virtualFile)?.path ?: "",
                 fileTypeName,
             )
@@ -71,10 +74,6 @@ fun findDaoMethod(originalFile: PsiFile): PsiMethod? {
                 }
             return daoMethod
         }
-    } else if (fileType.defaultExtension == "sql") {
-        originalFile.let {
-            return PsiTreeUtil.getParentOfType(originalFile.context, PsiMethod::class.java)
-        }
     }
     return null
 }
@@ -84,14 +83,15 @@ fun findDaoMethod(originalFile: PsiFile): PsiMethod? {
  */
 fun findDaoFile(
     project: Project,
-    sqlFile: VirtualFile,
+    sqlFile: PsiFile,
 ): VirtualFile? {
-    project.getModule(sqlFile) ?: return null
-    val contentRoot = project.getContentRoot(sqlFile) ?: return null
+    val virtualFile = sqlFile.virtualFile ?: return null
+    project.getModule(virtualFile) ?: return null
+    val contentRoot = project.getContentRoot(virtualFile) ?: return null
     // TODO: Add Support Kotlin
     val relativeFilePath =
         formatDaoPathFromSqlFilePath(sqlFile, contentRoot.path, "JAVA")
-    return searchDaoFile(contentRoot, sqlFile.path, relativeFilePath)
+    return searchDaoFile(contentRoot, virtualFile.path, relativeFilePath)
 }
 
 private fun findDaoClass(
@@ -103,11 +103,15 @@ private fun findDaoClass(
  * Generate Dao deployment path from SQL file path
  */
 fun formatDaoPathFromSqlFilePath(
-    relativeBaseSqlFile: VirtualFile,
+    relativeBaseSqlFile: PsiFile,
     projectRootPath: String,
     extension: String,
 ): String {
-    var relativeFilePath = relativeBaseSqlFile.path.substring(projectRootPath.length)
+    if (isInjectionSqlFile(relativeBaseSqlFile)) {
+        return ""
+    }
+    val sqlPath = relativeBaseSqlFile.virtualFile.path
+    var relativeFilePath = sqlPath.substring(projectRootPath.length)
     if (!relativeFilePath.startsWith("/")) {
         relativeFilePath = "/$relativeFilePath"
     }

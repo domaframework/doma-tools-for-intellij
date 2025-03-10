@@ -15,12 +15,14 @@
  */
 package org.domaframework.doma.intellij.action.sql
 
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiType
 import com.intellij.psi.tree.IFileElementType
@@ -35,7 +37,6 @@ import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getIterableClazz
-import org.domaframework.doma.intellij.extension.psi.initPsiFileAndElement
 import org.domaframework.doma.intellij.extension.psi.isNotWhiteSpace
 import org.domaframework.doma.intellij.extension.psi.methodParameters
 import org.domaframework.doma.intellij.psi.SqlElClass
@@ -54,7 +55,7 @@ class JumpToDeclarationFromSqlAction : AnAction() {
     override fun update(e: AnActionEvent) {
         e.presentation.isEnabledAndVisible = false
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
-        val caretOffset = editor.caretModel.offset
+        val caretOffset = editor.caretModel.primaryCaret.selectionStart
 
         currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
         currentFile?.let { element = it.findElementAt(caretOffset) ?: return }
@@ -62,7 +63,15 @@ class JumpToDeclarationFromSqlAction : AnAction() {
 
         val project = element?.project ?: return
         if (isJavaOrKotlinFileType(currentFile ?: return)) {
-            currentFile = currentFile!!.initPsiFileAndElement(project, caretOffset)
+            val injectedLanguageManager =
+                InjectedLanguageManager.getInstance(project)
+            val literal = PsiTreeUtil.getParentOfType(element, PsiLiteralExpression::class.java)
+            currentFile =
+                injectedLanguageManager
+                    .getInjectedPsiFiles(literal!!)
+                    ?.firstOrNull()
+                    ?.first as? PsiFile
+            element = currentFile?.findElementAt(countInjectionOffset(literal, caretOffset))
         }
         findDaoMethod(currentFile ?: return) ?: return
 
@@ -75,6 +84,31 @@ class JumpToDeclarationFromSqlAction : AnAction() {
 
         val targetElement = getBlockCommentElements(element ?: return)
         if (targetElement.isNotEmpty()) e.presentation.isEnabledAndVisible = true
+    }
+
+    private fun countInjectionOffset(
+        literal: PsiLiteralExpression,
+        caretOffset: Int,
+    ): Int {
+        val quoteCount = countLeadingDoubleQuotes(literal.text)
+        val literalOffset = caretOffset - literal.textOffset
+        val indentCount =
+            literal.text.substring(0, literalOffset)
+        val indentRegex = Regex("(?<=\\n)[ \\t]+")
+        val indentSpacesCount = indentRegex.findAll(indentCount).sumOf { it.value.length }
+        return literalOffset - quoteCount - indentSpacesCount
+    }
+
+    private fun countLeadingDoubleQuotes(s: String): Int {
+        var count = 0
+        for (char in s) {
+            if (char == '"') {
+                count++
+            } else {
+                break
+            }
+        }
+        return count
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT

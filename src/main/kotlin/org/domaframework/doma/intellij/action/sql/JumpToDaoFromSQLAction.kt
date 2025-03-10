@@ -37,7 +37,7 @@ class JumpToDaoFromSQLAction : AnAction() {
         currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
         findDaoMethod(currentFile!!) ?: return
         e.presentation.isEnabledAndVisible =
-            isSupportFileType(currentFile!!.virtualFile)
+            isSupportFileType(currentFile!!)
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
@@ -53,7 +53,7 @@ class JumpToDaoFromSQLAction : AnAction() {
         )
 
         val project = e.project ?: return
-        val daoFile = findDaoFile(project, currentFile?.virtualFile!!) ?: return
+        val daoFile = findDaoFile(project, currentFile!!) ?: return
 
         jumpToDaoMethod(project, currentFile?.virtualFile?.nameWithoutExtension!!, daoFile)
         PluginLoggerUtil.countLoggingByAction(

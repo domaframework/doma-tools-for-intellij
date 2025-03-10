@@ -48,12 +48,22 @@ fun isJavaOrKotlinFileType(daoFile: PsiFile): Boolean {
 /*
  * Determine whether the open file is an SQL template file extension
  */
-fun isSupportFileType(file: VirtualFile): Boolean {
-    val extension = file.extension
+fun isSupportFileType(file: PsiFile): Boolean {
+    val extension = file.fileType.defaultExtension
     return when (extension) {
         "sql", "script" -> true
         else -> false
     }
+}
+
+fun isInjectionSqlFile(file: PsiFile): Boolean {
+    val extension = file.fileType.defaultExtension
+    val filePath = file.virtualFile.path
+    return when (extension) {
+        "sql" -> true
+        else -> false
+    } &&
+        !(filePath.endsWith(".sql") || filePath.endsWith(".script"))
 }
 
 /**

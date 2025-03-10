@@ -24,6 +24,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.vfs.VirtualFile
 import org.domaframework.doma.intellij.DomaSqlTest
 import java.awt.event.InputEvent
 import java.awt.event.MouseEvent
@@ -37,6 +38,7 @@ class SqlJumpActionTest : DomaSqlTest() {
     override fun setUp() {
         super.setUp()
         addDaoJavaFile("$packageName/JumpActionTestDao.java")
+        addDaoJavaFile("$packageName/JumpDeclarationActionSqlAnnotationTestDao.java")
         addSqlFile(
             "$packageName/JumpActionTestDao/jumpToDaoFile.sql",
             "$packageName/JumpActionTestDao/notDisplayGutterWithNonExistentDaoMethod.sql",
@@ -128,6 +130,16 @@ class SqlJumpActionTest : DomaSqlTest() {
         jumpToDaoTest(action, "ProjectDetail.java")
     }
 
+    fun testJumpToDeclarationSqlAnnotation() {
+        val dao = findDaoClass("$packageName.JumpDeclarationActionSqlAnnotationTestDao")
+        val action: AnAction? = getJumpVariableActionTestOnSqlAnnotation(dao.containingFile.virtualFile)
+        assertNotNull("Not Found Action", action)
+        if (action == null) return
+
+        isDisplayedActionTest(action)
+        jumpToDaoTest(action, "Employee.java")
+    }
+
     private fun getJumDaoActionTest(sqlName: String): AnAction? {
         val sql = findSqlFile(sqlName)
         assertNotNull("Not Found SQL File", sql)
@@ -148,6 +160,14 @@ class SqlJumpActionTest : DomaSqlTest() {
 
         myFixture.configureFromExistingVirtualFile(sql)
 
+        val actionId = "org.domaframework.doma.intellij.JumpToDeclarationFromSql"
+        val action: AnAction = ActionManager.getInstance().getAction(actionId)
+        assertNotNull("Not Found Action", action)
+        return action
+    }
+
+    private fun getJumpVariableActionTestOnSqlAnnotation(daoFile: VirtualFile): AnAction {
+        myFixture.configureFromExistingVirtualFile(daoFile)
         val actionId = "org.domaframework.doma.intellij.JumpToDeclarationFromSql"
         val action: AnAction = ActionManager.getInstance().getAction(actionId)
         assertNotNull("Not Found Action", action)
