@@ -1,7 +1,7 @@
 [versions]
 # libraries
 junit = "4.13.2"
-doma = "3.5.1"
+doma = "3.2.0"
 logback = "1.5.17"
 
 # plugins
