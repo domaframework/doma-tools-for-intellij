@@ -80,7 +80,7 @@ jobs:
 
       # Build plugin
       - name: Build plugin
-        run: ./gradlew buildPlugin -PpluginVersion=0.3.0-${{ github.run_number }}
+        run: ./gradlew buildPlugin -PpluginVersion=0.3.1-${{ github.run_number }}
 
       # Prepare plugin archive content for creating artifact
       - name: Prepare Plugin Artifact
