@@ -1,7 +1,15 @@
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.gradle.internal.classpath.Instrumented.systemProperty
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import java.net.URL
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Base64
 
 plugins {
@@ -68,6 +76,7 @@ sourceSets {
 dependencies {
     implementation(libs.slf4j)
     implementation(libs.logback)
+    implementation(libs.jackson)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinTest)
@@ -187,6 +196,288 @@ tasks.register("encodeBase64") {
             println(encodedData)
             println("\n\n\n")
         }
+    }
+}
+
+tasks.register("updateChangelog") {
+    group = "changelog"
+    description = "Update CHANGELOG.md based on merged PRs since last release"
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    data class Label(
+        val id: Long = 0,
+        val name: String = "",
+        val color: String = "",
+        val description: String = "",
+    )
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    data class PullRequestItem(
+        val title: String = "",
+        @JsonProperty("html_url")
+        val url: String = "",
+        val number: Long = 0,
+        var labelItems: List<String> = emptyList(),
+    )
+
+    class VersionInfo(
+        lastversion: String = "",
+    ) {
+        var lastMajor: Int = 0
+        var lastMinor: Int = 0
+        var lastPatch: Int = 0
+
+        var major: Int = 0
+        var minor: Int = 0
+        var patch: Int = 0
+
+        init {
+            val lastVersions = lastversion.substringAfter("v").split(".")
+            lastMajor = lastVersions[0].toInt()
+            lastMinor = lastVersions[1].toInt()
+            lastPatch = lastVersions[2].toInt()
+
+            major = lastMajor
+            minor = lastMinor
+            patch = lastPatch
+        }
+
+        fun updateMajor() {
+            if (major == lastMajor) {
+                major++
+                minor = 0
+                patch = 0
+            }
+        }
+
+        fun updateMinor() {
+            if (minor == lastMinor && major == lastMajor) {
+                minor++
+                patch = 0
+            }
+        }
+
+        fun updatePatch() {
+            if (minor == lastMinor && major == lastMajor && patch == lastPatch) {
+                patch++
+            }
+        }
+
+        fun getNewVersion() = "$major.$minor.$patch"
+    }
+
+    val releaseDate =
+        if (project.hasProperty("releaseDate")) {
+            project.property("releaseDate") as String
+        } else {
+            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        }
+    val changelogFile = project.file("CHANGELOG.md")
+    val rootDir = project.rootDir
+
+    @Suppress("UNCHECKED_CAST")
+    doLast {
+        fun runCommand(command: String): String {
+            val parts = command.split(" ")
+            return ProcessBuilder(parts)
+                .directory(rootDir)
+                .redirectErrorStream(true)
+                .start()
+                .inputStream
+                .bufferedReader()
+                .readText()
+                .trim()
+        }
+
+        val tagsOutput = runCommand("git tag --sort=-v:refname")
+        val semverRegex = Regex("^v\\d+\\.\\d+\\.\\d+$")
+        val tags = tagsOutput.lines().filter { semverRegex.matches(it) }
+        if (tags.isEmpty()) {
+            throw GradleException("Not Found Release Tag")
+        }
+        val lastTag = tags.first()
+        println("Last release tag: $lastTag")
+
+        val lastReleaseCommitDate = runCommand("git log -1 --format=%cI $lastTag").trim()
+        val offsetTime = OffsetDateTime.parse(lastReleaseCommitDate)
+        val lastReleaseCommitDateUtc = offsetTime.withOffsetSameInstant(ZoneOffset.UTC)
+        println("Last release commit date: $lastReleaseCommitDateUtc")
+
+        val githubToken = System.getenv("GITHUB_TOKEN") ?: throw GradleException("Not Setting GITHUB_TOKEN")
+        val repo = System.getenv("GITHUB_REPOSITORY") ?: throw GradleException("Not Setting GITHUB_REPOSITORY")
+
+        // https://docs.github.com/en/search-github/searching-on-github/searching-issues-and-pull-requests
+        val apiPath = "https://api.github.com/search/issues"
+        val sort = "sort:updated"
+        val status = "is:closed+is:merged"
+        val type = "type:pr"
+        val base = "+base:main"
+        val apiUrl = "$apiPath?q=repo:$repo+$type+$status+$sort+$base+merged:>$lastReleaseCommitDateUtc"
+        val connection =
+            URL(apiUrl).openConnection().apply {
+                setRequestProperty("Authorization", "token $githubToken")
+                setRequestProperty("Accept", "application/vnd.github.v3+json")
+            }
+        val response = connection.getInputStream().bufferedReader().readText()
+        val mapper = jacksonObjectMapper()
+        val json: Map<String, Any> =
+            (
+                mapper.readValue(response, Map::class.java) as? Map<String, Any>
+                    ?: emptyList<Map<String, Any>>()
+            ) as Map<String, Any>
+        val items =
+            (json["items"] as List<*>)
+                .mapNotNull { item ->
+                    mapper.convertValue(item, Map::class.java) as Map<String, Any>
+                }
+
+        val prList =
+            items.mapNotNull { pr ->
+                val labelTemps = pr["labels"] as List<Map<String, Any>>
+                val labels =
+                    labelTemps
+                        .mapNotNull { mapper.convertValue(it, Label::class.java) }
+                        .map { it.name }
+                mapper.convertValue(pr, PullRequestItem::class.java)?.apply {
+                    labelItems = labels
+                }
+            }
+
+        val categories =
+            mapOf(
+                "New Features" to listOf("feature", "enhancement"),
+                "Bug Fixes" to listOf("fix", "bug", "bugfix"),
+                "Maintenance" to listOf("ci", "chore", "perf", "refactor", "test", "security"),
+                "Documentation" to listOf("doc"),
+                "Dependency Updates" to listOf("dependencies"),
+            )
+
+        val versionUpLabels =
+            mapOf(
+                "major" to listOf("major"),
+                "minor" to listOf("minor", "feature", "enhancement"),
+                "patch" to listOf("patch"),
+            )
+
+        val categorized: MutableMap<String, MutableList<PullRequestItem>> =
+            mutableMapOf(
+                "New Features" to mutableListOf(),
+                "Bug Fixes" to mutableListOf(),
+                "Maintenance" to mutableListOf(),
+                "Documentation" to mutableListOf(),
+                "Dependency Updates" to mutableListOf(),
+                "Other" to mutableListOf(),
+            )
+
+        val versionInfo = VersionInfo(lastTag)
+        var assigned: Boolean
+
+        prList.forEach { pr ->
+            assigned = false
+            categories.forEach { (category, catLabels) ->
+                val prLabels = pr.labelItems
+                if (prLabels.any { it in catLabels }) {
+                    categorized[category]?.add(pr)
+                    versionUpLabels.forEach { (version, versionUpLabels) ->
+                        if (prLabels.any { it in versionUpLabels }) {
+                            assigned = true
+                            when (version) {
+                                "major" -> versionInfo.updateMajor()
+
+                                "minor" -> versionInfo.updateMinor()
+
+                                "patch" -> versionInfo.updatePatch()
+                            }
+                        }
+                    }
+                }
+                if (!assigned) {
+                    versionInfo.updatePatch()
+                    categorized["Other"]?.add(pr)
+                }
+            }
+        }
+
+        val newVersion = versionInfo.getNewVersion()
+        val prLinks = mutableListOf<String>()
+        val newEntry = StringBuilder()
+
+        newEntry.append("## [$newVersion] - $releaseDate\n\n")
+        categories.keys.forEach { category ->
+            val hitItems = categorized[category]
+            if (!hitItems.isNullOrEmpty()) {
+                newEntry.append("### $category\n\n")
+                hitItems.forEach { title ->
+                    newEntry.append("- ${title.title} ([#${title.number}])\n")
+                    prLinks.add("[#${title.number}]:${title.url}")
+                }
+                newEntry.append("\n")
+            }
+        }
+
+        prLinks.forEach { link -> newEntry.append("$link\n") }
+
+        val currentContent = if (changelogFile.exists()) changelogFile.readText() else "\n"
+        val updatedContent =
+            if (currentContent.contains("## [Unreleased]")) {
+                currentContent.replace("## [Unreleased]", "## [Unreleased]\n\n$newEntry")
+            } else {
+                "## [Unreleased]\n\n$newEntry$currentContent"
+            }
+        val repoUrl = "https://github.com/domaframework/doma-tools-for-intellij"
+        changelogFile.writeText(updatedContent)
+        changelogFile.appendText("[$newVersion]: $repoUrl/compare/$lastTag...v$newVersion\n")
+
+        val githubEnv = System.getenv("GITHUB_ENV")
+        val envFile = File(githubEnv)
+        envFile.appendText("NEW_VERSION=$newVersion\n")
+        envFile.appendText("BRANCH=doc/changelog-update-$newVersion\n")
+
+        println("Update CHANGELOG.md :newVersion $newVersion")
+    }
+}
+
+tasks.register("checkExistChangelogPullRequest") {
+    group = "changelog"
+    description = "Check if a PR with the same name has already been created"
+
+    val newBranch =
+        if (project.hasProperty("newBranch")) {
+            project.property("newBranch") as String
+        } else {
+            "doc/changelog-update"
+        }
+
+    @Suppress("UNCHECKED_CAST")
+    doLast {
+        println("Check PR with the same name has already been created $newBranch")
+
+        val githubToken = System.getenv("GITHUB_TOKEN") ?: throw GradleException("Not Setting GITHUB_TOKEN")
+        val repo = System.getenv("GITHUB_REPOSITORY") ?: throw GradleException("Not Setting GITHUB_REPOSITORY")
+
+        // https://docs.github.com/en/search-github/searching-on-github/searching-issues-and-pull-requests
+        val apiPath = "https://api.github.com/search/issues"
+        val status = "is:open"
+        val label = "label:changelog,skip-changelog"
+        val branch = "base:main+head:$newBranch"
+        val apiUrl = "$apiPath?q=repo:$repo+is:pr+$branch+$label+$status"
+        val connection =
+            URL(apiUrl).openConnection().apply {
+                setRequestProperty("Authorization", "token $githubToken")
+                setRequestProperty("Accept", "application/vnd.github.v3+json")
+            }
+        val response = connection.getInputStream().bufferedReader().readText()
+        val mapper = jacksonObjectMapper()
+        val json: Map<String, Any> =
+            (
+                mapper.readValue(response, Map::class.java) as? Map<String, Any>
+                    ?: emptyList<Map<String, Any>>()
+            ) as Map<String, Any>
+        println("get response Json ${json["total_count"]}")
+        val existChangelogPr = json["total_count"] != 0
+
+        val githubEnv = System.getenv("GITHUB_ENV")
+        File(githubEnv).appendText("EXIST_CHANGELOG=$existChangelogPr\n")
     }
 }
 
