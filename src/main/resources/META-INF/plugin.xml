@@ -38,6 +38,10 @@
     <completion.contributor language="DomaSql"
       implementationClass="org.domaframework.doma.intellij.contributor.sql.SqlCompletionContributor" order="first" />
 
+    <lang.formatter
+      language="DomaSql"
+      implementationClass="org.domaframework.doma.intellij.formatter.SqlFormattingModelBuilder"/>
+
     <!-- CustomLanguage -->
     <fileType
       name="DomaSql"
