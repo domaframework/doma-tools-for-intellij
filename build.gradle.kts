@@ -208,7 +208,7 @@ tasks.register("updateChangelog") {
         val id: Long = 0,
         val name: String = "",
         val color: String = "",
-        val description: String = "",
+        val description: String? = "",
     )
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -458,9 +458,10 @@ tasks.register("checkExistChangelogPullRequest") {
         // https://docs.github.com/en/search-github/searching-on-github/searching-issues-and-pull-requests
         val apiPath = "https://api.github.com/search/issues"
         val status = "is:open"
+        val type = "type:pr"
         val label = "label:changelog,skip-changelog"
         val branch = "base:main+head:$newBranch"
-        val apiUrl = "$apiPath?q=repo:$repo+is:pr+$branch+$label+$status"
+        val apiUrl = "$apiPath?q=repo:$repo+$branch+$label+$status+$type"
         val connection =
             URL(apiUrl).openConnection().apply {
                 setRequestProperty("Authorization", "token $githubToken")
