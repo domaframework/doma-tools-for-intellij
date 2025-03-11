@@ -426,7 +426,7 @@ tasks.register("updateChangelog") {
             }
         val repoUrl = "https://github.com/domaframework/doma-tools-for-intellij"
         changelogFile.writeText(updatedContent)
-        changelogFile.appendText("[$newVersion]: $repoUrl/compare/$lastTag...v$newVersion\n")
+        changelogFile.appendText("[$newVersion]: $repoUrl/compare/$lastTag...$newVersion\n")
 
         val githubEnv = System.getenv("GITHUB_ENV")
         val envFile = File(githubEnv)

@@ -2,6 +2,47 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-03-11
+
+### Bug Fixes
+
+- Fix: Reference checks for repeated elements in the for directive do not work correctly ([#20])
+- Fix: element type condition checking in DAO argument usage check. ([#21])
+
+### Maintenance
+
+- Fix:Release draft generation is delegated to release-drafter ([#35])
+- Add: Update CHANGELOG.md Action ([#34])
+- Fix: release-raft should only be run on the main branch ([#26])
+- Add Develop Build Number ([#25])
+
+### Dependency Updates
+
+- Fix: IntelliJ Platform version upgrades ([#27])
+- Update dependency org.jetbrains.intellij.platform to v2.3.0 ([#10])
+- Change the library version upgrade settings ([#24])
+- Update dependency gradle to v8.13 ([#9])
+- Update dependency ubuntu to v24 ([#12])
+- Update dependency org.seasar.doma:doma-core to v3.5.1 ([#11])
+- Update dependency org.slf4j:slf4j-api to v2.0.17 ([#8])
+- Update dependency ch.qos.logback:logback-classic to v1.5.17 ([#7])
+
+[#20]:https://github.com/domaframework/doma-tools-for-intellij/pull/20
+[#21]:https://github.com/domaframework/doma-tools-for-intellij/pull/21
+[#35]:https://github.com/domaframework/doma-tools-for-intellij/pull/35
+[#34]:https://github.com/domaframework/doma-tools-for-intellij/pull/34
+[#26]:https://github.com/domaframework/doma-tools-for-intellij/pull/26
+[#25]:https://github.com/domaframework/doma-tools-for-intellij/pull/25
+[#27]:https://github.com/domaframework/doma-tools-for-intellij/pull/27
+[#10]:https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[#24]:https://github.com/domaframework/doma-tools-for-intellij/pull/24
+[#9]:https://github.com/domaframework/doma-tools-for-intellij/pull/9
+[#12]:https://github.com/domaframework/doma-tools-for-intellij/pull/12
+[#11]:https://github.com/domaframework/doma-tools-for-intellij/pull/11
+[#8]:https://github.com/domaframework/doma-tools-for-intellij/pull/8
+[#7]:https://github.com/domaframework/doma-tools-for-intellij/pull/7
+
+
 ## [0.3.0] - 2025-03-07
 
 ### Dao Support Features
@@ -36,3 +77,4 @@
 
 [Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/commits/main
 [0.3.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0
+[0.3.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0...0.3.1
