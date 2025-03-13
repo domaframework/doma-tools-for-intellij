@@ -74,7 +74,7 @@ class DaoMethodProvider : RelatedItemLineMarkerProvider() {
         if (!isJavaOrKotlinFileType(e.containingFile) && !isFunction(e)) {
             return false
         }
-        getDaoClass(e.containingFile) ?: return false
+        if (getDaoClass(e.containingFile) == null) return false
         return e is PsiMethod
     }
 

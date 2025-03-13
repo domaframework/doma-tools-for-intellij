@@ -59,8 +59,7 @@ class DaoMethodVariableInspector : AbstractBaseJavaLocalInspectionTool() {
             override fun visitMethod(method: PsiMethod) {
                 super.visitMethod(method)
                 val file = method.containingFile
-                if (!isJavaOrKotlinFileType(file)) return
-                getDaoClass(file) ?: return
+                if (!isJavaOrKotlinFileType(file) || getDaoClass(file) == null) return
 
                 val psiDaoMethod = PsiDaoMethod(method.project, method)
                 if (!psiDaoMethod.useSqlAnnotation() && !psiDaoMethod.isUseSqlFileMethod()) return

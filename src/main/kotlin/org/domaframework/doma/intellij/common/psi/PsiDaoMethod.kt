@@ -46,7 +46,7 @@ import java.io.IOException
  * Class that handles Dao method information
  */
 class PsiDaoMethod(
-    val psiProject: Project,
+    private val psiProject: Project,
     val psiMethod: PsiMethod,
 ) {
     private val isTest = false
@@ -132,7 +132,7 @@ class PsiDaoMethod(
                         psiFileFactory
                             .createFileFromText(
                                 "tempFile",
-                                Language.findLanguageByID(SqlLanguage.INSTANCE.id)!!,
+                                Language.findLanguageByID(SqlLanguage.INSTANCE.id) ?: return,
                                 valueText,
                             ).virtualFile
                 }
@@ -154,11 +154,14 @@ class PsiDaoMethod(
                     throw IncorrectOperationException(e)
                 }
 
+                val virtualFile =
+                    VfsUtil.findRelativeFile(rootDir, *parenDirPathSpirit)
+                        ?: return@runWriteCommandAction
                 val sqlOutputDirPath =
                     PsiManager
                         .getInstance(psiProject)
-                        .findDirectory(VfsUtil.findRelativeFile(rootDir, *parenDirPathSpirit)!!)
-                val sqlVirtualFile = sqlOutputDirPath!!.createFile(sqlFileName).virtualFile
+                        .findDirectory(virtualFile) ?: return@runWriteCommandAction
+                val sqlVirtualFile = sqlOutputDirPath.createFile(sqlFileName).virtualFile
                 FileEditorManager
                     .getInstance(psiProject)
                     .openFile(sqlVirtualFile, true)

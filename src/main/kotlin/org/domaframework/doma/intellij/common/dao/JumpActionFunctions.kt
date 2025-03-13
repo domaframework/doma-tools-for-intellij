@@ -63,7 +63,8 @@ private fun getJavaFunctionOffset(
     targetMethodName: String,
 ) {
     try {
-        PsiNavigateUtil.navigate(findUseSqlDaoMethod(file, targetMethodName)!!)
+        val dapMethod = findUseSqlDaoMethod(file, targetMethodName) ?: return
+        PsiNavigateUtil.navigate(dapMethod)
     } catch (e: Exception) {
         rethrow(e)
     }

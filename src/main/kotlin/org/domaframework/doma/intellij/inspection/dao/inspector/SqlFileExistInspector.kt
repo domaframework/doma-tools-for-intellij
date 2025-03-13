@@ -50,8 +50,7 @@ class SqlFileExistInspector : AbstractBaseJavaLocalInspectionTool() {
             override fun visitMethod(method: PsiMethod) {
                 super.visitMethod(method)
                 val file = method.containingFile
-                if (!isJavaOrKotlinFileType(file)) return
-                getDaoClass(file) ?: return
+                if (!isJavaOrKotlinFileType(file) || getDaoClass(file) == null) return
 
                 val psiDaoMethod = PsiDaoMethod(method.project, method)
                 if (psiDaoMethod.isUseSqlFileMethod()) {
@@ -65,9 +64,10 @@ class SqlFileExistInspector : AbstractBaseJavaLocalInspectionTool() {
         psiDaoMethod: PsiDaoMethod,
         problemHolder: ProblemsHolder,
     ) {
+        val identifier = psiDaoMethod.psiMethod.nameIdentifier ?: return
         if (psiDaoMethod.sqlFile == null) {
             problemHolder.registerProblem(
-                psiDaoMethod.psiMethod.nameIdentifier!!,
+                identifier,
                 MessageBundle.message("inspection.sql.not.exist.error"),
                 ProblemHighlightType.ERROR,
                 GenerateSQLFileQuickFixFactory.createSql(psiDaoMethod),

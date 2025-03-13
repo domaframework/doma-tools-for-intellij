@@ -34,14 +34,15 @@ class JumpToSQLFromDaoAction : AnAction() {
     override fun update(e: AnActionEvent) {
         e.presentation.isEnabledAndVisible = false
         currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
+        val file: PsiFile = currentFile ?: return
 
-        if (!isJavaOrKotlinFileType(currentFile!!)) return
-        getDaoClass(currentFile!!) ?: return
+        if (!isJavaOrKotlinFileType(file) || getDaoClass(file) == null) return
 
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
-        val element = currentFile!!.findElementAt(editor.caretModel.offset) ?: return
+        val element = file.findElementAt(editor.caretModel.offset) ?: return
+        val project = e.project ?: return
         val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
-        val psiDaoMethod = PsiDaoMethod(e.project!!, method)
+        val psiDaoMethod = PsiDaoMethod(project, method)
 
         e.presentation.isEnabledAndVisible =
             psiDaoMethod.isUseSqlFileMethod() &&
@@ -60,10 +61,9 @@ class JumpToSQLFromDaoAction : AnAction() {
             startTime,
         )
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
-        val element = currentFile!!.findElementAt(editor.caretModel.offset) ?: return
+        val element = currentFile?.findElementAt(editor.caretModel.offset) ?: return
         val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
         val project = e.project ?: return
-
         val psiDaoMethod = PsiDaoMethod(project, method)
 
         PluginLoggerUtil.countLoggingByAction(
@@ -72,6 +72,7 @@ class JumpToSQLFromDaoAction : AnAction() {
             inputEvent,
             startTime,
         )
-        jumpSqlFromDao(project, psiDaoMethod.sqlFile!!)
+        val sqlFile = psiDaoMethod.sqlFile ?: return
+        jumpSqlFromDao(project, sqlFile)
     }
 }

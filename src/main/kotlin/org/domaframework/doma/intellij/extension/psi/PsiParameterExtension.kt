@@ -29,7 +29,8 @@ fun PsiParameter.getIterableClazz(annotationType: DomaAnnotationType): PsiParent
         if (immediate.name == "List" && annotationType.isBatchAnnotation()) {
             val listType =
                 (this.type as PsiClassReferenceType).parameters.firstOrNull()
-            return PsiParentClass(listType!!)
+                    ?: return PsiParentClass(this.type)
+            return PsiParentClass(listType)
         }
     }
     return PsiParentClass(this.type)

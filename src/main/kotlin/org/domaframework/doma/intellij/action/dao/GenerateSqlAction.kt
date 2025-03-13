@@ -37,14 +37,16 @@ class GenerateSqlAction : AnAction() {
         e.presentation.isEnabledAndVisible = false
         currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
-        getDaoClass(currentFile!!) ?: return
-        val element = currentFile!!.findElementAt(editor.caretModel.offset) ?: return
+        val project = e.project ?: return
+        val file: PsiFile = currentFile ?: return
+        if (getDaoClass(file) == null) return
+        val element = file.findElementAt(editor.caretModel.offset) ?: return
         val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
 
-        val psiDaoMethod = PsiDaoMethod(e.project!!, method)
+        val psiDaoMethod = PsiDaoMethod(project, method)
         e.presentation.isEnabledAndVisible =
             psiDaoMethod.isUseSqlFileMethod() &&
-            isJavaOrKotlinFileType(currentFile!!) &&
+            isJavaOrKotlinFileType(file) &&
             psiDaoMethod.sqlFile == null
     }
 
@@ -61,7 +63,8 @@ class GenerateSqlAction : AnAction() {
         )
         val project = e.project ?: return
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
-        val element = currentFile!!.findElementAt(editor.caretModel.offset) ?: return
+        val file: PsiFile = currentFile ?: return
+        val element = file.findElementAt(editor.caretModel.offset) ?: return
         val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
         val psiDaoMethod = PsiDaoMethod(project, method)
         psiDaoMethod.generateSqlFile()

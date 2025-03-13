@@ -112,8 +112,8 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                             it !is PsiErrorElement
                     }
                 if (!pos.isNotWhiteSpace() && !isRightFactor(prevElm)) return
-
-                val blockElements = getAccessElementTextBlocks(parameters.originalPosition!!)
+                val originalPosition = parameters.originalPosition ?: return
+                val blockElements = getAccessElementTextBlocks(originalPosition)
                 generateCompletionList(
                     blockElements,
                     originalFile,
@@ -146,7 +146,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 prevElm?.elementType == SqlTypes.EL_ASTERISK ||
                 prevElm?.elementType == SqlTypes.EL_SLASH ||
                 prevElm?.elementType == SqlTypes.EL_PERCENT ||
-                prevElm?.isNotWhiteSpace()!!
+                prevElm?.isNotWhiteSpace() == true
         )
 
     private fun getAccessElementTextBlocks(targetElement: PsiElement): List<PsiElement> {

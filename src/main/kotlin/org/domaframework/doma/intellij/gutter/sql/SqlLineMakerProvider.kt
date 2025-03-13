@@ -56,7 +56,7 @@ class SqlLineMakerProvider : RelatedItemLineMarkerProvider() {
         val identifier = e.firstChild ?: e
         val daoFile =
             findDaoFile(project, file)?.let {
-                findDaoMethod(e.containingFile) ?: return
+                if (findDaoMethod(e.containingFile) == null) return
                 it
             } ?: return
 
