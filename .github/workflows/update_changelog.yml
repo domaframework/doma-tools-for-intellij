@@ -35,8 +35,6 @@ jobs:
   update-changelog:
     runs-on: ubuntu-latest
     if: ${{ needs.check-commit-message.outputs.skip_job != 'true' }}
-    outputs:
-      changelog: ${{ steps.properties.outputs.changelog }}
     needs: [ check-commit-message ]
     steps:
 
