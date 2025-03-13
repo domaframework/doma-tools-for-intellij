@@ -65,9 +65,10 @@ class SqlFileExistInspector : AbstractBaseJavaLocalInspectionTool() {
         psiDaoMethod: PsiDaoMethod,
         problemHolder: ProblemsHolder,
     ) {
+        val identifier = psiDaoMethod.psiMethod.nameIdentifier ?: return
         if (psiDaoMethod.sqlFile == null) {
             problemHolder.registerProblem(
-                psiDaoMethod.psiMethod.nameIdentifier!!,
+                identifier,
                 MessageBundle.message("inspection.sql.not.exist.error"),
                 ProblemHighlightType.ERROR,
                 GenerateSQLFileQuickFixFactory.createSql(psiDaoMethod),

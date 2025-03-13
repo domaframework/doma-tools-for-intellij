@@ -31,6 +31,7 @@ import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
+import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiStaticElement
@@ -58,31 +59,35 @@ class JumpToDeclarationFromSqlAction : AnAction() {
         val caretOffset = editor.caretModel.primaryCaret.selectionStart
 
         currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
-        currentFile?.let { element = it.findElementAt(caretOffset) ?: return }
-        if (element == null) return
+        element = currentFile?.findElementAt(caretOffset) ?: return
 
+        var file: PsiFile = currentFile ?: return
         val project = element?.project ?: return
-        if (isJavaOrKotlinFileType(currentFile ?: return)) {
+        if (isJavaOrKotlinFileType(file) && getDaoClass(file) != null) {
             val injectedLanguageManager =
                 InjectedLanguageManager.getInstance(project)
-            val literal = PsiTreeUtil.getParentOfType(element, PsiLiteralExpression::class.java)
+            val literal = PsiTreeUtil.getParentOfType(element, PsiLiteralExpression::class.java) ?: return
             currentFile =
                 injectedLanguageManager
-                    .getInjectedPsiFiles(literal!!)
+                    .getInjectedPsiFiles(literal)
                     ?.firstOrNull()
                     ?.first as? PsiFile
-            element = currentFile?.findElementAt(countInjectionOffset(literal, caretOffset))
+                    ?: return
+            file = currentFile ?: return
+            element = file.findElementAt(countInjectionOffset(literal, caretOffset)) ?: return
         }
-        findDaoMethod(currentFile ?: return) ?: return
+        findDaoMethod(file) ?: return
 
-        val staticDirection = element?.parent
-        val staticDirective = getStaticDirective(staticDirection, element!!.text)
+        val elm = element ?: return
+        val elementText = elm.text ?: ""
+        val staticDirection = elm.parent
+        val staticDirective = getStaticDirective(staticDirection, elementText)
         if (staticDirective != null) {
             e.presentation.isEnabledAndVisible = true
             return
         }
 
-        val targetElement = getBlockCommentElements(element ?: return)
+        val targetElement = getBlockCommentElements(elm)
         if (targetElement.isNotEmpty()) e.presentation.isEnabledAndVisible = true
     }
 
@@ -114,9 +119,13 @@ class JumpToDeclarationFromSqlAction : AnAction() {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
 
     override fun actionPerformed(e: AnActionEvent) {
+        val elm = element ?: return
+        val elementText = elm.text ?: ""
+        val file = currentFile ?: return
+
         val startTime = System.nanoTime()
-        val staticDirection = element?.parent
-        val staticDirective = getStaticDirective(staticDirection, element!!.text)
+        val staticDirection = elm.parent
+        val staticDirective = getStaticDirective(staticDirection, elementText)
         if (staticDirective != null) {
             BindVariableElement(staticDirective).jumpToEntity()
             PluginLoggerUtil.countLoggingByAction(
@@ -127,20 +136,20 @@ class JumpToDeclarationFromSqlAction : AnAction() {
             )
             return
         }
-        if (element == null) return
+
         // TODO Since the update also checks whether the action is to be executed,
         //  delete it if it is unnecessary.
-        if (isNotBindVariable(element!!)) return
+        if (isNotBindVariable(elm)) return
 
-        val targetElement = getBlockCommentElements(element!!)
+        val targetElement = getBlockCommentElements(elm)
         if (targetElement.isEmpty()) return
 
-        val daoMethod = currentFile?.let { file -> findDaoMethod(file) } ?: return
-        when (element!!.textOffset) {
+        val daoMethod = findDaoMethod(file) ?: return
+        when (elm.textOffset) {
             targetElement.first().textOffset ->
                 jumpToDaoMethodParameter(
                     daoMethod,
-                    element!!,
+                    elm,
                     logActionFileType,
                     e,
                     startTime,
@@ -155,10 +164,10 @@ class JumpToDeclarationFromSqlAction : AnAction() {
         elementName: String,
     ): PsiElement? {
         if (staticDirection == null) return null
-
+        val file: PsiFile = currentFile ?: return null
         // Jump to class definition
         if (staticDirection is SqlElClass) {
-            val psiStaticElement = PsiStaticElement(staticDirection.text, currentFile!!)
+            val psiStaticElement = PsiStaticElement(staticDirection.text, file)
             return psiStaticElement.getRefClazz()
         }
 
@@ -167,12 +176,14 @@ class JumpToDeclarationFromSqlAction : AnAction() {
         if (staticDirection is SqlElStaticFieldAccessExpr ||
             staticAccessParent is SqlElStaticFieldAccessExpr
         ) {
+            val firstChildText =
+                staticAccessParent.children
+                    .firstOrNull()
+                    ?.text ?: ""
             val psiStaticElement =
                 PsiStaticElement(
-                    staticAccessParent.children
-                        .firstOrNull()
-                        ?.text ?: "",
-                    currentFile!!,
+                    firstChildText,
+                    file,
                 )
             val javaClazz = psiStaticElement.getRefClazz() ?: return null
             val psiParentClass = PsiParentClass(PsiTypesUtil.getClassType(javaClazz))
@@ -300,9 +311,9 @@ class JumpToDeclarationFromSqlAction : AnAction() {
             parentClass
                 .findMethod(elm.text)
                 ?.let {
-                    if (it.returnType == null) return null
+                    val returnType = it.returnType ?: return null
                     val bindVal =
-                        getBindVariableIfLastIndex(index, it.returnType!!, it.originalElement)
+                        getBindVariableIfLastIndex(index, returnType, it.originalElement)
                     if (bindVal != null) return bindVal
                 }
             if (!isExistProperty) return null

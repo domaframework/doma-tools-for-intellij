@@ -35,9 +35,10 @@ class JumpToDaoFromSQLAction : AnAction() {
     override fun update(e: AnActionEvent) {
         e.presentation.isEnabledAndVisible = false
         currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
-        findDaoMethod(currentFile!!) ?: return
+        val file = currentFile ?: return
+        findDaoMethod(file) ?: return
         e.presentation.isEnabledAndVisible =
-            isSupportFileType(currentFile!!)
+            isSupportFileType(file)
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
@@ -51,11 +52,12 @@ class JumpToDaoFromSQLAction : AnAction() {
             inputEvent,
             startTime,
         )
-
+        val file = currentFile ?: return
         val project = e.project ?: return
-        val daoFile = findDaoFile(project, currentFile!!) ?: return
+        val daoFile = findDaoFile(project, file) ?: return
 
-        jumpToDaoMethod(project, currentFile?.virtualFile?.nameWithoutExtension!!, daoFile)
+        val nameWithoutExtension = file.virtualFile?.nameWithoutExtension ?: return
+        jumpToDaoMethod(project, nameWithoutExtension, daoFile)
         PluginLoggerUtil.countLoggingByAction(
             this::class.java.simpleName,
             "JumpToDao",

@@ -40,7 +40,7 @@ enum class DomaAnnotationType(
 
     fun isRequireSqlTemplate(): Boolean = this == Select || this == Script || this == SqlProcessor
 
-    fun useSqlFileOption(): Boolean =
+    private fun useSqlFileOption(): Boolean =
         this == Insert ||
             this == Update ||
             this == Delete ||
