@@ -16,9 +16,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  update-changelog:
+  check-commit-message:
     runs-on: ubuntu-latest
     if: startsWith(github.event.head_commit.message, 'Merge pull request')
+    outputs:
+      skip_job: ${{ steps.check.outputs.SKIP_JOB }}
+    steps:
+      - name: Check Commit Message
+        id: check
+        run: |
+          if [[ "${{ github.event.head_commit.message }}" =~ ^Merge\ pull\ request\ #[0-9]+\ from\ ${{ github.repository_owner }}/doc/changelog-update-.*$ ]]; then
+            echo "This commit is not target. Skip the workflow."
+            echo "SKIP_JOB=true" >> $GITHUB_OUTPUT
+          else
+            echo "SKIP_JOB=false" >> $GITHUB_OUTPUT
+          fi
+
+  update-changelog:
+    runs-on: ubuntu-latest
+    if: ${{ needs.check-commit-message.outputs.skip_job != 'true' }}
+    needs: [ check-commit-message ]
     steps:
 
       - name: Checkout repository
@@ -38,6 +55,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run Gradle updateChangelog
+        id: updateChangelog
         run: |
           ./gradlew updateChangelog -PreleaseDate=$(date +'%Y-%m-%d')
         env:
