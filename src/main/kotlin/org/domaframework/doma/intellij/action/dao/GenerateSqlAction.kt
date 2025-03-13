@@ -39,7 +39,7 @@ class GenerateSqlAction : AnAction() {
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
         val project = e.project ?: return
         val file: PsiFile = currentFile ?: return
-        getDaoClass(file) ?: return
+        if (getDaoClass(file) == null) return
         val element = file.findElementAt(editor.caretModel.offset) ?: return
         val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
 

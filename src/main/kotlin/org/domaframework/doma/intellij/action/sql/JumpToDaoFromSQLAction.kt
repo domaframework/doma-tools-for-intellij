@@ -36,7 +36,7 @@ class JumpToDaoFromSQLAction : AnAction() {
         e.presentation.isEnabledAndVisible = false
         currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
         val file = currentFile ?: return
-        findDaoMethod(file) ?: return
+        if (findDaoMethod(file) == null) return
         e.presentation.isEnabledAndVisible =
             isSupportFileType(file)
     }

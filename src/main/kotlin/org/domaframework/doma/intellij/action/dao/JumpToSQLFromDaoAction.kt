@@ -36,8 +36,7 @@ class JumpToSQLFromDaoAction : AnAction() {
         currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
         val file: PsiFile = currentFile ?: return
 
-        if (!isJavaOrKotlinFileType(file)) return
-        getDaoClass(file) ?: return
+        if (!isJavaOrKotlinFileType(file) || getDaoClass(file) == null) return
 
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
         val element = file.findElementAt(editor.caretModel.offset) ?: return

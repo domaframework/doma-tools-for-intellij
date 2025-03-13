@@ -76,7 +76,7 @@ class JumpToDeclarationFromSqlAction : AnAction() {
             file = currentFile ?: return
             element = file.findElementAt(countInjectionOffset(literal, caretOffset)) ?: return
         }
-        findDaoMethod(file) ?: return
+        if (findDaoMethod(file) == null) return
 
         val elm = element ?: return
         val elementText = elm.text ?: ""
