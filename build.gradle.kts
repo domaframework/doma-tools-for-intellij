@@ -290,7 +290,7 @@ tasks.register("updateChangelog") {
         }
 
         val tagsOutput = runCommand("git tag --sort=-v:refname")
-        val semverRegex = Regex("^v\\d+\\.\\d+\\.\\d+$")
+        val semverRegex = Regex("^\\d+\\.\\d+\\.\\d+$")
         val tags = tagsOutput.lines().filter { semverRegex.matches(it) }
         if (tags.isEmpty()) {
             throw GradleException("Not Found Release Tag")
