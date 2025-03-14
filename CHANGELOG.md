@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2025-03-13
+
+### Maintenance
+
+- Force unwrapping a nullable type into a null-safe object ([#48])
+- Regular expressions to match tag name format updates ([#45])
+- Additional control over update log change actions ([#43])
+
+[#48]:https://github.com/domaframework/doma-tools-for-intellij/pull/48
+[#45]:https://github.com/domaframework/doma-tools-for-intellij/pull/45
+[#43]:https://github.com/domaframework/doma-tools-for-intellij/pull/43
+
+
 ## [0.3.1] - 2025-03-11
 
 ### Bug Fixes
@@ -78,3 +91,4 @@
 [Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/commits/main
 [0.3.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0
 [0.3.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0...0.3.1
+[0.3.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.1...0.3.2
