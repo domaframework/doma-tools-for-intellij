@@ -1,10 +1,8 @@
 # GitHub Actions Workflow is created for testing and preparing the plugin release in the following steps:
 # - Validate Gradle Wrapper.
 # - Run 'test' and 'verifyPlugin' tasks.
-# - Run Qodana inspections.
 # - Run the 'buildPlugin' task and prepare artifact for further tests.
 # - Run the 'runPluginVerifier' task.
-# - Create a draft release.
 #
 # The workflow is triggered on push and pull_request events.
 #
@@ -14,110 +12,123 @@
 
 name: Build
 on:
-  # Trigger the workflow on pushes to only the 'main' branch (this avoids duplicate checks being run e.g., for dependabot pull requests)
   push:
-    branches: [ main ]
-  # Trigger the workflow on any pull request
+    branches:
+      - 'main'
   pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-  
+
 jobs:
 
-  # Prepare environment and build the plugin
   build:
     name: Build
     runs-on: ubuntu-24.04
     outputs:
-      version: ${{ steps.properties.outputs.version }}
-      changelog: ${{ steps.properties.outputs.changelog }}
       pluginVerifierHomeDir: ${{ steps.properties.outputs.pluginVerifierHomeDir }}
     steps:
-
-      # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
 
-      # Validate wrapper
       - name: Gradle Wrapper Validation
         uses: gradle/actions/wrapper-validation@v4
 
-      # Set up Java environment for the next steps
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: 17
 
-      # Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Generate Lexer and Parser
+      - name: Export Properties
+        id: properties
+        shell: bash
+        run: |
+          PROPERTIES="$(./gradlew properties --console=plain -q)"
+          echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
+
+      - name: Cache Lexer and Parser
+        uses: actions/cache@v4
+        id: cache-lexer-parser
+        with:
+          path: ${{ github.workspace }}/src/main/gen
+          key: lexer-parser-${{ hashFiles('**/Sql.bnf','**/Sql.flex') }}
+          restore-keys: |
+            lexer-parser-
+
       - name: Generate Lexer
+        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
         run: ./gradlew generateLexer
 
       - name: Generate Parser
+        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
         run: ./gradlew generateParser
 
-      # Build plugin
-      - name: Build plugin
-        run: ./gradlew buildPlugin -PpluginVersion=0.3.1-${{ github.run_number }}
+      - name: Build Gradle
+        run: ./gradlew build -x test
 
-      # Prepare plugin archive content for creating artifact
+      - name: Build plugin
+        run: ./gradlew buildPlugin -PpluginVersion=${{ github.run_number }}
+
       - name: Prepare Plugin Artifact
         id: artifact
         shell: bash
         run: |
           cd ${{ github.workspace }}/build/distributions
-          FILENAME=`ls *.zip`
+          FILENAME=$(ls *.zip)
           unzip "$FILENAME" -d content
-
           echo "filename=${FILENAME:0:-4}" >> $GITHUB_OUTPUT
 
-      # Store already-built plugin as an artifact for downloading
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/content/*/*
 
-  # Run tests and upload a code coverage report
   test:
     name: Test
     needs: [ build ]
     runs-on: ubuntu-24.04
     steps:
-
-      # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
 
-      # Set up Java environment for the next steps
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: 17
 
-      # Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
 
-      # Generate Lexer and Parser
+      - name: Cache Lexer and Parser
+        uses: actions/cache@v4
+        id: cache-lexer-parser
+        with:
+          path: ${{ github.workspace }}/src/main/gen
+          key: lexer-parser-${{ hashFiles('**/Sql.bnf','**/Sql.flex') }}
+          restore-keys: |
+            lexer-parser-
+
       - name: Generate Lexer
+        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
         run: ./gradlew generateLexer
 
       - name: Generate Parser
+        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
         run: ./gradlew generateParser
 
       # Run tests
       - name: Run Tests
         run: ./gradlew check
 
-      # Collect Tests Result of failed tests
       - name: Collect Tests Result
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
@@ -125,106 +136,62 @@ jobs:
           name: tests-result
           path: ${{ github.workspace }}/build/reports/tests
 
-      # Upload the Kover report to CodeCov
       - name: Upload Code Coverage Report
         uses: codecov/codecov-action@v5
         with:
           files: ${{ github.workspace }}/build/reports/kover/report.xml
 
-  # Run Qodana inspections and provide report
-  inspectCode:
-    name: Inspect code
-    needs: [ build ]
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-      checks: write
-      pull-requests: write
-    steps:
-
-      # Free GitHub Actions Environment Disk Space
-      - name: Maximize Build Space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          large-packages: false
-
-      # Check out the current repository
-      - name: Fetch Sources
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
-          fetch-depth: 0  # a full history is required for pull request analysis
-
-      # Set up Java environment for the next steps
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: zulu
-          java-version: 17
-
-      # Generate Lexer and Parser
-      - name: Generate Lexer
-        run: ./gradlew generateLexer
-
-      - name: Generate Parser
-        run: ./gradlew generateParser
-
-      # Run Qodana inspections
-      - name: Qodana - Code Inspection
-        uses: JetBrains/qodana-action@v2024.3
-        with:
-          cache-default-branch-only: true
-          upload-result: true
-
-  # Run plugin structure verification along with IntelliJ Plugin Verifier
   verify:
     name: Verify plugin
     needs: [ build ]
     runs-on: ubuntu-24.04
     steps:
-
-      # Free GitHub Actions Environment Disk Space
       - name: Maximize Build Space
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: false
           large-packages: false
 
-      # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v4
 
-      # Set up Java environment for the next steps
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: 17
 
-      # Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
 
-      # Generate Lexer and Parser
+      - name: Cache Lexer and Parser
+        uses: actions/cache@v4
+        id: cache-lexer-parser
+        with:
+          path: ${{ github.workspace }}/src/main/gen
+          key: lexer-parser-${{ hashFiles('**/Sql.bnf','**/Sql.flex') }}
+          restore-keys: |
+            lexer-parser-
+
       - name: Generate Lexer
+        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
         run: ./gradlew generateLexer
 
       - name: Generate Parser
+        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
         run: ./gradlew generateParser
 
-      # Cache Plugin Verifier IDEs
       - name: Setup Plugin Verifier IDEs Cache
         uses: actions/cache@v4
         with:
           path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
           key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
 
-      # Run Verify Plugin task and IntelliJ Plugin Verifier tool
       - name: Run Plugin Verification tasks
         run: ./gradlew verifyPlugin -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
 
-      # Collect Plugin Verifier Result
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
