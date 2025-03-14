@@ -53,6 +53,8 @@ jobs:
       # Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
 
       - name: Run Gradle updateChangelog
         id: updateChangelog
@@ -82,12 +84,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if ${{ env.EXIST_CHANGELOG == 'false' }} ; then
-            gh label create "$LABEL" \
-              --description "Pull requests with release changelog update" \
-              --force \
-              || true
-          
+          if ${{ env.EXIST_CHANGELOG == 'false' }} ; then          
             gh pr create \
               --title "Changelog update - \`$NEW_VERSION\`" \
               --body "Current pull request contains patched \`CHANGELOG.md\` for the \`$NEW_VERSION\` version.Please merge this Pull Request once you have completed all the changes you want included in the latest version." \
