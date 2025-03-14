@@ -1,5 +1,5 @@
 # Doma Tools for IntelliJ
-[![Current Release](https://img.shields.io/badge/release-0.3.1-orange.svg?style=flat-square)](https://plugins.jetbrains.com/plugin/26701-doma-tools)
+[![Current Release](https://img.shields.io/badge/release-Marketplace-orange.svg?style=flat-square)](https://plugins.jetbrains.com/plugin/26701-doma-tools)
 [![Build](https://github.com/domaframework/doma-tools-for-intellij/actions/workflows/build.yml/badge.svg?branch=main&event=push)](https://github.com/domaframework/doma-tools-for-intellij/actions/workflows/build.yml)
 [![Release](https://github.com/domaframework/doma-tools-for-intellij/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/domaframework/doma-tools-for-intellij/actions/workflows/release.yml)
 
