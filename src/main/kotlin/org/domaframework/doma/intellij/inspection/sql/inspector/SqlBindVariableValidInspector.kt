@@ -256,6 +256,7 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
             private fun isLiteralOrStatic(targetElement: PsiElement): Boolean =
                 (
                     targetElement.firstChild?.elementType == SqlTypes.EL_STRING ||
+                        targetElement.firstChild?.elementType == SqlTypes.EL_CHAR ||
                         targetElement.firstChild?.elementType == SqlTypes.EL_NUMBER ||
                         targetElement.firstChild?.elementType == SqlTypes.EL_NULL ||
                         targetElement.firstChild?.elementType == SqlTypes.EL_BOOLEAN ||
