@@ -50,9 +50,9 @@ class SqlElFunctionCallBlock(
         return blocks
     }
 
-    override fun getBlock(child: ASTNode): AbstractBlock =
+    override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
-            SqlTypes.EL_AT_SIGN ->
+            SqlTypes.AT_SIGN ->
                 SqlElAtSignBlock(child, wrap, alignment, createSpacingBuilder(), spacingBuilder)
 
             SqlTypes.EL_IDENTIFIER ->

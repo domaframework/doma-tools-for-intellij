@@ -31,7 +31,7 @@ fun PsiElement.findSelfBlocks(): List<PsiElement> {
     var elms = emptyList<PsiElement>()
     for (it in this.prevLeafs) {
         elms = elms.plus(it)
-        if (!it.isNotWhiteSpace() || it.elementType == SqlTypes.EL_AT_SIGN) break
+        if (!it.isNotWhiteSpace() || it.elementType == SqlTypes.AT_SIGN) break
     }
 
     elms

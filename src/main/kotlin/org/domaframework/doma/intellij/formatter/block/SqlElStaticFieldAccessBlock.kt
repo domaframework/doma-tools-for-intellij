@@ -21,7 +21,6 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
-import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.psi.SqlElClass
@@ -40,9 +39,9 @@ class SqlElStaticFieldAccessBlock(
         customSpacingBuilder,
         spacingBuilder,
     ) {
-    override fun getBlock(child: ASTNode): AbstractBlock =
+    override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
-            SqlTypes.EL_AT_SIGN -> {
+            SqlTypes.AT_SIGN -> {
                 if (PsiTreeUtil.skipSiblingsBackward(
                         child.psi,
                         PsiWhiteSpace::class.java,
@@ -60,22 +59,22 @@ class SqlElStaticFieldAccessBlock(
             SqlTypes.EL_IDENTIFIER ->
                 SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder)
 
-            else -> SqlBlock(child, wrap, alignment, null, spacingBuilder)
+            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
         }
 
     override fun createSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()
             .withSpacing(
-                SqlTypes.EL_AT_SIGN,
+                SqlTypes.AT_SIGN,
                 SqlTypes.EL_CLASS,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(
-                SqlTypes.EL_AT_SIGN,
+                SqlTypes.AT_SIGN,
                 SqlTypes.EL_IDENTIFIER,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(
                 SqlTypes.EL_IDENTIFIER,
-                SqlTypes.EL_DOT,
+                SqlTypes.DOT,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(
                 SqlTypes.EL_IDENTIFIER,

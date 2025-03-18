@@ -52,13 +52,13 @@ class SqlElFieldAccessBlock(
         return blocks
     }
 
-    override fun getBlock(child: ASTNode): AbstractBlock =
+    override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
             SqlTypes.EL_PRIMARY_EXPR -> {
                 SqlElPrimaryBlock(child, wrap, alignment, spacingBuilder)
             }
 
-            SqlTypes.EL_DOT ->
+            SqlTypes.DOT ->
                 SqlElDotBlock(child, wrap, alignment, spacingBuilder)
 
             SqlTypes.EL_IDENTIFIER ->

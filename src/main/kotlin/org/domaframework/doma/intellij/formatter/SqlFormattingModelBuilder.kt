@@ -24,11 +24,13 @@ import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.formatting.WrapType
+import com.intellij.psi.TokenType
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
 
+@Suppress("ktlint:standard:no-consecutive-comments")
 class SqlFormattingModelBuilder : FormattingModelBuilder {
     val breakLineSpacing: Spacing? = Spacing.createSpacing(0, 0, 1, true, 0)
     val mergeSpacing: Spacing? = Spacing.createSpacing(0, 0, 0, false, 0)
@@ -50,8 +52,16 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
             )
     }
 
+    private fun createSpaceBuilder(settings: CodeStyleSettings): SpacingBuilder = SpacingBuilder(settings, SqlLanguage.INSTANCE)
+
     private fun createCustomSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()
+            .withSpacing(
+                null,
+                TokenType.WHITE_SPACE,
+                Spacing.createSpacing(0, 0, 0, false, 0),
+            )
+            // BlockComment Rules
             .withSpacing(
                 SqlTypes.KEYWORD,
                 SqlTypes.OTHER,
@@ -80,48 +90,51 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
                 SqlTypes.BLOCK_COMMENT,
                 SqlTypes.KEYWORD,
                 breakLineSpacing,
-            ).withSpacing(
-                SqlTypes.EL_DOT,
+            )
+            // Table And Column Rules
+            .withSpacing(
+                SqlTypes.DOT,
                 SqlTypes.OTHER,
                 mergeSpacing,
             ).withSpacing(
-                SqlTypes.WORD,
-                SqlTypes.EL_DOT,
+                SqlTypes.DOT,
+                SqlTypes.ASTERISK,
                 mergeSpacing,
             ).withSpacing(
                 SqlTypes.WORD,
+                SqlTypes.DOT,
+                mergeSpacing,
+            )
+            // WORD And OTHER Rules
+            .withSpacing(
+                SqlTypes.WORD,
                 SqlTypes.WORD,
                 normalSpacing,
             ).withSpacing(
                 SqlTypes.OTHER,
-                SqlTypes.OTHER,
-                normalSpacing,
-            ).withSpacing(
-                SqlTypes.WORD,
-                SqlTypes.EL_COMMA,
-                breakLineSpacing,
-            ).withSpacing(
-                SqlTypes.OTHER,
-                SqlTypes.EL_COMMA,
-                breakLineSpacing,
-            ).withSpacing(
-                SqlTypes.EL_COMMA,
-                SqlTypes.WORD,
-                normalSpacing,
-            ).withSpacing(
-                SqlTypes.EL_COMMA,
                 SqlTypes.OTHER,
                 normalSpacing,
             )
-
-    private fun createSpaceBuilder(settings: CodeStyleSettings): SpacingBuilder =
-        SpacingBuilder(settings, SqlLanguage.INSTANCE)
-            .before(SqlTypes.BLOCK_COMMENT_START)
-            .blankLines(1)
-            .after(SqlTypes.BLOCK_COMMENT_END)
-            .blankLines(1)
-            .before(SqlTypes.LINE_COMMENT)
-            .blankLines(1)
-            .before(SqlTypes.KEYWORD)
-            .blankLines(1)
+            // COMMA Rules
+            .withSpacing(
+                SqlTypes.WORD,
+                SqlTypes.COMMA,
+                breakLineSpacing,
+            ).withSpacing(
+                SqlTypes.OTHER,
+                SqlTypes.COMMA,
+                breakLineSpacing,
+            ).withSpacing(
+                SqlTypes.ASTERISK,
+                SqlTypes.COMMA,
+                breakLineSpacing,
+            ).withSpacing(
+                SqlTypes.COMMA,
+                SqlTypes.WORD,
+                normalSpacing,
+            ).withSpacing(
+                SqlTypes.COMMA,
+                SqlTypes.OTHER,
+                normalSpacing,
+            )
 }

@@ -51,10 +51,10 @@ class SqlElBlockCommentBlock(
         return blocks
     }
 
-    override fun getBlock(child: ASTNode): AbstractBlock =
+    override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
 //            is SqlElGeExpr, is SqlElLeExpr, is SqlElGtExpr, is SqlElLtExpr, is SqlElEqExpr, is SqlElNeExpr ->
-//                SqlElOperationBlock(child, wrap, alignment, spacingBuilder)
+//                SqlOperationBlock(child, wrap, alignment, spacingBuilder)
 
             SqlTypes.EL_FIELD_ACCESS_EXPR ->
                 SqlElFieldAccessBlock(child, wrap, alignment, createFieldAccessSpacingBuilder(), spacingBuilder)
@@ -75,15 +75,15 @@ class SqlElBlockCommentBlock(
         SqlCustomSpacingBuilder()
             .withSpacing(
                 SqlTypes.EL_PRIMARY_EXPR,
-                SqlTypes.EL_DOT,
+                SqlTypes.DOT,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(
-                SqlTypes.EL_DOT,
+                SqlTypes.DOT,
                 SqlTypes.EL_IDENTIFIER,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(
                 SqlTypes.EL_IDENTIFIER,
-                SqlTypes.EL_DOT,
+                SqlTypes.DOT,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(
                 SqlTypes.EL_IDENTIFIER,
@@ -94,16 +94,16 @@ class SqlElBlockCommentBlock(
     private fun createStaticFieldSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()
             .withSpacing(
-                SqlTypes.EL_AT_SIGN,
+                SqlTypes.AT_SIGN,
                 SqlTypes.EL_CLASS,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(
-                SqlTypes.EL_AT_SIGN,
+                SqlTypes.AT_SIGN,
                 SqlTypes.EL_IDENTIFIER,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(
                 SqlTypes.EL_IDENTIFIER,
-                SqlTypes.EL_DOT,
+                SqlTypes.DOT,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(
                 SqlTypes.EL_IDENTIFIER,

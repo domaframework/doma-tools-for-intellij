@@ -80,7 +80,7 @@ class StaticDirectiveHandler(
                         CompletionSuggest(fields ?: emptyList(), methods ?: emptyList())
                     }
                 }
-        } else if (element.prevSibling?.elementType == SqlTypes.EL_AT_SIGN) {
+        } else if (element.prevSibling?.elementType == SqlTypes.AT_SIGN) {
             // Built-in function completion
             handleResult =
                 builtInDirectiveHandler(element, result) { bind ->

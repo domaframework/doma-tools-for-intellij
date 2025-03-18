@@ -16,20 +16,37 @@
 package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.Block
+import com.intellij.formatting.Indent
+import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
+import com.intellij.psi.formatter.common.AbstractBlock
 
-class SqlElOperationBlock(
+class SqlWhitespaceBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
+    val prevNode: SqlBlock?,
     spacingBuilder: SpacingBuilder,
-) : SqlElSymbolBlock(
+) : SqlBlock(
         node,
         wrap,
         alignment,
+        null,
         spacingBuilder,
     ) {
+    var nextNode: SqlBlock? = null
+
+    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
+
+    override fun getIndent(): Indent? = Indent.getNoneIndent()
+
     override fun isLeaf(): Boolean = true
+
+    override fun getSpacing(
+        child1: Block?,
+        child2: Block,
+    ): Spacing? = spacingBuilder.getSpacing(this, child1, child2)
 }

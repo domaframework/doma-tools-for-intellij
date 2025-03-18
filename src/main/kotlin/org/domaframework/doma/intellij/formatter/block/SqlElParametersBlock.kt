@@ -19,7 +19,6 @@ import com.intellij.formatting.Alignment
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.psi.SqlTypes
 
@@ -36,21 +35,21 @@ class SqlElParametersBlock(
         customSpacingBuilder,
         spacingBuilder,
     ) {
-    override fun getBlock(child: ASTNode): AbstractBlock =
+    override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
-            SqlTypes.EL_LEFT_PAREN ->
+            SqlTypes.LEFT_PAREN ->
                 SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
 
             SqlTypes.EL_PRIMARY_EXPR ->
                 SqlElPrimaryBlock(child, wrap, alignment, spacingBuilder)
 
-            SqlTypes.EL_COMMA ->
+            SqlTypes.COMMA ->
                 SqlElCommaBlock(child, wrap, alignment, spacingBuilder)
 
-            SqlTypes.EL_RIGHT_PAREN ->
+            SqlTypes.RIGHT_PAREN ->
                 SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
 
-            else -> SqlBlock(child, wrap, alignment, null, spacingBuilder)
+            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
         }
 
     override fun isLeaf(): Boolean = false

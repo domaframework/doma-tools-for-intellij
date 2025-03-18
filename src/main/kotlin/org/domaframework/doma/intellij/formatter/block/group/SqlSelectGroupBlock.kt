@@ -13,39 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block
+package org.domaframework.doma.intellij.formatter.block.group
 
 import com.intellij.formatting.Alignment
-import com.intellij.formatting.Indent
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
-/**
- * 改行、インデント付ける
- */
-class SqlTopKeywordBlock(
+class SqlSelectGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
-    private val indentLevel: Int,
+    val parentGroupNode: SqlBlock?,
     spacingBuilder: SpacingBuilder,
-) : SqlKeywordBlock(
+) : SqlGroupBlock(
         node,
         wrap,
         alignment,
+        parentGroupNode,
         spacingBuilder,
     ) {
-    override fun getIndent(): Indent? {
-        if (indentLevel <= 0) {
-            return Indent.getNoneIndent()
-        }
+    override val indentLevel = 1
+    override var searchKeywordLevel = 1
 
-        val spaces = "  "
-        val indentBuilder = StringBuilder()
-        for (level in 0..<indentLevel) {
-            indentBuilder.append(spaces)
+    override fun isLoopContinuation(child: ASTNode): Boolean = !topLevelKeywords.contains(child.text)
+
+    override fun getIndentCount(
+        parentIndent: Int,
+        parentTextLen: Int,
+    ): Int =
+        if (parentGroupNode is SqlSubGroupBlock) {
+            val parentTextLen = parentGroupNode.node.text.length
+            parentIndent + parentTextLen + 1
+        } else {
+            parentIndent + 2
         }
-        return Indent.getSpaceIndent(indentBuilder.length)
-    }
 }

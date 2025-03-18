@@ -16,19 +16,15 @@
 package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.formatting.Alignment
-import com.intellij.formatting.Block
-import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 
-class SqlElAtSignBlock(
+class SqlGroupTopKeywordBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
-    private val customSpacingBuilder: SqlCustomSpacingBuilder?,
     spacingBuilder: SpacingBuilder,
 ) : SqlBlock(
         node,
@@ -39,12 +35,5 @@ class SqlElAtSignBlock(
     ) {
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun getSpacing(
-        child1: Block?,
-        child2: Block,
-    ): Spacing? = customSpacingBuilder?.getSpacing(this, child1, child2) ?: spacingBuilder.getSpacing(this, child1, child2)
-
-    override fun isLeaf(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isLeaf(): Boolean = true
 }

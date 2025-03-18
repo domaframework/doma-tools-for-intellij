@@ -27,11 +27,13 @@ class SqlElClassRightBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
-    private val spacingBuilder: SpacingBuilder,
-) : AbstractBlock(
+    spacingBuilder: SpacingBuilder,
+) : SqlBlock(
         node,
         wrap,
         alignment,
+        null,
+        spacingBuilder,
     ) {
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 

@@ -52,21 +52,26 @@ class SqlElClassBlock(
         return blocks
     }
 
-    override fun getBlock(child: ASTNode): AbstractBlock =
+    override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
             SqlTypes.EL_IDENTIFIER ->
                 SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder)
-            SqlTypes.EL_DOT ->
+
+            SqlTypes.DOT ->
                 SqlElDotBlock(child, wrap, alignment, spacingBuilder)
-            else -> SqlBlock(child, wrap, alignment, null, spacingBuilder)
+
+            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
         }
 
     override fun getSpacing(
         child1: Block?,
         child2: Block,
-    ): Spacing? = customSpacingBuilder?.getSpacing(this, child1, child2) ?: spacingBuilder.getSpacing(this, child1, child2)
+    ): Spacing? =
+        customSpacingBuilder?.getSpacing(this, child1, child2) ?: spacingBuilder.getSpacing(
+            this,
+            child1,
+            child2,
+        )
 
-    override fun isLeaf(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isLeaf(): Boolean = false
 }
