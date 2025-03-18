@@ -16,6 +16,8 @@ import org.seasar.doma.Update;
 import org.seasar.doma.jdbc.Config;
 import org.seasar.doma.jdbc.PreparedSql;
 import org.seasar.doma.jdbc.SelectOptions;
+import org.seasar.doma.SelectType;
+import java.util.stream.Collector;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -38,5 +40,12 @@ interface DaoMethodVariableInspectionTestDao {
 
   @Select
   Project selectOptionDoesNotCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,String searchName,SelectOptions options);
+
+  @Select(strategy = SelectType.COLLECT)
+  Project collectDoesNotCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,Integer id,Collector<Project, ?, Project> collector);
+
+  @Select
+  Project collectDoesCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,String searchName,Collector<Project, ?, Project> <error descr="There are unused parameters in the SQL [collector]">collector</error>);
+
 
 }
