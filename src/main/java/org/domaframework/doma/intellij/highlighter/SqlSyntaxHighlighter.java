@@ -33,26 +33,27 @@ public class SqlSyntaxHighlighter extends SyntaxHighlighterBase {
   private static final Map<IElementType, TextAttributesKey> map = new HashMap<>(64);
 
   public static final TextAttributesKey KEYWORD =
-      createTextAttributesKey("SQL_KEYWORD", DefaultLanguageHighlighterColors.METADATA);
+      createTextAttributesKey("DOMA_SQL_KEYWORD", DefaultLanguageHighlighterColors.METADATA);
   public static final TextAttributesKey WORD =
-      createTextAttributesKey("SQL_WORD", DefaultLanguageHighlighterColors.IDENTIFIER);
+      createTextAttributesKey("DOMA_SQL_WORD", DefaultLanguageHighlighterColors.IDENTIFIER);
   public static final TextAttributesKey STRING =
-      createTextAttributesKey("SQL_STRING", DefaultLanguageHighlighterColors.STRING);
+      createTextAttributesKey("DOMA_SQL_STRING", DefaultLanguageHighlighterColors.STRING);
   public static final TextAttributesKey NUMBER =
-      createTextAttributesKey("SQL_NUMBER", DefaultLanguageHighlighterColors.NUMBER);
+      createTextAttributesKey("DOMA_SQL_NUMBER", DefaultLanguageHighlighterColors.NUMBER);
   public static final TextAttributesKey OTHER =
-      createTextAttributesKey("SQL_OTHER", DefaultLanguageHighlighterColors.IDENTIFIER);
+      createTextAttributesKey("DOMA_SQL_OTHER", DefaultLanguageHighlighterColors.IDENTIFIER);
   public static final TextAttributesKey BLOCK_COMMENT_START =
       createTextAttributesKey(
-          "SQL_BLOCK_COMMENT_START", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
+          "DOMA_SQL_BLOCK_COMMENT_START", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
   public static final TextAttributesKey BLOCK_COMMENT_END =
       createTextAttributesKey(
-          "SQL_BLOCK_COMMENT_END", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
+          "DOMA_SQL_BLOCK_COMMENT_END", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
   public static final TextAttributesKey BLOCK_COMMENT_CONTENT =
       createTextAttributesKey(
-          "SQL_BLOCK_COMMENT_CONTENT", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
+          "DOMA_SQL_BLOCK_COMMENT_CONTENT", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
   public static final TextAttributesKey LINE_COMMENT =
-      createTextAttributesKey("SQL_LINE_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
+      createTextAttributesKey(
+          "DOMA_SQL_LINE_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
 
   public static final TextAttributesKey EL_IDENTIFIER =
       createTextAttributesKey(
