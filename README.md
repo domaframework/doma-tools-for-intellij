@@ -1,13 +1,17 @@
 # Doma Tools for IntelliJ
+[![Current Release](https://img.shields.io/badge/release-Marketplace-orange.svg?style=flat-square)](https://plugins.jetbrains.com/plugin/26701-doma-tools)
+[![Build](https://github.com/domaframework/doma-tools-for-intellij/actions/workflows/build.yml/badge.svg?branch=main&event=push)](https://github.com/domaframework/doma-tools-for-intellij/actions/workflows/build.yml)
+[![Release](https://github.com/domaframework/doma-tools-for-intellij/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/domaframework/doma-tools-for-intellij/actions/workflows/release.yml)
 
 <!-- Plugin description -->
-“Doma Tools” is a plugin that supports the development of Doma-based projects in IntelliJ.
+“Doma Tools” is a plugin that supports the development of [Doma](https://github.com/domaframework/doma) based projects in IntelliJ.
 
 It checks associations between Dao and SQL, and offers coding support features for Doma syntax,
 such as generating SQL template files, navigating between files, and inspections to ensure the validity of bind variables.
+
 <!-- Plugin description end -->
 
-## Features
+# Features
 
 ## Actions
 The plugin adds some actions, gutter icons.
@@ -15,15 +19,15 @@ Shortcut keys can be used for actions
 
 ![action.png](images/action.png)
 
-- **Jump to SQL(Alt+D)**
+- **Jump to SQL**
   - Jump to action from Dao to SQL
   - You can also jump to the SQL file from the gutter icon that is displayed together.
-- **Generate SQL(Ctrl+Alt+G)**
+- **Generate SQL**
   - Generate SQL file
-- **Jump to Dao(Alt+D)**
+- **Jump to Dao**
   - Jump to action from SQL to Dao
   - You can also jump to the Dao Method from the gutter icon that is displayed together.
-- **Jump to Declaration(Alt+E)**
+- **Jump to Declaration**
   - Jump to action from SQL bind variable to declaration location
   - ex: Dao arguments, fields, method declaration
 
