@@ -16,7 +16,7 @@
   <appender name="DOMATOOLS" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_FILE_BASE_DIR:-/domatoolslog}/${LOG_FILE_BASENAME:-doma-tools}-${LOG_FILE_VERSION:-0.3.1}.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${LOG_FILE_BASENAME:-doma-tools}-${LOG_FILE_VERSION:-0.3.1}-%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>${LOG_FILE_BASE_DIR:-/domatoolslog}/${LOG_FILE_BASENAME:-doma-tools}-${LOG_FILE_VERSION:-0.3.1}-%d{yyyy-MM-dd}.log</fileNamePattern>
       <maxHistory>30</maxHistory>
     </rollingPolicy>
     <encoder>
