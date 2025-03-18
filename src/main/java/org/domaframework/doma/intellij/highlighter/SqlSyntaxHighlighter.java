@@ -156,19 +156,19 @@ public class SqlSyntaxHighlighter extends SyntaxHighlighterBase {
     map.put(SqlTypes.EL_PARSER_LEVEL_COMMENT, EL_PARSER_LEVEL_COMMENT);
     map.put(SqlTypes.EL_FOR, EL_FOR);
     map.put(SqlTypes.EL_END, EL_END);
-    map.put(SqlTypes.EL_HASH, EL_HASH);
-    map.put(SqlTypes.EL_CARET, EL_CARET);
+    map.put(SqlTypes.HASH, EL_HASH);
+    map.put(SqlTypes.CARET, EL_CARET);
 
-    map.put(SqlTypes.EL_DOT, EL_DOT);
-    map.put(SqlTypes.EL_COMMA, EL_COMMA);
-    map.put(SqlTypes.EL_AT_SIGN, EL_AT_SIGN);
-    map.put(SqlTypes.EL_LEFT_PAREN, EL_LEFT_PAREN);
-    map.put(SqlTypes.EL_RIGHT_PAREN, EL_RIGHT_PAREN);
+    map.put(SqlTypes.DOT, EL_DOT);
+    map.put(SqlTypes.COMMA, EL_COMMA);
+    map.put(SqlTypes.AT_SIGN, EL_AT_SIGN);
+    map.put(SqlTypes.LEFT_PAREN, EL_LEFT_PAREN);
+    map.put(SqlTypes.RIGHT_PAREN, EL_RIGHT_PAREN);
 
     map.put(SqlTypes.EL_PLUS, EL_PLUS);
     map.put(SqlTypes.EL_MINUS, EL_MINUS);
-    map.put(SqlTypes.EL_ASTERISK, EL_ASTERISK);
-    map.put(SqlTypes.EL_SLASH, EL_SLASH);
+    map.put(SqlTypes.ASTERISK, EL_ASTERISK);
+    map.put(SqlTypes.SLASH, EL_SLASH);
     map.put(SqlTypes.EL_PERCENT, EL_PERCENT);
 
     map.put(SqlTypes.EL_EQ, EL_EQ);
@@ -180,12 +180,12 @@ public class SqlSyntaxHighlighter extends SyntaxHighlighterBase {
     map.put(SqlTypes.EL_NOT, EL_NOT);
     map.put(SqlTypes.EL_AND, EL_AND);
     map.put(SqlTypes.EL_OR, EL_OR);
-    map.put(SqlTypes.EL_SEPARATOR, EL_SEPARATOR);
+    map.put(SqlTypes.SEPARATOR, EL_SEPARATOR);
 
     map.put(SqlTypes.EL_NEW, EL_NEW);
 
     map.put(SqlTypes.EL_NULL, EL_NULL);
-    map.put(SqlTypes.EL_BOOLEAN, EL_BOOLEAN);
+    map.put(SqlTypes.BOOLEAN, EL_BOOLEAN);
     map.put(SqlTypes.EL_STRING, EL_STRING);
     map.put(SqlTypes.EL_CHAR, EL_CHAR);
     map.put(SqlTypes.EL_NUMBER, EL_NUMBER);

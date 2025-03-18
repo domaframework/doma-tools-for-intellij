@@ -33,17 +33,17 @@
     EL_POPULATE = "%populate"
     EL_PARSER_LEVEL_COMMENT = "%!"
     EL_END = "%end"
-    EL_HASH = "#"
-    EL_CARET = "^"
-    EL_SEPARATOR = ":"
-    EL_NULL = "null"
-    EL_BOOLEAN = "regexp:(true|false)"
-    EL_DOT = "."
-    EL_PLUS = "+"
-    EL_MINUS = "-"
-    EL_ASTERISK = "*"
-    EL_SLASH = "/"
-    EL_PERCENT = "%"
+    HASH = "#"
+    CARET = "^"
+    SEPARATOR = ":"
+    NULL = "null"
+    BOOLEAN = "regexp:(true|false)"
+    DOT = "."
+    PLUS = "+"
+    MINUS = "-"
+    ASTERISK = "*"
+    SLASH = "/"
+    PERCENT = "%"
     EL_EQ = "=="
     EL_NE = "!="
     EL_LT = "<"
@@ -53,10 +53,10 @@
     EL_NOT = "!"
     EL_AND = "&&"
     EL_OR = "||"
-    EL_COMMA = ","
-    EL_LEFT_PAREN = "("
-    EL_RIGHT_PAREN = ")"
-    EL_AT_SIGN = "@"
+    COMMA = ","
+    LEFT_PAREN = "("
+    RIGHT_PAREN = ")"
+    AT_SIGN = "@"
     EL_NEW = "new"
     EL_NUMBER = "regexp:\d+(L|(\.\d+)?[FDB])?"
     EL_STRING = "regexp:\"([^\"\\]|\\\"|\\)*\""
@@ -74,7 +74,23 @@
 sql_file ::= content *
 
 private content ::= !<<eof>> item {pin=1 recoverWhile=content_recover}
-private item ::= (comment | literal | word | OTHER)
+private item ::= (comment | literal | word |
+ OTHER |
+ DOT |
+ COMMA |
+ ASTERISK |
+ LEFT_PAREN |
+ RIGHT_PAREN |
+ PLUS |
+ MINUS |
+ SLASH |
+ PERCENT |
+ LE |
+ GE |
+ LT |
+ GT |
+ NULL |
+ BOOLEAN )
 private comment ::= (block_comment | LINE_COMMENT)
 private literal ::= (STRING | NUMBER)
 private word ::= (KEYWORD | WORD)
@@ -149,6 +165,6 @@ el_parameters ::= "(" (el_expr ("," el_expr)*)? ")" {pin=1}
 
 // primary
 el_primary_expr ::= el_literal_expr | el_id_expr | el_paren_expr
-private el_literal_expr ::= EL_NULL | EL_BOOLEAN | (EL_PLUS | EL_MINUS)? EL_NUMBER | EL_STRING | EL_CHAR
+private el_literal_expr ::= EL_NULL | BOOLEAN | (EL_PLUS | EL_MINUS)? EL_NUMBER | EL_STRING | EL_CHAR
 private el_id_expr ::= EL_IDENTIFIER
 private el_paren_expr ::= "(" el_expr ")" {pin=1}

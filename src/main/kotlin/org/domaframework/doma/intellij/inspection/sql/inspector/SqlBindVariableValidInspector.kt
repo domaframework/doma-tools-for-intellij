@@ -142,9 +142,9 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
                     PsiTreeUtil
                         .getChildrenOfTypeAsList(element, PsiElement::class.java)
                         .filter {
-                            it.elementType != SqlTypes.EL_DOT &&
-                                it.elementType != SqlTypes.EL_LEFT_PAREN &&
-                                it.elementType != SqlTypes.EL_RIGHT_PAREN &&
+                            it.elementType != SqlTypes.DOT &&
+                                it.elementType != SqlTypes.LEFT_PAREN &&
+                                it.elementType != SqlTypes.RIGHT_PAREN &&
                                 it.elementType != SqlTypes.EL_PARAMETERS
                         }.toTypedArray()
                 val topElm = blockElement.firstOrNull() as SqlElPrimaryExpr
@@ -259,7 +259,7 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
                         targetElement.firstChild?.elementType == SqlTypes.EL_CHAR ||
                         targetElement.firstChild?.elementType == SqlTypes.EL_NUMBER ||
                         targetElement.firstChild?.elementType == SqlTypes.EL_NULL ||
-                        targetElement.firstChild?.elementType == SqlTypes.EL_BOOLEAN ||
+                        targetElement.firstChild?.elementType == SqlTypes.BOOLEAN ||
                         targetElement.firstChild is SqlElNewExpr ||
                         targetElement.text.startsWith("@")
                 )
