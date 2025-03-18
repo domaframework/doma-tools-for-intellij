@@ -7,6 +7,8 @@ INSERT INTO employee_project (employee_name, department, project)
              FROM
                  employee e1
                  JOIN user u1 ON e1.employee_id = u1.user_id
+                              AND e1.user_tag = /*# 't' */'a'
+                              AND e1.user_dept = /*# "development" */'dev'
                   -- Access to parent private field
                    WHERE u1.user_name = /* employee.userName.toLowerCase() */'name'
                    -- Access to non-existent parent field
