@@ -48,3 +48,9 @@ val PsiParameter.isSelectOption: Boolean
         (this.typeElement?.type as? PsiClassReferenceType)
             ?.resolve()
             ?.qualifiedName == "org.seasar.doma.jdbc.SelectOptions"
+
+val PsiParameter.isCollector: Boolean
+    get() =
+        (this.typeElement?.type as? PsiClassReferenceType)
+            ?.resolve()
+            ?.qualifiedName == "java.util.stream.Collector"

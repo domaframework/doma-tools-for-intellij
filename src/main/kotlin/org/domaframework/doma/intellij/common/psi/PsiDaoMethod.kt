@@ -92,6 +92,11 @@ class PsiDaoMethod(
 
     private fun getSqlAnnotation(): PsiAnnotation? = DomaAnnotationType.Sql.getPsiAnnotation(psiMethod)
 
+    fun isSelectTypeCollect(): Boolean {
+        val selectAnnotation = DomaAnnotationType.Select.getPsiAnnotation(psiMethod) ?: return false
+        return daoType.isSelectTypeCollect(selectAnnotation)
+    }
+
     fun useSqlAnnotation(): Boolean = getSqlAnnotation() != null
 
     private fun setSqlFilePath() {
