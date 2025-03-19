@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2025-03-19
+
+### Bug Fixes
+
+- Add Char type to the condition as a literal ([#56])
+- Fix:Prevent log file archives from being output to IDEA installation directory ([#57])
+- Fix: Exclude java.stream.Collector type arguments from code inspection ([#58])
+- Fix: Set a unique text attribute key ([#59])
+
+### Maintenance
+
+- Action cache control and refactoring ([#49])
+- Force unwrapping a nullable type into a null-safe object ([#48])
+- Regular expressions to match tag name format updates ([#45])
+- Additional control over update log change actions ([#43])
+
+### Dependency Updates
+
+- Update dependency ch.qos.logback:logback-classic to v1.5.18 ([#60])
+
+[#56]:https://github.com/domaframework/doma-tools-for-intellij/pull/56
+[#57]:https://github.com/domaframework/doma-tools-for-intellij/pull/57
+[#58]:https://github.com/domaframework/doma-tools-for-intellij/pull/58
+[#59]:https://github.com/domaframework/doma-tools-for-intellij/pull/59
+[#49]:https://github.com/domaframework/doma-tools-for-intellij/pull/49
+[#48]:https://github.com/domaframework/doma-tools-for-intellij/pull/48
+[#45]:https://github.com/domaframework/doma-tools-for-intellij/pull/45
+[#43]:https://github.com/domaframework/doma-tools-for-intellij/pull/43
+[#60]:https://github.com/domaframework/doma-tools-for-intellij/pull/60
+
+
 ## [0.3.1] - 2025-03-11
 
 ### Bug Fixes
@@ -78,3 +109,4 @@
 [Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/commits/main
 [0.3.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0
 [0.3.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0...0.3.1
+[0.3.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.1...0.3.2
