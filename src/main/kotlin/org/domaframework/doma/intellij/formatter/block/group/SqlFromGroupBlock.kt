@@ -20,16 +20,17 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlSelectGroupBlock
 
 class SqlFromGroupBlock(
     node: ASTNode,
+    groupTopNode: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
-    private val parentGroupNode: SqlBlock?,
+    parentGroupNode: SqlBlock?,
     spacingBuilder: SpacingBuilder,
 ) : SqlGroupBlock(
         node,
+        groupTopNode,
         wrap,
         alignment,
         parentGroupNode,
@@ -44,118 +45,6 @@ class SqlFromGroupBlock(
             !subQueryKeywords.contains(childLowercaseName)
     }
 
-/**
-     override fun getBlock(child: ASTNode): SqlBlock =
-     when (child.elementType) {
-     SqlTypes.LEFT_PAREN -> {
-     SqlSubGroupBlock(
-     child,
-     wrap,
-     alignment,
-     this,
-     spacingBuilder,
-     )
-     }
-
-     SqlTypes.KEYWORD -> {
-     return when (child.text.lowercase()) {
-     "select" -> {
-     SqlSelectGroupBlock(
-     child,
-     wrap,
-     alignment,
-     this,
-     spacingBuilder,
-     )
-     }
-
-     "from" -> {
-     SqlFromGroupBlock(
-     child,
-     wrap,
-     alignment,
-     this,
-     spacingBuilder,
-     )
-     }
-
-     "where" -> {
-     SqlWhereGroupBlock(
-     child,
-     wrap,
-     alignment,
-     this,
-     spacingBuilder,
-     )
-     }
-
-     "left", "right", "inner", "outer", "join" -> {
-     SqlSubQueryGroupBlock(
-     child,
-     wrap,
-     alignment,
-     this,
-     spacingBuilder,
-     )
-     }
-
-     else -> SqlKeywordBlock(child, wrap, alignment, spacingBuilder)
-     }
-     }
-
-     else -> {
-     SqlUnknownBlock(
-     child,
-     wrap,
-     alignment,
-     spacingBuilder,
-     )
-     }
-     }
-
-     override fun getSpacing(
-     child1: Block?,
-     child2: Block,
-     ): Spacing? =
-     if (parentGroupNode != null) {
-     SqlCustomSpacingBuilder()
-     .withSpacing(
-     null,
-     SqlTypes.KEYWORD,
-     Spacing.createSpacing(0, 0, 0, false, 0),
-     ).withSpacing(
-     SqlTypes.KEYWORD,
-     SqlTypes.WORD,
-     Spacing.createSpacing(1, 1, 0, false, 0),
-     ).withSpacing(
-     SqlTypes.KEYWORD,
-     SqlTypes.ASTERISK,
-     Spacing.createSpacing(1, 1, 0, false, 0),
-     ).withSpacing(
-     SqlTypes.OTHER,
-     SqlTypes.COMMA,
-     Spacing.createSpacing(0, 0, 1, false, 0),
-     ).withSpacing(
-     SqlTypes.ASTERISK,
-     SqlTypes.COMMA,
-     Spacing.createSpacing(0, 0, 1, false, 0),
-     ).withSpacing(
-     SqlTypes.WORD,
-     SqlTypes.DOT,
-     Spacing.createSpacing(0, 0, 0, false, 0),
-     ).withSpacing(
-     SqlTypes.DOT,
-     SqlTypes.OTHER,
-     Spacing.createSpacing(0, 0, 0, false, 0),
-     ).withSpacing(
-     SqlTypes.DOT,
-     SqlTypes.ASTERISK,
-     Spacing.createSpacing(0, 0, 0, false, 0),
-     ).getSpacing(this, child1, child2)
-     } else {
-     spacingBuilder.getSpacing(this, child1, child2)
-     }
-     */
     override fun getIndentCount(
         parentIndent: Int,
         parentTextLen: Int,

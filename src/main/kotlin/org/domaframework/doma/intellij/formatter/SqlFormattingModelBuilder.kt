@@ -45,7 +45,7 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
                     formattingContext.node,
                     Wrap.createWrap(WrapType.NONE, false),
                     Alignment.createAlignment(),
-                    createCustomSpacingBuilder(),
+                    null, // createCustomSpacingBuilder()
                     createSpaceBuilder(codeStyleSettings),
                 ),
                 codeStyleSettings,

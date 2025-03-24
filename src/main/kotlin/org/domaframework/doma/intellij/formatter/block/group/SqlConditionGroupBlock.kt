@@ -20,22 +20,18 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlElSymbolBlock
-import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
-import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
-import org.domaframework.doma.intellij.formatter.block.SqlOtherBlock
-import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
-import org.domaframework.doma.intellij.formatter.block.SqlWordBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlConditionGroupBlock(
     node: ASTNode,
+    groupTopNode: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
-    private val parentGroupNode: SqlBlock?,
+    parentGroupNode: SqlBlock?,
     spacingBuilder: SpacingBuilder,
 ) : SqlGroupBlock(
         node,
+        groupTopNode,
         wrap,
         alignment,
         parentGroupNode,
@@ -45,59 +41,6 @@ class SqlConditionGroupBlock(
 
     override fun isLoopContinuation(child: ASTNode): Boolean =
         !someLevelKeyword.contains(child.text) && child.elementType != SqlTypes.RIGHT_PAREN
-
-    override fun getBlock(child: ASTNode): SqlBlock =
-        when (child.elementType) {
-            SqlTypes.LEFT_PAREN -> {
-                SqlSubGroupBlock(
-                    child,
-                    wrap,
-                    alignment,
-                    this,
-                    spacingBuilder,
-                )
-            }
-
-            SqlTypes.KEYWORD -> {
-                when (child.text.lowercase()) {
-                    in someLevelKeyword ->
-                        SqlConditionGroupBlock(
-                            child,
-                            wrap,
-                            alignment,
-                            this,
-                            spacingBuilder,
-                        )
-
-                    else -> SqlKeywordBlock(child, wrap, alignment, spacingBuilder)
-                }
-            }
-
-            SqlTypes.WORD -> {
-                SqlWordBlock(child, wrap, alignment, spacingBuilder)
-            }
-
-            SqlTypes.OTHER -> {
-                SqlOtherBlock(child, wrap, alignment, spacingBuilder)
-            }
-
-            SqlTypes.DOT -> {
-                SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
-            }
-
-            SqlTypes.PLUS, SqlTypes.MINUS, SqlTypes.PERCENT, SqlTypes.SLASH, SqlTypes.ASTERISK -> {
-                SqlOperationBlock(child, wrap, alignment, spacingBuilder)
-            }
-
-            else -> {
-                SqlUnknownBlock(
-                    child,
-                    wrap,
-                    alignment,
-                    spacingBuilder,
-                )
-            }
-        }
 
     override fun getIndentCount(
         parentIndent: Int,

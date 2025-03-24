@@ -23,12 +23,14 @@ import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
 class SqlSubQueryGroupBlock(
     node: ASTNode,
+    groupTopNode: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     parentGroupNode: SqlBlock?,
     spacingBuilder: SpacingBuilder,
 ) : SqlGroupBlock(
         node,
+        groupTopNode,
         wrap,
         alignment,
         parentGroupNode,
@@ -42,44 +44,6 @@ class SqlSubQueryGroupBlock(
 
     override fun isLoopContinuation(child: ASTNode): Boolean = !someLevelKeyword.contains(child.text) && isOptionalSubQuery()
 
-/**
-     override fun getBlock(child: ASTNode): SqlBlock =
-     when (child.elementType) {
-     SqlTypes.KEYWORD -> {
-     when (child.text.lowercase()) {
-     "select" ->
-     SqlSelectGroupBlock(
-     child,
-     wrap,
-     alignment,
-     this,
-     spacingBuilder,
-     )
-     "inner", "left", "right", "outer", "cross" -> {
-     keywordAllLength += child.text.length
-     SqlKeywordBlock(
-     child,
-     wrap,
-     alignment,
-     spacingBuilder,
-     )
-     }
-     else -> SqlKeywordBlock(child, wrap, alignment, spacingBuilder)
-     }
-     }
-     SqlTypes.LEFT_PAREN ->
-     SqlSubGroupBlock(
-     child,
-     wrap,
-     alignment,
-     this,
-     spacingBuilder,
-     )
-     else -> {
-     SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
-     }
-     }
-*/
     override fun getIndentCount(
         parentIndent: Int,
         parentTextLen: Int,

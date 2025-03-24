@@ -16,19 +16,25 @@
 package org.domaframework.doma.intellij.formatter.block.group
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.Block
+import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
+import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlSelectGroupBlock(
     node: ASTNode,
+    groupTopNode: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     val parentGroupNode: SqlBlock?,
     spacingBuilder: SpacingBuilder,
 ) : SqlGroupBlock(
         node,
+        groupTopNode,
         wrap,
         alignment,
         parentGroupNode,
@@ -38,6 +44,15 @@ class SqlSelectGroupBlock(
     override var searchKeywordLevel = 1
 
     override fun isLoopContinuation(child: ASTNode): Boolean = !topLevelKeywords.contains(child.text)
+
+    override fun getSpacing(
+        child1: Block?,
+        child2: Block,
+    ): Spacing? {
+        SqlCustomSpacingBuilder()
+            .withSpacing(null, SqlTypes.KEYWORD, Spacing.createSpacing(0, 0, 1, false, 0))
+        return super.getSpacing(child1, child2)
+    }
 
     override fun getIndentCount(
         parentIndent: Int,

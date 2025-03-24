@@ -19,6 +19,7 @@ import com.intellij.formatting.Alignment
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
+import com.intellij.psi.formatter.common.AbstractBlock
 
 open class SqlOtherBlock(
     node: ASTNode,
@@ -32,5 +33,7 @@ open class SqlOtherBlock(
         null,
         spacingBuilder,
     ) {
+    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
+
     override fun isLeaf(): Boolean = true
 }

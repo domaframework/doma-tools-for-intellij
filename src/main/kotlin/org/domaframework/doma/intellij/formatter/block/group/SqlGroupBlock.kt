@@ -20,8 +20,12 @@ import com.intellij.formatting.Indent
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
+import com.intellij.lang.tree.util.children
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
+import com.intellij.psi.impl.source.tree.CompositeElement
+import org.domaframework.doma.intellij.formatter.PseudoASTBuilder
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlGroupTopKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
@@ -29,6 +33,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes
 
 abstract class SqlGroupBlock(
     node: ASTNode,
+    internal val groupTopNode: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     private val parentGroupNode: SqlBlock?,
@@ -49,13 +54,14 @@ abstract class SqlGroupBlock(
     open fun isLoopContinuation(child: ASTNode): Boolean = true
 
     override fun buildChildren(): MutableList<AbstractBlock> {
-        blocks.add(SqlGroupTopKeywordBlock(node, wrap, alignment, spacingBuilder))
+        val parentNode = CompositeElement(groupTopNode.elementType)
+        blocks.add(SqlGroupTopKeywordBlock(groupTopNode, groupTopNode, wrap, alignment, spacingBuilder))
         searchKeywordLevelHistory.add(indentLevel)
 
-        var child = node.treeNext
+        var child = groupTopNode.treeNext
         var nonWhiteSpaceChild: SqlBlock? = null
 
-        println("-----------------${node.text}-----------------")
+        println("----------------- Group: ${groupTopNode.text}-----------------")
         if (parentGroupNode != null && parentGroupNode.indentLevel > 0) {
             println("Parent: ${parentGroupNode.node.text}")
         }
@@ -80,10 +86,29 @@ abstract class SqlGroupBlock(
             }
             child = child.treeNext
         }
-        println("=========Build Block: ${this.node.text}")
+        println("Build Block: ${this.groupTopNode.text}=========")
         println("Blocks Size: ${blocks.size}")
-        println("Blocks: ${blocks.map { it.node.text }}")
+        println("Blocks: ${blocks.map { " ${it.node.textRange}" }}")
         println("=========Build Block: END")
+
+        val project = node.psi.project
+        WriteCommandAction.runWriteCommandAction(project) {
+            parentNode.addChildren(
+                groupTopNode,
+                null,
+                null,
+            )
+            this.myNode =
+                blocks.map {
+                    parentNode.addChildren(
+                        PseudoASTBuilder.createLeafNode(it.node.elementType, it.node.text),
+                        null,
+                        null,
+                    )
+                } as ASTNode
+        }
+        println("New Block: ${this.myNode.text}")
+        println("Children: ${this.myNode.children().map { it.text }}")
         return blocks.map { it }.toMutableList()
     }
 
@@ -101,13 +126,21 @@ abstract class SqlGroupBlock(
                         searchKeywordLevelHistory.size,
                     ).clear()
                 println("hit RIGHT_PAREN: $searchKeywordLevelHistory")
+                pendingCommentBlocks.clear()
             } else {
-                blockSkip = true
-                endBlock = true
+                if (!searchKeywordLevelHistory.contains(3)) {
+                    blockSkip = true
+                    endBlock = true
+                }
             }
             return
         }
-        val lastLevel = searchKeywordLevelHistory.last()
+        val lastLevel =
+            if (searchKeywordLevelHistory.isNotEmpty()) {
+                searchKeywordLevelHistory.last()
+            } else {
+                indentLevel
+            }
         if (childBlock is SqlGroupBlock) {
             val childIndentLevel = childBlock.indentLevel
             println("Hit Group Block: Lv:  $childIndentLevel ->  ${child.text}")
@@ -143,7 +176,7 @@ abstract class SqlGroupBlock(
     }
 
     override fun getIndent(): Indent? {
-        println("Node getIndent : ${node.text}")
+        println("Node getIndent : ${groupTopNode.text}")
         if (parentGroupNode == null || parentGroupNode.indentLevel == 0) return Indent.getNoneIndent()
         val parentIndent = parentGroupNode.indentCount
         val parentTextLen = parentGroupNode.node.text.length
@@ -153,7 +186,7 @@ abstract class SqlGroupBlock(
 
         indentCount = getIndentCount(parentIndent, parentTextLen)
 
-        println("Node Indent: ${node.text} $indentCount")
+        println("Node Indent: ${groupTopNode.text} $indentCount")
         return Indent.getSpaceIndent(indentCount)
     }
 

@@ -24,10 +24,12 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
+import org.domaframework.doma.intellij.formatter.block.group.SqlAsGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlSelectGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlWhereGroupBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 
@@ -52,9 +54,11 @@ open class SqlBlock(
     protected open var searchKeywordLevel = 0
 
     protected open val searchKeywordLevelHistory = mutableListOf<Int>()
-    private val pendingCommentBlocks = mutableListOf<SqlBlock>()
+    protected open val pendingCommentBlocks = mutableListOf<SqlBlock>()
 
     public override fun buildChildren(): MutableList<AbstractBlock> {
+        if (isLeaf) return mutableListOf()
+
         var child = node.firstChildNode
         var nonWhiteSpaceChild: SqlBlock? = null
         searchKeywordLevelHistory.add(0)
@@ -81,12 +85,11 @@ open class SqlBlock(
         }
         blocks.addAll(pendingCommentBlocks)
 
-        if (!isLeaf) {
-            println("=========Build Block: Top")
-            println("Blocks Size: ${blocks.size}")
-            println("Blocks: ${blocks.map { it.node.text }}")
-            println("=========Build Block: END")
-        }
+        println("=========Build Block: Top")
+        println("Blocks Size: ${blocks.size}")
+        println("Blocks: ${blocks.map { "${it.node.textRange}" }}")
+        println("=========Build Block: END")
+
         return blocks
     }
 
@@ -113,7 +116,6 @@ open class SqlBlock(
         when (childBlock) {
             is SqlGroupBlock -> {
                 println("Hit Group Blocks: ${child.text} $childIndentLevel")
-                // 最後のブロックより同等以上のブロックが来た場合
                 if (lastIndentLevel >= childIndentLevel) {
                     when (lastIndentLevel) {
                         3 -> {
@@ -136,17 +138,19 @@ open class SqlBlock(
                                 blocks.addAll(pendingCommentBlocks)
                                 pendingCommentBlocks.clear()
                                 blocks.add(childBlock)
+                                println("Top Add Node: ${child.text} : $lastIndentLevel $childIndentLevel")
                             }
                         }
                     }
                 } else {
-                    // 最後の要素より下位のブロックが来た場合
                     searchKeywordLevelHistory.add(childIndentLevel)
                     if (!blockSkip &&
                         childIndentLevel <= indentLevel + 1
                     ) {
-                        blocks.add(childBlock)
+                        blocks.addAll(pendingCommentBlocks)
+                        pendingCommentBlocks.clear()
                         println("Top Add Node: ${child.text} : $lastIndentLevel $childIndentLevel")
+                        blocks.add(childBlock)
                         blockSkip = true
                     }
                 }
@@ -166,7 +170,7 @@ open class SqlBlock(
                 return getKeywordBlock(child)
             }
 
-            SqlTypes.LEFT_PAREN -> SqlSubGroupBlock(child, wrap, alignment, this, spacingBuilder)
+            SqlTypes.LEFT_PAREN -> SqlSubGroupBlock(node, child, wrap, alignment, this, spacingBuilder)
 
             SqlTypes.OTHER ->
                 return SqlOtherBlock(child, wrap, alignment, spacingBuilder)
@@ -197,40 +201,55 @@ open class SqlBlock(
         val lowercaseText = child.text.lowercase()
         return when (lowercaseText) {
             "select" -> {
-                val block =
-                    SqlSelectGroupBlock(
-                        child,
-                        wrap,
-                        alignment,
-                        this,
-                        spacingBuilder,
-                    )
-                return block
+                SqlSelectGroupBlock(
+                    node,
+                    child,
+                    wrap,
+                    alignment,
+                    this,
+                    spacingBuilder,
+                )
             }
 
             "from" -> {
-                val block =
-                    SqlFromGroupBlock(
-                        child,
-                        wrap,
-                        alignment,
-                        this,
-                        spacingBuilder,
-                    )
-                return block
+                SqlFromGroupBlock(
+                    node,
+                    child,
+                    wrap,
+                    alignment,
+                    this,
+                    spacingBuilder,
+                )
             }
-
+            "as" -> {
+                SqlAsGroupBlock(
+                    node,
+                    child,
+                    wrap,
+                    alignment,
+                    this,
+                    spacingBuilder,
+                )
+            }
             "where" -> {
-                val block =
-                    SqlWhereGroupBlock(
-                        child,
-                        wrap,
-                        alignment,
-                        this,
-                        spacingBuilder,
-                    )
-                return block
+                SqlWhereGroupBlock(
+                    node,
+                    child,
+                    wrap,
+                    alignment,
+                    this,
+                    spacingBuilder,
+                )
             }
+            "inner", "outer", "left", "right" ->
+                SqlSubQueryGroupBlock(
+                    node,
+                    child,
+                    wrap,
+                    alignment,
+                    this,
+                    spacingBuilder,
+                )
 
             else -> {
                 return SqlKeywordBlock(child, wrap, alignment, spacingBuilder)

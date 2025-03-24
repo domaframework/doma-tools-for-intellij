@@ -23,6 +23,7 @@ import com.intellij.psi.formatter.common.AbstractBlock
 
 class SqlGroupTopKeywordBlock(
     node: ASTNode,
+    groupTopNode: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,

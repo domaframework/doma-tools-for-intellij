@@ -24,12 +24,14 @@ import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlSubGroupBlock(
     node: ASTNode,
+    groupTopNode: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     parentGroupNode: SqlBlock?,
     spacingBuilder: SpacingBuilder,
 ) : SqlGroupBlock(
         node,
+        groupTopNode,
         wrap,
         alignment,
         parentGroupNode,

@@ -23,12 +23,14 @@ import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
 class SqlWhereGroupBlock(
     node: ASTNode,
+    groupTopNode: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
-    private val parentGroupNode: SqlBlock?,
+    parentGroupNode: SqlBlock?,
     spacingBuilder: SpacingBuilder,
 ) : SqlGroupBlock(
         node,
+        groupTopNode,
         wrap,
         alignment,
         parentGroupNode,
