@@ -19,6 +19,7 @@ import com.intellij.formatting.ASTBlock
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.psi.tree.IElementType
+import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 
 class SqlCustomSpacingBuilder {
@@ -57,40 +58,42 @@ class SqlCustomSpacingBuilder {
         return null
     }
 
+    fun getSpacingWithIndentComma(child: SqlCommaBlock): Spacing? {
+        val parentBlock = child.parentBlock
+        val indentLen: Int = child.indentLen
+        return Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
+    }
+
     fun getSpacingWithIndentLevel(child: SqlKeywordBlock): Spacing? {
         val parentBlock = child.parentBlock
-        val indentLen: Int
+        val indentLen: Int = child.indentLen
         return when (child.indentLevel) {
             1 -> {
-                if (parentBlock?.indentLevel == 3) {
-                    return Spacing.createSpacing(1, 1, 0, false, 0)
+                return if (parentBlock?.parentBlock == null) {
+                    Spacing.createSpacing(0, 0, 0, false, 0, 0)
+                } else if (parentBlock.indentLevel == 3) {
+                    Spacing.createSpacing(0, 0, 0, false, 0, 0)
                 } else {
-                    indentLen = parentBlock?.indentLen ?: 0
-                    return Spacing.createSpacing(0, 0, 1, false, 0)
+                    Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
                 }
             }
 
             2 -> {
-                if (parentBlock?.indentLevel == 3) {
-                    return Spacing.createSpacing(0, 0, 0, false, 0)
+                return if (parentBlock?.indentLevel == 3) {
+                    Spacing.createSpacing(1, 1, 0, false, 0, 0)
                 } else {
-                    indentLen = parentBlock?.let {
-                        it.indentLen +
-                            it.node.text.length
-                                .minus(child.node.text.length)
-                    } ?: 1
-                    return Spacing.createSpacing(0, 0, 1, false, 0)
+                    Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
                 }
             }
 
             3 -> {
-                return Spacing.createSpacing(1, 1, 0, false, 0)
+                return Spacing.createSpacing(1, 1, 0, false, 0, 0)
             }
 
             else -> {
-                return Spacing.createSpacing(1, 1, 0, false, 0)
+                return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
             }
         }
-        return Spacing.createSpacing(1, 1, 0, false, 0)
+        return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
     }
 }

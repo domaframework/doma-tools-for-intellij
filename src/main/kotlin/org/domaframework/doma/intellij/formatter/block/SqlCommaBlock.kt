@@ -22,9 +22,8 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 
-open class SqlKeywordBlock(
+open class SqlCommaBlock(
     node: ASTNode,
-    override val indentLevel: Int = 0,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
@@ -42,44 +41,10 @@ open class SqlKeywordBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun getIndent(): Indent? {
-        if (indentLevel > 0) {
-            return Indent.getSpaceIndent(indentLen)
-        }
-        return Indent.getNormalIndent()
+    override fun getIndent(): Indent? = Indent.getSpaceIndent(indentLen)
+
+    private fun createIndentLen(): Int {
+        val parentLen = parentBlock?.node?.text?.length ?: 0
+        return parentBlock?.indentLen?.plus(parentLen.plus(1)) ?: 1
     }
-
-    private fun createIndentLen(): Int =
-        when (indentLevel) {
-            1 -> {
-                if (parentBlock?.indentLevel == 3) {
-                    (parentBlock?.indentLen?.plus(1)) ?: 1
-                } else {
-                    (parentBlock?.indentLen) ?: 0
-                }
-            }
-
-            2 -> {
-                if (parentBlock?.indentLevel == 3) {
-                    (parentBlock?.indentLen) ?: 1
-                } else {
-                    parentBlock?.let {
-                        (
-                            it.indentLen +
-                                it.node.text.length
-                                    .minus(this.node.text.length)
-                        )
-                    } ?: 1
-                }
-            }
-
-            3 -> {
-                val parentLen = parentBlock?.node?.text?.length ?: 0
-                parentBlock?.indentLen?.plus(parentLen.plus(1)) ?: 1
-            }
-
-            else -> {
-                1
-            }
-        }
 }

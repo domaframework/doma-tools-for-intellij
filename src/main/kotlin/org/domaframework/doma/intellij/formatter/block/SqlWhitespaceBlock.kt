@@ -16,14 +16,17 @@
 package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.Block
 import com.intellij.formatting.Indent
+import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 
-open class SqlWordBlock(
+class SqlWhitespaceBlock(
     node: ASTNode,
+    override var parentBlock: SqlBlock?,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
@@ -34,12 +37,16 @@ open class SqlWordBlock(
         null,
         spacingBuilder,
     ) {
+    var nextNode: SqlBlock? = null
+
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun getIndent(): Indent? {
-        if (indentLevel > 0) {
-            return Indent.getSpaceIndent(indentLen)
-        }
-        return Indent.getNormalIndent()
-    }
+    override fun getIndent(): Indent? = Indent.getNoneIndent()
+
+    override fun isLeaf(): Boolean = true
+
+    override fun getSpacing(
+        child1: Block?,
+        child2: Block,
+    ): Spacing? = Spacing.createSpacing(0, 0, 0, false, 0)
 }

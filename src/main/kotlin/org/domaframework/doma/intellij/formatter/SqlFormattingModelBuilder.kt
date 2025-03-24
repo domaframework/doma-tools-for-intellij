@@ -24,6 +24,7 @@ import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.formatting.WrapType
+import com.intellij.psi.TokenType
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -56,6 +57,22 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
     private fun createCustomSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()
             .withSpacing(
+                TokenType.WHITE_SPACE,
+                SqlTypes.KEYWORD,
+                Spacing.createSpacing(0, 0, 1, false, 0),
+            ).withSpacing(
+                SqlTypes.WORD,
+                TokenType.WHITE_SPACE,
+                Spacing.createSpacing(0, 0, 0, false, 0),
+            ).withSpacing(
+                SqlTypes.OTHER,
+                TokenType.WHITE_SPACE,
+                Spacing.createSpacing(0, 0, 0, false, 0),
+            ).withSpacing(
+                SqlTypes.ASTERISK,
+                TokenType.WHITE_SPACE,
+                Spacing.createSpacing(0, 0, 0, false, 0),
+            ).withSpacing(
                 SqlTypes.BLOCK_COMMENT,
                 SqlTypes.BLOCK_COMMENT,
                 breakLineSpacing,

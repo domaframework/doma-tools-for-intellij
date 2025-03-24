@@ -57,12 +57,34 @@ open class SqlBlock(
         if (isLeaf) return mutableListOf()
 
         var child = node.firstChildNode
+        var whiteBlock: SqlBlock = this
         groupTopNodeIndexHistory.add(Pair(0, this))
         while (child != null) {
             if (child !is PsiWhiteSpace) {
                 val childBlock = getBlock(child)
+                if (blocks.isNotEmpty() && blocks.last() is SqlWhitespaceBlock) {
+                    when (childBlock) {
+                        is SqlKeywordBlock, is SqlCommaBlock -> {
+                            whiteBlock = blocks.last() as SqlBlock
+                            whiteBlock.parentBlock = groupTopNodeIndexHistory.lastOrNull()?.second
+                        }
+                        else -> {
+                            blocks.removeLast()
+                        }
+                    }
+                }
                 blocks.add(childBlock)
                 updateSearchKeywordLevelHistory(childBlock, child, parentBlock)
+            } else {
+                blocks.add(
+                    SqlWhitespaceBlock(
+                        child,
+                        parentBlock,
+                        wrap,
+                        alignment,
+                        spacingBuilder,
+                    ),
+                )
             }
             child = child.treeNext
         }
@@ -192,9 +214,11 @@ open class SqlBlock(
             SqlTypes.OTHER ->
                 return SqlOtherBlock(child, wrap, alignment, spacingBuilder)
 
-            SqlTypes.COMMA, SqlTypes.DOT, SqlTypes.RIGHT_PAREN ->
+            SqlTypes.DOT, SqlTypes.RIGHT_PAREN ->
                 return SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
 
+            SqlTypes.COMMA ->
+                return SqlCommaBlock(child, wrap, alignment, spacingBuilder)
             SqlTypes.WORD ->
                 return SqlWordBlock(child, wrap, alignment, spacingBuilder)
 
@@ -260,16 +284,26 @@ open class SqlBlock(
         child1: Block?,
         child2: Block,
     ): Spacing? {
+        if (child1 is SqlWhitespaceBlock && child2 !is SqlKeywordBlock && child2 !is SqlCommaBlock) return null
+
         val keywordBlock = child2 as? SqlKeywordBlock
         if (keywordBlock != null) {
             val keyWordSpacing = SqlCustomSpacingBuilder().getSpacingWithIndentLevel(keywordBlock)
             keyWordSpacing?.let { return it }
         }
+
+        val commaBlock = child2 as? SqlCommaBlock
+        if (commaBlock != null) {
+            val commaSpacing = SqlCustomSpacingBuilder().getSpacingWithIndentComma(commaBlock)
+            commaSpacing?.let { return it }
+        }
+
         val spacing: Spacing? = customSpacingBuilder?.getSpacing(child1, child2)
         return spacing ?: spacingBuilder.getSpacing(this, child1, child2)
     }
 
     override fun getChildAttributes(newChildIndex: Int): ChildAttributes {
+        if (newChildIndex >= blocks.size) return super.getChildAttributes(newChildIndex)
         val block = blocks[newChildIndex]
         if (block is SqlKeywordBlock) {
             return ChildAttributes(Indent.getSpaceIndent(block.indentLen), null)
@@ -279,5 +313,5 @@ open class SqlBlock(
 
     override fun getChildIndent(): Indent? = Indent.getSpaceIndent(4)
 
-    override fun isLeaf(): Boolean = false
+    override fun isLeaf(): Boolean = myNode.firstChildNode == null
 }
