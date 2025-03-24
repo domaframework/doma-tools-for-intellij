@@ -19,11 +19,10 @@ import com.intellij.formatting.ASTBlock
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.psi.tree.IElementType
+import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 
 class SqlCustomSpacingBuilder {
-    companion object {
-        fun defaultSpacing(): Spacing? = Spacing.createSpacing(1, 1, 0, false, 0)
-    }
+    companion object;
 
     private val spacingRules: MutableMap<Pair<IElementType?, IElementType?>?, Spacing?> = HashMap()
 
@@ -37,7 +36,6 @@ class SqlCustomSpacingBuilder {
     }
 
     fun getSpacing(
-        parent: Block?,
         child1: Block?,
         child2: Block?,
     ): Spacing? {
@@ -56,6 +54,43 @@ class SqlCustomSpacingBuilder {
                 return spacing
             }
         }
-        return defaultSpacing()
+        return null
+    }
+
+    fun getSpacingWithIndentLevel(child: SqlKeywordBlock): Spacing? {
+        val parentBlock = child.parentBlock
+        val indentLen: Int
+        return when (child.indentLevel) {
+            1 -> {
+                if (parentBlock?.indentLevel == 3) {
+                    return Spacing.createSpacing(1, 1, 0, false, 0)
+                } else {
+                    indentLen = parentBlock?.indentLen ?: 0
+                    return Spacing.createSpacing(0, 0, 1, false, 0)
+                }
+            }
+
+            2 -> {
+                if (parentBlock?.indentLevel == 3) {
+                    return Spacing.createSpacing(0, 0, 0, false, 0)
+                } else {
+                    indentLen = parentBlock?.let {
+                        it.indentLen +
+                            it.node.text.length
+                                .minus(child.node.text.length)
+                    } ?: 1
+                    return Spacing.createSpacing(0, 0, 1, false, 0)
+                }
+            }
+
+            3 -> {
+                return Spacing.createSpacing(1, 1, 0, false, 0)
+            }
+
+            else -> {
+                return Spacing.createSpacing(1, 1, 0, false, 0)
+            }
+        }
+        return Spacing.createSpacing(1, 1, 0, false, 0)
     }
 }

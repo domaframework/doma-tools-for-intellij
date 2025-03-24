@@ -17,6 +17,8 @@ package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Block
+import com.intellij.formatting.ChildAttributes
+import com.intellij.formatting.Indent
 import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
@@ -24,13 +26,6 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
-import org.domaframework.doma.intellij.formatter.block.group.SqlAsGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlFromGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlSelectGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlSubQueryGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlWhereGroupBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlBlock(
@@ -45,41 +40,29 @@ open class SqlBlock(
         alignment,
     ) {
     val blocks = mutableListOf<AbstractBlock>()
+    open var parentBlock: SqlBlock? = null
 
-    var indentCount = 0
-    protected var blockSkip = false
-    protected var endBlock = false
+    open fun setParentGroupBlock(block: SqlBlock?) {
+        parentBlock = block
+    }
 
     open val indentLevel = 0
-    protected open var searchKeywordLevel = 0
+    open var indentLen = 0
 
-    protected open val searchKeywordLevelHistory = mutableListOf<Int>()
+    private val groupTopNodeIndexHistory = mutableListOf<Pair<Int, SqlBlock>>()
+
     protected open val pendingCommentBlocks = mutableListOf<SqlBlock>()
 
     public override fun buildChildren(): MutableList<AbstractBlock> {
         if (isLeaf) return mutableListOf()
 
         var child = node.firstChildNode
-        var nonWhiteSpaceChild: SqlBlock? = null
-        searchKeywordLevelHistory.add(0)
-        while (child != null && !endBlock) {
-            if (child is PsiWhiteSpace && !blockSkip) {
-                blocks.add(
-                    SqlWhitespaceBlock(
-                        child,
-                        wrap,
-                        alignment,
-                        nonWhiteSpaceChild,
-                        spacingBuilder,
-                    ),
-                )
-            } else {
+        groupTopNodeIndexHistory.add(Pair(0, this))
+        while (child != null) {
+            if (child !is PsiWhiteSpace) {
                 val childBlock = getBlock(child)
-                if (blocks.isNotEmpty()) {
-                    (blocks.last() as? SqlWhitespaceBlock)?.nextNode = childBlock
-                }
-                updateSearchKeywordLevelHistory(childBlock, child)
-                nonWhiteSpaceChild = childBlock
+                blocks.add(childBlock)
+                updateSearchKeywordLevelHistory(childBlock, child, parentBlock)
             }
             child = child.treeNext
         }
@@ -87,7 +70,7 @@ open class SqlBlock(
 
         println("=========Build Block: Top")
         println("Blocks Size: ${blocks.size}")
-        println("Blocks: ${blocks.map { "${it.node.textRange}" }}")
+        println("Blocks: ${blocks.map { "Parent: \"${(it as? SqlBlock)?.parentBlock?.node?.text}\" -->  \"${it.node.text}\"\n" }}")
         println("=========Build Block: END")
 
         return blocks
@@ -96,71 +79,104 @@ open class SqlBlock(
     protected open fun updateSearchKeywordLevelHistory(
         childBlock: SqlBlock,
         child: ASTNode,
+        parentKeywordBlock: SqlBlock?,
     ) {
-        if (child.elementType == SqlTypes.RIGHT_PAREN) {
-            blockSkip = false
-            val leftIndex = searchKeywordLevelHistory.indexOfLast { it == 3 }
-            if (leftIndex >= 0) {
-                searchKeywordLevelHistory
-                    .subList(
-                        leftIndex,
-                        searchKeywordLevelHistory.size,
-                    ).clear()
-                println("hit RIGHT_PAREN")
-            }
-            pendingCommentBlocks.clear()
-            return
-        }
-        val childIndentLevel = childBlock.indentLevel
-        val lastIndentLevel = searchKeywordLevelHistory.last()
+        val lastIndentLevel = groupTopNodeIndexHistory.last().second.indentLevel
+        val latestGroupTopBlock = groupTopNodeIndexHistory.last().second
         when (childBlock) {
-            is SqlGroupBlock -> {
-                println("Hit Group Blocks: ${child.text} $childIndentLevel")
-                if (lastIndentLevel >= childIndentLevel) {
-                    when (lastIndentLevel) {
-                        3 -> {
-                            searchKeywordLevelHistory.add(childIndentLevel)
-                        }
-
-                        else -> {
-                            blockSkip = true
-                            if (lastIndentLevel == childIndentLevel) {
-                                if (!searchKeywordLevelHistory.contains(3)) {
-                                    blocks.addAll(pendingCommentBlocks)
-                                    pendingCommentBlocks.clear()
-                                    println("Top Add Node: ${child.text} : $lastIndentLevel $childIndentLevel")
-                                    blocks.add(childBlock)
-                                }
-                            } else {
-                                // lastIndentLevel > childIndentLevel
-                                searchKeywordLevelHistory.removeLast()
-                                searchKeywordLevelHistory.add(childIndentLevel)
-                                blocks.addAll(pendingCommentBlocks)
-                                pendingCommentBlocks.clear()
-                                blocks.add(childBlock)
-                                println("Top Add Node: ${child.text} : $lastIndentLevel $childIndentLevel")
-                            }
-                        }
+            is SqlKeywordBlock -> {
+                println("Keyword: ${child.text}")
+                if (latestGroupTopBlock.indentLevel == 3) {
+                    setParentGroups(
+                        childBlock,
+                    ) { history ->
+                        return@setParentGroups latestGroupTopBlock
+                    }
+                } else if (lastIndentLevel == childBlock.indentLevel) {
+                    groupTopNodeIndexHistory.removeLast()
+                    setParentGroups(
+                        childBlock,
+                    ) { history ->
+                        return@setParentGroups latestGroupTopBlock.parentBlock
+                    }
+                } else if (lastIndentLevel < childBlock.indentLevel) {
+                    setParentGroups(
+                        childBlock,
+                    ) { history ->
+                        return@setParentGroups history.last().second
                     }
                 } else {
-                    searchKeywordLevelHistory.add(childIndentLevel)
-                    if (!blockSkip &&
-                        childIndentLevel <= indentLevel + 1
-                    ) {
-                        blocks.addAll(pendingCommentBlocks)
-                        pendingCommentBlocks.clear()
-                        println("Top Add Node: ${child.text} : $lastIndentLevel $childIndentLevel")
-                        blocks.add(childBlock)
-                        blockSkip = true
+                    setParentGroups(
+                        childBlock,
+                    ) { history ->
+                        return@setParentGroups history.lastOrNull { it.second.indentLevel < childBlock.indentLevel }?.second
                     }
                 }
-                println("Top Blocks: $searchKeywordLevelHistory")
-                pendingCommentBlocks.clear()
             }
+            is SqlWordBlock, is SqlOtherBlock, is SqlLineCommentBlock, is SqlBlockCommentBlock -> {
+                setParentGroups(
+                    childBlock,
+                ) { history ->
+                    return@setParentGroups history.last().second
+                }
+            }
+            is SqlElSymbolBlock -> {
+                when (child.elementType) {
+                    SqlTypes.LEFT_PAREN -> {
+                        setParentGroups(
+                            childBlock,
+                        ) { history ->
+                            return@setParentGroups history.last().second
+                        }
+                    }
 
-            is SqlBlockCommentBlock, is SqlLineCommentBlock -> {
-                pendingCommentBlocks.add(childBlock)
+                    SqlTypes.RIGHT_PAREN -> {
+                        val leftIndex =
+                            groupTopNodeIndexHistory.indexOfLast { it.second.indentLevel == 3 }
+                        if (leftIndex >= 0) {
+                            setParentGroups(
+                                childBlock,
+                            ) { history ->
+                                return@setParentGroups history[leftIndex].second
+                            }
+                            groupTopNodeIndexHistory
+                                .subList(
+                                    leftIndex,
+                                    groupTopNodeIndexHistory.size,
+                                ).clear()
+                            println("hit RIGHT_PAREN: parent ${parentKeywordBlock?.node?.text}")
+                        }
+                        pendingCommentBlocks.clear()
+                    }
+
+                    else -> {
+                        setParentGroups(
+                            childBlock,
+                        ) { history ->
+                            return@setParentGroups history.last().second
+                        }
+                    }
+                }
             }
+            else -> {
+                setParentGroups(
+                    childBlock,
+                ) { history ->
+                    return@setParentGroups history.last().second
+                }
+            }
+        }
+    }
+
+    private fun setParentGroups(
+        childBlock: SqlBlock,
+        getParentGroup: (MutableList<Pair<Int, SqlBlock>>) -> SqlBlock?,
+    ) {
+        val parentGroup = getParentGroup(groupTopNodeIndexHistory)
+        childBlock.setParentGroupBlock(parentGroup)
+
+        if (childBlock is SqlKeywordBlock) {
+            groupTopNodeIndexHistory.add(Pair(blocks.size - 1, childBlock))
         }
     }
 
@@ -170,7 +186,8 @@ open class SqlBlock(
                 return getKeywordBlock(child)
             }
 
-            SqlTypes.LEFT_PAREN -> SqlSubGroupBlock(node, child, wrap, alignment, this, spacingBuilder)
+            SqlTypes.LEFT_PAREN -> SqlKeywordBlock(child, 3, wrap, alignment, spacingBuilder)
+            SqlTypes.RIGHT_PAREN -> SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
 
             SqlTypes.OTHER ->
                 return SqlOtherBlock(child, wrap, alignment, spacingBuilder)
@@ -197,64 +214,16 @@ open class SqlBlock(
         }
     }
 
-    fun getKeywordBlock(child: ASTNode): SqlBlock {
-        val lowercaseText = child.text.lowercase()
-        return when (lowercaseText) {
-            "select" -> {
-                SqlSelectGroupBlock(
-                    node,
-                    child,
-                    wrap,
-                    alignment,
-                    this,
-                    spacingBuilder,
-                )
+    private fun getKeywordBlock(child: ASTNode): SqlKeywordBlock {
+        val lower = child.text.lowercase()
+        val indentLevel =
+            when (lower) {
+                "select" -> 1
+                "from", "where" -> 2
+                "(" -> 3
+                else -> 5
             }
-
-            "from" -> {
-                SqlFromGroupBlock(
-                    node,
-                    child,
-                    wrap,
-                    alignment,
-                    this,
-                    spacingBuilder,
-                )
-            }
-            "as" -> {
-                SqlAsGroupBlock(
-                    node,
-                    child,
-                    wrap,
-                    alignment,
-                    this,
-                    spacingBuilder,
-                )
-            }
-            "where" -> {
-                SqlWhereGroupBlock(
-                    node,
-                    child,
-                    wrap,
-                    alignment,
-                    this,
-                    spacingBuilder,
-                )
-            }
-            "inner", "outer", "left", "right" ->
-                SqlSubQueryGroupBlock(
-                    node,
-                    child,
-                    wrap,
-                    alignment,
-                    this,
-                    spacingBuilder,
-                )
-
-            else -> {
-                return SqlKeywordBlock(child, wrap, alignment, spacingBuilder)
-            }
-        }
+        return SqlKeywordBlock(child, indentLevel, wrap, alignment, spacingBuilder)
     }
 
     protected open fun createSpacingBuilder(): SqlCustomSpacingBuilder = SqlCustomSpacingBuilder()
@@ -291,27 +260,24 @@ open class SqlBlock(
         child1: Block?,
         child2: Block,
     ): Spacing? {
-        val prevChild = findPrevNonWhiteSpace(child1)
-        val nextChild = findNextNonWhiteSpace(child2)
-        val spacing: Spacing? = customSpacingBuilder?.getSpacing(this, prevChild, nextChild)
-        return spacing ?: spacingBuilder.getSpacing(this, prevChild, nextChild)
+        val keywordBlock = child2 as? SqlKeywordBlock
+        if (keywordBlock != null) {
+            val keyWordSpacing = SqlCustomSpacingBuilder().getSpacingWithIndentLevel(keywordBlock)
+            keyWordSpacing?.let { return it }
+        }
+        val spacing: Spacing? = customSpacingBuilder?.getSpacing(child1, child2)
+        return spacing ?: spacingBuilder.getSpacing(this, child1, child2)
     }
 
-    protected fun findPrevNonWhiteSpace(block: Block?): Block? {
-        var current: Block? = block
-        while (current != null && current is SqlWhitespaceBlock) {
-            current = current.prevNode
+    override fun getChildAttributes(newChildIndex: Int): ChildAttributes {
+        val block = blocks[newChildIndex]
+        if (block is SqlKeywordBlock) {
+            return ChildAttributes(Indent.getSpaceIndent(block.indentLen), null)
         }
-        return current
+        return super.getChildAttributes(newChildIndex)
     }
 
-    protected fun findNextNonWhiteSpace(block: Block?): Block? {
-        var current: Block? = block
-        while (current != null && current is SqlWhitespaceBlock) {
-            current = current.nextNode
-        }
-        return current
-    }
+    override fun getChildIndent(): Indent? = Indent.getSpaceIndent(4)
 
     override fun isLeaf(): Boolean = false
 }

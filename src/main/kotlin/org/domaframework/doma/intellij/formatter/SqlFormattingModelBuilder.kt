@@ -24,7 +24,6 @@ import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.formatting.WrapType
-import com.intellij.psi.TokenType
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -32,7 +31,7 @@ import org.domaframework.doma.intellij.setting.SqlLanguage
 
 @Suppress("ktlint:standard:no-consecutive-comments")
 class SqlFormattingModelBuilder : FormattingModelBuilder {
-    val breakLineSpacing: Spacing? = Spacing.createSpacing(0, 0, 1, true, 0)
+    val breakLineSpacing: Spacing? = Spacing.createSpacing(0, 0, 1, false, 0)
     val mergeSpacing: Spacing? = Spacing.createSpacing(0, 0, 0, false, 0)
     val normalSpacing: Spacing? = Spacing.createSpacing(1, 1, 0, false, 0)
 
@@ -45,7 +44,7 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
                     formattingContext.node,
                     Wrap.createWrap(WrapType.NONE, false),
                     Alignment.createAlignment(),
-                    null, // createCustomSpacingBuilder()
+                    createCustomSpacingBuilder(),
                     createSpaceBuilder(codeStyleSettings),
                 ),
                 codeStyleSettings,
@@ -57,21 +56,7 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
     private fun createCustomSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()
             .withSpacing(
-                null,
-                TokenType.WHITE_SPACE,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            )
-            // BlockComment Rules
-            .withSpacing(
-                SqlTypes.KEYWORD,
-                SqlTypes.OTHER,
-                normalSpacing,
-            ).withSpacing(
                 SqlTypes.BLOCK_COMMENT,
-                SqlTypes.BLOCK_COMMENT,
-                breakLineSpacing,
-            ).withSpacing(
-                SqlTypes.KEYWORD,
                 SqlTypes.BLOCK_COMMENT,
                 breakLineSpacing,
             ).withSpacing(
@@ -86,13 +71,13 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
                 SqlTypes.OTHER,
                 SqlTypes.LINE_COMMENT,
                 breakLineSpacing,
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT,
-                SqlTypes.KEYWORD,
-                breakLineSpacing,
             )
             // Table And Column Rules
             .withSpacing(
+                SqlTypes.DOT,
+                SqlTypes.WORD,
+                mergeSpacing,
+            ).withSpacing(
                 SqlTypes.DOT,
                 SqlTypes.OTHER,
                 mergeSpacing,

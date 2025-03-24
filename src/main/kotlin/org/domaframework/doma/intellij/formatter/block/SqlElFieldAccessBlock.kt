@@ -73,7 +73,7 @@ class SqlElFieldAccessBlock(
     override fun getSpacing(
         child1: Block?,
         child2: Block,
-    ): Spacing? = customSpacingBuilder?.getSpacing(this, child1, child2) ?: spacingBuilder.getSpacing(this, child1, child2)
+    ): Spacing? = customSpacingBuilder?.getSpacing(child1, child2) ?: spacingBuilder.getSpacing(this, child1, child2)
 
     override fun isLeaf(): Boolean = false
 }
