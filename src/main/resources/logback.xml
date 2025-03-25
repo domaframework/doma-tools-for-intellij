@@ -2,7 +2,7 @@
 <configuration scan="true">
   <property resource="logback.properties" />
   <property name="LOG_FILE_BASE_DIR" value="${org.domaframework.doma.intellij.log.path:-/doma-tools}" />
-  <property name="LOG_FILE_VERSION" value="${org.domaframework.doma.intellij.plugin.version:-0.3.1}" />
+  <property name="LOG_FILE_VERSION" value="${org.domaframework.doma.intellij.plugin.version:-0.3.2}" />
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
@@ -14,9 +14,9 @@
   </appender>
 
   <appender name="DOMATOOLS" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${LOG_FILE_BASE_DIR:-/domatoolslog}/${LOG_FILE_BASENAME:-doma-tools}-${LOG_FILE_VERSION:-0.3.1}.log</file>
+    <file>${LOG_FILE_BASE_DIR:-/domatoolslog}/${LOG_FILE_BASENAME:-doma-tools}-${LOG_FILE_VERSION:-0.3.2}.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${LOG_FILE_BASE_DIR:-/domatoolslog}/${LOG_FILE_BASENAME:-doma-tools}-${LOG_FILE_VERSION:-0.3.1}-%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>${LOG_FILE_BASE_DIR:-/domatoolslog}/${LOG_FILE_BASENAME:-doma-tools}-${LOG_FILE_VERSION:-0.3.2}-%d{yyyy-MM-dd}.log</fileNamePattern>
       <maxHistory>30</maxHistory>
     </rollingPolicy>
     <encoder>

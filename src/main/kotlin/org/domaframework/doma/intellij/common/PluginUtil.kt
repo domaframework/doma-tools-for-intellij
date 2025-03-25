@@ -19,7 +19,7 @@ import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.extensions.PluginId
 
 const val PLUGIN_ID = "org.domaframework.doma.intellij"
-const val PLUGIN_VERSION = "0.3.1"
+const val PLUGIN_VERSION = "0.3.2"
 
 open class PluginUtil {
     companion object {
