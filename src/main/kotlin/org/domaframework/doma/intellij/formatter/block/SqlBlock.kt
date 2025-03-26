@@ -69,7 +69,7 @@ open class SqlBlock(
         if (isLeaf) return mutableListOf()
 
         var child = node.firstChildNode
-        var whiteBlock: SqlBlock = this
+        var whiteBlock: SqlBlock? = null
         groupTopNodeIndexHistory.add(Pair(0, this))
         while (child != null) {
             if (child !is PsiWhiteSpace) {
@@ -305,12 +305,20 @@ open class SqlBlock(
             return Spacing.createSpacing(0, 0, 0, false, 0, 0)
         }
 
-        if (child1 is SqlWhitespaceBlock && child2 is SqlKeywordBlock) {
-            customSpacingBuilder?.getSpacingWithWhiteSpace(child1, child2)?.let { return it }
-        }
-
         if (child2 is SqlKeywordBlock) {
-            SqlCustomSpacingBuilder().getSpacingWithIndentLevel(child2)?.let { return it }
+            when (child1) {
+                is SqlWhitespaceBlock ->
+                    customSpacingBuilder
+                        ?.getSpacingWithWhiteSpace(
+                            child1,
+                            child2,
+                        )?.let { return it }
+
+                else ->
+                    SqlCustomSpacingBuilder()
+                        .getSpacingWithIndentLevel(child2)
+                        ?.let { return it }
+            }
         }
 
         if (child1 is SqlBlock && child2 is SqlCommaBlock) {

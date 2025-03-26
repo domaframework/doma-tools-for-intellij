@@ -43,7 +43,7 @@ open class SqlCommaBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun getIndent(): Indent? = Indent.getSpaceIndent(indentLen)
+    override fun getIndent(): Indent? = Indent.getIndent(Indent.Type.SPACES, indentLen, true, true)
 
     private fun createIndentLen(): Int {
         val parentLen = parentBlock?.node?.text?.length ?: 0

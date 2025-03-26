@@ -100,7 +100,7 @@ class SqlCustomSpacingBuilder {
                 } else {
                     child2.indentLen - postNewLine.length
                 }
-            println("Spacing: ${child2.node.text} , $newIndent")
+            println("limeSpace:$postNewLine,Spacing:${child2.node.text}, $newIndent")
             return Spacing.createSpacing(
                 newIndent,
                 newIndent,

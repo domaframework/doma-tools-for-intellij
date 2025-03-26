@@ -44,7 +44,7 @@ open class SqlKeywordBlock(
 
     override fun getIndent(): Indent? {
         if (indentLevel > IndentType.FILE) {
-            println("Indent: ${node.text} $indentLevel, $indentLen")
+            println("Indent:${node.text}, $indentLevel, $indentLen")
             return Indent.getIndent(Indent.Type.SPACES, indentLen, false, true)
         }
         return Indent.getNormalIndent()
