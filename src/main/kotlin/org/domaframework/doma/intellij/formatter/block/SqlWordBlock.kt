@@ -37,7 +37,7 @@ open class SqlWordBlock(
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? {
-        if (indentLevel > 0) {
+        if (indentLevel > IndentType.FILE) {
             return Indent.getSpaceIndent(indentLen)
         }
         return Indent.getNormalIndent()

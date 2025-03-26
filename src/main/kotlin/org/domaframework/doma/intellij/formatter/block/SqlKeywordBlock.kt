@@ -24,7 +24,7 @@ import com.intellij.psi.formatter.common.AbstractBlock
 
 open class SqlKeywordBlock(
     node: ASTNode,
-    override val indentLevel: Int = 0,
+    override val indentLevel: IndentType = IndentType.TOP,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
@@ -43,24 +43,25 @@ open class SqlKeywordBlock(
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? {
-        if (indentLevel > 0) {
-            return Indent.getSpaceIndent(indentLen)
+        if (indentLevel > IndentType.FILE) {
+            println("Indent: ${node.text} $indentLevel, $indentLen")
+            return Indent.getIndent(Indent.Type.SPACES, indentLen, false, true)
         }
         return Indent.getNormalIndent()
     }
 
     private fun createIndentLen(): Int =
         when (indentLevel) {
-            1 -> {
-                if (parentBlock?.indentLevel == 3) {
+            IndentType.TOP -> {
+                if (parentBlock?.indentLevel == IndentType.SUB) {
                     (parentBlock?.indentLen?.plus(1)) ?: 1
                 } else {
                     (parentBlock?.indentLen) ?: 0
                 }
             }
 
-            2 -> {
-                if (parentBlock?.indentLevel == 3) {
+            IndentType.SECOND -> {
+                if (parentBlock?.indentLevel == IndentType.SUB) {
                     (parentBlock?.indentLen) ?: 1
                 } else {
                     parentBlock?.let {
@@ -73,7 +74,7 @@ open class SqlKeywordBlock(
                 }
             }
 
-            3 -> {
+            IndentType.SUB -> {
                 val parentLen = parentBlock?.node?.text?.length ?: 0
                 parentBlock?.indentLen?.plus(parentLen.plus(1)) ?: 1
             }

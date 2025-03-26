@@ -32,9 +32,9 @@ import org.domaframework.doma.intellij.setting.SqlLanguage
 
 @Suppress("ktlint:standard:no-consecutive-comments")
 class SqlFormattingModelBuilder : FormattingModelBuilder {
-    val breakLineSpacing: Spacing? = Spacing.createSpacing(0, 0, 1, false, 0)
-    val mergeSpacing: Spacing? = Spacing.createSpacing(0, 0, 0, false, 0)
-    val normalSpacing: Spacing? = Spacing.createSpacing(1, 1, 0, false, 0)
+    val breakLineSpacing: Spacing? = Spacing.createSpacing(0, 0, 1, true, 0, 1)
+    val mergeSpacing: Spacing? = Spacing.createSpacing(0, 0, 0, true, 0, 0)
+    val normalSpacing: Spacing? = Spacing.createSpacing(1, 1, 0, true, 0, 0)
 
     override fun createModel(formattingContext: FormattingContext): FormattingModel {
         val codeStyleSettings = formattingContext.codeStyleSettings
@@ -59,19 +59,19 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
             .withSpacing(
                 TokenType.WHITE_SPACE,
                 SqlTypes.KEYWORD,
-                Spacing.createSpacing(0, 0, 1, false, 0),
+                Spacing.createSpacing(0, 0, 1, true, 0, 1),
             ).withSpacing(
                 SqlTypes.WORD,
                 TokenType.WHITE_SPACE,
-                Spacing.createSpacing(0, 0, 0, false, 0),
+                Spacing.createSpacing(0, 0, 0, true, 0, 0),
             ).withSpacing(
                 SqlTypes.OTHER,
                 TokenType.WHITE_SPACE,
-                Spacing.createSpacing(0, 0, 0, false, 0),
+                Spacing.createSpacing(0, 0, 0, true, 0, 0),
             ).withSpacing(
                 SqlTypes.ASTERISK,
                 TokenType.WHITE_SPACE,
-                Spacing.createSpacing(0, 0, 0, false, 0),
+                Spacing.createSpacing(0, 0, 0, true, 0, 0),
             ).withSpacing(
                 SqlTypes.BLOCK_COMMENT,
                 SqlTypes.BLOCK_COMMENT,
@@ -118,23 +118,24 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
                 normalSpacing,
             )
             // COMMA Rules
+//            .withSpacing(
+//                SqlTypes.WORD,
+//                SqlTypes.COMMA,
+//                breakLineSpacing,
+//            ).withSpacing(
+//                SqlTypes.OTHER,
+//                SqlTypes.COMMA,
+//                breakLineSpacing,
+//            ).withSpacing(
+//                SqlTypes.ASTERISK,
+//                SqlTypes.COMMA,
+//                breakLineSpacing,
+//            ).withSpacing(
+//                SqlTypes.COMMA,
+//                SqlTypes.WORD,
+//                normalSpacing,
+//            )
             .withSpacing(
-                SqlTypes.WORD,
-                SqlTypes.COMMA,
-                breakLineSpacing,
-            ).withSpacing(
-                SqlTypes.OTHER,
-                SqlTypes.COMMA,
-                breakLineSpacing,
-            ).withSpacing(
-                SqlTypes.ASTERISK,
-                SqlTypes.COMMA,
-                breakLineSpacing,
-            ).withSpacing(
-                SqlTypes.COMMA,
-                SqlTypes.WORD,
-                normalSpacing,
-            ).withSpacing(
                 SqlTypes.COMMA,
                 SqlTypes.OTHER,
                 normalSpacing,

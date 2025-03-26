@@ -28,6 +28,18 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.psi.SqlTypes
 
+enum class IndentType(
+    private val level: Int,
+) {
+    FILE(0),
+    TOP(1),
+    SECOND(2),
+    SUB(3),
+    COMMA(4),
+    SUB_QUERY(5),
+    OPTION(6),
+}
+
 open class SqlBlock(
     node: ASTNode,
     wrap: Wrap?,
@@ -46,7 +58,7 @@ open class SqlBlock(
         parentBlock = block
     }
 
-    open val indentLevel = 0
+    open val indentLevel = IndentType.FILE
     open var indentLen = 0
 
     private val groupTopNodeIndexHistory = mutableListOf<Pair<Int, SqlBlock>>()
@@ -65,8 +77,13 @@ open class SqlBlock(
                 if (blocks.isNotEmpty() && blocks.last() is SqlWhitespaceBlock) {
                     when (childBlock) {
                         is SqlKeywordBlock, is SqlCommaBlock -> {
-                            whiteBlock = blocks.last() as SqlBlock
-                            whiteBlock.parentBlock = groupTopNodeIndexHistory.lastOrNull()?.second
+                            if (childBlock.indentLevel < IndentType.SUB || childBlock is SqlCommaBlock) {
+                                whiteBlock = blocks.last() as SqlBlock
+                                whiteBlock.parentBlock =
+                                    groupTopNodeIndexHistory.lastOrNull()?.second
+                            } else {
+                                blocks.removeLast()
+                            }
                         }
                         else -> {
                             blocks.removeLast()
@@ -108,7 +125,7 @@ open class SqlBlock(
         when (childBlock) {
             is SqlKeywordBlock -> {
                 println("Keyword: ${child.text}")
-                if (latestGroupTopBlock.indentLevel == 3) {
+                if (latestGroupTopBlock.indentLevel == IndentType.SUB) {
                     setParentGroups(
                         childBlock,
                     ) { history ->
@@ -154,7 +171,7 @@ open class SqlBlock(
 
                     SqlTypes.RIGHT_PAREN -> {
                         val leftIndex =
-                            groupTopNodeIndexHistory.indexOfLast { it.second.indentLevel == 3 }
+                            groupTopNodeIndexHistory.indexOfLast { it.second.indentLevel == IndentType.SUB }
                         if (leftIndex >= 0) {
                             setParentGroups(
                                 childBlock,
@@ -208,7 +225,7 @@ open class SqlBlock(
                 return getKeywordBlock(child)
             }
 
-            SqlTypes.LEFT_PAREN -> SqlKeywordBlock(child, 3, wrap, alignment, spacingBuilder)
+            SqlTypes.LEFT_PAREN -> SqlKeywordBlock(child, IndentType.SUB, wrap, alignment, spacingBuilder)
             SqlTypes.RIGHT_PAREN -> SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
 
             SqlTypes.OTHER ->
@@ -242,10 +259,10 @@ open class SqlBlock(
         val lower = child.text.lowercase()
         val indentLevel =
             when (lower) {
-                "select" -> 1
-                "from", "where" -> 2
-                "(" -> 3
-                else -> 5
+                "select" -> IndentType.TOP
+                "from", "where" -> IndentType.SECOND
+                "(" -> IndentType.SUB
+                else -> IndentType.OPTION
             }
         return SqlKeywordBlock(child, indentLevel, wrap, alignment, spacingBuilder)
     }
@@ -284,18 +301,20 @@ open class SqlBlock(
         child1: Block?,
         child2: Block,
     ): Spacing? {
-        if (child1 is SqlWhitespaceBlock && child2 !is SqlKeywordBlock && child2 !is SqlCommaBlock) return null
-
-        val keywordBlock = child2 as? SqlKeywordBlock
-        if (keywordBlock != null) {
-            val keyWordSpacing = SqlCustomSpacingBuilder().getSpacingWithIndentLevel(keywordBlock)
-            keyWordSpacing?.let { return it }
+        if (child1 is SqlWhitespaceBlock && child2 !is SqlKeywordBlock && child2 !is SqlCommaBlock) {
+            return Spacing.createSpacing(0, 0, 0, false, 0, 0)
         }
 
-        val commaBlock = child2 as? SqlCommaBlock
-        if (commaBlock != null) {
-            val commaSpacing = SqlCustomSpacingBuilder().getSpacingWithIndentComma(commaBlock)
-            commaSpacing?.let { return it }
+        if (child1 is SqlWhitespaceBlock && child2 is SqlKeywordBlock) {
+            customSpacingBuilder?.getSpacingWithWhiteSpace(child1, child2)?.let { return it }
+        }
+
+        if (child2 is SqlKeywordBlock) {
+            SqlCustomSpacingBuilder().getSpacingWithIndentLevel(child2)?.let { return it }
+        }
+
+        if (child1 is SqlBlock && child2 is SqlCommaBlock) {
+            SqlCustomSpacingBuilder().getSpacingWithIndentComma(child1, child2)?.let { return it }
         }
 
         val spacing: Spacing? = customSpacingBuilder?.getSpacing(child1, child2)
@@ -303,12 +322,17 @@ open class SqlBlock(
     }
 
     override fun getChildAttributes(newChildIndex: Int): ChildAttributes {
-        if (newChildIndex >= blocks.size) return super.getChildAttributes(newChildIndex)
-        val block = blocks[newChildIndex]
-        if (block is SqlKeywordBlock) {
-            return ChildAttributes(Indent.getSpaceIndent(block.indentLen), null)
-        }
-        return super.getChildAttributes(newChildIndex)
+        blocks
+            .getOrNull(newChildIndex)
+            ?.let {
+                val indent =
+                    when (it) {
+                        is SqlKeywordBlock -> Indent.getSpaceIndent(it.indentLen)
+                        else -> childIndent ?: Indent.getNoneIndent()
+                    }
+                return ChildAttributes(indent, null)
+            }
+        return ChildAttributes(Indent.getNoneIndent(), null)
     }
 
     override fun getChildIndent(): Indent? = Indent.getSpaceIndent(4)

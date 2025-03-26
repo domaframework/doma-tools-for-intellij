@@ -19,8 +19,11 @@ import com.intellij.formatting.ASTBlock
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.psi.tree.IElementType
+import org.domaframework.doma.intellij.formatter.block.IndentType
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
 
 class SqlCustomSpacingBuilder {
     companion object;
@@ -58,40 +61,103 @@ class SqlCustomSpacingBuilder {
         return null
     }
 
-    fun getSpacingWithIndentComma(child: SqlCommaBlock): Spacing? {
-        val parentBlock = child.parentBlock
-        val indentLen: Int = child.indentLen
+    fun getSpacingWithIndentComma(
+        child1: SqlBlock?,
+        child2: SqlCommaBlock,
+    ): Spacing? {
+        val indentLen: Int = child2.indentLen
+        when (child1) {
+            null -> return Spacing.createSpacing(0, 0, 0, false, 0, 0)
+            is SqlWhitespaceBlock -> {
+                val afterNewLine = child1.node.text.substringAfterLast("\n", "")
+                if (child1.node.text.contains("\n")) {
+                    val currentIndent = afterNewLine.length
+                    val newIndent =
+                        if (currentIndent != indentLen) {
+                            indentLen.minus(currentIndent)
+                        } else {
+                            0
+                        }
+                    return Spacing.createSpacing(newIndent, newIndent, 0, false, 0, 0)
+                }
+            }
+            else -> {
+                return Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
+            }
+        }
         return Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
+    }
+
+    fun getSpacingWithWhiteSpace(
+        child1: SqlWhitespaceBlock,
+        child2: SqlKeywordBlock,
+    ): Spacing? {
+        if (child1.node.text.contains("\n")) {
+            val postNewLine = child1.node.text.substringAfterLast("\n", "")
+            val newIndent =
+                if (child1.node.text.endsWith("\n") || postNewLine.isEmpty()) {
+                    child2.indentLen
+                } else {
+                    child2.indentLen - postNewLine.length
+                }
+            println("Spacing: ${child2.node.text} , $newIndent")
+            return Spacing.createSpacing(
+                newIndent,
+                newIndent,
+                0,
+                false,
+                0,
+                0,
+            )
+        } else {
+            val newIndent =
+                if (child2.indentLevel < IndentType.SUB) {
+                    child2.indentLen
+                } else {
+                    1 - child1.node.text.length
+                }
+
+            println("Spacing: ${child2.node.text} , $newIndent")
+            return Spacing.createSpacing(
+                newIndent,
+                newIndent,
+                1,
+                false,
+                0,
+                1,
+            )
+        }
+        return null
     }
 
     fun getSpacingWithIndentLevel(child: SqlKeywordBlock): Spacing? {
         val parentBlock = child.parentBlock
         val indentLen: Int = child.indentLen
         return when (child.indentLevel) {
-            1 -> {
+            IndentType.TOP -> {
                 return if (parentBlock?.parentBlock == null) {
                     Spacing.createSpacing(0, 0, 0, false, 0, 0)
-                } else if (parentBlock.indentLevel == 3) {
+                } else if (parentBlock.indentLevel == IndentType.SUB) {
                     Spacing.createSpacing(0, 0, 0, false, 0, 0)
                 } else {
                     Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
                 }
             }
 
-            2 -> {
-                return if (parentBlock?.indentLevel == 3) {
+            IndentType.SECOND -> {
+                return if (parentBlock?.indentLevel == IndentType.SUB) {
                     Spacing.createSpacing(1, 1, 0, false, 0, 0)
                 } else {
                     Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
                 }
             }
 
-            3 -> {
+            IndentType.SUB -> {
                 return Spacing.createSpacing(1, 1, 0, false, 0, 0)
             }
 
             else -> {
-                return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
+                return Spacing.createSpacing(1, 1, 0, false, 0, 0)
             }
         }
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)

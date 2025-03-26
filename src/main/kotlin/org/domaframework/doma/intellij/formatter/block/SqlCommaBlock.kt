@@ -34,6 +34,8 @@ open class SqlCommaBlock(
         null,
         spacingBuilder,
     ) {
+    override val indentLevel: IndentType = IndentType.COMMA
+
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indentLen = createIndentLen()
