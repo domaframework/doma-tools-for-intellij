@@ -116,26 +116,7 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
                 SqlTypes.OTHER,
                 SqlTypes.OTHER,
                 normalSpacing,
-            )
-            // COMMA Rules
-//            .withSpacing(
-//                SqlTypes.WORD,
-//                SqlTypes.COMMA,
-//                breakLineSpacing,
-//            ).withSpacing(
-//                SqlTypes.OTHER,
-//                SqlTypes.COMMA,
-//                breakLineSpacing,
-//            ).withSpacing(
-//                SqlTypes.ASTERISK,
-//                SqlTypes.COMMA,
-//                breakLineSpacing,
-//            ).withSpacing(
-//                SqlTypes.COMMA,
-//                SqlTypes.WORD,
-//                normalSpacing,
-//            )
-            .withSpacing(
+            ).withSpacing(
                 SqlTypes.COMMA,
                 SqlTypes.OTHER,
                 normalSpacing,

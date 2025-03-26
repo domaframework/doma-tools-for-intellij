@@ -92,41 +92,41 @@ class SqlCustomSpacingBuilder {
         child1: SqlWhitespaceBlock,
         child2: SqlKeywordBlock,
     ): Spacing? {
-        if (child1.node.text.contains("\n")) {
-            val postNewLine = child1.node.text.substringAfterLast("\n", "")
-            val newIndent =
-                if (child1.node.text.endsWith("\n") || postNewLine.isEmpty()) {
-                    child2.indentLen
-                } else {
-                    child2.indentLen - postNewLine.length
-                }
-            println("limeSpace:$postNewLine,Spacing:${child2.node.text}, $newIndent")
-            return Spacing.createSpacing(
-                newIndent,
-                newIndent,
-                0,
-                false,
-                0,
-                0,
-            )
-        } else {
-            val newIndent =
-                if (child2.indentLevel < IndentType.SUB) {
-                    child2.indentLen
-                } else {
-                    1 - child1.node.text.length
-                }
-
-            println("Spacing: ${child2.node.text} , $newIndent")
-            return Spacing.createSpacing(
-                newIndent,
-                newIndent,
-                1,
-                false,
-                0,
-                1,
-            )
-        }
+        // if (child1.node.text.contains("\n")) {
+        val postNewLine = child1.node.text.substringAfterLast("\n", "")
+        val newIndent =
+            if (child1.node.text.endsWith("\n") || postNewLine.isEmpty()) {
+                child2.indentLen
+            } else {
+                child2.indentLen - postNewLine.length
+            }
+        println("InNewLine limeSpace:${postNewLine.length},Spacing:${child2.node.text}, $newIndent")
+        return Spacing.createSpacing(
+            child2.indentLen,
+            child2.indentLen,
+            0,
+            false,
+            0,
+            0,
+        )
+//        } else {
+//            val newIndent =
+//                if (child2.indentLevel < IndentType.SUB) {
+//                    child2.indentLen
+//                } else {
+//                    1 - child1.node.text.length
+//                }
+//
+//            println("Add NewLine Spacing: ${child2.node.text} , $newIndent")
+//            return Spacing.createSpacing(
+//                newIndent,
+//                newIndent,
+//                1,
+//                false,
+//                0,
+//                1,
+//            )
+//        }
         return null
     }
 

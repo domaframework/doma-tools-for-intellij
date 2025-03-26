@@ -29,14 +29,15 @@ import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 enum class IndentType(
-    private val level: Int,
+    level: Int,
 ) {
     FILE(0),
     TOP(1),
     SECOND(2),
     SUB(3),
     COMMA(4),
-    SUB_QUERY(5),
+
+    // SUB_QUERY(5),
     OPTION(6),
 }
 
@@ -69,29 +70,28 @@ open class SqlBlock(
         if (isLeaf) return mutableListOf()
 
         var child = node.firstChildNode
-        var whiteBlock: SqlBlock? = null
+        var settingWhiteSpace = false
+        var prevNonWhiteSpaceNode: ASTNode? = null
         groupTopNodeIndexHistory.add(Pair(0, this))
         while (child != null) {
+            settingWhiteSpace = false
             if (child !is PsiWhiteSpace) {
                 val childBlock = getBlock(child)
                 if (blocks.isNotEmpty() && blocks.last() is SqlWhitespaceBlock) {
-                    when (childBlock) {
-                        is SqlKeywordBlock, is SqlCommaBlock -> {
-                            if (childBlock.indentLevel < IndentType.SUB || childBlock is SqlCommaBlock) {
-                                whiteBlock = blocks.last() as SqlBlock
-                                whiteBlock.parentBlock =
-                                    groupTopNodeIndexHistory.lastOrNull()?.second
-                            } else {
-                                blocks.removeLast()
-                            }
-                        }
-                        else -> {
-                            blocks.removeLast()
-                        }
+                    if ((childBlock is SqlKeywordBlock && childBlock.indentLevel < IndentType.SUB) ||
+                        childBlock is SqlCommaBlock
+                    ) {
+                        val whiteBlock = blocks.last() as SqlBlock
+                        whiteBlock.parentBlock =
+                            groupTopNodeIndexHistory.lastOrNull()?.second
+                        settingWhiteSpace = true
+                    } else {
+                        blocks.removeLast()
                     }
                 }
-                blocks.add(childBlock)
+                prevNonWhiteSpaceNode = child
                 updateSearchKeywordLevelHistory(childBlock, child, parentBlock)
+                blocks.add(childBlock)
             } else {
                 blocks.add(
                     SqlWhitespaceBlock(
