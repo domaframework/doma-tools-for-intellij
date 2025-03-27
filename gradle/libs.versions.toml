@@ -18,7 +18,7 @@ logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "l
 slf4j = { group = "org.slf4j", name = "slf4j-api", version = "2.0.17" }
 kotlinTest = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
 domacore = { module = "org.seasar.doma:doma-core", version.ref = "doma" }
-google-java-format = { module = "com.google.googlejavaformat:google-java-format", version = "1.25.2" }
+google-java-format = { module = "com.google.googlejavaformat:google-java-format", version = "1.26.0" }
 ktlint = { module = "com.pinterest.ktlint:ktlint-cli", version = "1.5.0" }
 jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.18.3" }
 
