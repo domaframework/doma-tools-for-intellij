@@ -72,7 +72,7 @@ jobs:
         run: ./gradlew build -x test
 
       - name: Build plugin
-        run: ./gradlew buildPlugin -PpluginVersion=0.3.2-${{ github.run_number }}
+        run: ./gradlew buildPlugin -PpluginVersion=0.4.0-${{ github.run_number }}
 
       - name: Prepare Plugin Artifact
         id: artifact
