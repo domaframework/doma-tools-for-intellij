@@ -15,9 +15,35 @@
  */
 package org.domaframework.doma.intellij.formatter
 
+enum class IndentType(
+    private val level: Int,
+    private val group: Boolean = false,
+) {
+    FILE(0),
+    TOP(1, true),
+    SECOND(2, true),
+    JOIN(3, true),
+    SECOND_OPTION(4, true),
+    TIRD(5),
+    ATTACHED(6),
+    INLINE_SECOND(8, true),
+    COLUMN(9),
+    SUB(90, true),
+    ATTRIBUTE(91),
+    LITERAL(92),
+    OPTIONS(93),
+    COMMA(94),
+    COLUMN_ROW(95),
+    INLINE(96, true),
+    NONE(99),
+    ;
+
+    fun isNewLineGroup(): Boolean = this.level < SUB.level || this.level == COMMA.level
+}
+
 class SqlKeywordUtil {
     companion object {
-        val TOP_KEYWORDS: Set<String> =
+        private val TOP_KEYWORDS: Set<String> =
             setOf(
                 "select",
                 "update",
@@ -33,7 +59,7 @@ class SqlKeywordUtil {
 
         fun isTopKeyword(keyword: String): Boolean = TOP_KEYWORDS.contains(keyword.lowercase())
 
-        val SECOND_KEYWORD =
+        private val SECOND_KEYWORD =
             setOf(
                 "from",
                 "where",
@@ -41,26 +67,65 @@ class SqlKeywordUtil {
                 "group",
                 "having",
                 "limit",
-                "and",
-                "or",
             )
 
         fun isSecondKeyword(keyword: String): Boolean = SECOND_KEYWORD.contains(keyword.lowercase())
 
-        val ATTACHED_KEYWORD =
+        private val SECOND_OPTION_KEYWORD =
             setOf(
-                "distinct",
+                "and",
+                "or",
+                "on",
+            )
+
+        fun isSecondOptionKeyword(keyword: String): Boolean = SECOND_OPTION_KEYWORD.contains(keyword.lowercase())
+
+        private val BEFORE_TABLE_KEYWORD =
+            setOf(
+                "from",
+                "update",
+                "drop",
                 "table",
+            )
+
+        fun isBeforeTableKeyword(keyword: String): Boolean = BEFORE_TABLE_KEYWORD.contains(keyword.lowercase())
+
+        private val BEFORE_COLUMN_KEYWORD = setOf("select")
+
+        fun isBeforeColumnKeyword(keyword: String): Boolean = BEFORE_COLUMN_KEYWORD.contains(keyword.lowercase())
+
+        private val JOIN_KEYWORD =
+            setOf(
                 "left",
                 "right",
+                "full",
+                "cross",
+                "natural",
+            )
+
+        fun isJoinKeyword(keyword: String): Boolean = JOIN_KEYWORD.contains(keyword.lowercase())
+
+        private val JOIN_ATTACHED_KEYWORD =
+            setOf(
                 "outer",
                 "inner",
                 "join",
             )
 
+        fun isJoinAttachedKeyword(keyword: String): Boolean = JOIN_ATTACHED_KEYWORD.contains(keyword.lowercase())
+
+        private val ATTACHED_KEYWORD =
+            setOf(
+                "distinct",
+                "table",
+                "index",
+                "database",
+                "view",
+            )
+
         fun isAttachedKeyword(keyword: String): Boolean = ATTACHED_KEYWORD.contains(keyword.lowercase())
 
-        val THIRD_KEYWORDS =
+        private val THIRD_KEYWORDS =
             setOf(
                 "add",
                 "between",
@@ -70,7 +135,7 @@ class SqlKeywordUtil {
 
         fun isThirdKeyword(keyword: String): Boolean = THIRD_KEYWORDS.contains(keyword.lowercase())
 
-        val COLUMN_TYPE_KEYWORDS =
+        private val COLUMN_TYPE_KEYWORDS =
             setOf(
                 "int",
                 "integer",
@@ -101,7 +166,7 @@ class SqlKeywordUtil {
 
         fun isColumnTypeKeyword(keyword: String): Boolean = COLUMN_TYPE_KEYWORDS.contains(keyword.lowercase())
 
-        val LITERAL_KEYWORDS =
+        private val LITERAL_KEYWORDS =
             setOf(
                 "null",
                 "true",
@@ -111,10 +176,9 @@ class SqlKeywordUtil {
 
         fun isLiteralKeyword(keyword: String): Boolean = LITERAL_KEYWORDS.contains(keyword.lowercase())
 
-        val ATTRIBUTE_KEYWORD =
+        private val ATTRIBUTE_KEYWORD =
             setOf(
                 "default",
-                "index",
                 "key",
                 "unique",
                 "primary",
@@ -124,24 +188,24 @@ class SqlKeywordUtil {
 
         fun isAttributeKeyword(keyword: String): Boolean = ATTRIBUTE_KEYWORD.contains(keyword.lowercase())
 
-        val INLINE_PARENT_SQL_KEYWORDS =
+        private val INLINE_PARENT_SQL_KEYWORDS =
             setOf(
                 "if",
                 "case",
-                "end",
             )
 
         fun isInlineParentSqlKeyword(keyword: String): Boolean = INLINE_PARENT_SQL_KEYWORDS.contains(keyword.lowercase())
 
-        val INLINE_SQL_KEYWORDS =
+        private val INLINE_SQL_KEYWORDS =
             setOf(
                 "when",
                 "else",
+                "end",
             )
 
         fun isInlineSqlKeyword(keyword: String): Boolean = INLINE_SQL_KEYWORDS.contains(keyword.lowercase())
 
-        val OPTION_SQL_KEYWORDS =
+        private val OPTION_SQL_KEYWORDS =
             setOf(
                 "as",
                 "by",
@@ -162,10 +226,13 @@ class SqlKeywordUtil {
 
         fun isOptionSqlKeyword(keyword: String): Boolean = OPTION_SQL_KEYWORDS.contains(keyword.lowercase())
 
-        val SET_LINE_KEYWORDS =
+        private val SET_LINE_KEYWORDS =
             mapOf(
                 "into" to setOf("insert"),
                 "from" to setOf("delete"),
+                "distinct" to setOf("select"),
+                "table" to setOf("create", "alter", "rename", "truncate", "drop"),
+                "index" to setOf("create", "alter", "rename", "truncate", "drop"),
                 "join" to setOf("outer", "inner", "left", "right"),
                 "outer" to setOf("left", "right"),
                 "inner" to setOf("left", "right"),
@@ -178,5 +245,26 @@ class SqlKeywordUtil {
             keyword: String,
             prevKeyword: String,
         ): Boolean = SET_LINE_KEYWORDS[keyword.lowercase()]?.contains(prevKeyword.lowercase()) == true
+
+        fun getIndentType(keywordText: String): IndentType {
+            val keyword = keywordText.lowercase()
+            return when {
+                isTopKeyword(keyword) -> IndentType.TOP
+                isSecondKeyword(keyword) -> IndentType.SECOND
+                isSecondOptionKeyword(keyword) -> IndentType.SECOND_OPTION
+                isJoinKeyword(keyword) -> IndentType.JOIN
+                isJoinAttachedKeyword(keyword) -> IndentType.JOIN
+                isAttachedKeyword(keyword) -> IndentType.ATTACHED
+                isThirdKeyword(keyword) -> IndentType.TIRD
+                isInlineParentSqlKeyword(keyword) -> IndentType.INLINE
+                isInlineSqlKeyword(keyword) -> IndentType.INLINE_SECOND
+                isAttributeKeyword(keyword) -> IndentType.ATTRIBUTE
+                isLiteralKeyword(keyword) -> IndentType.LITERAL
+                isOptionSqlKeyword(keyword) -> IndentType.OPTIONS
+                isColumnTypeKeyword(keyword) -> IndentType.COLUMN
+                keyword == "," -> IndentType.COMMA
+                else -> IndentType.NONE
+            }
+        }
     }
 }
