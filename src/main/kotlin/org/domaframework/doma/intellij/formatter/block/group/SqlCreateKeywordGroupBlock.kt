@@ -62,4 +62,8 @@ open class SqlCreateKeywordGroupBlock(
                 0
             }
         } ?: 0
+
+    fun setCreateTableGroup(nextKeyword: String) {
+        isCreateTable = nextKeyword.lowercase() == "table"
+    }
 }

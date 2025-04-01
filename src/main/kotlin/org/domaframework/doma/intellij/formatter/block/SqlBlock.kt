@@ -26,6 +26,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
+import org.domaframework.doma.intellij.formatter.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.SqlKeywordUtil
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
@@ -72,7 +73,7 @@ open class SqlBlock(
             0,
         )
 
-    private val groupTopNodeIndexHistory = mutableListOf<Pair<Int, SqlBlock>>()
+    private val blockBuilder = SqlBlockBuilder()
 
     protected open val pendingCommentBlocks = mutableListOf<SqlBlock>()
 
@@ -81,12 +82,12 @@ open class SqlBlock(
 
         var child = node.firstChildNode
         var prevNonWhiteSpaceNode: ASTNode? = null
-        groupTopNodeIndexHistory.add(Pair(0, this))
+        blockBuilder.addGroupTopNodeIndexHistory(Pair(0, this))
         while (child != null) {
             if (child !is PsiWhiteSpace) {
                 val childBlock = getBlock(child)
                 if (blocks.isNotEmpty() && blocks.last() is SqlWhitespaceBlock) {
-                    val lastGroup = groupTopNodeIndexHistory.lastOrNull()?.second
+                    val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()?.second
                     if (isSaveWhiteSpace(childBlock, child, lastGroup)) {
                         val whiteBlock = blocks.last() as SqlBlock
                         whiteBlock.parentBlock = lastGroup
@@ -142,25 +143,31 @@ open class SqlBlock(
         childBlock: SqlBlock,
         child: ASTNode,
     ) {
-        val lastIndentLevel =
-            groupTopNodeIndexHistory
-                .last()
-                .second.indent.indentLevel
-        val latestGroupTopBlock = groupTopNodeIndexHistory.last().second
+        val lastGroupBlock = blockBuilder.getLastGroupTopNodeIndexHistory()?.second
+        val lastIndentLevel = lastGroupBlock?.indent?.indentLevel
+        if (lastGroupBlock == null || lastIndentLevel == null) {
+            setParentGroups(
+                childBlock,
+            ) { history ->
+                return@setParentGroups null
+            }
+            return
+        }
+
         when (childBlock) {
             is SqlKeywordGroupBlock -> {
-                if (latestGroupTopBlock.indent.indentLevel == IndentType.SUB) {
+                if (lastGroupBlock.indent.indentLevel == IndentType.SUB) {
                     setParentGroups(
                         childBlock,
                     ) { history ->
-                        return@setParentGroups latestGroupTopBlock
+                        return@setParentGroups lastGroupBlock
                     }
                 } else if (lastIndentLevel == childBlock.indent.indentLevel) {
-                    groupTopNodeIndexHistory.removeLast()
+                    blockBuilder.removeLastGroupTopNodeIndexHistory()
                     setParentGroups(
                         childBlock,
                     ) { history ->
-                        return@setParentGroups latestGroupTopBlock.parentBlock
+                        return@setParentGroups lastGroupBlock.parentBlock
                     }
                 } else if (lastIndentLevel < childBlock.indent.indentLevel) {
                     setParentGroups(
@@ -194,11 +201,11 @@ open class SqlBlock(
             is SqlColumnGroupBlock -> {
                 when (lastIndentLevel) {
                     childBlock.indent.indentLevel -> {
-                        groupTopNodeIndexHistory.removeLast()
+                        blockBuilder.removeLastGroupTopNodeIndexHistory()
                         setParentGroups(
                             childBlock,
                         ) { history ->
-                            return@setParentGroups latestGroupTopBlock.parentBlock
+                            return@setParentGroups lastGroupBlock.parentBlock
                         }
                     }
                     else -> {
@@ -223,27 +230,23 @@ open class SqlBlock(
             is SqlInlineSecondGroupBlock -> {
                 if (childBlock.isEndCase) {
                     val inlineIndex =
-                        groupTopNodeIndexHistory.indexOfLast { it.second.indent.indentLevel == IndentType.INLINE }
+                        blockBuilder.getGroupTopNodeIndexByIndentType(IndentType.INLINE)
                     if (inlineIndex >= 0) {
                         setParentGroups(
                             childBlock,
                         ) { history ->
                             return@setParentGroups history[inlineIndex].second
                         }
-                        groupTopNodeIndexHistory
-                            .subList(
-                                inlineIndex,
-                                groupTopNodeIndexHistory.size,
-                            ).clear()
+                        blockBuilder.clearSubListGroupTopNodeIndexHistory(inlineIndex)
                     }
                     return
                 }
                 if (lastIndentLevel == IndentType.INLINE_SECOND) {
-                    groupTopNodeIndexHistory.removeLast()
+                    blockBuilder.removeLastGroupTopNodeIndexHistory()
                     setParentGroups(
                         childBlock,
                     ) { history ->
-                        return@setParentGroups latestGroupTopBlock.parentBlock
+                        return@setParentGroups lastGroupBlock.parentBlock
                     }
                     return
                 }
@@ -271,19 +274,14 @@ open class SqlBlock(
             }
 
             is SqlRightPatternBlock -> {
-                val leftIndex =
-                    groupTopNodeIndexHistory.indexOfLast { it.second.indent.indentLevel == IndentType.SUB }
+                val leftIndex = blockBuilder.getGroupTopNodeIndexByIndentType(IndentType.SUB)
                 if (leftIndex >= 0) {
                     setParentGroups(
                         childBlock,
                     ) { history ->
                         return@setParentGroups history[leftIndex].second
                     }
-                    groupTopNodeIndexHistory
-                        .subList(
-                            leftIndex,
-                            groupTopNodeIndexHistory.size,
-                        ).clear()
+                    blockBuilder.clearSubListGroupTopNodeIndexHistory(leftIndex)
                 }
                 pendingCommentBlocks.clear()
             }
@@ -297,13 +295,13 @@ open class SqlBlock(
             }
 
             is SqlColumnDefinitionRawGroupBlock -> {
-                if (latestGroupTopBlock is SqlColumnDefinitionRawGroupBlock) {
-                    groupTopNodeIndexHistory.removeLast()
+                if (lastGroupBlock is SqlColumnDefinitionRawGroupBlock) {
+                    blockBuilder.removeLastGroupTopNodeIndexHistory()
                 }
                 setParentGroups(
                     childBlock,
                 ) { history ->
-                    return@setParentGroups groupTopNodeIndexHistory.last().second
+                    return@setParentGroups history.last().second
                 }
             }
 
@@ -321,7 +319,7 @@ open class SqlBlock(
         childBlock: SqlBlock,
         getParentGroup: (MutableList<Pair<Int, SqlBlock>>) -> SqlBlock?,
     ) {
-        val parentGroup = getParentGroup(groupTopNodeIndexHistory)
+        val parentGroup = getParentGroup(blockBuilder.getGroupTopNodeIndexHistory() as MutableList<Pair<Int, SqlBlock>>)
         childBlock.setParentGroupBlock(parentGroup)
 
         if ((
@@ -337,12 +335,12 @@ open class SqlBlock(
             childBlock is SqlInlineSecondGroupBlock ||
             childBlock is SqlColumnDefinitionRawGroupBlock
         ) {
-            groupTopNodeIndexHistory.add(Pair(blocks.size - 1, childBlock))
+            blockBuilder.addGroupTopNodeIndexHistory(Pair(blocks.size - 1, childBlock))
         }
     }
 
     open fun getBlock(child: ASTNode): SqlBlock {
-        val lastGroup = groupTopNodeIndexHistory.lastOrNull()?.second
+        val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()?.second
         return when (child.elementType) {
             SqlTypes.KEYWORD -> {
                 return getKeywordBlock(child)
@@ -431,6 +429,7 @@ open class SqlBlock(
         // Because we haven't yet set the parent-child relationship of the block,
         // the parent group references groupTopNodeIndexHistory.
         val indentLevel = SqlKeywordUtil.getIndentType(child.text)
+        val lastGroupBlock = blockBuilder.getLastGroupTopNodeIndexHistory()?.second
         if (indentLevel.isNewLineGroup()) {
             if (child.text.lowercase() == "create") {
                 return SqlCreateKeywordGroupBlock(child, wrap, alignment, spacingBuilder)
@@ -438,7 +437,7 @@ open class SqlBlock(
             if (indentLevel == IndentType.JOIN) {
                 return if (SqlKeywordUtil.isJoinKeyword(child.text)) {
                     SqlJoinGroupBlock(child, wrap, alignment, spacingBuilder)
-                } else if (groupTopNodeIndexHistory.last().second is SqlJoinGroupBlock) {
+                } else if (lastGroupBlock is SqlJoinGroupBlock) {
                     SqlKeywordBlock(child, IndentType.ATTACHED, wrap, alignment, spacingBuilder)
                 } else {
                     SqlJoinGroupBlock(child, wrap, alignment, spacingBuilder)
@@ -451,11 +450,8 @@ open class SqlBlock(
             return SqlKeywordGroupBlock(child, indentLevel, wrap, alignment, spacingBuilder)
         }
 
-        val lastGroup = groupTopNodeIndexHistory.lastOrNull()?.second
-        if (lastGroup is SqlCreateKeywordGroupBlock) {
-            if (SqlKeywordUtil.isAttachedKeyword(child.text)) {
-                lastGroup.isCreateTable = child.text.lowercase() == "table"
-            }
+        if (lastGroupBlock is SqlCreateKeywordGroupBlock) {
+            lastGroupBlock.setCreateTableGroup(child.text)
             return SqlKeywordBlock(child, indentLevel, wrap, alignment, spacingBuilder)
         }
 
