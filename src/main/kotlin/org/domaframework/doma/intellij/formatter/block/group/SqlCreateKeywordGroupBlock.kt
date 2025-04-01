@@ -21,6 +21,7 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.CreateQueryType
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
@@ -36,7 +37,7 @@ open class SqlCreateKeywordGroupBlock(
         alignment,
         spacingBuilder,
     ) {
-    var isCreateTable: Boolean = false
+    var createType: CreateQueryType = CreateQueryType.NONE
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
@@ -63,7 +64,7 @@ open class SqlCreateKeywordGroupBlock(
             }
         } ?: 0
 
-    fun setCreateTableGroup(nextKeyword: String) {
-        isCreateTable = nextKeyword.lowercase() == "table"
+    fun setCreateQueryType(nextKeyword: String) {
+        createType = CreateQueryType.getCreateTableType(nextKeyword)
     }
 }

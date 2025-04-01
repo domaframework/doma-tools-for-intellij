@@ -36,6 +36,8 @@ public class SqlSyntaxHighlighter extends SyntaxHighlighterBase {
       createTextAttributesKey("DOMA_SQL_KEYWORD", DefaultLanguageHighlighterColors.METADATA);
   public static final TextAttributesKey WORD =
       createTextAttributesKey("DOMA_SQL_WORD", DefaultLanguageHighlighterColors.IDENTIFIER);
+  public static final TextAttributesKey DATATYPE =
+      createTextAttributesKey("DOMA_SQL_DATATYPE", DefaultLanguageHighlighterColors.METADATA);
   public static final TextAttributesKey STRING =
       createTextAttributesKey("DOMA_SQL_STRING", DefaultLanguageHighlighterColors.STRING);
   public static final TextAttributesKey NUMBER =
@@ -138,6 +140,7 @@ public class SqlSyntaxHighlighter extends SyntaxHighlighterBase {
 
   static {
     map.put(SqlTypes.KEYWORD, KEYWORD);
+    map.put(SqlTypes.DATATYPE, DATATYPE);
     map.put(SqlTypes.STRING, STRING);
     map.put(SqlTypes.OTHER, OTHER);
     map.put(SqlTypes.WORD, WORD);

@@ -63,10 +63,10 @@ open class SqlKeywordGroupBlock(
         when (indentLevel) {
             IndentType.TOP -> {
                 parentBlock?.let {
-                    if (it.indent.indentLevel == IndentType.SUB) {
+                    if (it is SqlSubGroupBlock) {
                         it.indent.groupIndentLen.plus(1)
                     } else {
-                        0
+                        it.indent.groupIndentLen.plus(it.node.text.length)
                     }
                 } ?: 0
             }

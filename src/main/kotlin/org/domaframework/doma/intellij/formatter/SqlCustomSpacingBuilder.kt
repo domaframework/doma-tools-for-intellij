@@ -20,11 +20,13 @@ import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.psi.tree.IElementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlDataTypeBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlSubQueryGroupBlock
 
 class SqlCustomSpacingBuilder {
@@ -106,6 +108,11 @@ class SqlCustomSpacingBuilder {
         return null
     }
 
+    fun getSpacingDataType(child: SqlDataTypeBlock): Spacing? {
+        val indentLen = child.createIndentLen()
+        return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
+    }
+
     fun getSpacingColumnDefinitionRaw(child: SqlColumnDefinitionRawGroupBlock): Spacing? {
         val indentLen = child.indent.indentLen
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
@@ -127,7 +134,7 @@ class SqlCustomSpacingBuilder {
             IndentType.TOP -> {
                 return if (parentBlock?.parentBlock == null) {
                     Spacing.createSpacing(0, 0, 0, false, 0, 0)
-                } else if (parentBlock.indent.indentLevel == IndentType.SUB) {
+                } else if (parentBlock is SqlSubGroupBlock) {
                     Spacing.createSpacing(0, 0, 0, false, 0, 0)
                 } else {
                     Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)

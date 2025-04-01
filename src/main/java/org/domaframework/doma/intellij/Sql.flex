@@ -21,6 +21,8 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
 %{
   // SQL keywords
   private static final Set<String> KEYWORDS = Set.of(
+      "add",
+      "after",
       "alter",
       "all",
       "and",
@@ -28,9 +30,13 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "asc",
       "by",
       "case",
+      "change",
       "check",
+      "column",
+      "comment",
       "create",
       "cross",
+      "database",
       "default",
       "delete",
       "desc",
@@ -40,6 +46,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "end",
       "except",
       "exists",
+      "first",
       "foreign",
       "from",
       "full",
@@ -60,6 +67,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "limit",
       "not",
       "null",
+      "modify",
       "offset",
       "on",
       "outer",
@@ -67,21 +75,59 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "order",
       "primary",
       "references",
+      "rename",
       "right",
       "select",
       "set",
       "table",
+      "temporary",
       "then",
+      "to",
+      "truncate",
       "union",
       "unique",
       "update",
       "values",
+      "view",
       "when",
       "where"
   );
 
+  // COLUMN DataTypes
+  private static final Set<String> DATATYPES = Set.of(
+      "int",
+      "integer",
+      "smallint",
+      "bigint",
+      "tinyint",
+      "float",
+      "double",
+      "decimal",
+      "numeric",
+      "char",
+      "varchar",
+      "text",
+      "date",
+      "time",
+      "timestamp",
+      "datetime",
+      "boolean",
+      "bit",
+      "binary",
+      "varbinary",
+      "blob",
+      "clob",
+      "json",
+      "enum",
+      "set"
+   );
+
   private static boolean isKeyword(CharSequence word) {
       return KEYWORDS.contains(word.toString().toLowerCase());
+  }
+
+  private static boolean isColumnDataType(CharSequence word) {
+    return DATATYPES.contains(word.toString().toLowerCase());
   }
 %}
 
@@ -119,7 +165,7 @@ El_NonWordPart = [=<>\-,/*();\R \n\t\f]
   {LineComment}                                { return SqlTypes.LINE_COMMENT; }
   {String}                                     { return SqlTypes.STRING; }
   {Number}                                     { return SqlTypes.NUMBER; }
-  {Word}                                       { return isKeyword(yytext()) ? SqlTypes.KEYWORD : SqlTypes.WORD; }
+  {Word}                                       { return isKeyword(yytext()) ? SqlTypes.KEYWORD : isColumnDataType(yytext()) ? SqlTypes.DATATYPE : SqlTypes.WORD; }
   "."                                         { return SqlTypes.DOT; }
   ","                                         { return SqlTypes.COMMA; }
   "+"                                          { return SqlTypes.PLUS;}

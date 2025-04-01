@@ -21,29 +21,31 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.psi.SqlTypes
 
-/**
- * Column definition group block in the column list group attached to Create Table
- * The parent must be SqlColumnDefinitionGroupBlock
- */
-class SqlColumnDefinitionRawGroupBlock(
+open class SqlViewGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlBlock(
+) : SqlKeywordGroupBlock(
         node,
+        IndentType.SUB,
         wrap,
         alignment,
-        null,
         spacingBuilder,
     ) {
-    var columnName = node.text
+    override val indent =
+        ElementIndent(
+            IndentType.SUB,
+            0,
+            0,
+        )
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
+        indent.indentLevel = IndentType.JOIN
         indent.indentLen = createIndentLen()
         indent.groupIndentLen = indent.indentLen
     }
@@ -52,14 +54,5 @@ class SqlColumnDefinitionRawGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    private fun createIndentLen(): Int =
-        parentBlock?.let {
-            val parentIndentLen = it.indent.groupIndentLen
-            val baseIndent = parentIndentLen.plus(parentIndentLen)
-            when (node.elementType) {
-                SqlTypes.COMMA -> baseIndent.minus(1)
-                SqlTypes.WORD -> baseIndent.plus(1)
-                else -> baseIndent
-            }
-        } ?: 1
+    private fun createIndentLen(): Int = parentBlock?.indent?.groupIndentLen ?: 1
 }

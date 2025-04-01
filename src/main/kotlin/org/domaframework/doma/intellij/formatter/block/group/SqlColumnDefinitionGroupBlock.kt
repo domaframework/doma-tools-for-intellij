@@ -37,6 +37,8 @@ class SqlColumnDefinitionGroupBlock(
         alignment,
         spacingBuilder,
     ) {
+    var alignmentColumnName = ""
+
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLen = createIndentLen()

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -21,14 +21,11 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.psi.SqlTypes
+import org.domaframework.doma.intellij.formatter.IndentType
+import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
 
-/**
- * Column definition group block in the column list group attached to Create Table
- * The parent must be SqlColumnDefinitionGroupBlock
- */
-class SqlColumnDefinitionRawGroupBlock(
+open class SqlDataTypeBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
@@ -40,11 +37,18 @@ class SqlColumnDefinitionRawGroupBlock(
         null,
         spacingBuilder,
     ) {
-    var columnName = node.text
+    override val indent =
+        ElementIndent(
+            IndentType.NONE,
+            0,
+            0,
+        )
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLen = createIndentLen()
+        indent.indentLevel = IndentType.NONE
+        // Calculate right justification space during indentation after getting all column rows
+        indent.indentLen = 0
         indent.groupIndentLen = indent.indentLen
     }
 
@@ -52,14 +56,21 @@ class SqlColumnDefinitionRawGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    private fun createIndentLen(): Int =
+    fun createIndentLen(): Int {
         parentBlock?.let {
-            val parentIndentLen = it.indent.groupIndentLen
-            val baseIndent = parentIndentLen.plus(parentIndentLen)
-            when (node.elementType) {
-                SqlTypes.COMMA -> baseIndent.minus(1)
-                SqlTypes.WORD -> baseIndent.plus(1)
-                else -> baseIndent
+            when (it) {
+                is SqlColumnDefinitionRawGroupBlock -> {
+                    val groupBlock = it.parentBlock as? SqlColumnDefinitionGroupBlock
+                    val groupAlimentLen = groupBlock?.alignmentColumnName?.length ?: 1
+                    val rawColumnNameLen = it.columnName.length
+                    val newSpaces = groupAlimentLen.minus(rawColumnNameLen).plus(1)
+                    return newSpaces
+                }
+                else -> {
+                    return 1
+                }
             }
-        } ?: 1
+        }
+        return 1
+    }
 }

@@ -37,6 +37,7 @@ public class SqlColorSettingsPage implements ColorSettingsPage {
         new AttributesDescriptor("SQL//Literal//String", SqlSyntaxHighlighter.STRING),
         new AttributesDescriptor("SQL//Literal//Number", SqlSyntaxHighlighter.NUMBER),
         new AttributesDescriptor("SQL//Syntax//Keyword", SqlSyntaxHighlighter.KEYWORD),
+        new AttributesDescriptor("SQL//Syntax//DataType", SqlSyntaxHighlighter.DATATYPE),
         new AttributesDescriptor("SQL//Syntax//Other", SqlSyntaxHighlighter.OTHER),
         new AttributesDescriptor("SQL//Syntax//Word", SqlSyntaxHighlighter.WORD),
         new AttributesDescriptor("SQL//Comment//Line comment", SqlSyntaxHighlighter.LINE_COMMENT),
