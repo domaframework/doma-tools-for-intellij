@@ -25,13 +25,12 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.TokenType
 import com.intellij.psi.impl.source.codeStyle.PreFormatProcessor
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeafs
 import org.domaframework.doma.intellij.psi.SqlBlockComment
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
-import org.jetbrains.kotlin.idea.base.codeInsight.handlers.fixers.end
-import org.jetbrains.kotlin.idea.base.codeInsight.handlers.fixers.start
-import org.toml.lang.psi.ext.elementType
+import org.jetbrains.kotlin.psi.psiUtil.startOffset
 
 class SqlFormatPreProcessor : PreFormatProcessor {
     enum class CreateQueryType {
@@ -74,6 +73,8 @@ class SqlFormatPreProcessor : PreFormatProcessor {
 
         visitor.replaces.asReversed().forEach {
             val isCreateTableGroup = isCreateTableGroup(keywordList, index)
+            val textRangeStart = it.startOffset
+            val textRangeEnd = textRangeStart + it.text.length
             if (it.elementType != TokenType.WHITE_SPACE) {
                 index--
                 var newKeyword = getUpperText(it)
@@ -150,8 +151,8 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                         newKeyword = getNewLineString(it)
                     }
                 }
-                document.deleteString(it.textRange.start, it.textRange.end)
-                document.insertString(it.textRange.start, newKeyword)
+                document.deleteString(textRangeStart, textRangeEnd)
+                document.insertString(textRangeStart, newKeyword)
             } else {
                 if (keywordIndex < replaceKeywordList.size) {
                     val nextElement = replaceKeywordList[keywordIndex]
@@ -166,18 +167,17 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                             isNewLineOnlyCreateTable(nextElement) && isCreateTableGroup
                         )
                     ) {
-                        val start = it.textRange.start
-                        document.deleteString(start, it.textRange.end)
-                        document.insertString(start, " ")
+                        document.deleteString(textRangeStart, textRangeEnd)
+                        document.insertString(textRangeStart, " ")
                     } else {
                         val currentIndent = it.text.substringAfter("\n", "").length
-                        val start = it.textRange.end - currentIndent
-                        document.deleteString(start, it.textRange.end)
+                        val start = textRangeEnd - currentIndent
+                        document.deleteString(start, textRangeEnd)
                     }
                 } else {
                     val currentIndent = it.text.substringAfter("\n", "").length
-                    val start = it.textRange.end - currentIndent
-                    document.deleteString(start, it.textRange.end)
+                    val start = textRangeEnd - currentIndent
+                    document.deleteString(start, textRangeEnd)
                 }
             }
         }
