@@ -421,6 +421,12 @@ open class SqlBlock(
             SqlTypes.LINE_COMMENT ->
                 return SqlLineCommentBlock(child, wrap, alignment, spacingBuilder)
 
+            SqlTypes.PLUS, SqlTypes.MINUS, SqlTypes.ASTERISK, SqlTypes.SLASH ->
+                return SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
+
+            SqlTypes.STRING, SqlTypes.NUMBER, SqlTypes.BOOLEAN ->
+                return SqlLiteralBlock(child, wrap, alignment, spacingBuilder)
+
             else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
         }
     }
