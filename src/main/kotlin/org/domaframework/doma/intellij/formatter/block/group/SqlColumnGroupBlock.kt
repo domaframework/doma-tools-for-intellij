@@ -49,8 +49,9 @@ class SqlColumnGroupBlock(
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
+        indent.indentLevel = IndentType.COLUMN
         indent.indentLen = createIndentLen()
-        indent.groupIndentLen = indent.indentLen
+        indent.groupIndentLen = if (isFirstColumnGroup) indent.indentLen else indent.indentLen.plus(1)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()

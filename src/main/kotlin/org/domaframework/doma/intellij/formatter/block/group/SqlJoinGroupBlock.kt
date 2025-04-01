@@ -29,12 +29,20 @@ open class SqlJoinGroupBlock(
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlNewGroupBlock(
+) : SqlKeywordGroupBlock(
         node,
+        IndentType.JOIN,
         wrap,
         alignment,
         spacingBuilder,
     ) {
+    override val indent =
+        ElementIndent(
+            IndentType.JOIN,
+            0,
+            0,
+        )
+
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.JOIN

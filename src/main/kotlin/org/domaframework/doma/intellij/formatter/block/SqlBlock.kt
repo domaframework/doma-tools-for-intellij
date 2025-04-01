@@ -33,6 +33,7 @@ import org.domaframework.doma.intellij.formatter.block.expr.SqlElDotBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElSymbolBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlInlineGroupBlock
@@ -190,6 +191,26 @@ open class SqlBlock(
                 }
             }
 
+            is SqlColumnGroupBlock -> {
+                when (lastIndentLevel) {
+                    childBlock.indent.indentLevel -> {
+                        groupTopNodeIndexHistory.removeLast()
+                        setParentGroups(
+                            childBlock,
+                        ) { history ->
+                            return@setParentGroups latestGroupTopBlock.parentBlock
+                        }
+                    }
+                    else -> {
+                        setParentGroups(
+                            childBlock,
+                        ) { history ->
+                            return@setParentGroups history.last().second
+                        }
+                    }
+                }
+            }
+
             is SqlInlineGroupBlock -> {
                 // case-end
                 setParentGroups(
@@ -200,14 +221,36 @@ open class SqlBlock(
             }
 
             is SqlInlineSecondGroupBlock -> {
-                groupTopNodeIndexHistory.removeLast()
+                if (childBlock.isEndCase) {
+                    val inlineIndex =
+                        groupTopNodeIndexHistory.indexOfLast { it.second.indent.indentLevel == IndentType.INLINE }
+                    if (inlineIndex >= 0) {
+                        setParentGroups(
+                            childBlock,
+                        ) { history ->
+                            return@setParentGroups history[inlineIndex].second
+                        }
+                        groupTopNodeIndexHistory
+                            .subList(
+                                inlineIndex,
+                                groupTopNodeIndexHistory.size,
+                            ).clear()
+                    }
+                    return
+                }
+                if (lastIndentLevel == IndentType.INLINE_SECOND) {
+                    groupTopNodeIndexHistory.removeLast()
+                    setParentGroups(
+                        childBlock,
+                    ) { history ->
+                        return@setParentGroups latestGroupTopBlock.parentBlock
+                    }
+                    return
+                }
                 setParentGroups(
                     childBlock,
                 ) { history ->
-                    return@setParentGroups latestGroupTopBlock.parentBlock
-                }
-                if (childBlock.isEndCase) {
-                    groupTopNodeIndexHistory.removeLast()
+                    return@setParentGroups history.last().second
                 }
             }
 
@@ -333,7 +376,9 @@ open class SqlBlock(
                             spacingBuilder,
                         )
 
-                    else -> SqlCommaBlock(child, wrap, alignment, spacingBuilder)
+                    is SqlColumnGroupBlock -> SqlColumnGroupBlock(child, wrap, alignment, spacingBuilder)
+
+                    else -> SqlColumnGroupBlock(child, wrap, alignment, spacingBuilder)
                 }
             }
 
@@ -472,14 +517,14 @@ open class SqlBlock(
         }
 
         if (child2 is SqlColumnDefinitionRawGroupBlock) {
-            SqlCustomSpacingBuilder().getSpacingColumnRaw(child2)?.let { return it }
+            SqlCustomSpacingBuilder().getSpacingColumnDefinitionRaw(child2)?.let { return it }
         }
 
         if (child2 is SqlRightPatternBlock && child2.parentBlock is SqlColumnDefinitionGroupBlock) {
-            SqlCustomSpacingBuilder().getSpacingColumnRowEndRight(child2)?.let { return it }
+            SqlCustomSpacingBuilder().getSpacingColumnDefinitionRawEndRight(child2)?.let { return it }
         }
 
-        if (child1 is SqlBlock && child2 is SqlCommaBlock) {
+        if (child1 is SqlBlock && (child2 is SqlCommaBlock || child2 is SqlColumnGroupBlock)) {
             SqlCustomSpacingBuilder().getSpacingWithIndentComma(child1, child2)?.let { return it }
         }
 

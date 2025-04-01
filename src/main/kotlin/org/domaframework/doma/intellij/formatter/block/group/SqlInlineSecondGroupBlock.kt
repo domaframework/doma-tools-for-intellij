@@ -57,8 +57,11 @@ open class SqlInlineSecondGroupBlock(
 
     private fun createIndentLen(): Int =
         parentBlock?.let {
-            it.indent.groupIndentLen
-                .plus(it.node.text.length)
-                .plus(1)
+            if (isEndCase) {
+                it.indent.indentLen
+            } else {
+                it.indent.groupIndentLen
+                    .plus(it.node.text.length)
+            }
         } ?: 1
 }

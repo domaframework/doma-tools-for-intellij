@@ -20,7 +20,6 @@ import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.psi.tree.IElementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
@@ -66,7 +65,7 @@ class SqlCustomSpacingBuilder {
 
     fun getSpacingWithIndentComma(
         child1: SqlBlock?,
-        child2: SqlCommaBlock,
+        child2: SqlBlock,
     ): Spacing? {
         val indentLen: Int = child2.indent.indentLen
         when (child1) {
@@ -107,12 +106,12 @@ class SqlCustomSpacingBuilder {
         return null
     }
 
-    fun getSpacingColumnRaw(child: SqlColumnDefinitionRawGroupBlock): Spacing? {
+    fun getSpacingColumnDefinitionRaw(child: SqlColumnDefinitionRawGroupBlock): Spacing? {
         val indentLen = child.indent.indentLen
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
     }
 
-    fun getSpacingColumnRowEndRight(child: SqlRightPatternBlock): Spacing? {
+    fun getSpacingColumnDefinitionRawEndRight(child: SqlRightPatternBlock): Spacing? {
         val indentLen = child.indent.indentLen
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
     }
@@ -157,7 +156,7 @@ class SqlCustomSpacingBuilder {
             }
 
             IndentType.INLINE -> {
-                return Spacing.createSpacing(0, 0, 0, false, 0, 0)
+                return Spacing.createSpacing(1, 1, 0, false, 0, 0)
             }
 
             IndentType.INLINE_SECOND -> {
