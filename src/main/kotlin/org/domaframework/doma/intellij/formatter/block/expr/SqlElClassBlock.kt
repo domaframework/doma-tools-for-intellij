@@ -69,7 +69,7 @@ class SqlElClassBlock(
         child1: Block?,
         child2: Block,
     ): Spacing? =
-        customSpacingBuilder?.getSpacing(child1, child2) ?: spacingBuilder.getSpacing(
+        customSpacingBuilder?.getCustomSpacing(child1, child2) ?: spacingBuilder.getSpacing(
             this,
             child1,
             child2,

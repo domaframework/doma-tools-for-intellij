@@ -43,7 +43,7 @@ class SqlCustomSpacingBuilder {
         return this
     }
 
-    fun getSpacing(
+    fun getCustomSpacing(
         child1: Block?,
         child2: Block?,
     ): Spacing? {
@@ -92,12 +92,8 @@ class SqlCustomSpacingBuilder {
         return null
     }
 
-    fun getSpacingWithWhiteSpace(
-        child1: SqlWhitespaceBlock,
-        child2: SqlNewGroupBlock,
-    ): Spacing? {
-        child1.node.text.substringAfterLast("\n", "")
-        return Spacing.createSpacing(
+    fun getSpacing(child2: SqlNewGroupBlock): Spacing? =
+        Spacing.createSpacing(
             child2.indent.indentLen,
             child2.indent.indentLen,
             0,
@@ -105,8 +101,6 @@ class SqlCustomSpacingBuilder {
             0,
             0,
         )
-        return null
-    }
 
     fun getSpacingDataType(child: SqlDataTypeBlock): Spacing? {
         val indentLen = child.createIndentLen()

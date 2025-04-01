@@ -28,13 +28,13 @@ enum class IndentType(
     ATTACHED(6, true),
     INLINE_SECOND(8, true),
     COLUMN(9, true),
-    SUB(90, true),
+    SUB(90),
     ATTRIBUTE(91),
     LITERAL(92),
     OPTIONS(93),
     COMMA(94),
-    PARAM(95, false),
-    INLINE(96, true),
+    PARAM(95),
+    INLINE(96),
     NONE(99),
     ;
 

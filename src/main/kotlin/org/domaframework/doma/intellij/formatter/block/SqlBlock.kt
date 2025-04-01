@@ -362,6 +362,7 @@ open class SqlBlock(
                     )
             ) ||
             childBlock is SqlSubGroupBlock ||
+            childBlock is SqlViewGroupBlock ||
             childBlock is SqlInlineGroupBlock ||
             childBlock is SqlInlineSecondGroupBlock ||
             childBlock is SqlColumnDefinitionRawGroupBlock
@@ -482,12 +483,6 @@ open class SqlBlock(
                     }
                 }
 
-                IndentType.INLINE -> {
-                    if (!SqlKeywordUtil.isSetLineKeyword(child.text, lastGroupBlock?.node?.text ?: "")) {
-                        return SqlInlineGroupBlock(child, wrap, alignment, spacingBuilder)
-                    }
-                }
-
                 IndentType.INLINE_SECOND -> {
                     return SqlInlineSecondGroupBlock(child, wrap, alignment, spacingBuilder)
                 }
@@ -496,6 +491,7 @@ open class SqlBlock(
                     if (child.text.lowercase() == "create") {
                         return SqlCreateKeywordGroupBlock(child, wrap, alignment, spacingBuilder)
                     }
+                    return SqlKeywordGroupBlock(child, indentLevel, wrap, alignment, spacingBuilder)
                 }
 
                 IndentType.ATTACHED -> {
@@ -511,21 +507,30 @@ open class SqlBlock(
             }
         }
 
-        if (indentLevel == IndentType.OPTIONS) {
-            if (child.text.lowercase() == "as") {
-                val parentCreateBlock =
-                    lastGroupBlock as? SqlCreateKeywordGroupBlock
-                        ?: lastGroupBlock?.parentBlock as? SqlCreateKeywordGroupBlock
-                if (parentCreateBlock == null) {
-                    return SqlKeywordBlock(child, indentLevel, wrap, alignment, spacingBuilder)
-                }
-
-                if (parentCreateBlock.createType == CreateQueryType.VIEW) {
-                    return SqlViewGroupBlock(child, wrap, alignment, spacingBuilder)
+        when (indentLevel) {
+            IndentType.INLINE -> {
+                if (!SqlKeywordUtil.isSetLineKeyword(
+                        child.text,
+                        lastGroupBlock?.node?.text ?: "",
+                    )
+                ) {
+                    return SqlInlineGroupBlock(child, wrap, alignment, spacingBuilder)
                 }
             }
-        }
 
+            IndentType.OPTIONS -> {
+                if (child.text.lowercase() == "as") {
+                    val parentCreateBlock =
+                        lastGroupBlock as? SqlCreateKeywordGroupBlock
+                            ?: lastGroupBlock?.parentBlock as? SqlCreateKeywordGroupBlock
+                    if (parentCreateBlock != null && parentCreateBlock.createType == CreateQueryType.VIEW) {
+                        return SqlViewGroupBlock(child, wrap, alignment, spacingBuilder)
+                    }
+                }
+            }
+
+            else -> return SqlKeywordBlock(child, indentLevel, wrap, alignment, spacingBuilder)
+        }
         return SqlKeywordBlock(child, indentLevel, wrap, alignment, spacingBuilder)
     }
 
@@ -567,8 +572,7 @@ open class SqlBlock(
             when (child1) {
                 is SqlWhitespaceBlock ->
                     SqlCustomSpacingBuilder()
-                        .getSpacingWithWhiteSpace(
-                            child1,
+                        .getSpacing(
                             child2,
                         )?.let { return it }
 
@@ -599,7 +603,7 @@ open class SqlBlock(
             SqlCustomSpacingBuilder().getSpacingDataType(child2)?.let { return it }
         }
 
-        val spacing: Spacing? = customSpacingBuilder?.getSpacing(child1, child2)
+        val spacing: Spacing? = customSpacingBuilder?.getCustomSpacing(child1, child2)
         return spacing ?: spacingBuilder.getSpacing(this, child1, child2)
     }
 

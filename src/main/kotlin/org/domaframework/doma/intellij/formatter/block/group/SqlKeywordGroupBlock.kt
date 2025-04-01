@@ -63,7 +63,9 @@ open class SqlKeywordGroupBlock(
         when (indentLevel) {
             IndentType.TOP -> {
                 parentBlock?.let {
-                    if (it is SqlSubGroupBlock) {
+                    if (it.indent.indentLevel == IndentType.FILE) {
+                        0
+                    } else if (it is SqlSubGroupBlock) {
                         it.indent.groupIndentLen.plus(1)
                     } else {
                         it.indent.groupIndentLen.plus(it.node.text.length)
@@ -73,22 +75,31 @@ open class SqlKeywordGroupBlock(
 
             IndentType.SECOND -> {
                 parentBlock?.let {
-                    it.indent.groupIndentLen
-                        .plus(it.node.text.length)
-                        .minus(this.node.text.length)
+                    if (it.indent.indentLevel == IndentType.FILE) {
+                        0
+                    } else {
+                        it.indent.groupIndentLen
+                            .plus(it.node.text.length)
+                            .minus(this.node.text.length)
+                    }
                 } ?: 1
             }
 
             IndentType.SECOND_OPTION -> {
                 parentBlock?.let {
-                    it.indent.groupIndentLen
-                        .plus(it.node.text.length)
-                        .minus(this.node.text.length)
+                    if (it.indent.indentLevel == IndentType.FILE) {
+                        0
+                    } else {
+                        it.indent.groupIndentLen
+                            .plus(it.node.text.length)
+                            .minus(this.node.text.length)
+                    }
                 } ?: 1
             }
 
             IndentType.INLINE_SECOND -> {
                 parentBlock?.let {
+                    if (it.indent.indentLevel == IndentType.FILE) 0
                     it.indent.groupIndentLen
                         .plus(it.node.text.length)
                         .plus(1)

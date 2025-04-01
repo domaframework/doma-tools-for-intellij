@@ -22,6 +22,7 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
 class SqlSubQueryGroupBlock(
     node: ASTNode,
@@ -34,6 +35,12 @@ class SqlSubQueryGroupBlock(
         alignment,
         spacingBuilder,
     ) {
+    override fun setParentGroupBlock(block: SqlBlock?) {
+        super.setParentGroupBlock(block)
+        indent.indentLen = 1
+        indent.groupIndentLen = createIndentLen()
+    }
+
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)

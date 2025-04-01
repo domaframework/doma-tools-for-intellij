@@ -45,7 +45,7 @@ open class SqlViewGroupBlock(
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.JOIN
+        indent.indentLevel = IndentType.SUB
         indent.indentLen = createIndentLen()
         indent.groupIndentLen = indent.indentLen
     }
@@ -54,5 +54,7 @@ open class SqlViewGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    private fun createIndentLen(): Int = parentBlock?.indent?.groupIndentLen ?: 1
+    private fun createIndentLen(): Int = parentBlock?.indent?.indentLen ?: 0
+
+    override fun isLeaf(): Boolean = true
 }

@@ -55,17 +55,21 @@ open class SqlWordBlock(
 
     private fun createIndentLen(): Int {
         parentBlock?.let {
-            if (it is SqlSubQueryGroupBlock) {
-                val parentIndentLen = it.indent.groupIndentLen
-                val grand = it.parentBlock
-                if (grand != null && grand.node.text.lowercase() == "create") {
-                    val grandIndentLen = grand.indent.groupIndentLen
-                    return grandIndentLen.plus(parentIndentLen).plus(1)
+            when (it) {
+                is SqlSubQueryGroupBlock -> {
+                    val parentIndentLen = it.indent.groupIndentLen
+                    val grand = it.parentBlock
+                    if (grand != null && grand.node.text.lowercase() == "create") {
+                        val grandIndentLen = grand.indent.groupIndentLen
+                        return grandIndentLen.plus(parentIndentLen).plus(1)
+                    }
+                    return parentIndentLen.plus(1)
                 }
-                return parentIndentLen.plus(1)
-            } else {
-                val parentLen = it.node.text.length
-                return it.indent.groupIndentLen.plus(parentLen.plus(1))
+
+                else -> {
+                    val parentLen = it.node.text.length
+                    return it.indent.groupIndentLen.plus(parentLen.plus(1))
+                }
             }
         }
         return 1

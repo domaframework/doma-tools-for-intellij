@@ -64,7 +64,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         }
 
         visitor.replaces.asReversed().forEach {
-            val isCreateTableGroup = isCreateTableGroup(keywordList, index)
+            val createQueryType = getCreateQueryGroup(keywordList, index)
             val textRangeStart = it.startOffset
             val textRangeEnd = textRangeStart + it.text.length
             if (it.elementType != TokenType.WHITE_SPACE) {
@@ -76,7 +76,11 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                         newKeyword =
                             if (checkKeywordPrevElement(index, it) &&
                                 SqlKeywordUtil.getIndentType(it.text).isNewLineGroup() ||
-                                it.text.lowercase() == "end"
+                                it.text.lowercase() == "end" ||
+                                (
+                                    it.text.lowercase() == "as" &&
+                                        createQueryType == CreateQueryType.VIEW
+                                )
                             ) {
                                 if (SqlKeywordUtil.isSetLineKeyword(
                                         it.text,
@@ -93,7 +97,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                     }
                     SqlTypes.LEFT_PAREN -> {
                         newKeyword =
-                            if (isCreateTableGroup) {
+                            if (createQueryType == CreateQueryType.TABLE) {
                                 getNewLineString(it)
                             } else {
                                 getUpperText(it)
@@ -105,7 +109,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                         val containsColumnRaw =
                             prefixElements.findLast { isColumnDefinedRawElementType(it) } != null
                         newKeyword =
-                            if (isCreateTableGroup) {
+                            if (createQueryType == CreateQueryType.TABLE) {
                                 if (containsColumnRaw) {
                                     getNewLineString(it)
                                 } else {
@@ -133,7 +137,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                         }
 
                         newKeyword =
-                            if (isCreateTableGroup && isColumnName) {
+                            if (createQueryType == CreateQueryType.TABLE && isColumnName) {
                                 getNewLineString(it)
                             } else {
                                 getUpperText(it)
@@ -156,7 +160,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                                 )
                         ) ||
                         (
-                            isNewLineOnlyCreateTable(nextElement) && isCreateTableGroup
+                            isNewLineOnlyCreateTable(nextElement) && createQueryType == CreateQueryType.TABLE
                         )
                     ) {
                         document.deleteString(textRangeStart, textRangeEnd)
@@ -184,10 +188,10 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             element.elementType == SqlTypes.KEYWORD ||
             element.elementType == SqlTypes.COMMA
 
-    private fun isCreateTableGroup(
+    private fun getCreateQueryGroup(
         keywordList: List<PsiElement>,
         index: Int,
-    ): Boolean {
+    ): CreateQueryType {
         var topLastKeyWord: PsiElement? = null
         var attachmentKeywordType = CreateQueryType.NONE
         keywordList
@@ -206,7 +210,8 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             }
         val prevKeywordText = topLastKeyWord?.text?.lowercase()
         val isCreateGroup = prevKeywordText == "create"
-        return isCreateGroup && attachmentKeywordType == CreateQueryType.TABLE
+        if (!isCreateGroup) return CreateQueryType.NONE
+        return attachmentKeywordType
     }
 
     private fun isNewLineOnlyCreateTable(nextElement: PsiElement): Boolean =
