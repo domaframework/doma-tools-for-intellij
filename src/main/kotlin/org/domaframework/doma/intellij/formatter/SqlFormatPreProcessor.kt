@@ -33,14 +33,6 @@ import org.domaframework.doma.intellij.setting.SqlLanguage
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 
 class SqlFormatPreProcessor : PreFormatProcessor {
-    enum class CreateQueryType {
-        TABLE,
-        INDEX,
-        VIEW,
-        DATABASE,
-        NONE,
-    }
-
     override fun process(
         node: ASTNode,
         rangeToReformat: TextRange,
@@ -209,14 +201,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                     return@forEach
                 }
                 if (SqlKeywordUtil.isAttachedKeyword(key.text)) {
-                    attachmentKeywordType =
-                        when (key.text.lowercase()) {
-                            "table" -> CreateQueryType.TABLE
-                            "index" -> CreateQueryType.INDEX
-                            "view" -> CreateQueryType.VIEW
-                            "database" -> CreateQueryType.DATABASE
-                            else -> CreateQueryType.NONE
-                        }
+                    attachmentKeywordType = CreateQueryType.getCreateTableType(key.text)
                 }
             }
         val prevKeywordText = topLastKeyWord?.text?.lowercase()

@@ -286,6 +286,17 @@ open class SqlBlock(
             }
 
             is SqlRightPatternBlock -> {
+                val paramIndex = blockBuilder.getGroupTopNodeIndexByIndentType(IndentType.PARAM)
+                if (paramIndex >= 0) {
+                    setParentGroups(
+                        childBlock,
+                    ) { history ->
+                        return@setParentGroups history[paramIndex].second
+                    }
+                    blockBuilder.clearSubListGroupTopNodeIndexHistory(paramIndex)
+                    return
+                }
+
                 val leftIndex = blockBuilder.getGroupTopNodeIndexByIndentType(IndentType.SUB)
                 if (leftIndex >= 0) {
                     setParentGroups(
@@ -294,8 +305,8 @@ open class SqlBlock(
                         return@setParentGroups history[leftIndex].second
                     }
                     blockBuilder.clearSubListGroupTopNodeIndexHistory(leftIndex)
+                    return
                 }
-                pendingCommentBlocks.clear()
             }
 
             is SqlElSymbolBlock -> {
@@ -578,6 +589,10 @@ open class SqlBlock(
 
         if (child1 is SqlBlock && (child2 is SqlCommaBlock || child2 is SqlColumnGroupBlock)) {
             SqlCustomSpacingBuilder().getSpacingWithIndentComma(child1, child2)?.let { return it }
+        }
+
+        if (child2 is SqlDataTypeParamBlock) {
+            return Spacing.createSpacing(0, 0, 0, false, 0)
         }
 
         if (child2 is SqlDataTypeBlock) {

@@ -19,6 +19,8 @@ import com.intellij.formatting.Alignment
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
+import org.domaframework.doma.intellij.formatter.IndentType
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
 /**
  * The parent must be [SqlColumnDefinitionRawGroupBlock]
@@ -34,5 +36,19 @@ class SqlDataTypeParamBlock(
         alignment,
         spacingBuilder,
     ) {
+    override val indent =
+        ElementIndent(
+            IndentType.PARAM,
+            0,
+            0,
+        )
+
+    override fun setParentGroupBlock(block: SqlBlock?) {
+        super.setParentGroupBlock(block)
+        indent.indentLevel = IndentType.PARAM
+        indent.indentLen = 0
+        indent.groupIndentLen = 0
+    }
+
     override fun createIndentLen(): Int = 0
 }

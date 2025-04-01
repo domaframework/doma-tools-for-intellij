@@ -19,26 +19,46 @@ enum class IndentType(
     private val level: Int,
     private val group: Boolean = false,
 ) {
-    FILE(0),
+    FILE(0, true),
     TOP(1, true),
     SECOND(2, true),
     JOIN(3, true),
     SECOND_OPTION(4, true),
-    TIRD(5),
-    ATTACHED(6),
+    TIRD(5, true),
+    ATTACHED(6, true),
     INLINE_SECOND(8, true),
-    COLUMN(9),
+    COLUMN(9, true),
     SUB(90, true),
     ATTRIBUTE(91),
     LITERAL(92),
     OPTIONS(93),
     COMMA(94),
-    COLUMN_ROW(95),
+    PARAM(95, false),
     INLINE(96, true),
     NONE(99),
     ;
 
-    fun isNewLineGroup(): Boolean = this.level < SUB.level || this.level == COMMA.level
+    fun isNewLineGroup(): Boolean = this.group || this.level == COMMA.level
+}
+
+enum class CreateQueryType {
+    TABLE,
+    INDEX,
+    VIEW,
+    DATABASE,
+    NONE,
+    ;
+
+    companion object {
+        fun getCreateTableType(text: String): CreateQueryType =
+            when (text.lowercase()) {
+                "table" -> TABLE
+                "index" -> INDEX
+                "view" -> VIEW
+                "database" -> DATABASE
+                else -> NONE
+            }
+    }
 }
 
 class SqlKeywordUtil {
@@ -89,10 +109,6 @@ class SqlKeywordUtil {
             )
 
         fun isBeforeTableKeyword(keyword: String): Boolean = BEFORE_TABLE_KEYWORD.contains(keyword.lowercase())
-
-        private val BEFORE_COLUMN_KEYWORD = setOf("select")
-
-        fun isBeforeColumnKeyword(keyword: String): Boolean = BEFORE_COLUMN_KEYWORD.contains(keyword.lowercase())
 
         private val JOIN_KEYWORD =
             setOf(
@@ -233,12 +249,14 @@ class SqlKeywordUtil {
                 "distinct" to setOf("select"),
                 "table" to setOf("create", "alter", "rename", "truncate", "drop"),
                 "index" to setOf("create", "alter", "rename", "truncate", "drop"),
+                "view" to setOf("create", "alter", "rename", "truncate", "drop"),
+                "database" to setOf("create", "alter", "rename", "truncate", "drop"),
                 "join" to setOf("outer", "inner", "left", "right"),
                 "outer" to setOf("left", "right"),
                 "inner" to setOf("left", "right"),
                 "by" to setOf("group", "order"),
                 "and" to setOf("between"),
-                "if" to setOf("table"),
+                "if" to setOf("table", "create"),
             )
 
         fun isSetLineKeyword(

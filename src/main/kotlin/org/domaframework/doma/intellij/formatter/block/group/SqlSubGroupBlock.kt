@@ -47,6 +47,7 @@ abstract class SqlSubGroupBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         prevChildren = parentBlock?.childBlocks?.toList()
+        indent.indentLevel = indent.indentLevel
         indent.indentLen = createIndentLen()
         indent.groupIndentLen = indent.indentLen
     }
