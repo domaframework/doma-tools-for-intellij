@@ -28,6 +28,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "and",
       "as",
       "asc",
+      "between",
       "by",
       "case",
       "change",
