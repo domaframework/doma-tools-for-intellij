@@ -49,11 +49,5 @@ class SqlColumnDefinitionGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createIndentLen(): Int =
-        parentBlock?.let {
-            var parentLen = it.node.text.length
-            it.indent.groupIndentLen
-                .plus(parentLen)
-                .plus(1)
-        } ?: 1
+    override fun createIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
 }

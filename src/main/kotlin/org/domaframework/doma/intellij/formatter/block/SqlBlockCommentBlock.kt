@@ -19,37 +19,15 @@ import com.intellij.formatting.Alignment
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
 
 open class SqlBlockCommentBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlBlock(
+) : SqlCommentBlock(
         node,
         wrap,
         alignment,
-        null,
         spacingBuilder,
-    ) {
-    override val indent =
-        ElementIndent(
-            IndentType.NONE,
-            0,
-            0,
-        )
-
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.NONE
-        indent.indentLen = 0
-        indent.groupIndentLen = 0
-    }
-
-    // TODO: Implement
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun isLeaf(): Boolean = true
-}
+    )

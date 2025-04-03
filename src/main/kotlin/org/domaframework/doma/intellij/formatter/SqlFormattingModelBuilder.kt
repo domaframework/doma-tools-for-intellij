@@ -20,7 +20,6 @@ import com.intellij.formatting.FormattingContext
 import com.intellij.formatting.FormattingModel
 import com.intellij.formatting.FormattingModelBuilder
 import com.intellij.formatting.FormattingModelProvider
-import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.formatting.WrapType
@@ -32,9 +31,6 @@ import org.domaframework.doma.intellij.setting.SqlLanguage
 
 @Suppress("ktlint:standard:no-consecutive-comments")
 class SqlFormattingModelBuilder : FormattingModelBuilder {
-    val breakLineSpacing: Spacing? = Spacing.createSpacing(0, 0, 1, true, 0, 1)
-    val normalSpacing: Spacing? = Spacing.createSpacing(1, 1, 0, true, 0, 0)
-
     override fun createModel(formattingContext: FormattingContext): FormattingModel {
         val codeStyleSettings = formattingContext.codeStyleSettings
         return FormattingModelProvider
@@ -57,7 +53,9 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
             .spacing(0, 0, 0, false, 0)
             .after(SqlTypes.COMMA)
             .spacing(1, 1, 0, false, 0)
-            .around(SqlTypes.BLOCK_COMMENT)
+            .before(SqlTypes.LINE_COMMENT)
+            .spacing(1, 1, 0, false, 0)
+            .before(SqlTypes.BLOCK_COMMENT)
             .spacing(0, 0, 1, false, 0)
             .before(SqlTypes.KEYWORD)
             .spacing(1, 1, 0, false, 0)
@@ -81,41 +79,41 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
             .withSpacing(
                 TokenType.WHITE_SPACE,
                 SqlTypes.KEYWORD,
-                Spacing.createSpacing(0, 0, 1, true, 0, 1),
+                SqlCustomSpacingBuilder.nonSpacing,
             ).withSpacing(
                 SqlTypes.WORD,
                 TokenType.WHITE_SPACE,
-                Spacing.createSpacing(0, 0, 0, true, 0, 0),
+                SqlCustomSpacingBuilder.nonSpacing,
+            ).withSpacing(
+                SqlTypes.WORD,
+                SqlTypes.LEFT_PAREN,
+                SqlCustomSpacingBuilder.nonSpacing,
             ).withSpacing(
                 SqlTypes.LEFT_PAREN,
                 SqlTypes.WORD,
-                Spacing.createSpacing(0, 0, 0, true, 0, 0),
+                SqlCustomSpacingBuilder.nonSpacing,
             ).withSpacing(
                 SqlTypes.WORD,
                 SqlTypes.RIGHT_PAREN,
-                Spacing.createSpacing(0, 0, 0, true, 0, 0),
+                SqlCustomSpacingBuilder.nonSpacing,
             ).withSpacing(
                 SqlTypes.OTHER,
                 TokenType.WHITE_SPACE,
-                Spacing.createSpacing(0, 0, 0, true, 0, 0),
+                SqlCustomSpacingBuilder.nonSpacing,
             ).withSpacing(
                 SqlTypes.ASTERISK,
                 TokenType.WHITE_SPACE,
-                Spacing.createSpacing(0, 0, 0, true, 0, 0),
-            ).withSpacing(
-                SqlTypes.OTHER,
-                SqlTypes.LINE_COMMENT,
-                breakLineSpacing,
+                SqlCustomSpacingBuilder.nonSpacing,
             )
             // Table And Column Rules
             // WORD And OTHER Rules
             .withSpacing(
                 SqlTypes.WORD,
                 SqlTypes.WORD,
-                normalSpacing,
+                SqlCustomSpacingBuilder.normalSpacing,
             ).withSpacing(
                 SqlTypes.OTHER,
                 SqlTypes.OTHER,
-                normalSpacing,
+                SqlCustomSpacingBuilder.normalSpacing,
             )
 }

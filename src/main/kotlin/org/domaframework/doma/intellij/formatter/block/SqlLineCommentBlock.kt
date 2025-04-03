@@ -21,22 +21,47 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlLineCommentBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlBlock(
+) : SqlCommentBlock(
         node,
         wrap,
         alignment,
-        null,
         spacingBuilder,
     ) {
+    override fun setParentGroupBlock(block: SqlBlock?) {
+        super.setParentGroupBlock(block)
+        indent.indentLen = createIndentLen()
+    }
+
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = super.getIndent()
 
     override fun isLeaf(): Boolean = true
+
+    private fun createIndentLen(): Int {
+        parentBlock?.let {
+            if (it is SqlSubQueryGroupBlock) {
+                if (it.childBlocks.dropLast(1).isEmpty()) {
+                    return 1
+                }
+                if (it.isFirstLineComment) {
+                    return it.indent.groupIndentLen.minus(2)
+                }
+            }
+            return 1
+        }
+        return 1
+    }
+
+    fun isNeedBeforeWhiteSpace(): Boolean =
+        node.treePrev?.text?.contains("\n") == true ||
+            node.treePrev?.treePrev?.elementType == SqlTypes.LINE_COMMENT
 }

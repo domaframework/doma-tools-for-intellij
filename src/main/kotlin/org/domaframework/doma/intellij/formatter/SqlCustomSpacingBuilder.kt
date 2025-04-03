@@ -30,7 +30,10 @@ import org.domaframework.doma.intellij.formatter.block.group.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlSubQueryGroupBlock
 
 class SqlCustomSpacingBuilder {
-    companion object;
+    companion object {
+        val normalSpacing: Spacing = Spacing.createSpacing(1, 1, 0, false, 0, 0)
+        val nonSpacing: Spacing = Spacing.createSpacing(0, 0, 0, false, 0, 0)
+    }
 
     private val spacingRules: MutableMap<Pair<IElementType?, IElementType?>?, Spacing?> = HashMap()
 
@@ -127,9 +130,9 @@ class SqlCustomSpacingBuilder {
         return when (child.indent.indentLevel) {
             IndentType.TOP -> {
                 return if (parentBlock?.parentBlock == null) {
-                    Spacing.createSpacing(0, 0, 0, false, 0, 0)
+                    nonSpacing
                 } else if (parentBlock is SqlSubGroupBlock) {
-                    Spacing.createSpacing(0, 0, 0, false, 0, 0)
+                    nonSpacing
                 } else {
                     Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
                 }
@@ -137,7 +140,7 @@ class SqlCustomSpacingBuilder {
 
             IndentType.SECOND -> {
                 return if (parentBlock is SqlSubQueryGroupBlock) {
-                    Spacing.createSpacing(1, 1, 0, false, 0, 0)
+                    normalSpacing
                 } else if (SqlKeywordUtil.isSetLineKeyword(child.node.text, parentBlock?.node?.text ?: "")) {
                     null
                 } else {
@@ -157,7 +160,7 @@ class SqlCustomSpacingBuilder {
             }
 
             IndentType.INLINE -> {
-                return Spacing.createSpacing(1, 1, 0, false, 0, 0)
+                return normalSpacing
             }
 
             IndentType.INLINE_SECOND -> {

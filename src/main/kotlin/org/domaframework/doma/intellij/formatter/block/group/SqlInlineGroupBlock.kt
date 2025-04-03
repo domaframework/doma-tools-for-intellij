@@ -46,7 +46,7 @@ open class SqlInlineGroupBlock(
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.INLINE
         indent.indentLen = createIndentLen()
-        indent.groupIndentLen = indent.indentLen
+        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()

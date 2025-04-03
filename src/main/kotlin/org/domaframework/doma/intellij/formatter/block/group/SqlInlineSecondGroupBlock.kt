@@ -57,6 +57,7 @@ open class SqlInlineSecondGroupBlock(
 
     private fun createIndentLen(): Int =
         parentBlock?.let {
+            // TODO:Customize indentation within an inline group
             if (isEndCase) {
                 it.indent.indentLen
             } else {

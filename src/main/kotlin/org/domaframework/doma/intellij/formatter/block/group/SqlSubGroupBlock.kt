@@ -23,6 +23,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlCommentBlock
 
 abstract class SqlSubGroupBlock(
     node: ASTNode,
@@ -35,6 +36,7 @@ abstract class SqlSubGroupBlock(
         alignment,
         spacingBuilder,
     ) {
+    var isFirstLineComment = false
     var prevChildren: List<SqlBlock>? = emptyList<SqlBlock>()
 
     override val indent =
@@ -50,6 +52,13 @@ abstract class SqlSubGroupBlock(
         indent.indentLevel = indent.indentLevel
         indent.indentLen = createIndentLen()
         indent.groupIndentLen = indent.indentLen
+    }
+
+    override fun addChildBlock(childBlock: SqlBlock) {
+        childBlocks.add(childBlock)
+        if (!isFirstLineComment) {
+            isFirstLineComment = childBlock is SqlCommentBlock
+        }
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()

@@ -37,22 +37,28 @@ class SqlSubQueryGroupBlock(
     ) {
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLen = 1
-        indent.groupIndentLen = createIndentLen()
+        indent.indentLen = createIndentLen()
+        indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createIndentLen(): Int =
+    override fun createIndentLen(): Int = 1
+
+    private fun createGroupIndentLen(): Int =
         parentBlock?.let {
-            var parentLen = it.node.text.length
-            if (prevChildren?.findLast { it.indent.indentLevel == IndentType.COMMA } == null) {
-                prevChildren?.dropLast(1)?.forEach { prev -> parentLen = parentLen.plus(prev.node.text.length).plus(1) }
+            var parentLen = 0
+            if (it !is SqlJoinGroupBlock) {
+                if (prevChildren?.findLast { it.indent.indentLevel == IndentType.COMMA } == null) {
+                    prevChildren
+                        ?.dropLast(1)
+                        ?.forEach { prev -> parentLen = parentLen.plus(prev.node.text.length) }
+                }
             }
             it.indent.groupIndentLen
+                .plus(2)
                 .plus(parentLen)
-                .plus(1)
         } ?: 1
 }

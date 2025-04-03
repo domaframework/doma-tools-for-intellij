@@ -20,6 +20,7 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.IndentType
 
 class SqlUnknownBlock(
     node: ASTNode,
@@ -33,6 +34,13 @@ class SqlUnknownBlock(
         null,
         spacingBuilder,
     ) {
+    override fun setParentGroupBlock(block: SqlBlock?) {
+        super.setParentGroupBlock(block)
+        indent.indentLevel = IndentType.NONE
+        indent.indentLen = 0
+        indent.groupIndentLen = 0
+    }
+
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun isLeaf(): Boolean = true

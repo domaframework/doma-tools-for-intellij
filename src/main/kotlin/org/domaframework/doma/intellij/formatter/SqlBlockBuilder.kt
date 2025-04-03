@@ -16,15 +16,43 @@
 package org.domaframework.doma.intellij.formatter
 
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import kotlin.text.clear
+import org.domaframework.doma.intellij.formatter.block.group.SqlSubGroupBlock
 
 open class SqlBlockBuilder {
     private val groupTopNodeIndexHistory = mutableListOf<Pair<Int, SqlBlock>>()
+
+    private val commentBlocks = mutableListOf<SqlBlock>()
 
     fun getGroupTopNodeIndexHistory(): List<Pair<Int, SqlBlock>> = groupTopNodeIndexHistory
 
     fun addGroupTopNodeIndexHistory(block: Pair<Int, SqlBlock>) {
         groupTopNodeIndexHistory.add(block)
+    }
+
+    fun addCommentBlock(block: SqlBlock) {
+        commentBlocks.add(block)
+    }
+
+    fun updateCommentBlockIndent(baseIndent: SqlBlock) {
+        if (commentBlocks.isNotEmpty()) {
+            var index = 0
+            commentBlocks.forEach { block ->
+                val indentLen =
+                    if (index == 0 &&
+                        baseIndent.parentBlock is SqlSubGroupBlock &&
+                        baseIndent.parentBlock?.childBlocks?.size == 1
+                    ) {
+                        1
+                    } else {
+                        baseIndent.indent.indentLen
+                    }
+                block.indent.indentLevel = IndentType.NONE
+                block.indent.indentLen = indentLen
+                block.indent.groupIndentLen = 0
+                index++
+            }
+            commentBlocks.clear()
+        }
     }
 
     fun getLastGroupTopNodeIndexHistory(): Pair<Int, SqlBlock>? = groupTopNodeIndexHistory.lastOrNull()

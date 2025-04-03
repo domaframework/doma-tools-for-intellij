@@ -21,6 +21,8 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
+import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
 
 /**
  * Parent is always a subclass of a subgroup
@@ -37,6 +39,17 @@ open class SqlRightPatternBlock(
         null,
         spacingBuilder,
     ) {
+    var lastRight = false
+
+    fun enableLastRight() {
+        parentBlock?.parentBlock?.let {
+            lastRight = it.indent.indentLevel <= IndentType.SECOND ||
+                it.indent.indentLevel == IndentType.JOIN
+            return
+        }
+        lastRight = false
+    }
+
     override val indent =
         ElementIndent(
             IndentType.NONE,
@@ -56,4 +69,8 @@ open class SqlRightPatternBlock(
     private fun createIndentLen(): Int = parentBlock?.indent?.groupIndentLen ?: 1
 
     override fun isLeaf(): Boolean = true
+
+    fun isNeedBeforeWhiteSpace(lastGroup: SqlBlock?): Boolean =
+        lastGroup is SqlColumnDefinitionGroupBlock ||
+            lastGroup is SqlColumnDefinitionRawGroupBlock
 }

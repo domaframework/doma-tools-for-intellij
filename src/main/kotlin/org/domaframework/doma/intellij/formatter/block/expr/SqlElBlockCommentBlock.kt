@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block.expr
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
@@ -25,19 +26,19 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.SqlCommentBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElBlockCommentBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
-    private val customSpacingBuilder: SqlCustomSpacingBuilder?,
+    val customSpacingBuilder: SqlCustomSpacingBuilder?,
     spacingBuilder: SpacingBuilder,
-) : SqlBlock(
+) : SqlCommentBlock(
         node,
         wrap,
         alignment,
-        customSpacingBuilder,
         spacingBuilder,
     ) {
     override fun buildChildren(): MutableList<AbstractBlock> {
@@ -130,6 +131,16 @@ class SqlElBlockCommentBlock(
                 SqlTypes.EL_PARAMETERS,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             )
+
+    override fun getSpacing(
+        child1: Block?,
+        child2: Block,
+    ): Spacing? =
+        customSpacingBuilder?.getCustomSpacing(child1, child2) ?: spacingBuilder.getSpacing(
+            this,
+            child1,
+            child2,
+        )
 
     override fun isLeaf(): Boolean = false
 }

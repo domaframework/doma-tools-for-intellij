@@ -13,47 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.formatting.Alignment
-import com.intellij.formatting.Indent
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
-open class SqlJoinGroupBlock(
+abstract class SqlCommentBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlKeywordGroupBlock(
+) : SqlBlock(
         node,
-        IndentType.JOIN,
         wrap,
         alignment,
+        null,
         spacingBuilder,
     ) {
     override val indent =
         ElementIndent(
-            IndentType.JOIN,
+            IndentType.NONE,
             0,
             0,
         )
 
     override fun setParentGroupBlock(block: SqlBlock?) {
-        parentBlock = block
-        parentBlock?.childBlocks?.add(this)
-        indent.indentLevel = IndentType.JOIN
-        indent.indentLen = createIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
+        super.setParentGroupBlock(block)
+        indent.indentLevel = IndentType.NONE
+        indent.indentLen = 0
+        indent.groupIndentLen = 0
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
-
-    private fun createIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+    override fun isLeaf(): Boolean = true
 }
