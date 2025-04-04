@@ -47,7 +47,7 @@ open class SqlJoinGroupBlock(
         parentBlock = block
         parentBlock?.childBlocks?.add(this)
         indent.indentLevel = IndentType.JOIN
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
@@ -55,5 +55,5 @@ open class SqlJoinGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    private fun createIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
 }

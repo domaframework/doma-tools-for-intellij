@@ -50,7 +50,7 @@ class SqlColumnGroupBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.COLUMN
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen =
             if (isFirstColumnGroup) indent.indentLen else indent.indentLen.plus(1)
     }
@@ -59,7 +59,7 @@ class SqlColumnGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createIndentLen(): Int =
+    override fun createBlockIndentLen(): Int =
         parentBlock?.let {
             if (it is SqlKeywordGroupBlock) {
                 val parentIndentLen = it.indent.indentLen.plus(it.node.text.length)

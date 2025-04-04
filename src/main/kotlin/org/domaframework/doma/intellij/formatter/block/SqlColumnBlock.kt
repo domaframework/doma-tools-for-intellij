@@ -51,7 +51,7 @@ class SqlColumnBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    fun createIndentLen(): Int {
+    override fun createBlockIndentLen(): Int {
         parentBlock?.let {
             val parentGroupDefinition = it.parentBlock as? SqlColumnDefinitionGroupBlock
             if (parentGroupDefinition == null) return 1

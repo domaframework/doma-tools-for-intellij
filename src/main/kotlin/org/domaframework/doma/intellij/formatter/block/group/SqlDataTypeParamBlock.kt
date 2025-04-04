@@ -50,5 +50,5 @@ class SqlDataTypeParamBlock(
         indent.groupIndentLen = 0
     }
 
-    override fun createIndentLen(): Int = 0
+    override fun createBlockIndentLen(): Int = 0
 }

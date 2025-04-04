@@ -21,7 +21,6 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import fleet.util.plus
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlCreateKeywordGroupBlock
@@ -43,7 +42,7 @@ open class SqlCommaBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.COMMA
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
@@ -51,7 +50,7 @@ open class SqlCommaBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    private fun createIndentLen(): Int {
+    override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             if (parent is SqlSubGroupBlock) {
                 val parentIndentLen = parent.indent.groupIndentLen

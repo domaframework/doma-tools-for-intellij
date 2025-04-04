@@ -45,7 +45,7 @@ open class SqlWordBlock(
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
     }
 
@@ -53,7 +53,7 @@ open class SqlWordBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    private fun createIndentLen(): Int {
+    override fun createBlockIndentLen(): Int {
         parentBlock?.let {
             when (it) {
                 is SqlSubQueryGroupBlock -> {

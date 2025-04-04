@@ -72,7 +72,7 @@ class SqlElBlockCommentBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.NONE
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = 0
     }
 
@@ -233,7 +233,7 @@ class SqlElBlockCommentBlock(
 
     override fun isLeaf(): Boolean = false
 
-    private fun createIndentLen(): Int {
+    override fun createBlockIndentLen(): Int {
         parentBlock?.let {
             if (it is SqlSubQueryGroupBlock) {
                 if (it.childBlocks.dropLast(1).isEmpty()) {
@@ -243,7 +243,6 @@ class SqlElBlockCommentBlock(
                     return it.indent.groupIndentLen.minus(2)
                 }
             }
-            return 1
         }
         return 1
     }

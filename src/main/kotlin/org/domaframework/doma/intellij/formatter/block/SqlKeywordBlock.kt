@@ -22,7 +22,6 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.SqlKeywordUtil
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 
 open class SqlKeywordBlock(
@@ -48,7 +47,7 @@ open class SqlKeywordBlock(
         super.setParentGroupBlock(block)
 
         indent.indentLevel = indentLevel
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(node.text.length)
         // updateParentIndentLen()
     }
@@ -62,7 +61,7 @@ open class SqlKeywordBlock(
         return Indent.getNoneIndent()
     }
 
-    private fun createIndentLen(): Int =
+    override fun createBlockIndentLen(): Int =
         when (indentLevel) {
             IndentType.TOP -> {
                 parentBlock?.let {
@@ -92,20 +91,4 @@ open class SqlKeywordBlock(
 
             else -> 1
         }
-
-    private fun updateParentIndentLen() {
-        parentBlock?.let {
-            if (indentLevel == IndentType.ATTACHED &&
-                SqlKeywordUtil.isSetLineKeyword(
-                    node.text,
-                    it.node.text,
-                )
-            ) {
-                it.indent.groupIndentLen =
-                    it.indent.groupIndentLen
-                        .plus(node.text.length)
-                        .plus(1)
-            }
-        }
-    }
 }

@@ -103,12 +103,12 @@ class SqlCustomSpacingBuilder {
         )
 
     fun getSpacingColumnDefinition(child: SqlColumnBlock): Spacing? {
-        val indentLen = child.createIndentLen()
+        val indentLen = child.createBlockIndentLen()
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
     }
 
     fun getSpacingColumnDefinitionRaw(child: SqlColumnDefinitionRawGroupBlock): Spacing? {
-        val indentLen = child.createIndentLen()
+        val indentLen = child.createBlockIndentLen()
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
     }
 

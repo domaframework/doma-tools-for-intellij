@@ -38,7 +38,7 @@ class SqlSubQueryGroupBlock(
     ) {
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -46,7 +46,7 @@ class SqlSubQueryGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createIndentLen(): Int = 1
+    override fun createBlockIndentLen(): Int = 1
 
     private fun createGroupIndentLen(): Int {
         parentBlock?.let {

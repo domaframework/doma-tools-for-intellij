@@ -61,7 +61,7 @@ open class SqlKeywordGroupBlock(
         block: SqlBlock?,
     ): Int {
         if (block == null) {
-            return createIndentLen()
+            return createBlockIndentLen()
         }
         if (preChildBlock != null &&
             preChildBlock.indent.indentLevel == this.indent.indentLevel &&
@@ -74,7 +74,7 @@ open class SqlKeywordGroupBlock(
                 return preChildBlock.indent.indentLen
             }
         } else {
-            return createIndentLen()
+            return createBlockIndentLen()
         }
     }
 
@@ -108,7 +108,7 @@ open class SqlKeywordGroupBlock(
         return baseIndent
     }
 
-    private fun createIndentLen(): Int {
+    override fun createBlockIndentLen(): Int {
         when (indentLevel) {
             IndentType.TOP -> {
                 parentBlock?.let {

@@ -454,6 +454,8 @@ open class SqlBlock(
         }
     }
 
+    open fun createBlockIndentLen(): Int = 0
+
     open fun getBlock(child: ASTNode): SqlBlock {
         val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()?.second
         return when (child.elementType) {

@@ -48,7 +48,7 @@ class SqlColumnDefinitionRawGroupBlock(
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
     }
 
@@ -59,7 +59,7 @@ class SqlColumnDefinitionRawGroupBlock(
     /**
      * Right-justify the longest column name in the column definition.
      */
-    fun createIndentLen(): Int {
+    override fun createBlockIndentLen(): Int {
         if (!isFirstColumnRaw) return defaultOffset
 
         parentBlock?.let {

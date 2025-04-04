@@ -44,7 +44,7 @@ class SqlColumnDefinitionGroupBlock(
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
     }
 
@@ -52,5 +52,5 @@ class SqlColumnDefinitionGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createIndentLen(): Int = offset
+    override fun createBlockIndentLen(): Int = offset
 }

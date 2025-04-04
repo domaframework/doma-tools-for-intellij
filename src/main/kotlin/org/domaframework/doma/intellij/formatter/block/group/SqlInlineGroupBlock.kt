@@ -45,7 +45,7 @@ open class SqlInlineGroupBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.INLINE
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
@@ -58,7 +58,7 @@ open class SqlInlineGroupBlock(
         return Indent.getNoneIndent()
     }
 
-    private fun createIndentLen(): Int =
+    override fun createBlockIndentLen(): Int =
         parentBlock?.let {
             it.indent.groupIndentLen
                 .plus(it.node.text.length)

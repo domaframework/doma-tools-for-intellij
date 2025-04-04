@@ -40,7 +40,7 @@ class SqlInsertColumnGroupBlock(
     ) {
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(1)
         updateParentGroupIndentLen()
     }
@@ -49,7 +49,7 @@ class SqlInsertColumnGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createIndentLen(): Int {
+    override fun createBlockIndentLen(): Int {
         parentBlock?.let {
             if (it is SqlInsertKeywordGroupBlock) {
                 var parentLen = 0

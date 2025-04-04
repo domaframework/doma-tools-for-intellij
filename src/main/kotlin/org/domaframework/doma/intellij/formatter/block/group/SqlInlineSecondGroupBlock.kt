@@ -47,7 +47,7 @@ open class SqlInlineSecondGroupBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.INLINE_SECOND
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
     }
 
@@ -55,7 +55,7 @@ open class SqlInlineSecondGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    private fun createIndentLen(): Int =
+    override fun createBlockIndentLen(): Int =
         parentBlock?.let {
             // TODO:Customize indentation within an inline group
             if (isEndCase) {

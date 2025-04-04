@@ -76,13 +76,13 @@ open class SqlRightPatternBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.NONE
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    private fun createIndentLen(): Int = parentBlock?.indent?.groupIndentLen ?: 1
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen ?: 1
 
     override fun isLeaf(): Boolean = true
 

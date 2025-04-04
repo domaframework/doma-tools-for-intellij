@@ -39,7 +39,7 @@ open class SqlInsertKeywordGroupBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.TOP
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
@@ -47,7 +47,7 @@ open class SqlInsertKeywordGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    private fun createIndentLen(): Int =
+    override fun createBlockIndentLen(): Int =
         parentBlock?.let {
             if (it.indent.indentLevel == IndentType.SUB) {
                 it.indent.groupIndentLen.plus(1)

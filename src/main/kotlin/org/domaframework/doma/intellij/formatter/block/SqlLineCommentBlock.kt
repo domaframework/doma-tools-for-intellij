@@ -36,7 +36,7 @@ open class SqlLineCommentBlock(
     ) {
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLen = createIndentLen()
+        indent.indentLen = createBlockIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -45,7 +45,7 @@ open class SqlLineCommentBlock(
 
     override fun isLeaf(): Boolean = true
 
-    private fun createIndentLen(): Int {
+    override fun createBlockIndentLen(): Int {
         parentBlock?.let {
             if (it is SqlSubQueryGroupBlock) {
                 if (it.childBlocks.dropLast(1).isEmpty()) {
