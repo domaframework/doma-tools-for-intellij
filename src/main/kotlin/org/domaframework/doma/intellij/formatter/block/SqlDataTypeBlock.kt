@@ -22,8 +22,6 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
 
 open class SqlDataTypeBlock(
     node: ASTNode,
@@ -47,30 +45,11 @@ open class SqlDataTypeBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.NONE
-        // Calculate right justification space during indentation after getting all column rows
-        indent.indentLen = 0
+        indent.indentLen = 1
         indent.groupIndentLen = indent.indentLen
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
-
-    fun createIndentLen(): Int {
-        parentBlock?.let {
-            when (it) {
-                is SqlColumnDefinitionRawGroupBlock -> {
-                    val groupBlock = it.parentBlock as? SqlColumnDefinitionGroupBlock
-                    val groupAlimentLen = groupBlock?.alignmentColumnName?.length ?: 1
-                    val rawColumnNameLen = it.columnName.length
-                    val newSpaces = groupAlimentLen.minus(rawColumnNameLen).plus(1)
-                    return newSpaces
-                }
-                else -> {
-                    return 1
-                }
-            }
-        }
-        return 1
-    }
 }

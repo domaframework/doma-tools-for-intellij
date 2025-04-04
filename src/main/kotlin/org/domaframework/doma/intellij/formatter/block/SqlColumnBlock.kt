@@ -21,7 +21,7 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionGroupBlock
 
 class SqlColumnBlock(
     node: ASTNode,
@@ -44,19 +44,22 @@ class SqlColumnBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.NONE
-        indent.indentLen = createIndentLen()
+        // Calculate right justification space during indentation after getting all column rows
+        indent.indentLen = 1
         indent.groupIndentLen = 0
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    private fun createIndentLen(): Int =
+    fun createIndentLen(): Int {
         parentBlock?.let {
-            if (it is SqlSubQueryGroupBlock) {
-                return@let it.indent.groupIndentLen
-            }
-            it.indent.groupIndentLen
-                .plus(it.node.text.length)
-                .plus(1)
-        } ?: 1
+            val parentGroupDefinition = it.parentBlock as? SqlColumnDefinitionGroupBlock
+            if (parentGroupDefinition == null) return 1
+
+            val groupMaxAlimentLen = parentGroupDefinition.alignmentColumnName.length
+            val diffColumnName = groupMaxAlimentLen.minus(node.text.length)
+            return diffColumnName.plus(1)
+        }
+        return 1
+    }
 }

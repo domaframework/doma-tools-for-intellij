@@ -40,6 +40,10 @@ class SqlColumnDefinitionRawGroupBlock(
         null,
         spacingBuilder,
     ) {
+    // TODO:Customize indentation within an inline group
+    val defaultOffset = 5
+    val isFirstColumnRaw = node.elementType != SqlTypes.COMMA
+
     var columnName = node.text
 
     override fun setParentGroupBlock(block: SqlBlock?) {
@@ -52,14 +56,30 @@ class SqlColumnDefinitionRawGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    private fun createIndentLen(): Int =
+    /**
+     * Right-justify the longest column name in the column definition.
+     */
+    fun createIndentLen(): Int {
+        if (!isFirstColumnRaw) return defaultOffset
+
         parentBlock?.let {
-            val parentIndentLen = it.indent.groupIndentLen
-            val baseIndent = parentIndentLen.plus(parentIndentLen)
-            when (node.elementType) {
-                SqlTypes.COMMA -> baseIndent.minus(1)
-                SqlTypes.WORD -> baseIndent.plus(1)
-                else -> baseIndent
+            return when (it) {
+                is SqlColumnDefinitionGroupBlock -> {
+                    getColumnRawNewIndent(it)
+                }
+
+                else -> {
+                    1
+                }
             }
-        } ?: 1
+        }
+        return 1
+    }
+
+    private fun getColumnRawNewIndent(groupRawBlock: SqlColumnDefinitionGroupBlock): Int {
+        val groupMaxAlimentLen = groupRawBlock.alignmentColumnName.length
+        val diffColumnName = groupMaxAlimentLen.minus(columnName.length)
+        val newSpaces = defaultOffset.plus(diffColumnName)
+        return newSpaces.plus(2)
+    }
 }

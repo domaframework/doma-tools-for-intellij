@@ -105,7 +105,7 @@ open class SqlBlock(
                         blocks.removeLast()
                     }
                 }
-                setRightSpace(blocks.lastOrNull() as SqlBlock?, childBlock)
+                setRightSpace(blocks.lastOrNull() as SqlBlock?)
                 prevNonWhiteSpaceNode = child
                 updateSearchKeywordLevelHistory(childBlock, child)
                 blocks.add(childBlock)
@@ -151,10 +151,7 @@ open class SqlBlock(
                     child.treePrev.text.contains("\n")
             )
 
-    private fun setRightSpace(
-        lastBlock: SqlBlock?,
-        currentBlock: SqlBlock,
-    ) {
+    private fun setRightSpace(lastBlock: SqlBlock?) {
         val rightBlock = lastBlock as? SqlRightPatternBlock
         rightBlock?.enableLastRight()
     }
@@ -331,13 +328,13 @@ open class SqlBlock(
                 }
             }
 
-            is SqlWordBlock, is SqlOtherBlock, is SqlLineCommentBlock, is SqlBlockCommentBlock -> {
+            is SqlColumnBlock -> {
                 setParentGroups(
                     childBlock,
                 ) { history ->
                     val parentGroupBlock = history.last().second
                     if (parentGroupBlock is SqlColumnDefinitionRawGroupBlock &&
-                        parentGroupBlock.columnName == ","
+                        parentGroupBlock.columnName != ","
                     ) {
                         parentGroupBlock.columnName = childBlock.node.text
                         val columnDefinition = parentGroupBlock.parentBlock as? SqlColumnDefinitionGroupBlock
@@ -345,6 +342,25 @@ open class SqlBlock(
                             columnDefinition.alignmentColumnName = parentGroupBlock.columnName
                         }
                     }
+                    return@setParentGroups history.last().second
+                }
+            }
+
+            is SqlColumnDefinitionRawGroupBlock -> {
+                if (lastGroupBlock is SqlColumnDefinitionRawGroupBlock) {
+                    blockBuilder.removeLastGroupTopNodeIndexHistory()
+                }
+                setParentGroups(
+                    childBlock,
+                ) { history ->
+                    return@setParentGroups history.last().second
+                }
+            }
+
+            is SqlWordBlock, is SqlOtherBlock, is SqlLineCommentBlock, is SqlBlockCommentBlock -> {
+                setParentGroups(
+                    childBlock,
+                ) { history ->
                     return@setParentGroups history.last().second
                 }
             }
@@ -382,17 +398,6 @@ open class SqlBlock(
             }
 
             is SqlElSymbolBlock -> {
-                setParentGroups(
-                    childBlock,
-                ) { history ->
-                    return@setParentGroups history.last().second
-                }
-            }
-
-            is SqlColumnDefinitionRawGroupBlock -> {
-                if (lastGroupBlock is SqlColumnDefinitionRawGroupBlock) {
-                    blockBuilder.removeLastGroupTopNodeIndexHistory()
-                }
                 setParentGroups(
                     childBlock,
                 ) { history ->
@@ -504,6 +509,20 @@ open class SqlBlock(
                             alignment,
                             spacingBuilder,
                         )
+                    }
+
+                    is SqlColumnDefinitionRawGroupBlock -> {
+                        if (lastGroup.childBlocks.isEmpty()) {
+                            lastGroup.columnName = child.text
+                            SqlColumnBlock(
+                                child,
+                                wrap,
+                                alignment,
+                                spacingBuilder,
+                            )
+                        } else {
+                            SqlWordBlock(child, wrap, alignment, spacingBuilder)
+                        }
                     }
 
                     else -> SqlWordBlock(child, wrap, alignment, spacingBuilder)
@@ -705,6 +724,7 @@ open class SqlBlock(
                     SqlCustomSpacingBuilder()
                         .getSpacingColumnDefinitionRawEndRight(child2)
                         ?.let { return it }
+                child2.parentBlock is SqlDataTypeParamBlock -> SqlCustomSpacingBuilder.nonSpacing
 
                 child2.lastRight -> SqlCustomSpacingBuilder.normalSpacing
                 else -> SqlCustomSpacingBuilder.nonSpacing
@@ -719,8 +739,8 @@ open class SqlBlock(
             return SqlCustomSpacingBuilder.nonSpacing
         }
 
-        if (child2 is SqlDataTypeBlock) {
-            SqlCustomSpacingBuilder().getSpacingDataType(child2)?.let { return it }
+        if (child2 is SqlColumnBlock) {
+            SqlCustomSpacingBuilder().getSpacingColumnDefinition(child2)?.let { return it }
         }
 
         val spacing: Spacing? = customSpacingBuilder?.getCustomSpacing(child1, child2)

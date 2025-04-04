@@ -39,6 +39,9 @@ class SqlColumnDefinitionGroupBlock(
     ) {
     var alignmentColumnName = ""
 
+    // TODO:Customize indentation
+    val offset = 2
+
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLen = createIndentLen()
@@ -49,5 +52,5 @@ class SqlColumnDefinitionGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+    override fun createIndentLen(): Int = offset
 }

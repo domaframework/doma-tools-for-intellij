@@ -20,7 +20,7 @@ import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.psi.tree.IElementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlDataTypeBlock
+import org.domaframework.doma.intellij.formatter.block.SqlColumnBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
@@ -105,13 +105,13 @@ class SqlCustomSpacingBuilder {
             0,
         )
 
-    fun getSpacingDataType(child: SqlDataTypeBlock): Spacing? {
+    fun getSpacingColumnDefinition(child: SqlColumnBlock): Spacing? {
         val indentLen = child.createIndentLen()
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
     }
 
     fun getSpacingColumnDefinitionRaw(child: SqlColumnDefinitionRawGroupBlock): Spacing? {
-        val indentLen = child.indent.indentLen
+        val indentLen = child.createIndentLen()
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
     }
 
