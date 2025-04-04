@@ -43,7 +43,5 @@ class SqlElClassRightBlock(
         child2: Block,
     ): Spacing? = spacingBuilder.getSpacing(this, child1, child2)
 
-    override fun isLeaf(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun isLeaf(): Boolean = true
 }

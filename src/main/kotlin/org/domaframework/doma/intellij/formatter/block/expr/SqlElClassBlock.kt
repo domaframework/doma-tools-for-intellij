@@ -56,11 +56,9 @@ class SqlElClassBlock(
 
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
-            SqlTypes.EL_IDENTIFIER ->
-                SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder)
+            SqlTypes.EL_IDENTIFIER -> SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder)
 
-            SqlTypes.DOT ->
-                SqlElDotBlock(child, wrap, alignment, spacingBuilder)
+            SqlTypes.DOT -> SqlElDotBlock(child, wrap, alignment, spacingBuilder)
 
             else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
         }

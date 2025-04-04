@@ -22,7 +22,6 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlSubQueryGroupBlock
-import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlLineCommentBlock(
     node: ASTNode,
@@ -60,8 +59,4 @@ open class SqlLineCommentBlock(
         }
         return 1
     }
-
-    fun isNeedBeforeWhiteSpace(): Boolean =
-        node.treePrev?.text?.contains("\n") == true ||
-            node.treePrev?.treePrev?.elementType == SqlTypes.LINE_COMMENT
 }

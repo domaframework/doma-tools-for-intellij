@@ -39,7 +39,7 @@ class SqlElParametersBlock(
     ) {
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
-            SqlTypes.LEFT_PAREN ->
+            SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN ->
                 SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
 
             SqlTypes.EL_PRIMARY_EXPR ->
@@ -47,9 +47,6 @@ class SqlElParametersBlock(
 
             SqlTypes.COMMA ->
                 SqlElCommaBlock(child, wrap, alignment, spacingBuilder)
-
-            SqlTypes.RIGHT_PAREN ->
-                SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
 
             else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
         }
