@@ -28,11 +28,23 @@ import com.intellij.psi.codeStyle.CodeStyleSettings
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
+import org.domaframework.doma.intellij.state.DomaToolsFunctionEnableSettings
 
-@Suppress("ktlint:standard:no-consecutive-comments")
 class SqlFormattingModelBuilder : FormattingModelBuilder {
     override fun createModel(formattingContext: FormattingContext): FormattingModel {
         val codeStyleSettings = formattingContext.codeStyleSettings
+        val setting = DomaToolsFunctionEnableSettings.getInstance()
+        val isEnableFormat = setting.state.isEnableSqlFormat
+
+        val spacingBuilder =
+            if (!isEnableFormat) {
+                SpacingBuilder(codeStyleSettings, SqlLanguage.INSTANCE)
+            } else {
+                createSpaceBuilder(codeStyleSettings)
+            }
+        val customSpacingBuilder =
+            if (!isEnableFormat) null else createCustomSpacingBuilder()
+
         return FormattingModelProvider
             .createFormattingModelForPsiFile(
                 formattingContext.containingFile,
@@ -40,8 +52,9 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
                     formattingContext.node,
                     Wrap.createWrap(WrapType.NONE, false),
                     Alignment.createAlignment(),
-                    createCustomSpacingBuilder(),
-                    createSpaceBuilder(codeStyleSettings),
+                    customSpacingBuilder,
+                    spacingBuilder,
+                    isEnableFormat,
                 ),
                 codeStyleSettings,
             )

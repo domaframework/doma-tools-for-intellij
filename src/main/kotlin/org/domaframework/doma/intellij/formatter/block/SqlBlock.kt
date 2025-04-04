@@ -56,24 +56,21 @@ open class SqlBlock(
     alignment: Alignment?,
     private val customSpacingBuilder: SqlCustomSpacingBuilder?,
     internal val spacingBuilder: SpacingBuilder,
+    private val enableFormat: Boolean = false,
 ) : AbstractBlock(
         node,
         wrap,
         alignment,
     ) {
+    data class ElementIndent(
+        var indentLevel: IndentType,
+        var indentLen: Int,
+        var groupIndentLen: Int,
+    )
+
     val blocks = mutableListOf<AbstractBlock>()
     open var parentBlock: SqlBlock? = null
     open val childBlocks = mutableListOf<SqlBlock>()
-
-    open fun setParentGroupBlock(block: SqlBlock?) {
-        parentBlock = block
-        parentBlock?.addChildBlock(this)
-    }
-
-    open fun addChildBlock(childBlock: SqlBlock) {
-        childBlocks.add(childBlock)
-    }
-
     open val indent: ElementIndent =
         ElementIndent(
             IndentType.FILE,
@@ -85,8 +82,19 @@ open class SqlBlock(
 
     protected open val pendingCommentBlocks = mutableListOf<SqlBlock>()
 
+    protected fun isEnableFormat(): Boolean = enableFormat
+
+    open fun setParentGroupBlock(block: SqlBlock?) {
+        parentBlock = block
+        parentBlock?.addChildBlock(this)
+    }
+
+    open fun addChildBlock(childBlock: SqlBlock) {
+        childBlocks.add(childBlock)
+    }
+
     public override fun buildChildren(): MutableList<AbstractBlock> {
-        if (isLeaf) return mutableListOf()
+        if (isLeaf || !isEnableFormat()) return mutableListOf()
 
         var child = node.firstChildNode
         var prevNonWhiteSpaceNode: ASTNode? = null
@@ -142,14 +150,14 @@ open class SqlBlock(
             childBlock is SqlColumnDefinitionRawGroupBlock ||
             childBlock is SqlColumnDefinitionGroupBlock ||
             (childBlock is SqlRightPatternBlock && childBlock.isNeedBeforeWhiteSpace(lastGroup)) ||
-            // 改行があれば残す。無ければ残さない
             (
                 (
                     childBlock is SqlLineCommentBlock ||
                         childBlock is SqlBlockCommentBlock
                 ) &&
                     child.treePrev.text.contains("\n")
-            )
+            ) ||
+            (childBlock is SqlElBlockCommentBlock && childBlock.isConditionLoopBlock)
 
     private fun setRightSpace(lastBlock: SqlBlock?) {
         val rightBlock = lastBlock as? SqlRightPatternBlock
@@ -665,6 +673,8 @@ open class SqlBlock(
         child1: Block?,
         child2: Block,
     ): Spacing? {
+        if (!isEnableFormat()) return null
+
         // The end of a line comment element is a newline, so just add a space for the indent.
         if (child1 is SqlLineCommentBlock) {
             if (child2 is SqlBlock) {
@@ -673,12 +683,24 @@ open class SqlBlock(
         }
 
         // Do not leave a space after the comment block of the bind variable
-        if (child1 is SqlElBlockCommentBlock) {
+        if (child1 is SqlElBlockCommentBlock && child2 !is SqlCommentBlock) {
             return Spacing.createSpacing(0, 0, 0, false, 0)
         }
-        // Put a space before the comment block of the bind variable
+
         if (child2 is SqlElBlockCommentBlock) {
-            return Spacing.createSpacing(1, 1, 1, false, 1)
+            when (child1) {
+                is SqlElBlockCommentBlock -> {
+                    val indentLen = child2.indent.indentLen
+                    return Spacing.createSpacing(indentLen, indentLen, 1, false, 0)
+                }
+
+                is SqlWhitespaceBlock -> {
+                    val indentLen = child2.indent.indentLen
+                    return Spacing.createSpacing(indentLen, indentLen, 0, false, 0)
+                }
+
+                else -> return SqlCustomSpacingBuilder.normalSpacing
+            }
         }
 
         if (child1 is SqlWhitespaceBlock) {
@@ -748,6 +770,8 @@ open class SqlBlock(
     }
 
     override fun getChildAttributes(newChildIndex: Int): ChildAttributes {
+        if (!isEnableFormat()) return ChildAttributes(Indent.getNoneIndent(), null)
+
         blocks
             .getOrNull(newChildIndex)
             ?.let {
@@ -761,13 +785,12 @@ open class SqlBlock(
         return ChildAttributes(Indent.getNoneIndent(), null)
     }
 
-    override fun getChildIndent(): Indent? = Indent.getSpaceIndent(4)
+    override fun getChildIndent(): Indent? =
+        if (!isEnableFormat()) {
+            Indent.getSpaceIndent(4)
+        } else {
+            Indent.getSpaceIndent(0)
+        }
 
     override fun isLeaf(): Boolean = myNode.firstChildNode == null
-
-    data class ElementIndent(
-        var indentLevel: IndentType,
-        var indentLen: Int,
-        var groupIndentLen: Int,
-    )
 }

@@ -32,6 +32,7 @@ import com.intellij.psi.util.prevLeafs
 import org.domaframework.doma.intellij.psi.SqlBlockComment
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
+import org.domaframework.doma.intellij.state.DomaToolsFunctionEnableSettings
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 
 class SqlFormatPreProcessor : PreFormatProcessor {
@@ -44,6 +45,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         source: PsiFile,
         rangeToReformat: TextRange,
     ): TextRange {
+        if (!isEnableFormat()) return rangeToReformat
         if (source.language != SqlLanguage.INSTANCE) return rangeToReformat
 
         val visitor = SqlFormatVisitor()
@@ -61,13 +63,17 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         val documentLastElement = visitor.lastElement
         val documentLastRange = visitor.lastElement?.textRange
         if (documentLastElement != null && documentLastRange != null && documentLastRange.endOffset <= rangeToReformat.endOffset) {
-            if (documentLastElement !is PsiWhiteSpace) {
-                val textEnd = documentLastElement.endOffset
-                document.insertString(textEnd, " \n")
-            } else {
+            if (documentLastElement is PsiWhiteSpace) {
                 val textStart = documentLastElement.startOffset
                 val textEnd = documentLastElement.endOffset
                 document.replaceString(textStart, textEnd, " \n")
+            } else if (documentLastElement.elementType == SqlTypes.LINE_COMMENT) {
+                val textStart = documentLastElement.startOffset
+                val textEnd = documentLastElement.endOffset
+                document.replaceString(textStart, textEnd, "${documentLastElement.text} \n")
+            } else {
+                val textEnd = documentLastElement.endOffset
+                document.insertString(textEnd, " \n")
             }
         }
 
@@ -111,9 +117,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             } else {
                 // Remove spaces after newlines to reset indentation
                 val nextSibling = it.nextSibling
-                if (nextSibling.elementType == SqlTypes.LINE_COMMENT) {
-                    document.replaceString(textRangeStart, textRangeEnd, "")
-                } else if (nextSibling.elementType == SqlTypes.BLOCK_COMMENT) {
+                if (nextSibling.elementType == SqlTypes.BLOCK_COMMENT) {
                     removeSpacesAroundNewline(document, it.textRange)
                 } else if (keywordIndex < replaceKeywordList.size) {
                     val nextElement = replaceKeywordList[keywordIndex]
@@ -148,6 +152,12 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         docManager.commitDocument(document)
 
         return rangeToReformat.grown(visitor.replaces.size)
+    }
+
+    private fun isEnableFormat(): Boolean {
+        val setting = DomaToolsFunctionEnableSettings.getInstance()
+        val isEnableFormat = setting.state.isEnableSqlFormat
+        return isEnableFormat
     }
 
     private fun removeSpacesAroundNewline(
