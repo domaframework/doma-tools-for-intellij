@@ -24,37 +24,35 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
-open class SqlViewGroupBlock(
+open class SqlInsertKeywordGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
 ) : SqlKeywordGroupBlock(
         node,
-        IndentType.SECOND,
+        IndentType.TOP,
         wrap,
         alignment,
         spacingBuilder,
     ) {
-    override val indent =
-        ElementIndent(
-            IndentType.SECOND,
-            0,
-            0,
-        )
-
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.SUB
+        indent.indentLevel = IndentType.TOP
         indent.indentLen = createIndentLen()
-        indent.groupIndentLen = node.text.length
+        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    private fun createIndentLen(): Int = parentBlock?.indent?.indentLen ?: 0
-
-    override fun isLeaf(): Boolean = true
+    private fun createIndentLen(): Int =
+        parentBlock?.let {
+            if (it.indent.indentLevel == IndentType.SUB) {
+                it.indent.groupIndentLen.plus(1)
+            } else {
+                0
+            }
+        } ?: 0
 }

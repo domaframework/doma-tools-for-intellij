@@ -50,7 +50,7 @@ open class SqlKeywordBlock(
         indent.indentLevel = indentLevel
         indent.indentLen = createIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(node.text.length)
-        updateParentIndentLen()
+        // updateParentIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()

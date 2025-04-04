@@ -23,6 +23,9 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 /**
  * Parent is always a subclass of a subgroup
@@ -39,15 +42,28 @@ open class SqlRightPatternBlock(
         null,
         spacingBuilder,
     ) {
-    var lastRight = false
+    var preSpaceRight = false
 
     fun enableLastRight() {
-        parentBlock?.parentBlock?.let {
-            lastRight = it.indent.indentLevel <= IndentType.SECOND ||
-                it.indent.indentLevel == IndentType.JOIN
-            return
+        parentBlock?.let {
+            if (it.node.treePrev.elementType == SqlTypes.WORD) {
+                preSpaceRight = false
+                return
+            }
+            if (it is SqlInsertColumnGroupBlock) {
+                preSpaceRight = false
+                return
+            }
+            it.parentBlock?.let {
+                preSpaceRight = (
+                    it.indent.indentLevel <= IndentType.SECOND &&
+                        it.parentBlock !is SqlInsertKeywordGroupBlock
+                ) ||
+                    it.indent.indentLevel == IndentType.JOIN
+                return
+            }
         }
-        lastRight = false
+        preSpaceRight = false
     }
 
     override val indent =

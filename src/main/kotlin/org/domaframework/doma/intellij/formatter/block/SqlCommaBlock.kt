@@ -21,8 +21,12 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import fleet.util.plus
 import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlSubGroupBlock
 
 open class SqlCommaBlock(
     node: ASTNode,
@@ -48,18 +52,29 @@ open class SqlCommaBlock(
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
     private fun createIndentLen(): Int {
-        parentBlock?.let {
-            if (it is SqlSubQueryGroupBlock) {
-                val parentIndentLen = it.indent.groupIndentLen
-                val grand = it.parentBlock
-                if (grand != null && grand.node.text.lowercase() == "create") {
-                    val grandIndentLen = grand.indent.groupIndentLen
-                    return grandIndentLen.plus(parentIndentLen).minus(1)
+        parentBlock?.let { parent ->
+            if (parent is SqlSubGroupBlock) {
+                val parentIndentLen = parent.indent.groupIndentLen
+                val grand = parent.parentBlock
+                grand?.let { grand ->
+                    if (grand is SqlCreateKeywordGroupBlock) {
+                        val grandIndentLen = grand.indent.groupIndentLen
+                        return grandIndentLen.plus(parentIndentLen).minus(1)
+                    }
+                    if (grand is SqlInsertKeywordGroupBlock) {
+                        return parentIndentLen
+                    }
+                    if (grand is SqlColumnGroupBlock) {
+                        val grandIndentLen = grand.indent.groupIndentLen
+                        var prevTextLen = 1
+                        parent.prevChildren?.dropLast(1)?.forEach { prev -> prevTextLen = prevTextLen.plus(prev.node.text.length) }
+                        return grandIndentLen.plus(prevTextLen).plus(1)
+                    }
                 }
                 return parentIndentLen
             } else {
-                val parentLen = it.node.text.length
-                return it.indent.groupIndentLen.plus(parentLen.plus(1))
+                val parentLen = parent.node.text.length
+                return parent.indent.groupIndentLen.plus(parentLen.plus(1))
             }
         }
         return 1

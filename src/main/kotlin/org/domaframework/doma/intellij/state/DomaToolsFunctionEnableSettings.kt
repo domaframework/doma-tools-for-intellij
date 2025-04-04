@@ -18,14 +18,15 @@ package org.domaframework.doma.intellij.state
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.components.PersistentStateComponent
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
-import com.intellij.openapi.components.StoragePathMacros
 
+@Service(Service.Level.APP)
 @State(
     name = "org.domaframework.doma",
     reloadable = true,
-    storages = [Storage(StoragePathMacros.WORKSPACE_FILE)],
+    storages = [Storage("DomaTools.xml")],
 )
 class DomaToolsFunctionEnableSettings : PersistentStateComponent<DomaToolsFunctionEnableSettings.State> {
     class State : BaseState() {

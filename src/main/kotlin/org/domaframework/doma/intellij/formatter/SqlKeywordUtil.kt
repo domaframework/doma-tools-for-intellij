@@ -87,6 +87,7 @@ class SqlKeywordUtil {
                 "group",
                 "having",
                 "limit",
+                "values",
             )
 
         fun isSecondKeyword(keyword: String): Boolean = SECOND_KEYWORD.contains(keyword.lowercase())
@@ -133,6 +134,7 @@ class SqlKeywordUtil {
         private val ATTACHED_KEYWORD =
             setOf(
                 "distinct",
+                "into",
                 "table",
                 "index",
                 "database",
@@ -236,7 +238,6 @@ class SqlKeywordUtil {
                 "like",
                 "offset",
                 "then",
-                "values",
                 "in",
             )
 

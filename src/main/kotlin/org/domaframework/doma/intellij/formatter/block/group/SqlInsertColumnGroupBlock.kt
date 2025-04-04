@@ -21,11 +21,13 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-class SqlSubQueryGroupBlock(
+/**
+ * Block of columns to insert
+ */
+class SqlInsertColumnGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
@@ -39,18 +41,17 @@ class SqlSubQueryGroupBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLen = createIndentLen()
-        indent.groupIndentLen = createGroupIndentLen()
+        indent.groupIndentLen = indent.indentLen.plus(1)
+        updateParentGroupIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createIndentLen(): Int = 1
-
-    private fun createGroupIndentLen(): Int {
+    override fun createIndentLen(): Int {
         parentBlock?.let {
-            if (it is SqlJoinGroupBlock) {
+            if (it is SqlInsertKeywordGroupBlock) {
                 var parentLen = 0
                 val keywords =
                     it.childBlocks.dropLast(1).takeWhile { it.node.elementType == SqlTypes.KEYWORD }
@@ -59,23 +60,28 @@ class SqlSubQueryGroupBlock(
                 }
                 return it.indent.indentLen
                     .plus(it.node.text.length)
-                    .plus(2)
+                    .plus(1)
                     .plus(parentLen)
-            } else {
-                var parentLen = 0
-                if (prevChildren?.findLast { it.indent.indentLevel == IndentType.COMMA } == null) {
-                    prevChildren
-                        ?.dropLast(1)
-                        ?.forEach { prev ->
-                            parentLen = parentLen.plus(prev.node.text.length).plus(1)
-                        }
-                }
-                return it.indent.groupIndentLen
-                    .plus(parentLen)
-                    .plus(2)
             }
-            return it.indent.groupIndentLen
-                .plus(2)
-        } ?: return 1
+            // TODO:Customize indentation
+            return 2
+        } ?: return 2
+    }
+
+    private fun updateParentGroupIndentLen() {
+        parentBlock?.let {
+            if (it is SqlInsertKeywordGroupBlock) {
+                var parentLen = 0
+                val keywords =
+                    it.childBlocks.dropLast(1).takeWhile { it.node.elementType == SqlTypes.KEYWORD }
+                keywords.forEach { keyword ->
+                    parentLen = parentLen.plus(keyword.node.text.length).plus(1)
+                }
+                it.indent.groupIndentLen =
+                    it.indent.indentLen
+                        .plus(it.node.text.length)
+                        .plus(parentLen)
+            }
+        }
     }
 }

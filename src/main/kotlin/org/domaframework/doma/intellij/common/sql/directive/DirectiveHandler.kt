@@ -33,8 +33,7 @@ open class DirectiveHandler(
     ): Boolean {
         val prev = it.prevLeaf()
         return (
-            prev != null &&
-                prev.text == symbol ||
+            prev?.text == symbol ||
                 it.text.startsWith(symbol)
         )
     }

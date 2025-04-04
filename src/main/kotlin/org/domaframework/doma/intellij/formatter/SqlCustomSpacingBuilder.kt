@@ -24,10 +24,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlColumnBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlSubQueryGroupBlock
 
 class SqlCustomSpacingBuilder {
     companion object {
@@ -118,65 +115,5 @@ class SqlCustomSpacingBuilder {
     fun getSpacingColumnDefinitionRawEndRight(child: SqlRightPatternBlock): Spacing? {
         val indentLen = child.indent.indentLen
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
-    }
-
-    /**
-     * Adjust line breaks and indentation depending on the block indent type
-     */
-    fun getSpacingWithIndentLevel(child: SqlNewGroupBlock): Spacing? {
-        val parentBlock = child.parentBlock
-        val indentLen: Int = child.indent.indentLen
-
-        return when (child.indent.indentLevel) {
-            IndentType.TOP -> {
-                return if (parentBlock?.parentBlock == null) {
-                    nonSpacing
-                } else if (parentBlock is SqlSubGroupBlock) {
-                    nonSpacing
-                } else {
-                    Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
-                }
-            }
-
-            IndentType.SECOND -> {
-                return if (parentBlock is SqlSubQueryGroupBlock) {
-                    normalSpacing
-                } else if (SqlKeywordUtil.isSetLineKeyword(child.node.text, parentBlock?.node?.text ?: "")) {
-                    null
-                } else {
-                    Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
-                }
-            }
-
-            IndentType.SECOND_OPTION -> {
-                return Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
-            }
-
-            IndentType.SUB -> {
-                if (parentBlock is SqlCreateKeywordGroupBlock) {
-                    return Spacing.createSpacing(0, 0, 1, false, 0, 1)
-                }
-                return null
-            }
-
-            IndentType.INLINE -> {
-                return normalSpacing
-            }
-
-            IndentType.INLINE_SECOND -> {
-                parentBlock?.let {
-                    val parentIndentLen = it.indent.groupIndentLen
-                    val parentTextLen = it.node.text.length
-                    val newIndentLen = parentIndentLen.plus(parentTextLen).plus(1)
-                    return Spacing.createSpacing(newIndentLen, newIndentLen, 1, false, 0, 1)
-                }
-                return Spacing.createSpacing(0, 0, 1, false, 0, 1)
-            }
-
-            else -> {
-                return null
-            }
-        }
-        return null
     }
 }

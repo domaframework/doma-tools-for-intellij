@@ -59,24 +59,6 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         var index = keywordList.size
         var keywordIndex = replaceKeywordList.size
 
-        // Add a newline to the end of the file
-        val documentLastElement = visitor.lastElement
-        val documentLastRange = visitor.lastElement?.textRange
-        if (documentLastElement != null && documentLastRange != null && documentLastRange.endOffset <= rangeToReformat.endOffset) {
-            if (documentLastElement is PsiWhiteSpace) {
-                val textStart = documentLastElement.startOffset
-                val textEnd = documentLastElement.endOffset
-                document.replaceString(textStart, textEnd, " \n")
-            } else if (documentLastElement.elementType == SqlTypes.LINE_COMMENT) {
-                val textStart = documentLastElement.startOffset
-                val textEnd = documentLastElement.endOffset
-                document.replaceString(textStart, textEnd, "${documentLastElement.text} \n")
-            } else {
-                val textEnd = documentLastElement.endOffset
-                document.insertString(textEnd, " \n")
-            }
-        }
-
         visitor.replaces.asReversed().forEach {
             val createQueryType = getCreateQueryGroup(keywordList, index)
             val textRangeStart = it.startOffset
@@ -95,6 +77,14 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                         newKeyword =
                             if (createQueryType == CreateQueryType.TABLE) {
                                 getNewLineString(it.prevSibling, getUpperText(it))
+                            } else if (keywordIndex > 0) {
+                                if (replaceKeywordList[keywordIndex - 1].text.lowercase() == "insert" ||
+                                    replaceKeywordList[keywordIndex - 1].text.lowercase() == "into"
+                                ) {
+                                    getNewLineString(it.prevSibling, getUpperText(it))
+                                } else {
+                                    getUpperText(it)
+                                }
                             } else {
                                 getUpperText(it)
                             }
@@ -125,6 +115,8 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                         removeSpacesAroundNewline(document, it.textRange)
                     } else if (isSubGroupFirstElement(nextElement)) {
                         document.deleteString(textRangeStart, textRangeEnd)
+                    } else if (isCreateViewAs(replaceKeywordList[keywordIndex], createQueryType)) {
+                        removeSpacesAroundNewline(document, it.textRange)
                     } else {
                         val isNewLineGroup = SqlKeywordUtil.getIndentType(nextElement.text ?: "").isNewLineGroup()
                         val isSetLineKeyword =

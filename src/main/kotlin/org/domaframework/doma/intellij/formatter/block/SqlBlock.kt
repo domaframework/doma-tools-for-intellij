@@ -42,6 +42,8 @@ import org.domaframework.doma.intellij.formatter.block.group.SqlCreateKeywordGro
 import org.domaframework.doma.intellij.formatter.block.group.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlInlineSecondGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlInsertKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
@@ -113,9 +115,9 @@ open class SqlBlock(
                         blocks.removeLast()
                     }
                 }
-                setRightSpace(blocks.lastOrNull() as SqlBlock?)
                 prevNonWhiteSpaceNode = child
                 updateSearchKeywordLevelHistory(childBlock, child)
+                setRightSpace(childBlock)
                 blocks.add(childBlock)
                 if (childBlock is SqlCommentBlock) {
                     blockBuilder.addCommentBlock(childBlock)
@@ -147,6 +149,7 @@ open class SqlBlock(
     ): Boolean =
         isNewLineGroupBlock(childBlock, child, lastGroup) ||
             childBlock.node.elementType == SqlTypes.COMMA ||
+            childBlock is SqlInsertColumnGroupBlock ||
             childBlock is SqlColumnDefinitionRawGroupBlock ||
             childBlock is SqlColumnDefinitionGroupBlock ||
             (childBlock is SqlRightPatternBlock && childBlock.isNeedBeforeWhiteSpace(lastGroup)) ||
@@ -159,8 +162,8 @@ open class SqlBlock(
             ) ||
             (childBlock is SqlElBlockCommentBlock && childBlock.isConditionLoopBlock)
 
-    private fun setRightSpace(lastBlock: SqlBlock?) {
-        val rightBlock = lastBlock as? SqlRightPatternBlock
+    private fun setRightSpace(currentBlock: SqlBlock?) {
+        val rightBlock = currentBlock as? SqlRightPatternBlock
         rightBlock?.enableLastRight()
     }
 
@@ -465,6 +468,8 @@ open class SqlBlock(
                     SqlColumnDefinitionGroupBlock(child, wrap, alignment, spacingBuilder)
                 } else if (lastGroup is SqlColumnDefinitionRawGroupBlock) {
                     SqlDataTypeParamBlock(child, wrap, alignment, spacingBuilder)
+                } else if (lastGroup is SqlInsertKeywordGroupBlock) {
+                    SqlInsertColumnGroupBlock(child, wrap, alignment, spacingBuilder)
                 } else {
                     SqlSubQueryGroupBlock(child, wrap, alignment, spacingBuilder)
                 }
@@ -596,6 +601,9 @@ open class SqlBlock(
                     if (child.text.lowercase() == "create") {
                         return SqlCreateKeywordGroupBlock(child, wrap, alignment, spacingBuilder)
                     }
+                    if (child.text.lowercase() == "insert") {
+                        return SqlInsertKeywordGroupBlock(child, wrap, alignment, spacingBuilder)
+                    }
                     return SqlKeywordGroupBlock(child, indentLevel, wrap, alignment, spacingBuilder)
                 }
 
@@ -674,7 +682,6 @@ open class SqlBlock(
         child2: Block,
     ): Spacing? {
         if (!isEnableFormat()) return null
-
         // The end of a line comment element is a newline, so just add a space for the indent.
         if (child1 is SqlLineCommentBlock) {
             if (child2 is SqlBlock) {
@@ -748,7 +755,7 @@ open class SqlBlock(
                         ?.let { return it }
                 child2.parentBlock is SqlDataTypeParamBlock -> SqlCustomSpacingBuilder.nonSpacing
 
-                child2.lastRight -> SqlCustomSpacingBuilder.normalSpacing
+                child2.preSpaceRight -> SqlCustomSpacingBuilder.normalSpacing
                 else -> SqlCustomSpacingBuilder.nonSpacing
             }
         }
