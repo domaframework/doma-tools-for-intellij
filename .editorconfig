@@ -1,1 +1,4 @@
 [*.{kt,kts}]
+
+[src/test/testData/sql/**.sql]
+trim_trailing_whitespace = false
