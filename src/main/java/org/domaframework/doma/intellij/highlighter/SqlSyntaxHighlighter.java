@@ -109,14 +109,14 @@ public class SqlSyntaxHighlighter extends SyntaxHighlighterBase {
       createTextAttributesKey("EL_EQ", DefaultLanguageHighlighterColors.OPERATION_SIGN);
   public static final TextAttributesKey EL_NE =
       createTextAttributesKey("EL_NE", DefaultLanguageHighlighterColors.OPERATION_SIGN);
-  public static final TextAttributesKey EL_LT =
-      createTextAttributesKey("EL_LT", DefaultLanguageHighlighterColors.OPERATION_SIGN);
-  public static final TextAttributesKey EL_LE =
-      createTextAttributesKey("EL_LE", DefaultLanguageHighlighterColors.OPERATION_SIGN);
-  public static final TextAttributesKey EL_GT =
-      createTextAttributesKey("EL_GT", DefaultLanguageHighlighterColors.OPERATION_SIGN);
-  public static final TextAttributesKey EL_GE =
-      createTextAttributesKey("EL_GE", DefaultLanguageHighlighterColors.OPERATION_SIGN);
+  public static final TextAttributesKey LT =
+      createTextAttributesKey("LT", DefaultLanguageHighlighterColors.OPERATION_SIGN);
+  public static final TextAttributesKey LE =
+      createTextAttributesKey("LE", DefaultLanguageHighlighterColors.OPERATION_SIGN);
+  public static final TextAttributesKey GT =
+      createTextAttributesKey("GT", DefaultLanguageHighlighterColors.OPERATION_SIGN);
+  public static final TextAttributesKey GE =
+      createTextAttributesKey("GE", DefaultLanguageHighlighterColors.OPERATION_SIGN);
   public static final TextAttributesKey EL_NOT =
       createTextAttributesKey("EL_NOT", DefaultLanguageHighlighterColors.OPERATION_SIGN);
   public static final TextAttributesKey EL_AND =
@@ -176,10 +176,10 @@ public class SqlSyntaxHighlighter extends SyntaxHighlighterBase {
 
     map.put(SqlTypes.EL_EQ, EL_EQ);
     map.put(SqlTypes.EL_NE, EL_NE);
-    map.put(SqlTypes.EL_LT, EL_LT);
-    map.put(SqlTypes.EL_LE, EL_LE);
-    map.put(SqlTypes.EL_GT, EL_GT);
-    map.put(SqlTypes.EL_GE, EL_GE);
+    map.put(SqlTypes.LT, LT);
+    map.put(SqlTypes.LE, LE);
+    map.put(SqlTypes.GT, GT);
+    map.put(SqlTypes.GE, GE);
     map.put(SqlTypes.EL_NOT, EL_NOT);
     map.put(SqlTypes.EL_AND, EL_AND);
     map.put(SqlTypes.EL_OR, EL_OR);

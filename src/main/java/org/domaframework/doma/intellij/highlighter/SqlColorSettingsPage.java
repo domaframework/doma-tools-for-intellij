@@ -77,9 +77,9 @@ public class SqlColorSettingsPage implements ColorSettingsPage {
         new AttributesDescriptor("Expression//Operator///", SqlSyntaxHighlighter.EL_SLASH),
         new AttributesDescriptor("Expression//Operator//==", SqlSyntaxHighlighter.EL_EQ),
         new AttributesDescriptor("Expression//Operator//!=", SqlSyntaxHighlighter.EL_NE),
-        new AttributesDescriptor("Expression//Operator//>=", SqlSyntaxHighlighter.EL_GE),
-        new AttributesDescriptor("Expression//Operator//<=", SqlSyntaxHighlighter.EL_LE),
-        new AttributesDescriptor("Expression//Operator//>", SqlSyntaxHighlighter.EL_GT),
+        new AttributesDescriptor("Expression//Operator//>=", SqlSyntaxHighlighter.GE),
+        new AttributesDescriptor("Expression//Operator//<=", SqlSyntaxHighlighter.LE),
+        new AttributesDescriptor("Expression//Operator//>", SqlSyntaxHighlighter.GT),
         new AttributesDescriptor("Expression//Operator//&&", SqlSyntaxHighlighter.EL_AND),
         new AttributesDescriptor("Expression//Operator//||", SqlSyntaxHighlighter.EL_OR),
         // Comment
