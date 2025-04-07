@@ -93,7 +93,6 @@ dependencies {
         zipSigner()
         testFramework(TestFrameworkType.Platform)
         testFramework(TestFrameworkType.Plugin.Java)
-        testFramework(TestFrameworkType.Metrics)
     }
 }
 
