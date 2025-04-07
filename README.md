@@ -59,6 +59,14 @@ Along with the Dao name change, we will refactor the SQL file directory and file
 - After refactoring the Dao method name, we will also change the SQL file name.
 - After refactoring the Dao package, we will also change the SQL directory.
 
+## Formatter(Preview)
+Provides code formatting for SQL syntax.
+
+This feature is in preview. You cannot customize the indentation or keywords to be broken down!
+
+You can reformat entire directories and files with "Code > Reformat Code".
+
+If you want to enable the plugin's formatting function, check "Enable SQL Format" in "Settings > Other Settings > Doma Tools". (The default is OFF.)
 ## Settings
 Some functions of "Doma Tools" can be customized from the settings screen.
 

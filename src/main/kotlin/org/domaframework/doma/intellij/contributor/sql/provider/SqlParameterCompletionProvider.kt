@@ -108,7 +108,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 val prevElm =
                     pos.prevLeafs.firstOrNull {
                         it.isNotWhiteSpace() &&
-                            it.elementType != SqlTypes.EL_DOT &&
+                            it.elementType != SqlTypes.DOT &&
                             it !is PsiErrorElement
                     }
                 if (!pos.isNotWhiteSpace() && !isRightFactor(prevElm)) return
@@ -143,8 +143,8 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 prevElm is SqlElAndExpr ||
                 prevElm?.elementType == SqlTypes.EL_PLUS ||
                 prevElm?.elementType == SqlTypes.EL_MINUS ||
-                prevElm?.elementType == SqlTypes.EL_ASTERISK ||
-                prevElm?.elementType == SqlTypes.EL_SLASH ||
+                prevElm?.elementType == SqlTypes.ASTERISK ||
+                prevElm?.elementType == SqlTypes.SLASH ||
                 prevElm?.elementType == SqlTypes.EL_PERCENT ||
                 prevElm?.isNotWhiteSpace() == true
         )

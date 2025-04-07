@@ -37,7 +37,6 @@ fun getExtension(type: String): String =
  * Does it match the Dao file type condition?
  */
 fun isJavaOrKotlinFileType(daoFile: PsiFile): Boolean {
-    if (daoFile.virtualFile == null) return false
     val fileType = FileTypeManager.getInstance().getFileTypeByFile(daoFile.virtualFile)
     return when (fileType.name) {
         "JAVA", "Kotlin" -> true

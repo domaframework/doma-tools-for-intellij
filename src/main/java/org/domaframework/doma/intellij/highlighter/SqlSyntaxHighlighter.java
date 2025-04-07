@@ -36,6 +36,8 @@ public class SqlSyntaxHighlighter extends SyntaxHighlighterBase {
       createTextAttributesKey("DOMA_SQL_KEYWORD", DefaultLanguageHighlighterColors.METADATA);
   public static final TextAttributesKey WORD =
       createTextAttributesKey("DOMA_SQL_WORD", DefaultLanguageHighlighterColors.IDENTIFIER);
+  public static final TextAttributesKey DATATYPE =
+      createTextAttributesKey("DOMA_SQL_DATATYPE", DefaultLanguageHighlighterColors.METADATA);
   public static final TextAttributesKey STRING =
       createTextAttributesKey("DOMA_SQL_STRING", DefaultLanguageHighlighterColors.STRING);
   public static final TextAttributesKey NUMBER =
@@ -107,14 +109,14 @@ public class SqlSyntaxHighlighter extends SyntaxHighlighterBase {
       createTextAttributesKey("EL_EQ", DefaultLanguageHighlighterColors.OPERATION_SIGN);
   public static final TextAttributesKey EL_NE =
       createTextAttributesKey("EL_NE", DefaultLanguageHighlighterColors.OPERATION_SIGN);
-  public static final TextAttributesKey EL_LT =
-      createTextAttributesKey("EL_LT", DefaultLanguageHighlighterColors.OPERATION_SIGN);
-  public static final TextAttributesKey EL_LE =
-      createTextAttributesKey("EL_LE", DefaultLanguageHighlighterColors.OPERATION_SIGN);
-  public static final TextAttributesKey EL_GT =
-      createTextAttributesKey("EL_GT", DefaultLanguageHighlighterColors.OPERATION_SIGN);
-  public static final TextAttributesKey EL_GE =
-      createTextAttributesKey("EL_GE", DefaultLanguageHighlighterColors.OPERATION_SIGN);
+  public static final TextAttributesKey LT =
+      createTextAttributesKey("LT", DefaultLanguageHighlighterColors.OPERATION_SIGN);
+  public static final TextAttributesKey LE =
+      createTextAttributesKey("LE", DefaultLanguageHighlighterColors.OPERATION_SIGN);
+  public static final TextAttributesKey GT =
+      createTextAttributesKey("GT", DefaultLanguageHighlighterColors.OPERATION_SIGN);
+  public static final TextAttributesKey GE =
+      createTextAttributesKey("GE", DefaultLanguageHighlighterColors.OPERATION_SIGN);
   public static final TextAttributesKey EL_NOT =
       createTextAttributesKey("EL_NOT", DefaultLanguageHighlighterColors.OPERATION_SIGN);
   public static final TextAttributesKey EL_AND =
@@ -138,6 +140,7 @@ public class SqlSyntaxHighlighter extends SyntaxHighlighterBase {
 
   static {
     map.put(SqlTypes.KEYWORD, KEYWORD);
+    map.put(SqlTypes.DATATYPE, DATATYPE);
     map.put(SqlTypes.STRING, STRING);
     map.put(SqlTypes.OTHER, OTHER);
     map.put(SqlTypes.WORD, WORD);
@@ -156,36 +159,36 @@ public class SqlSyntaxHighlighter extends SyntaxHighlighterBase {
     map.put(SqlTypes.EL_PARSER_LEVEL_COMMENT, EL_PARSER_LEVEL_COMMENT);
     map.put(SqlTypes.EL_FOR, EL_FOR);
     map.put(SqlTypes.EL_END, EL_END);
-    map.put(SqlTypes.EL_HASH, EL_HASH);
-    map.put(SqlTypes.EL_CARET, EL_CARET);
+    map.put(SqlTypes.HASH, EL_HASH);
+    map.put(SqlTypes.CARET, EL_CARET);
 
-    map.put(SqlTypes.EL_DOT, EL_DOT);
-    map.put(SqlTypes.EL_COMMA, EL_COMMA);
-    map.put(SqlTypes.EL_AT_SIGN, EL_AT_SIGN);
-    map.put(SqlTypes.EL_LEFT_PAREN, EL_LEFT_PAREN);
-    map.put(SqlTypes.EL_RIGHT_PAREN, EL_RIGHT_PAREN);
+    map.put(SqlTypes.DOT, EL_DOT);
+    map.put(SqlTypes.COMMA, EL_COMMA);
+    map.put(SqlTypes.AT_SIGN, EL_AT_SIGN);
+    map.put(SqlTypes.LEFT_PAREN, EL_LEFT_PAREN);
+    map.put(SqlTypes.RIGHT_PAREN, EL_RIGHT_PAREN);
 
     map.put(SqlTypes.EL_PLUS, EL_PLUS);
     map.put(SqlTypes.EL_MINUS, EL_MINUS);
-    map.put(SqlTypes.EL_ASTERISK, EL_ASTERISK);
-    map.put(SqlTypes.EL_SLASH, EL_SLASH);
+    map.put(SqlTypes.ASTERISK, EL_ASTERISK);
+    map.put(SqlTypes.SLASH, EL_SLASH);
     map.put(SqlTypes.EL_PERCENT, EL_PERCENT);
 
     map.put(SqlTypes.EL_EQ, EL_EQ);
     map.put(SqlTypes.EL_NE, EL_NE);
-    map.put(SqlTypes.EL_LT, EL_LT);
-    map.put(SqlTypes.EL_LE, EL_LE);
-    map.put(SqlTypes.EL_GT, EL_GT);
-    map.put(SqlTypes.EL_GE, EL_GE);
+    map.put(SqlTypes.LT, LT);
+    map.put(SqlTypes.LE, LE);
+    map.put(SqlTypes.GT, GT);
+    map.put(SqlTypes.GE, GE);
     map.put(SqlTypes.EL_NOT, EL_NOT);
     map.put(SqlTypes.EL_AND, EL_AND);
     map.put(SqlTypes.EL_OR, EL_OR);
-    map.put(SqlTypes.EL_SEPARATOR, EL_SEPARATOR);
+    map.put(SqlTypes.SEPARATOR, EL_SEPARATOR);
 
     map.put(SqlTypes.EL_NEW, EL_NEW);
 
     map.put(SqlTypes.EL_NULL, EL_NULL);
-    map.put(SqlTypes.EL_BOOLEAN, EL_BOOLEAN);
+    map.put(SqlTypes.BOOLEAN, EL_BOOLEAN);
     map.put(SqlTypes.EL_STRING, EL_STRING);
     map.put(SqlTypes.EL_CHAR, EL_CHAR);
     map.put(SqlTypes.EL_NUMBER, EL_NUMBER);

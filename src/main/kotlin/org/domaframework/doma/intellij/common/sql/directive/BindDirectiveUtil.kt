@@ -42,7 +42,7 @@ object BindDirectiveUtil {
                     p.text == "%" ||
                         p.prevSibling?.text == "%" ||
                         p is SqlElStaticFieldAccessExpr ||
-                        p.elementType == SqlTypes.EL_AT_SIGN
+                        p.elementType == SqlTypes.AT_SIGN
                 ) ||
                     p.elementType == SqlTypes.BLOCK_COMMENT_START ||
                     !p.isNotWhiteSpace()
@@ -51,7 +51,7 @@ object BindDirectiveUtil {
                     !it.isNotWhiteSpace() -> DirectiveType.NOT_DIRECTIVE
                     it.text == "%" || it.prevSibling?.text == "%" -> DirectiveType.PERCENT
                     it is SqlElStaticFieldAccessExpr -> DirectiveType.STATIC
-                    it.elementType == SqlTypes.EL_AT_SIGN -> DirectiveType.BUILT_IN
+                    it.elementType == SqlTypes.AT_SIGN -> DirectiveType.BUILT_IN
                     else -> DirectiveType.NOT_DIRECTIVE
                 }
             }

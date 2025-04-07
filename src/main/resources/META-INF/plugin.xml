@@ -18,6 +18,12 @@
   <extensions defaultExtensionNs="com.intellij">
     <postStartupActivity implementation="org.domaframework.doma.intellij.setting.DomaToolStartupActivity"/>
 
+    <applicationService
+      serviceImplementation="org.domaframework.doma.intellij.state.DomaToolsFunctionEnableSettings"/>
+      <applicationConfigurable groupId="org.domaframework.doma"
+        instance="org.domaframework.doma.intellij.setting.DomaToolsConfigurable"
+        displayName="Doma Tools" />
+
     <!-- Gutter -->
     <codeInsight.lineMarkerProvider language="JAVA"
       implementationClass="org.domaframework.doma.intellij.gutter.dao.DaoMethodProvider"/>
@@ -37,6 +43,12 @@
     <!-- Completion -->
     <completion.contributor language="DomaSql"
       implementationClass="org.domaframework.doma.intellij.contributor.sql.SqlCompletionContributor" order="first" />
+
+    <!-- Formatter -->
+    <lang.formatter language="DomaSql"
+      implementationClass="org.domaframework.doma.intellij.formatter.SqlFormattingModelBuilder"/>
+    <preFormatProcessor implementation="org.domaframework.doma.intellij.formatter.SqlFormatPreProcessor" />
+    <postFormatProcessor implementation="org.domaframework.doma.intellij.formatter.SqlPostProcessor" />
 
     <!-- CustomLanguage -->
     <fileType

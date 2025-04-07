@@ -21,14 +21,23 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
 %{
   // SQL keywords
   private static final Set<String> KEYWORDS = Set.of(
+      "add",
+      "after",
       "alter",
       "all",
       "and",
+      "as",
       "asc",
+      "between",
       "by",
       "case",
+      "change",
       "check",
+      "column",
+      "comment",
       "create",
+      "cross",
+      "database",
       "default",
       "delete",
       "desc",
@@ -36,16 +45,20 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "drop",
       "else",
       "end",
+      "except",
       "exists",
+      "first",
       "foreign",
       "from",
       "full",
       "group",
       "having",
+      "if",
       "in",
       "index",
       "inner",
       "insert",
+      "intersect",
       "into",
       "is",
       "join",
@@ -55,27 +68,67 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "limit",
       "not",
       "null",
+      "modify",
       "offset",
       "on",
+      "outer",
       "or",
       "order",
       "primary",
       "references",
+      "rename",
       "right",
       "select",
       "set",
       "table",
+      "temporary",
       "then",
+      "to",
+      "truncate",
       "union",
       "unique",
       "update",
       "values",
+      "view",
       "when",
       "where"
   );
 
+  // COLUMN DataTypes
+  private static final Set<String> DATATYPES = Set.of(
+      "int",
+      "integer",
+      "smallint",
+      "bigint",
+      "tinyint",
+      "float",
+      "double",
+      "decimal",
+      "numeric",
+      "char",
+      "varchar",
+      "text",
+      "date",
+      "time",
+      "timestamp",
+      "datetime",
+      "boolean",
+      "bit",
+      "binary",
+      "varbinary",
+      "blob",
+      "clob",
+      "json",
+      "enum",
+      "set"
+   );
+
   private static boolean isKeyword(CharSequence word) {
       return KEYWORDS.contains(word.toString().toLowerCase());
+  }
+
+  private static boolean isColumnDataType(CharSequence word) {
+    return DATATYPES.contains(word.toString().toLowerCase());
   }
 %}
 
@@ -113,37 +166,52 @@ El_NonWordPart = [=<>\-,/*();\R \n\t\f]
   {LineComment}                                { return SqlTypes.LINE_COMMENT; }
   {String}                                     { return SqlTypes.STRING; }
   {Number}                                     { return SqlTypes.NUMBER; }
-  {Word}                                       { return isKeyword(yytext()) ? SqlTypes.KEYWORD : SqlTypes.WORD; }
+  {Word}                                       { return isKeyword(yytext()) ? SqlTypes.KEYWORD : isColumnDataType(yytext()) ? SqlTypes.DATATYPE : SqlTypes.WORD; }
+  "."                                         { return SqlTypes.DOT; }
+  ","                                         { return SqlTypes.COMMA; }
+  "+"                                          { return SqlTypes.PLUS;}
+  "-"                                          { return SqlTypes.MINUS;}
+  "*"                                          { return SqlTypes.ASTERISK;}
+  "/"                                          { return SqlTypes.SLASH;}
+  "%"                                          { return SqlTypes.PERCENT;}
+  "("                                          { return SqlTypes.LEFT_PAREN; }
+  ")"                                          { return SqlTypes.RIGHT_PAREN; }
+  "<"                                          { return SqlTypes.LT;}
+  "<="                                         { return SqlTypes.LE;}
+  ">"                                          { return SqlTypes.GT;}
+  ">="                                         { return SqlTypes.GE;}
+  "true"                                       { return SqlTypes.BOOLEAN;}
+  "false"                                      { return SqlTypes.BOOLEAN;}
   ({LineTerminator}|{WhiteSpace})+             { return TokenType.WHITE_SPACE; }
   [^]                                          { return SqlTypes.OTHER; }
 }
 
 <EXPRESSION> {
   {BlockCommentEnd}                            { yybegin(YYINITIAL); return SqlTypes.BLOCK_COMMENT_END; }
-  ":"                                          { return SqlTypes.EL_SEPARATOR; }
-  "."                                          { return SqlTypes.EL_DOT; }
-  ","                                          { return SqlTypes.EL_COMMA; }
-  "("                                          { return SqlTypes.EL_LEFT_PAREN; }
-  ")"                                          { return SqlTypes.EL_RIGHT_PAREN; }
-  "@"                                          { return SqlTypes.EL_AT_SIGN; }
-  "+"                                          { return SqlTypes.EL_PLUS;}
-  "-"                                          { return SqlTypes.EL_MINUS;}
-  "*"                                          { return SqlTypes.EL_ASTERISK;}
-  "/"                                          { return SqlTypes.EL_SLASH;}
-  "%"                                          { return SqlTypes.EL_PERCENT;}
+  ":"                                          { return SqlTypes.SEPARATOR; }
+  "."                                          { return SqlTypes.DOT; }
+  ","                                          { return SqlTypes.COMMA; }
+  "("                                          { return SqlTypes.LEFT_PAREN; }
+  ")"                                          { return SqlTypes.RIGHT_PAREN; }
+  "@"                                          { return SqlTypes.AT_SIGN; }
+  "+"                                          { return SqlTypes.PLUS;}
+  "-"                                          { return SqlTypes.MINUS;}
+  "*"                                          { return SqlTypes.ASTERISK;}
+  "/"                                          { return SqlTypes.SLASH;}
+  "%"                                          { return SqlTypes.PERCENT;}
   "=="                                         { return SqlTypes.EL_EQ;}
   "!="                                         { return SqlTypes.EL_NE;}
-  "<"                                          { return SqlTypes.EL_LT;}
-  "<="                                         { return SqlTypes.EL_LE;}
-  ">"                                          { return SqlTypes.EL_GT;}
-  ">="                                         { return SqlTypes.EL_GE;}
+  "<"                                          { return SqlTypes.LT;}
+  "<="                                         { return SqlTypes.LE;}
+  ">"                                          { return SqlTypes.GT;}
+  ">="                                         { return SqlTypes.GE;}
   "!"                                          { return SqlTypes.EL_NOT;}
   "&&"                                         { return SqlTypes.EL_AND;}
   "||"                                         { return SqlTypes.EL_OR;}
   "new"                                        { return SqlTypes.EL_NEW;}
   "null"                                       { return SqlTypes.EL_NULL;}
-  "true"                                       { return SqlTypes.EL_BOOLEAN;}
-  "false"                                      { return SqlTypes.EL_BOOLEAN;}
+  "true"                                       { return SqlTypes.BOOLEAN;}
+  "false"                                      { return SqlTypes.BOOLEAN;}
   {El_Number}                                  { return SqlTypes.EL_NUMBER; }
   {El_String}                                  { return SqlTypes.EL_STRING; }
   {El_Char}                                    { return SqlTypes.EL_CHAR; }
@@ -162,8 +230,8 @@ El_NonWordPart = [=<>\-,/*();\R \n\t\f]
   "%populate"/{El_NonWordPart}                 { yybegin(EXPRESSION); return SqlTypes.EL_POPULATE; }
   "%end"/{El_NonWordPart}                      { yybegin(EXPRESSION); return SqlTypes.EL_END; }
   "%!"                                         { yybegin(PARSER_LEVEL_COMMENT); return SqlTypes.EL_PARSER_LEVEL_COMMENT; }
-  "#"                                          { yybegin(EXPRESSION); return SqlTypes.EL_HASH; }
-  "^"                                          { yybegin(EXPRESSION); return SqlTypes.EL_CARET; }
+  "#"                                          { yybegin(EXPRESSION); return SqlTypes.HASH; }
+  "^"                                          { yybegin(EXPRESSION); return SqlTypes.CARET; }
   ({LineTerminator}|{WhiteSpace})+             { return TokenType.WHITE_SPACE; }
   [^]                                          { return TokenType.BAD_CHARACTER; }
 }
