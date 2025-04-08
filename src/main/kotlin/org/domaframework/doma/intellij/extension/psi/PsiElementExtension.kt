@@ -30,8 +30,16 @@ fun PsiElement.isNotWhiteSpace(): Boolean = this !is PsiWhiteSpace
 fun PsiElement.findSelfBlocks(): List<PsiElement> {
     var elms = emptyList<PsiElement>()
     for (it in this.prevLeafs) {
+        // When performing code completion within a [SqlElParameter] element,
+        // there is a possibility that a “)” may be inserted for the final argument, so it is excluded.
         elms = elms.plus(it)
-        if (!it.isNotWhiteSpace() || it.elementType == SqlTypes.AT_SIGN) break
+        if (!it.isNotWhiteSpace() ||
+            it.elementType == SqlTypes.AT_SIGN ||
+            it.elementType == SqlTypes.LEFT_PAREN ||
+            it.elementType == SqlTypes.COMMA
+        ) {
+            break
+        }
     }
 
     elms

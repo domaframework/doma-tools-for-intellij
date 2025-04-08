@@ -64,6 +64,7 @@ import org.domaframework.doma.intellij.psi.SqlElLeExpr
 import org.domaframework.doma.intellij.psi.SqlElLtExpr
 import org.domaframework.doma.intellij.psi.SqlElNeExpr
 import org.domaframework.doma.intellij.psi.SqlElOrExpr
+import org.domaframework.doma.intellij.psi.SqlElParameters
 import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.jetbrains.kotlin.idea.base.util.module
@@ -164,11 +165,12 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 return prevElms
             }
         }
+
         // If the parent has field access, get its child element
-        if (targetElement.parent is SqlElFieldAccessExpr) {
+        if (parent is SqlElFieldAccessExpr) {
             blocks =
                 PsiTreeUtil
-                    .getChildrenOfTypeAsList(targetElement.parent, PsiElement::class.java)
+                    .getChildrenOfTypeAsList(parent, PsiElement::class.java)
                     .filter {
                         (
                             it is SqlElPrimaryExpr ||
@@ -178,7 +180,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                     }.toList()
             if (blocks.isEmpty()) {
                 val parent =
-                    PsiTreeUtil.findFirstParent(targetElement.parent) {
+                    PsiTreeUtil.findFirstParent(parent) {
                         it !is PsiDirectory &&
                             it !is PsiFile &&
                             it is SqlElFieldAccessExpr
@@ -192,14 +194,38 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                                 (targetElement.startOffsetInParent) >= it.startOffsetInParent
                         }.toList()
             }
+        } else {
+            // Completion for the first argument
+            var parameterParent: PsiElement? =
+                PsiTreeUtil.getParentOfType(targetElement, SqlElParameters::class.java)
+            if (parameterParent != null) {
+                blocks = emptyList()
+            } else {
+                // Completion for subsequent arguments
+                parameterParent =
+                    targetElement.prevLeafs
+                        .takeWhile {
+                            it.isNotWhiteSpace() &&
+                                it.elementType != SqlTypes.LEFT_PAREN
+                        }.firstOrNull {
+                            PsiTreeUtil.getParentOfType(
+                                it,
+                                SqlElParameters::class.java,
+                            ) != null
+                        }
+                if (parameterParent != null) {
+                    blocks = emptyList()
+                }
+            }
         }
+
         // If the element has no parent-child relationship,
         // create a list that also adds itself at the end.
         if (blocks.isEmpty()) {
             val prevElms =
                 targetElement.findSelfBlocks()
             if (prevElms.isNotEmpty()) {
-                return prevElms
+                blocks = prevElms
             }
         }
         return blocks.sortedBy { it.textOffset }
@@ -220,7 +246,8 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 elements.isEmpty() -> return
                 else -> elements.first()
             }
-        val topText = cleanString(top.text)
+
+        val topText = cleanString(getSearchElementText(top))
         val prevWord = PsiPatternUtil.getBindSearchWord(originalFile, elements.last(), " ")
         if (prevWord.startsWith("@") && prevWord.endsWith("@")) {
             val clazz = getRefClazz(top) { prevWord.replace("@", "") } ?: return
@@ -252,7 +279,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         var listParamIndex = 0
         for (elm in elements.drop(1)) {
             index++
-            val searchElm = cleanString(elm.text)
+            val searchElm = cleanString(getSearchElementText(elm))
             if (searchElm.isEmpty()) {
                 setFieldsAndMethodsCompletionResultSet(
                     (psiParentClass.searchField(searchElm)?.toTypedArray() ?: emptyArray()),
@@ -287,6 +314,18 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         }
     }
 
+    private fun getSearchElementText(elm: PsiElement): String =
+        if (elm is SqlElPrimaryExpr || elm.elementType == SqlTypes.EL_IDENTIFIER) {
+            elm.text
+        } else {
+            ""
+        }
+
+    /**
+     * Retrieves the referenced class from a static field access element
+     * and searches for a field or method matching the specified identifier name.
+     * If no match is found, returns null.
+     */
     private fun getElementTypeByStaticFieldAccess(
         top: PsiElement,
         staticDirective: PsiElement,
@@ -295,7 +334,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val clazz =
             getRefClazz(top) {
                 staticDirective.children
-                    .firstOrNull { it.elementType == SqlTypes.EL_CLASS }
+                    .firstOrNull { it is SqlElClass }
                     ?.text
                     ?: ""
             } ?: return null
@@ -304,6 +343,12 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             ?: clazz.findStaticMethod(topText)?.returnType
     }
 
+    /**
+     * Retrieves the DAO method parameters that match the text of the top element.
+     * If the element list contains one or fewer items,
+     * the DAO method parameters are registered as suggestions and this method returns null.
+     * If there are additional elements, it returns the class type of the top element.
+     */
     private fun getElementTypeByFieldAccess(
         originalFile: PsiFile,
         topText: String,
