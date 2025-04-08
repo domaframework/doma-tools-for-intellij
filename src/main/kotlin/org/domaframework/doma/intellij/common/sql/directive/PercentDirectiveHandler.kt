@@ -33,7 +33,7 @@ class PercentDirectiveHandler(
             element,
             result,
         ) { bind ->
-            val beforeTextChars =
+            val prevLeafCount =
                 this.element.prevLeafs
                     .takeWhile { prev -> prev.text != "%" }
                     .toList()
@@ -53,7 +53,7 @@ class PercentDirectiveHandler(
                 LookupElementBuilder
                     .create(it)
                     .withInsertHandler { context, _ ->
-                        val start = context.startOffset - beforeTextChars
+                        val start = context.startOffset - prevLeafCount
                         val tail = context.tailOffset
                         context.document.replaceString(start, tail, it)
                         context.editor.caretModel.moveToOffset(start + it.length)
