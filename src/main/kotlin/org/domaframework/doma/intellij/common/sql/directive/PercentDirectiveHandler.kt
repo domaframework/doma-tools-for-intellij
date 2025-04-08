@@ -21,6 +21,7 @@ import com.intellij.codeInsight.lookup.AutoCompletionPolicy
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.prevLeafs
 
 class PercentDirectiveHandler(
     originalFile: PsiElement,
@@ -32,6 +33,11 @@ class PercentDirectiveHandler(
             element,
             result,
         ) { bind ->
+            val beforeTextChars =
+                this.element.prevLeafs
+                    .takeWhile { prev -> prev.text != "%" }
+                    .toList()
+                    .size
             listOf(
                 "if",
                 "elseif",
@@ -46,7 +52,12 @@ class PercentDirectiveHandler(
             }.map {
                 LookupElementBuilder
                     .create(it)
-                    .withAutoCompletionPolicy(AutoCompletionPolicy.ALWAYS_AUTOCOMPLETE)
+                    .withInsertHandler { context, _ ->
+                        val start = context.startOffset - beforeTextChars
+                        val tail = context.tailOffset
+                        context.document.replaceString(start, tail, it)
+                        context.editor.caretModel.moveToOffset(start + it.length)
+                    }.withAutoCompletionPolicy(AutoCompletionPolicy.ALWAYS_AUTOCOMPLETE)
             }
         }
 
