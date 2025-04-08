@@ -57,4 +57,16 @@ interface SqlCompleteTestDao {
   @Insert(sqlFile = true)
   int completeConcatenationOperator(Employee employee,Integer point);
 
+  @Select
+  Employee completeParameterFirst(Employee employee);
+
+  @Select
+  Employee completeParameterFirstProperty(Employee employee);
+
+  @Select
+  Employee completeParameterSecond(Employee employee);
+
+  @Select
+  Employee completeParameterSecondProperty(Employee employee);
+
 }
