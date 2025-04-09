@@ -13,42 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.Indent
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
+import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
-/**
- * The parent must be [SqlColumnDefinitionRawGroupBlock]
- */
-class SqlDataTypeParamBlock(
+open class SqlUpdateKeywordGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlSubGroupBlock(
+) : SqlKeywordGroupBlock(
         node,
+        IndentType.SECOND,
         wrap,
         alignment,
         spacingBuilder,
     ) {
-    override val indent =
-        ElementIndent(
-            IndentType.PARAM,
-            0,
-            0,
-        )
-
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.PARAM
-        indent.indentLen = 0
-        indent.groupIndentLen = 0
+        indent.indentLevel = IndentType.SECOND
+        indent.indentLen = createBlockIndentLen()
+        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
-    override fun createBlockIndentLen(): Int = 0
+    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
+
+    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
+
+    override fun createBlockIndentLen(): Int =
+        parentBlock?.let {
+            if (it.indent.indentLevel == IndentType.SUB) {
+                it.indent.groupIndentLen.plus(1)
+            } else {
+                val parentTextLen = it.node.text.length
+                val diffTextLen = parentTextLen.minus(node.text.length)
+                it.indent.indentLen.plus(diffTextLen)
+            }
+        } ?: 0
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -23,36 +23,33 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 
-/**
- * Group blocks when generating columns with subqueries
- */
-class SqlColumnGroupBlock(
+open class SqlInlineSecondGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlSubGroupBlock(
+) : SqlNewGroupBlock(
         node,
         wrap,
         alignment,
         spacingBuilder,
     ) {
-    var isFirstColumnGroup = node.text != ","
+    val isEndCase = node.text.lowercase() == "end"
 
     override val indent =
         ElementIndent(
-            IndentType.COLUMN,
+            IndentType.INLINE_SECOND,
             0,
             0,
         )
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.COLUMN
+        indent.indentLevel = IndentType.INLINE_SECOND
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen =
-            if (isFirstColumnGroup) indent.indentLen else indent.indentLen.plus(1)
+        indent.groupIndentLen = indent.indentLen
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -61,16 +58,12 @@ class SqlColumnGroupBlock(
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let {
-            if (it is SqlKeywordGroupBlock) {
-                val parentIndentLen = it.indent.indentLen.plus(it.node.text.length)
-                val subGroup = it.parentBlock as? SqlSubGroupBlock
-                if (subGroup is SqlSubGroupBlock && !subGroup.isFirstLineComment) {
-                    parentIndentLen.plus(3)
-                } else {
-                    parentIndentLen.plus(1)
-                }
+            // TODO:Customize indentation within an inline group
+            if (isEndCase) {
+                it.indent.indentLen
             } else {
-                it.indent.groupIndentLen.plus(1)
+                it.indent.groupIndentLen
+                    .plus(it.node.text.length)
             }
         } ?: 1
 }

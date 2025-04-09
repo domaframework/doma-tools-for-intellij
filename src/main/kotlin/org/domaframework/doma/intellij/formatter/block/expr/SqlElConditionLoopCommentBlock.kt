@@ -21,47 +21,33 @@ import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
-import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
-import org.domaframework.doma.intellij.psi.SqlElElseifDirective
-import org.domaframework.doma.intellij.psi.SqlElForDirective
-import org.domaframework.doma.intellij.psi.SqlElIfDirective
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-enum class SqlDirectiveType {
-    IF,
-    ELSEIF,
-    ELSE,
-    FOR,
-    END,
-    Variable,
-}
-
-open class SqlElBlockCommentBlock(
+class SqlElConditionLoopCommentBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
-    open val customSpacingBuilder: SqlCustomSpacingBuilder?,
+    override val customSpacingBuilder: SqlCustomSpacingBuilder?,
     spacingBuilder: SpacingBuilder,
-) : SqlCommentBlock(
+) : SqlElBlockCommentBlock(
         node,
         wrap,
         alignment,
+        customSpacingBuilder,
         spacingBuilder,
     ) {
-    // open var isConditionLoopBlock = getConditionOrLoopBlock(node)
-
     override val indent =
         ElementIndent(
             IndentType.NONE,
@@ -129,47 +115,6 @@ open class SqlElBlockCommentBlock(
             else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
         }
 
-    private fun getConditionOrLoopBlock(node: ASTNode): Boolean {
-        val directiveType =
-            when {
-                PsiTreeUtil.getChildOfType(node.psi, SqlElIfDirective::class.java) != null -> {
-                    SqlDirectiveType.IF
-                }
-
-                PsiTreeUtil.getChildOfType(node.psi, SqlElElseifDirective::class.java) != null -> {
-                    SqlDirectiveType.ELSEIF
-                }
-
-                PsiTreeUtil.getChildOfType(node.psi, SqlElForDirective::class.java) != null -> {
-                    SqlDirectiveType.FOR
-                }
-
-                PsiTreeUtil.getChildOfType(node.psi, SqlElElseifDirective::class.java) != null -> {
-                    SqlDirectiveType.ELSE
-                }
-
-                PsiTreeUtil.getChildOfType(node.psi, SqlElForDirective::class.java) != null -> {
-                    SqlDirectiveType.END
-                }
-
-                else -> {
-                    val children =
-                        PsiTreeUtil
-                            .getChildrenOfType(node.psi, PsiElement::class.java)
-                            ?.firstOrNull { it.elementType == SqlTypes.EL_ELSE || it.elementType == SqlTypes.EL_END }
-                    children?.let {
-                        when (it.elementType) {
-                            SqlTypes.EL_ELSE -> SqlDirectiveType.ELSE
-                            SqlTypes.EL_END -> SqlDirectiveType.END
-                            else -> SqlDirectiveType.Variable
-                        }
-                    } ?: SqlDirectiveType.Variable
-                }
-            }
-
-        return directiveType != SqlDirectiveType.Variable
-    }
-
     private fun createFieldAccessSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()
             .withSpacing(
@@ -223,14 +168,40 @@ open class SqlElBlockCommentBlock(
     override fun isLeaf(): Boolean = false
 
     override fun createBlockIndentLen(): Int {
-        parentBlock?.let {
-            if (it is SqlSubQueryGroupBlock) {
-                if (it.childBlocks.dropLast(1).isEmpty()) {
-                    return 1
+        parentBlock?.let { parent ->
+            if (parent is SqlSubGroupBlock) {
+                val parentIndentLen = parent.indent.groupIndentLen
+                val grand = parent.parentBlock
+                grand?.let { grand ->
+                    if (grand is SqlCreateKeywordGroupBlock) {
+                        val grandIndentLen = grand.indent.groupIndentLen
+                        return grandIndentLen.plus(parentIndentLen).minus(1)
+                    }
+                    if (grand is SqlInsertKeywordGroupBlock) {
+                        return parentIndentLen
+                    }
+                    if (grand is SqlColumnGroupBlock) {
+                        val grandIndentLen = grand.indent.groupIndentLen
+                        var prevTextLen = 1
+                        parent.prevChildren?.dropLast(1)?.forEach { prev -> prevTextLen = prevTextLen.plus(prev.node.text.length) }
+                        return grandIndentLen.plus(prevTextLen).plus(1)
+                    }
                 }
-                if (it.isFirstLineComment) {
-                    return it.indent.groupIndentLen.minus(2)
-                }
+                return parentIndentLen
+            } else {
+                var prevLen = 0
+                parent.childBlocks
+                    .filter { it.node.elementType == SqlTypes.KEYWORD }
+                    .forEach { prev ->
+                        prevLen =
+                            prevLen.plus(
+                                prev.node.text.length
+                                    .plus(1),
+                            )
+                    }
+                return parent.indent.groupIndentLen
+                    .plus(prevLen)
+                    .plus(1)
             }
         }
         return 1

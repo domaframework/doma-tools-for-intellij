@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -23,8 +23,10 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 
-open class SqlInlineSecondGroupBlock(
+abstract class SqlSubGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
@@ -35,34 +37,32 @@ open class SqlInlineSecondGroupBlock(
         alignment,
         spacingBuilder,
     ) {
-    val isEndCase = node.text.lowercase() == "end"
+    var isFirstLineComment = false
+    var prevChildren: List<SqlBlock>? = emptyList<SqlBlock>()
 
     override val indent =
         ElementIndent(
-            IndentType.INLINE_SECOND,
+            IndentType.SUB,
             0,
             0,
         )
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.INLINE_SECOND
+        prevChildren = parentBlock?.childBlocks?.toList()
+        indent.indentLevel = indent.indentLevel
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen
+        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
+    }
+
+    override fun addChildBlock(childBlock: SqlBlock) {
+        childBlocks.add(childBlock)
+        if (!isFirstLineComment) {
+            isFirstLineComment = childBlock is SqlCommentBlock
+        }
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
-
-    override fun createBlockIndentLen(): Int =
-        parentBlock?.let {
-            // TODO:Customize indentation within an inline group
-            if (isEndCase) {
-                it.indent.indentLen
-            } else {
-                it.indent.groupIndentLen
-                    .plus(it.node.text.length)
-            }
-        } ?: 1
 }

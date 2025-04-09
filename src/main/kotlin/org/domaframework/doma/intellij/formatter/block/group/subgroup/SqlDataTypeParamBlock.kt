@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
-class SqlColumnBlock(
+/**
+ * The parent must be [org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock]
+ */
+class SqlDataTypeParamBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlWordBlock(
+) : SqlSubGroupBlock(
         node,
         wrap,
         alignment,
@@ -36,30 +38,17 @@ class SqlColumnBlock(
     ) {
     override val indent =
         ElementIndent(
-            IndentType.NONE,
+            IndentType.PARAM,
             0,
             0,
         )
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.NONE
-        // Calculate right justification space during indentation after getting all column rows
-        indent.indentLen = 1
+        indent.indentLevel = IndentType.PARAM
+        indent.indentLen = 0
         indent.groupIndentLen = 0
     }
 
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun createBlockIndentLen(): Int {
-        parentBlock?.let {
-            val parentGroupDefinition = it.parentBlock as? SqlColumnDefinitionGroupBlock
-            if (parentGroupDefinition == null) return 1
-
-            val groupMaxAlimentLen = parentGroupDefinition.alignmentColumnName.length
-            val diffColumnName = groupMaxAlimentLen.minus(node.text.length)
-            return diffColumnName.plus(1)
-        }
-        return 1
-    }
+    override fun createBlockIndentLen(): Int = 0
 }

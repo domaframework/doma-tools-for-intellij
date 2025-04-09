@@ -110,10 +110,6 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
                 SqlTypes.RIGHT_PAREN,
                 SqlCustomSpacingBuilder.nonSpacing,
             ).withSpacing(
-                SqlTypes.OTHER,
-                TokenType.WHITE_SPACE,
-                SqlCustomSpacingBuilder.nonSpacing,
-            ).withSpacing(
                 SqlTypes.ASTERISK,
                 TokenType.WHITE_SPACE,
                 SqlCustomSpacingBuilder.nonSpacing,

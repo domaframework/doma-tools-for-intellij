@@ -21,7 +21,6 @@ import com.intellij.formatting.Spacing
 import com.intellij.psi.tree.IElementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlColumnBlock
-import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
@@ -109,11 +108,6 @@ class SqlCustomSpacingBuilder {
 
     fun getSpacingColumnDefinitionRaw(child: SqlColumnDefinitionRawGroupBlock): Spacing? {
         val indentLen = child.createBlockIndentLen()
-        return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
-    }
-
-    fun getSpacingColumnDefinitionRawEndRight(child: SqlRightPatternBlock): Spacing? {
-        val indentLen = child.indent.indentLen
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
     }
 }

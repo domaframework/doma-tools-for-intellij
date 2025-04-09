@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -24,6 +24,10 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.SqlKeywordUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlViewGroupBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlKeywordGroupBlock(
@@ -71,7 +75,8 @@ open class SqlKeywordGroupBlock(
                 val diffPreBlockTextLen = node.text.length.minus(preChildBlock.node.text.length)
                 return preChildBlock.indent.indentLen.minus(diffPreBlockTextLen)
             } else {
-                return preChildBlock.indent.indentLen
+                val diffPretextLen = node.text.length.minus(preChildBlock.node.text.length)
+                return preChildBlock.indent.indentLen.minus(diffPretextLen)
             }
         } else {
             return createBlockIndentLen()

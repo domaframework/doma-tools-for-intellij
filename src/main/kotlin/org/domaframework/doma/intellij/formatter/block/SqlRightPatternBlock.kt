@@ -21,10 +21,13 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlInsertColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlUpdateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 /**
@@ -82,11 +85,21 @@ open class SqlRightPatternBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen ?: 1
+    override fun createBlockIndentLen(): Int =
+        if (parentBlock is SqlUpdateColumnGroupBlock || parentBlock is SqlUpdateValueGroupBlock) {
+            parentBlock?.indent?.indentLen ?: 1
+        } else {
+            parentBlock?.indent?.groupIndentLen ?: 1
+        }
 
     override fun isLeaf(): Boolean = true
 
-    fun isNeedBeforeWhiteSpace(lastGroup: SqlBlock?): Boolean =
+    fun isNewLine(lastGroup: SqlBlock?): Boolean =
         lastGroup is SqlColumnDefinitionGroupBlock ||
-            lastGroup is SqlColumnDefinitionRawGroupBlock
+            lastGroup is SqlColumnDefinitionRawGroupBlock ||
+            lastGroup?.parentBlock is SqlUpdateKeywordGroupBlock ||
+            lastGroup?.parentBlock is SqlUpdateColumnGroupBlock ||
+            lastGroup is SqlUpdateColumnGroupBlock ||
+            lastGroup is SqlUpdateValueGroupBlock ||
+            lastGroup?.parentBlock is SqlUpdateValueGroupBlock
 }

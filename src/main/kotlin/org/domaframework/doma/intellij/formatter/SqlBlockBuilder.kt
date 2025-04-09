@@ -16,7 +16,8 @@
 package org.domaframework.doma.intellij.formatter
 
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 
 open class SqlBlockBuilder {
     private val groupTopNodeIndexHistory = mutableListOf<Pair<Int, SqlBlock>>()
@@ -24,6 +25,8 @@ open class SqlBlockBuilder {
     private val commentBlocks = mutableListOf<SqlBlock>()
 
     fun getGroupTopNodeIndexHistory(): List<Pair<Int, SqlBlock>> = groupTopNodeIndexHistory
+
+    fun getLastGroup(): SqlBlock? = groupTopNodeIndexHistory.lastOrNull()?.second
 
     fun addGroupTopNodeIndexHistory(block: Pair<Int, SqlBlock>) {
         groupTopNodeIndexHistory.add(block)
@@ -37,19 +40,21 @@ open class SqlBlockBuilder {
         if (commentBlocks.isNotEmpty()) {
             var index = 0
             commentBlocks.forEach { block ->
-                val indentLen =
-                    if (index == 0 &&
-                        baseIndent.parentBlock is SqlSubGroupBlock &&
-                        baseIndent.parentBlock?.childBlocks?.size == 1
-                    ) {
-                        1
-                    } else {
-                        baseIndent.indent.indentLen
-                    }
-                block.indent.indentLevel = IndentType.NONE
-                block.indent.indentLen = indentLen
-                block.indent.groupIndentLen = 0
-                index++
+                if (block !is SqlElBlockCommentBlock) {
+                    val indentLen =
+                        if (index == 0 &&
+                            baseIndent.parentBlock is SqlSubGroupBlock &&
+                            baseIndent.parentBlock?.childBlocks?.size == 1
+                        ) {
+                            1
+                        } else {
+                            baseIndent.indent.indentLen
+                        }
+                    block.indent.indentLevel = IndentType.NONE
+                    block.indent.indentLen = indentLen
+                    block.indent.groupIndentLen = 0
+                    index++
+                }
             }
             commentBlocks.clear()
         }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -21,40 +21,58 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlUpdateKeywordGroupBlock
+import org.domaframework.doma.intellij.psi.SqlTypes
 
-open class SqlViewGroupBlock(
+/**
+ * In an UPDATE statement using the row value constructor,
+ * a group representing the value list
+ */
+class SqlUpdateValueGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlKeywordGroupBlock(
+) : SqlSubGroupBlock(
         node,
-        IndentType.SECOND,
         wrap,
         alignment,
         spacingBuilder,
     ) {
-    override val indent =
-        ElementIndent(
-            IndentType.SECOND,
-            0,
-            0,
-        )
-
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.SUB
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = node.text.length
+        indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createBlockIndentLen(): Int = parentBlock?.indent?.indentLen ?: 0
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            if (parent is SqlUpdateKeywordGroupBlock) {
+                val keywords =
+                    parent.childBlocks
+                        .dropLast(1)
+                        .takeWhile { parent.node.elementType == SqlTypes.KEYWORD }
+                return parent.indent.indentLen
+                    .plus(parent.node.text.length)
+                    .plus(3)
+            }
+            // TODO:Customize indentation
+            return 2
+        } ?: return 2
+    }
 
-    override fun isLeaf(): Boolean = true
+    private fun createGroupIndentLen(): Int {
+        parentBlock?.let { parent ->
+            if (parent is SqlUpdateKeywordGroupBlock) {
+                val parentGroupIndent = parent.indent.groupIndentLen
+                return parentGroupIndent.plus(4)
+            }
+        } ?: return 2
+        return 2
+    }
 }

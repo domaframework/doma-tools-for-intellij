@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -22,65 +22,67 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 /**
- * Column definition group block in the column list group attached to Create Table
- * The parent must be SqlColumnDefinitionGroupBlock
+ * Block of columns to insert
  */
-class SqlColumnDefinitionRawGroupBlock(
+class SqlInsertColumnGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlBlock(
+) : SqlSubGroupBlock(
         node,
         wrap,
         alignment,
-        null,
         spacingBuilder,
     ) {
-    // TODO:Customize indentation within an inline group
-    val defaultOffset = 5
-    val isFirstColumnRaw = node.elementType != SqlTypes.COMMA
-
-    var columnName = node.text
-
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen
+        indent.groupIndentLen = indent.indentLen.plus(1)
+        updateParentGroupIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    /**
-     * Right-justify the longest column name in the column definition.
-     */
     override fun createBlockIndentLen(): Int {
-        if (!isFirstColumnRaw) return defaultOffset
-
         parentBlock?.let {
-            return when (it) {
-                is SqlColumnDefinitionGroupBlock -> {
-                    getColumnRawNewIndent(it)
+            if (it is SqlInsertKeywordGroupBlock) {
+                var parentLen = 0
+                val keywords =
+                    it.childBlocks.dropLast(1).takeWhile { it.node.elementType == SqlTypes.KEYWORD }
+                keywords.forEach { keyword ->
+                    parentLen = parentLen.plus(keyword.node.text.length).plus(1)
                 }
-
-                else -> {
-                    1
-                }
+                return it.indent.indentLen
+                    .plus(it.node.text.length)
+                    .plus(1)
+                    .plus(parentLen)
             }
-        }
-        return 1
+            // TODO:Customize indentation
+            return 2
+        } ?: return 2
     }
 
-    private fun getColumnRawNewIndent(groupRawBlock: SqlColumnDefinitionGroupBlock): Int {
-        val groupMaxAlimentLen = groupRawBlock.alignmentColumnName.length
-        val diffColumnName = groupMaxAlimentLen.minus(columnName.length)
-        val newSpaces = defaultOffset.plus(diffColumnName)
-        return newSpaces.plus(2)
+    private fun updateParentGroupIndentLen() {
+        parentBlock?.let {
+            if (it is SqlInsertKeywordGroupBlock) {
+                var parentLen = 0
+                val keywords =
+                    it.childBlocks.dropLast(1).takeWhile { it.node.elementType == SqlTypes.KEYWORD }
+                keywords.forEach { keyword ->
+                    parentLen = parentLen.plus(keyword.node.text.length).plus(1)
+                }
+                it.indent.groupIndentLen =
+                    it.indent.indentLen
+                        .plus(it.node.text.length)
+                        .plus(parentLen)
+            }
+        }
     }
 }

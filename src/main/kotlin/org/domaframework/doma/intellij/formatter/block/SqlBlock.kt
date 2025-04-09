@@ -27,29 +27,35 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.util.PsiTreeUtil
+import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.formatter.CreateQueryType
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.SqlKeywordUtil
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElDotBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElSymbolBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlCreateKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlDataTypeParamBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlInlineGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlInlineSecondGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlInsertColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlInsertKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlJoinGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlSubQueryGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlViewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlUpdateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlViewGroupBlock
+import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlBlock(
@@ -152,7 +158,8 @@ open class SqlBlock(
             childBlock is SqlInsertColumnGroupBlock ||
             childBlock is SqlColumnDefinitionRawGroupBlock ||
             childBlock is SqlColumnDefinitionGroupBlock ||
-            (childBlock is SqlRightPatternBlock && childBlock.isNeedBeforeWhiteSpace(lastGroup)) ||
+            (childBlock is SqlOtherBlock && childBlock.isUpdateColumnSubstitutions) ||
+            (childBlock is SqlRightPatternBlock && childBlock.isNewLine(lastGroup)) ||
             (
                 (
                     childBlock is SqlLineCommentBlock ||
@@ -160,7 +167,7 @@ open class SqlBlock(
                 ) &&
                     child.treePrev.text.contains("\n")
             ) ||
-            (childBlock is SqlElBlockCommentBlock && childBlock.isConditionLoopBlock)
+            (childBlock is SqlElConditionLoopCommentBlock)
 
     private fun setRightSpace(currentBlock: SqlBlock?) {
         val rightBlock = currentBlock as? SqlRightPatternBlock
@@ -368,6 +375,17 @@ open class SqlBlock(
                 }
             }
 
+            is SqlElConditionLoopCommentBlock -> {
+                if (lastGroupBlock is SqlCommaBlock || lastGroupBlock is SqlElConditionLoopCommentBlock) {
+                    blockBuilder.removeLastGroupTopNodeIndexHistory()
+                }
+                setParentGroups(
+                    childBlock,
+                ) { history ->
+                    return@setParentGroups history.last().second
+                }
+            }
+
             is SqlWordBlock, is SqlOtherBlock, is SqlLineCommentBlock, is SqlBlockCommentBlock -> {
                 setParentGroups(
                     childBlock,
@@ -424,6 +442,17 @@ open class SqlBlock(
                 }
             }
 
+            is SqlCommaBlock -> {
+                if (lastGroupBlock is SqlCommaBlock) {
+                    blockBuilder.removeLastGroupTopNodeIndexHistory()
+                }
+                setParentGroups(
+                    childBlock,
+                ) { history ->
+                    return@setParentGroups history.last().second
+                }
+            }
+
             else -> {
                 setParentGroups(
                     childBlock,
@@ -466,22 +495,10 @@ open class SqlBlock(
             SqlTypes.DATATYPE -> SqlDataTypeBlock(child, wrap, alignment, spacingBuilder)
 
             SqlTypes.LEFT_PAREN -> {
-                if (lastGroup is SqlCreateKeywordGroupBlock && lastGroup.createType == CreateQueryType.TABLE) {
-                    SqlColumnDefinitionGroupBlock(child, wrap, alignment, spacingBuilder)
-                } else if (lastGroup is SqlColumnDefinitionRawGroupBlock) {
-                    SqlDataTypeParamBlock(child, wrap, alignment, spacingBuilder)
-                } else if (lastGroup is SqlInsertKeywordGroupBlock) {
-                    SqlInsertColumnGroupBlock(child, wrap, alignment, spacingBuilder)
-                } else {
-                    SqlSubQueryGroupBlock(child, wrap, alignment, spacingBuilder)
-                }
+                return getSubGroupBlock(lastGroup, child)
             }
 
-            SqlTypes.OTHER ->
-                return SqlOtherBlock(child, wrap, alignment, spacingBuilder)
-
-            SqlTypes.DOT -> return SqlElDotBlock(child, wrap, alignment, spacingBuilder)
-
+            SqlTypes.OTHER -> return SqlOtherBlock(child, wrap, alignment, spacingBuilder, blockBuilder.getLastGroup())
             SqlTypes.RIGHT_PAREN -> return SqlRightPatternBlock(child, wrap, alignment, spacingBuilder)
 
             SqlTypes.COMMA -> {
@@ -494,7 +511,13 @@ open class SqlBlock(
                             spacingBuilder,
                         )
 
-                    is SqlColumnGroupBlock, is SqlKeywordGroupBlock -> SqlColumnGroupBlock(child, wrap, alignment, spacingBuilder)
+                    is SqlColumnGroupBlock, is SqlKeywordGroupBlock -> {
+                        if (lastGroup.indent.indentLevel == IndentType.SECOND) {
+                            SqlCommaBlock(child, wrap, alignment, spacingBuilder)
+                        } else {
+                            SqlColumnGroupBlock(child, wrap, alignment, spacingBuilder)
+                        }
+                    }
 
                     else -> SqlCommaBlock(child, wrap, alignment, spacingBuilder)
                 }
@@ -553,6 +576,17 @@ open class SqlBlock(
                         spacingBuilder,
                     )
                 }
+                if (child.psi is SqlCustomElCommentExpr &&
+                    (child.psi as SqlCustomElCommentExpr).isConditionOrLoopDirective()
+                ) {
+                    return SqlElConditionLoopCommentBlock(
+                        child,
+                        wrap,
+                        alignment,
+                        createBlockCommentSpacingBuilder(),
+                        spacingBuilder,
+                    )
+                }
                 return SqlElBlockCommentBlock(
                     child,
                     wrap,
@@ -578,11 +612,55 @@ open class SqlBlock(
         }
     }
 
+    private fun getSubGroupBlock(
+        lastGroup: SqlBlock?,
+        child: ASTNode,
+    ): SqlBlock {
+        if (child.treePrev.elementType == SqlTypes.WORD) {
+            return SqlFunctionParamBlock(child, wrap, alignment, spacingBuilder)
+        }
+
+        when (lastGroup) {
+            is SqlCreateKeywordGroupBlock -> {
+                return if (lastGroup.createType == CreateQueryType.TABLE) {
+                    SqlColumnDefinitionGroupBlock(
+                        child,
+                        wrap,
+                        alignment,
+                        spacingBuilder,
+                    )
+                } else {
+                    SqlSubQueryGroupBlock(child, wrap, alignment, spacingBuilder)
+                }
+            }
+
+            is SqlColumnDefinitionRawGroupBlock ->
+                return SqlDataTypeParamBlock(child, wrap, alignment, spacingBuilder)
+
+            is SqlInsertKeywordGroupBlock ->
+                return SqlInsertColumnGroupBlock(child, wrap, alignment, spacingBuilder)
+
+            is SqlUpdateKeywordGroupBlock -> {
+                return if (lastGroup.childBlocks.firstOrNull { it is SqlUpdateColumnGroupBlock } == null) {
+                    SqlUpdateColumnGroupBlock(child, wrap, alignment, spacingBuilder)
+                } else if (lastGroup.childBlocks.lastOrNull { it is SqlUpdateColumnGroupBlock } != null) {
+                    SqlUpdateValueGroupBlock(child, wrap, alignment, spacingBuilder)
+                } else {
+                    SqlSubQueryGroupBlock(child, wrap, alignment, spacingBuilder)
+                }
+            }
+
+            else ->
+                return SqlSubQueryGroupBlock(child, wrap, alignment, spacingBuilder)
+        }
+    }
+
     private fun getKeywordBlock(child: ASTNode): SqlBlock {
         // Because we haven't yet set the parent-child relationship of the block,
         // the parent group references groupTopNodeIndexHistory.
         val indentLevel = SqlKeywordUtil.getIndentType(child.text)
         val lastGroupBlock = blockBuilder.getLastGroupTopNodeIndexHistory()?.second
+        val keywordText = child.text.lowercase()
         if (indentLevel.isNewLineGroup()) {
             when (indentLevel) {
                 IndentType.JOIN -> {
@@ -600,13 +678,22 @@ open class SqlBlock(
                 }
 
                 IndentType.TOP -> {
-                    if (child.text.lowercase() == "create") {
+                    if (keywordText == "create") {
                         return SqlCreateKeywordGroupBlock(child, wrap, alignment, spacingBuilder)
                     }
-                    if (child.text.lowercase() == "insert") {
+                    if (keywordText == "insert") {
                         return SqlInsertKeywordGroupBlock(child, wrap, alignment, spacingBuilder)
                     }
+
                     return SqlKeywordGroupBlock(child, indentLevel, wrap, alignment, spacingBuilder)
+                }
+
+                IndentType.SECOND -> {
+                    return if (keywordText == "set") {
+                        SqlUpdateKeywordGroupBlock(child, wrap, alignment, spacingBuilder)
+                    } else {
+                        SqlKeywordGroupBlock(child, indentLevel, wrap, alignment, spacingBuilder)
+                    }
                 }
 
                 else -> {
@@ -712,6 +799,15 @@ open class SqlBlock(
             }
         }
 
+        if (child1 is SqlFunctionParamBlock) {
+            return SqlCustomSpacingBuilder.nonSpacing
+        }
+
+        if (child2 is SqlOtherBlock) {
+            val indentLen = child2.indent.indentLen
+            return Spacing.createSpacing(indentLen, indentLen, 0, false, 0)
+        }
+
         if (child1 is SqlWhitespaceBlock) {
             when (child2) {
                 is SqlBlockCommentBlock, is SqlLineCommentBlock -> {
@@ -751,10 +847,13 @@ open class SqlBlock(
 
         if (child2 is SqlRightPatternBlock) {
             return when {
-                child2.parentBlock is SqlColumnDefinitionGroupBlock ->
-                    SqlCustomSpacingBuilder()
-                        .getSpacingColumnDefinitionRawEndRight(child2)
-                        ?.let { return it }
+                child2.parentBlock is SqlColumnDefinitionGroupBlock ||
+                    child2.parentBlock is SqlUpdateColumnGroupBlock ||
+                    child2.parentBlock is SqlUpdateValueGroupBlock -> {
+                    val indentLen = child2.indent.indentLen
+                    return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
+                }
+
                 child2.parentBlock is SqlDataTypeParamBlock -> SqlCustomSpacingBuilder.nonSpacing
 
                 child2.preSpaceRight -> SqlCustomSpacingBuilder.normalSpacing

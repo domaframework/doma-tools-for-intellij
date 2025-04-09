@@ -28,7 +28,9 @@ import com.intellij.psi.impl.source.codeStyle.PreFormatProcessor
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeafs
+import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.psi.SqlBlockComment
+import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
 import org.domaframework.doma.intellij.state.DomaToolsFunctionEnableSettings
@@ -90,14 +92,14 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                     }
 
                     SqlTypes.RIGHT_PAREN -> {
-                        newKeyword = getRightPatternNewText(it, newKeyword, createQueryType)
+                        newKeyword = getRightPatternNewText(it, newKeyword, replaceKeywordList[keywordIndex - 1], createQueryType)
                     }
 
                     SqlTypes.WORD -> {
                         newKeyword = getWordNewText(it, newKeyword, createQueryType)
                     }
 
-                    SqlTypes.COMMA -> {
+                    SqlTypes.COMMA, SqlTypes.BLOCK_COMMENT, SqlTypes.OTHER -> {
                         newKeyword = getNewLineString(it.prevSibling, getUpperText(it))
                     }
                 }
@@ -192,25 +194,29 @@ class SqlFormatPreProcessor : PreFormatProcessor {
 
     private fun getRightPatternNewText(
         element: PsiElement,
-        newKeyword: String,
+        keyword: String,
+        nextKeyword: PsiElement,
         createQueryType: CreateQueryType,
     ): String {
-        var newKeyword1 = newKeyword
-        val prefixElements =
-            getElementsBeforeKeyword(element.prevLeafs.toList()) { it.elementType == SqlTypes.LEFT_PAREN }
-        val containsColumnRaw =
-            prefixElements.findLast { isColumnDefinedRawElementType(it) } != null
-        newKeyword1 =
-            if (createQueryType == CreateQueryType.TABLE) {
+        var newKeyword = keyword
+        val elementText = element.text
+        if (createQueryType == CreateQueryType.TABLE) {
+            val prefixElements =
+                getElementsBeforeKeyword(element.prevLeafs.toList()) { it.elementType == SqlTypes.LEFT_PAREN }
+            val containsColumnRaw =
+                prefixElements.findLast { isColumnDefinedRawElementType(it) } != null
+            newKeyword =
                 if (containsColumnRaw) {
-                    getNewLineString(element.prevSibling, getUpperText(element))
+                    getNewLineString(element.prevSibling, elementText)
                 } else {
-                    getUpperText(element)
+                    elementText
                 }
-            } else {
-                getUpperText(element)
-            }
-        return newKeyword1
+        } else if (nextKeyword.text.lowercase() == "set") {
+            newKeyword = getNewLineString(element.prevSibling, elementText)
+        } else {
+            newKeyword = elementText
+        }
+        return newKeyword
     }
 
     private fun getWordNewText(
@@ -329,6 +335,23 @@ private class SqlFormatVisitor : PsiRecursiveElementVisitor() {
                 SqlTypes.KEYWORD, SqlTypes.COMMA, SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN, SqlTypes.WORD -> {
                     replaces.add(element)
                 }
+                SqlTypes.OTHER -> {
+                    if (element.text == "=") {
+                        val updateSetKeyword =
+                            replaces
+                                .lastOrNull { it.elementType == SqlTypes.KEYWORD }
+                        if (updateSetKeyword?.text?.lowercase() == "set") {
+                            replaces.add(element)
+                        }
+                    }
+                }
+                SqlTypes.BLOCK_COMMENT ->
+                    if (
+                        element is SqlCustomElCommentExpr &&
+                        element.isConditionOrLoopDirective()
+                    ) {
+                        replaces.add(element)
+                    }
             }
         }
     }

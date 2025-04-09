@@ -22,10 +22,13 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.SqlColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlCreateKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlInsertKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlCommaBlock(
     node: ASTNode,
@@ -54,6 +57,10 @@ open class SqlCommaBlock(
         parentBlock?.let { parent ->
             if (parent is SqlSubGroupBlock) {
                 val parentIndentLen = parent.indent.groupIndentLen
+                if (parent is SqlUpdateColumnGroupBlock || parent is SqlUpdateValueGroupBlock) {
+                    return parentIndentLen
+                }
+
                 val grand = parent.parentBlock
                 grand?.let { grand ->
                     if (grand is SqlCreateKeywordGroupBlock) {
@@ -72,8 +79,19 @@ open class SqlCommaBlock(
                 }
                 return parentIndentLen
             } else {
-                val parentLen = parent.node.text.length
-                return parent.indent.groupIndentLen.plus(parentLen.plus(1))
+                var prevLen = 0
+                parent.childBlocks
+                    .filter { it.node.elementType == SqlTypes.KEYWORD }
+                    .forEach { prev ->
+                        prevLen =
+                            prevLen.plus(
+                                prev.node.text.length
+                                    .plus(1),
+                            )
+                    }
+                return parent.indent.groupIndentLen
+                    .plus(prevLen)
+                    .plus(1)
             }
         }
         return 1

@@ -22,12 +22,14 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
 
 open class SqlOtherBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
+    lastGroup: SqlBlock? = null,
 ) : SqlBlock(
         node,
         wrap,
@@ -35,6 +37,8 @@ open class SqlOtherBlock(
         null,
         spacingBuilder,
     ) {
+    var isUpdateColumnSubstitutions = isBeforeUpdateValuesBlock(lastGroup)
+
     override val indent =
         ElementIndent(
             IndentType.NONE,
@@ -45,13 +49,25 @@ open class SqlOtherBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.NONE
-        indent.indentLen = 0
+        indent.indentLen = createIntendLen()
         indent.groupIndentLen = 0
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
+
+    private fun createIntendLen(): Int {
+        if (isUpdateColumnSubstitutions) {
+            parentBlock?.let { return it.indent.groupIndentLen.plus(1) }
+                ?: return indent.indentLen
+        } else {
+            return 1
+        }
+    }
+
+    fun isBeforeUpdateValuesBlock(lastGroupBlock: SqlBlock?): Boolean =
+        lastGroupBlock?.childBlocks?.lastOrNull() is SqlUpdateColumnGroupBlock
 
     override fun isLeaf(): Boolean = true
 }

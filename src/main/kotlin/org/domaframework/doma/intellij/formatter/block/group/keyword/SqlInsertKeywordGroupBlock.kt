@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -24,44 +24,35 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
-open class SqlInlineGroupBlock(
+open class SqlInsertKeywordGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlNewGroupBlock(
+) : SqlKeywordGroupBlock(
         node,
+        IndentType.TOP,
         wrap,
         alignment,
         spacingBuilder,
     ) {
-    override val indent =
-        ElementIndent(
-            IndentType.INLINE,
-            0,
-            0,
-        )
-
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.INLINE
+        indent.indentLevel = IndentType.TOP
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun getIndent(): Indent? {
-        if (parentBlock?.indent?.indentLevel == IndentType.SUB) {
-            return Indent.getSpaceIndent(0)
-        }
-        return Indent.getNoneIndent()
-    }
+    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let {
-            it.indent.groupIndentLen
-                .plus(it.node.text.length)
-                .plus(1)
-        } ?: 1
+            if (it.indent.indentLevel == IndentType.SUB) {
+                it.indent.groupIndentLen.plus(1)
+            } else {
+                0
+            }
+        } ?: 0
 }
