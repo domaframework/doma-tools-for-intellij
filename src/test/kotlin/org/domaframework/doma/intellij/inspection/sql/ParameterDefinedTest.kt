@@ -22,20 +22,20 @@ import org.domaframework.doma.intellij.inspection.sql.inspector.SqlBindVariableV
  * A test that inspects whether a bind variable's parameters are defined.
  */
 class ParameterDefinedTest : DomaSqlTest() {
-    private val testDaoNema = "EmployeeSummaryDao"
+    private val testDaoName = "EmployeeSummaryDao"
 
     override fun setUp() {
         super.setUp()
         addDaoJavaFile(
-            "$testDaoNema.java",
+            "$testDaoName.java",
         )
         addSqlFile(
-            "$testDaoNema/bindVariableForEntityAndNonEntityParentClass.sql",
-            "$testDaoNema/bindVariableForNonEntityClass.sql",
-            "$testDaoNema/accessStaticProperty.sql",
-            "$testDaoNema/batchAnnotationResolvesClassInList.sql",
-            "$testDaoNema/resolveDaoArgumentOfListType.sql",
-            "$testDaoNema/bindVariableInFunctionParameters.sql",
+            "$testDaoName/bindVariableForEntityAndNonEntityParentClass.sql",
+            "$testDaoName/bindVariableForNonEntityClass.sql",
+            "$testDaoName/accessStaticProperty.sql",
+            "$testDaoName/batchAnnotationResolvesClassInList.sql",
+            "$testDaoName/resolveDaoArgumentOfListType.sql",
+            "$testDaoName/bindVariableInFunctionParameters.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
@@ -45,7 +45,7 @@ class ParameterDefinedTest : DomaSqlTest() {
      * + Non-Entity parent class field, method reference test
      */
     fun testBindVariableForEntityAndNonEntityParentClass() {
-        val sqlFile = findSqlFile("$testDaoNema/bindVariableForEntityAndNonEntityParentClass.sql")
+        val sqlFile = findSqlFile("$testDaoName/bindVariableForEntityAndNonEntityParentClass.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 
@@ -53,7 +53,7 @@ class ParameterDefinedTest : DomaSqlTest() {
     }
 
     fun testBindVariableForNonEntityClass() {
-        val sqlFile = findSqlFile("$testDaoNema/bindVariableForNonEntityClass.sql")
+        val sqlFile = findSqlFile("$testDaoName/bindVariableForNonEntityClass.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 
@@ -61,7 +61,7 @@ class ParameterDefinedTest : DomaSqlTest() {
     }
 
     fun testAccessStaticProperty() {
-        val sqlFile = findSqlFile("$testDaoNema/accessStaticProperty.sql")
+        val sqlFile = findSqlFile("$testDaoName/accessStaticProperty.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 
@@ -70,7 +70,7 @@ class ParameterDefinedTest : DomaSqlTest() {
 
     fun testBatchAnnotationResolvesClassInList() {
         val sqlFile =
-            findSqlFile("$testDaoNema/batchAnnotationResolvesClassInList.sql")
+            findSqlFile("$testDaoName/batchAnnotationResolvesClassInList.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 
@@ -79,7 +79,7 @@ class ParameterDefinedTest : DomaSqlTest() {
 
     fun testResolveDaoArgumentOfListType() {
         val sqlFile =
-            findSqlFile("$testDaoNema/resolveDaoArgumentOfListType.sql")
+            findSqlFile("$testDaoName/resolveDaoArgumentOfListType.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 
@@ -88,7 +88,7 @@ class ParameterDefinedTest : DomaSqlTest() {
 
     fun testBindVariableInFunctionParameters() {
         val sqlFile =
-            findSqlFile("$testDaoNema/bindVariableInFunctionParameters.sql")
+            findSqlFile("$testDaoName/bindVariableInFunctionParameters.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 
