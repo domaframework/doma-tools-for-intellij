@@ -199,7 +199,7 @@ class StaticDirectiveHandler(
     ): Boolean {
         val clazzRef =
             PsiTreeUtil
-                .getChildOfType(element.prevSibling, SqlElClass::class.java) // getStaticFieldAccessClazzRef(element) ?: return false
+                .getChildOfType(element.prevSibling, SqlElClass::class.java)
         val fqdn =
             PsiTreeUtil.getChildrenOfTypeAsList(clazzRef, PsiElement::class.java).joinToString("") { it.text }
         val candidates = processor(fqdn, bindText) ?: return false

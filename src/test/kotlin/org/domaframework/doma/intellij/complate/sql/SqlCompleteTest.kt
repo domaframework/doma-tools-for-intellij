@@ -43,6 +43,10 @@ class SqlCompleteTest : DomaSqlTest() {
             "SqlCompleteTestDao/completeDirectiveFieldInsideFor.sql",
             "SqlCompleteTestDao/completeConcatenationOperator.sql",
             "SqlCompleteTestDao/completeComparisonOperator.sql",
+            "SqlCompleteTestDao/completeParameterFirst.sql",
+            "SqlCompleteTestDao/completeParameterFirstProperty.sql",
+            "SqlCompleteTestDao/completeParameterSecond.sql",
+            "SqlCompleteTestDao/completeParameterSecondProperty.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
@@ -224,6 +228,32 @@ class SqlCompleteTest : DomaSqlTest() {
             "SqlCompleteTestDao/completeComparisonOperator.sql",
             listOf("rank"),
             listOf("employee", "employeeId", "department"),
+        )
+    }
+
+    fun testCompleteParameter() {
+        innerDirectiveCompleteTest(
+            "SqlCompleteTestDao/completeParameterFirst.sql",
+            listOf("employee"),
+            listOf("employeeId", "department", "rank", "startWith"),
+        )
+
+        innerDirectiveCompleteTest(
+            "SqlCompleteTestDao/completeParameterFirstProperty.sql",
+            listOf("employeeId", "department", "rank"),
+            listOf("employee"),
+        )
+
+        innerDirectiveCompleteTest(
+            "SqlCompleteTestDao/completeParameterSecond.sql",
+            listOf("employee"),
+            listOf("employeeId", "department", "rank", "startWith"),
+        )
+
+        innerDirectiveCompleteTest(
+            "SqlCompleteTestDao/completeParameterSecondProperty.sql",
+            listOf("managerId"),
+            listOf("employee", "department", "rank"),
         )
     }
 

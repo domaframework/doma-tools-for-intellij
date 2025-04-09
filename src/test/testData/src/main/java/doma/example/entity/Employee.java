@@ -27,4 +27,7 @@ public class Employee extends User {
     return rank;
   }
 
+  public Integer employeeParam(Integer p1, Integer p2) {
+    return p1 + p2;
+  }
 }
