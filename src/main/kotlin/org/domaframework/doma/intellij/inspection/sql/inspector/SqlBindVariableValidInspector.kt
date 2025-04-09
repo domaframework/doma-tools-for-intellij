@@ -43,7 +43,6 @@ import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.extension.expr.fqdn
 import org.domaframework.doma.intellij.extension.getJavaClazz
-import org.domaframework.doma.intellij.extension.psi.findNodeParent
 import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.getIterableClazz
@@ -163,9 +162,6 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
 
                 // Exclude fixed Literal
                 if (isLiteralOrStatic(element)) return
-
-                // TODO Check function parameters in the same way as bind variables.
-                if (element.findNodeParent(SqlTypes.EL_PARAMETERS) != null) return
 
                 // For static property references, match against properties in the class definition
                 if (element.parent is SqlElStaticFieldAccessExpr) {
