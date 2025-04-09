@@ -26,4 +26,7 @@ interface EmployeeSummaryDao {
 
   @BatchInsert(sqlFile=true)
   int[] batchAnnotationResolvesClassInList(List<Employee> employees);
+
+  @Insert(sqlFile=true)
+  EmployeeSummary bindVariableInFunctionParameters(Employee employee, User user);
 }
