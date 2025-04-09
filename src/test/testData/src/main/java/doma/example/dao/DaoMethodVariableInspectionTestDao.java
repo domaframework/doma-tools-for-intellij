@@ -47,5 +47,7 @@ interface DaoMethodVariableInspectionTestDao {
   @Select
   Project collectDoesCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,String searchName,Collector<Project, ?, Project> <error descr="There are unused parameters in the SQL [collector]">collector</error>);
 
+  @Select
+  Project noErrorWhenUsedInFunctionParameters(Employee employee, Integer count);
 
 }

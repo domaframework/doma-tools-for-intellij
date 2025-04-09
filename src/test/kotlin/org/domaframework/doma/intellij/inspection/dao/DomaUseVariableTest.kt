@@ -34,6 +34,7 @@ class DomaUseVariableTest : DomaSqlTest() {
             "$testDaoName/selectOptionDoesNotCauseError.sql",
             "$testDaoName/collectDoesNotCauseError.sql",
             "$testDaoName/collectDoesCauseError.sql",
+            "$testDaoName/noErrorWhenUsedInFunctionParameters.sql",
         )
         myFixture.enableInspections(DaoMethodVariableInspector())
     }
