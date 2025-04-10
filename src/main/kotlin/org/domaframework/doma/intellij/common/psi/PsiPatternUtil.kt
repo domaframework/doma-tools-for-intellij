@@ -59,8 +59,9 @@ object PsiPatternUtil {
                             (element.elementType == SqlTypes.EL_IDENTIFIER && element.prevLeaf()?.text == it) ||
                             (
                                 element.elementType == TokenType.BAD_CHARACTER &&
-                                    element.parent.prevLeafs
-                                        .firstOrNull { p -> p.text == it || p.elementType == SqlTypes.BLOCK_COMMENT_START }
+                                    element.parent
+                                        ?.prevLeafs
+                                        ?.firstOrNull { p -> p.text == it || p.elementType == SqlTypes.BLOCK_COMMENT_START }
                                         ?.text == it
                             )
                     }
@@ -75,7 +76,11 @@ object PsiPatternUtil {
                 override fun accepts(
                     element: PsiElement,
                     context: ProcessingContext?,
-                ): Boolean = element.containingFile.originalFile.virtualFile.extension == extension
+                ): Boolean =
+                    element.containingFile
+                        ?.originalFile
+                        ?.virtualFile
+                        ?.extension == extension
             },
         )
 
@@ -88,7 +93,7 @@ object PsiPatternUtil {
         element: PsiElement,
         symbol: String,
     ): String {
-        val text = originalFile.containingFile.text
+        val text = originalFile.containingFile?.text ?: " "
         val offset = element.textOffset
         val builder = StringBuilder()
         for (i in offset - 1 downTo 0) {

@@ -203,7 +203,7 @@ class JumpToDeclarationFromSqlAction : AnAction() {
      */
     private fun isNotBindVariable(it: PsiElement) =
         (
-            it.parent.elementType is IFileElementType &&
+            it.parent?.elementType is IFileElementType &&
                 it.elementType != SqlTypes.EL_IDENTIFIER &&
                 it !is SqlElPrimaryExpr &&
                 !it.isNotWhiteSpace()
