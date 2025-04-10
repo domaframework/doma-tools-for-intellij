@@ -120,6 +120,12 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                     originalFile,
                     result,
                 )
+                PluginLoggerUtil.countLogging(
+                    this::class.java.simpleName,
+                    "CompletionDirectiveByVariable",
+                    "Completion",
+                    startTime,
+                )
             }
         } catch (e: Exception) {
             e.printStackTrace()
