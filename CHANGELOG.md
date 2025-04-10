@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-04-10
+
+### New Features
+
+- Function Parameter Block Code Completion ([#80])
+
+### Bug Fixes
+
+- Fix/formatter indent ([#86])
+- inspection in function parameters ([#82])
+- Fix:Strings are concatenated when completing code for % directives ([#79])
+
+### Dependency Updates
+
+- Update plugin spotless to v7.0.3 ([#78])
+- Update dependency org.jetbrains.intellij.platform to v2.5.0 ([#62])
+
+[#80]:https://github.com/domaframework/doma-tools-for-intellij/pull/80
+[#86]:https://github.com/domaframework/doma-tools-for-intellij/pull/86
+[#82]:https://github.com/domaframework/doma-tools-for-intellij/pull/82
+[#79]:https://github.com/domaframework/doma-tools-for-intellij/pull/79
+[#78]:https://github.com/domaframework/doma-tools-for-intellij/pull/78
+[#62]:https://github.com/domaframework/doma-tools-for-intellij/pull/62
+
+
 ## [0.4.0] - 2025-04-07
 
 ### New Features
@@ -136,3 +161,4 @@
 [0.3.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0...0.3.1
 [0.3.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.1...0.3.2
 [0.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.2...0.4.0
+[0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.4.0...0.5.0
