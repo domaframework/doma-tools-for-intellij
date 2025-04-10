@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -24,31 +24,23 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
-open class SqlInlineSecondGroupBlock(
+open class SqlUpdateKeywordGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlNewGroupBlock(
+) : SqlKeywordGroupBlock(
         node,
+        IndentType.SECOND,
         wrap,
         alignment,
         spacingBuilder,
     ) {
-    val isEndCase = node.text.lowercase() == "end"
-
-    override val indent =
-        ElementIndent(
-            IndentType.INLINE_SECOND,
-            0,
-            0,
-        )
-
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.INLINE_SECOND
+        indent.indentLevel = IndentType.SECOND
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen
+        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -57,12 +49,12 @@ open class SqlInlineSecondGroupBlock(
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let {
-            // TODO:Customize indentation within an inline group
-            if (isEndCase) {
-                it.indent.indentLen
+            if (it.indent.indentLevel == IndentType.SUB) {
+                it.indent.groupIndentLen.plus(1)
             } else {
-                it.indent.groupIndentLen
-                    .plus(it.node.text.length)
+                val parentTextLen = it.node.text.length
+                val diffTextLen = parentTextLen.minus(node.text.length)
+                it.indent.indentLen.plus(diffTextLen)
             }
-        } ?: 1
+        } ?: 0
 }

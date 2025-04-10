@@ -13,42 +13,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.Indent
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
+import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 
-/**
- * The parent must be [SqlColumnDefinitionRawGroupBlock]
- */
-class SqlDataTypeParamBlock(
+open class SqlInlineSecondGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlSubGroupBlock(
+) : SqlNewGroupBlock(
         node,
         wrap,
         alignment,
         spacingBuilder,
     ) {
+    val isEndCase = node.text.lowercase() == "end"
+
     override val indent =
         ElementIndent(
-            IndentType.PARAM,
+            IndentType.INLINE_SECOND,
             0,
             0,
         )
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.PARAM
-        indent.indentLen = 0
-        indent.groupIndentLen = 0
+        indent.indentLevel = IndentType.INLINE_SECOND
+        indent.indentLen = createBlockIndentLen()
+        indent.groupIndentLen = indent.indentLen
     }
 
-    override fun createBlockIndentLen(): Int = 0
+    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
+
+    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
+
+    override fun createBlockIndentLen(): Int =
+        parentBlock?.let {
+            // TODO:Customize indentation within an inline group
+            if (isEndCase) {
+                it.indent.indentLen
+            } else {
+                it.indent.groupIndentLen
+                    .plus(it.node.text.length)
+            }
+        } ?: 1
 }

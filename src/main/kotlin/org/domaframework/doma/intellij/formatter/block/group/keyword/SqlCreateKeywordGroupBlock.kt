@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -21,10 +21,11 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.CreateQueryType
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
-open class SqlInsertKeywordGroupBlock(
+open class SqlCreateKeywordGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
@@ -36,6 +37,8 @@ open class SqlInsertKeywordGroupBlock(
         alignment,
         spacingBuilder,
     ) {
+    var createType: CreateQueryType = CreateQueryType.NONE
+
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.TOP
@@ -45,7 +48,12 @@ open class SqlInsertKeywordGroupBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
+    override fun getIndent(): Indent? {
+        if (parentBlock?.indent?.indentLevel == IndentType.SUB) {
+            return Indent.getSpaceIndent(0)
+        }
+        return Indent.getNoneIndent()
+    }
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let {
@@ -55,4 +63,8 @@ open class SqlInsertKeywordGroupBlock(
                 0
             }
         } ?: 0
+
+    fun setCreateQueryType(nextKeyword: String) {
+        createType = CreateQueryType.getCreateTableType(nextKeyword)
+    }
 }

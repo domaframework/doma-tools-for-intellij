@@ -13,55 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.formatting.Alignment
-import com.intellij.formatting.Indent
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlCommentBlock
 
-abstract class SqlSubGroupBlock(
+class SqlFunctionParamBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlNewGroupBlock(
+) : SqlSubGroupBlock(
         node,
         wrap,
         alignment,
         spacingBuilder,
     ) {
-    var isFirstLineComment = false
-    var prevChildren: List<SqlBlock>? = emptyList<SqlBlock>()
-
     override val indent =
         ElementIndent(
-            IndentType.SUB,
+            IndentType.PARAM,
             0,
             0,
         )
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        prevChildren = parentBlock?.childBlocks?.toList()
-        indent.indentLevel = indent.indentLevel
-        indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
+        indent.indentLevel = IndentType.PARAM
+        indent.indentLen = 0
+        indent.groupIndentLen = 0
     }
 
-    override fun addChildBlock(childBlock: SqlBlock) {
-        childBlocks.add(childBlock)
-        if (!isFirstLineComment) {
-            isFirstLineComment = childBlock is SqlCommentBlock
-        }
-    }
-
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
+    override fun createBlockIndentLen(): Int = 0
 }

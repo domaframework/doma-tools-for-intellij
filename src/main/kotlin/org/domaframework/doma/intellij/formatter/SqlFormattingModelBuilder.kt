@@ -86,16 +86,18 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
             .spacing(1, 1, 0, false, 0)
             .around(SqlTypes.ASTERISK)
             .spacing(1, 1, 0, false, 0)
+            .before(SqlTypes.LEFT_PAREN)
+            .spacing(1, 1, 0, false, 0)
 
     private fun createCustomSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()
             .withSpacing(
-                TokenType.WHITE_SPACE,
-                SqlTypes.KEYWORD,
+                SqlTypes.NUMBER,
+                SqlTypes.COMMA,
                 SqlCustomSpacingBuilder.nonSpacing,
             ).withSpacing(
-                SqlTypes.WORD,
-                TokenType.WHITE_SPACE,
+                SqlTypes.STRING,
+                SqlTypes.COMMA,
                 SqlCustomSpacingBuilder.nonSpacing,
             ).withSpacing(
                 SqlTypes.WORD,
@@ -108,10 +110,6 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
             ).withSpacing(
                 SqlTypes.WORD,
                 SqlTypes.RIGHT_PAREN,
-                SqlCustomSpacingBuilder.nonSpacing,
-            ).withSpacing(
-                SqlTypes.OTHER,
-                TokenType.WHITE_SPACE,
                 SqlCustomSpacingBuilder.nonSpacing,
             ).withSpacing(
                 SqlTypes.ASTERISK,

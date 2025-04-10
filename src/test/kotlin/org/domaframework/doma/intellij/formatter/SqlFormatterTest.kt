@@ -57,6 +57,22 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFime("Insert.sql", "FormattedInsert.sql")
     }
 
+    fun testInsertWithBindVariableFormatter() {
+        formatSqlFime("InsertWithBindVariable.sql", "FormattedInsertWithBindVariable.sql")
+    }
+
+    fun testUpdateFormatter() {
+        formatSqlFime("Update.sql", "FormattedUpdate.sql")
+    }
+
+    fun testUpdateBindVariableFormatter() {
+        formatSqlFime("UpdateBindVariable.sql", "FormattedUpdateBindVariable.sql")
+    }
+
+    fun testUpdateTupleAssignmentFormatter() {
+        formatSqlFime("UpdateTupleAssignment.sql", "FormattedUpdateTupleAssignment.sql")
+    }
+
     fun testDeleteFormatter() {
         formatSqlFime("Delete.sql", "FormattedDelete.sql")
     }

@@ -47,7 +47,7 @@ class SqlLineMakerProvider : RelatedItemLineMarkerProvider() {
         val file = e.containingFile ?: return
         if (!isSupportFileType(file) || isInjectionSqlFile(file)) return
         // Display only on the first line
-        if (e.originalElement.parent.originalElement !is PsiFile ||
+        if (e.originalElement?.parent?.originalElement !is PsiFile ||
             e.textRange.startOffset != file.textRange.startOffset
         ) {
             return

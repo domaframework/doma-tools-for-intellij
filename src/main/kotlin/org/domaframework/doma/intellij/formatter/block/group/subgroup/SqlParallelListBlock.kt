@@ -13,22 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
-class SqlColumnBlock(
+/**
+ * A class that represents the List type test data after the IN clause.
+ * If the child element is a [org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock],
+ * it controls the indentation in the same way as a [SqlSubQueryGroupBlock].
+ * If the direct child element is a comma, it controls the line break.
+ */
+class SqlParallelListBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlWordBlock(
+) : SqlSubQueryGroupBlock(
         node,
         wrap,
         alignment,
@@ -36,30 +41,12 @@ class SqlColumnBlock(
     ) {
     override val indent =
         ElementIndent(
-            IndentType.NONE,
+            IndentType.SUB,
             0,
             0,
         )
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.NONE
-        // Calculate right justification space during indentation after getting all column rows
-        indent.indentLen = 1
-        indent.groupIndentLen = 0
-    }
-
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun createBlockIndentLen(): Int {
-        parentBlock?.let {
-            val parentGroupDefinition = it.parentBlock as? SqlColumnDefinitionGroupBlock
-            if (parentGroupDefinition == null) return 1
-
-            val groupMaxAlimentLen = parentGroupDefinition.alignmentColumnName.length
-            val diffColumnName = groupMaxAlimentLen.minus(node.text.length)
-            return diffColumnName.plus(1)
-        }
-        return 1
     }
 }

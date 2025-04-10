@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -23,8 +23,10 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 
-open class SqlInlineGroupBlock(
+abstract class SqlSubGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
@@ -35,33 +37,32 @@ open class SqlInlineGroupBlock(
         alignment,
         spacingBuilder,
     ) {
+    var isFirstLineComment = false
+    var prevChildren: List<SqlBlock>? = emptyList<SqlBlock>()
+
     override val indent =
         ElementIndent(
-            IndentType.INLINE,
+            IndentType.SUB,
             0,
             0,
         )
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.INLINE
+        prevChildren = parentBlock?.childBlocks?.toList()
+        indent.indentLevel = indent.indentLevel
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun getIndent(): Indent? {
-        if (parentBlock?.indent?.indentLevel == IndentType.SUB) {
-            return Indent.getSpaceIndent(0)
+    override fun addChildBlock(childBlock: SqlBlock) {
+        childBlocks.add(childBlock)
+        if (!isFirstLineComment) {
+            isFirstLineComment = childBlock is SqlCommentBlock
         }
-        return Indent.getNoneIndent()
     }
 
-    override fun createBlockIndentLen(): Int =
-        parentBlock?.let {
-            it.indent.groupIndentLen
-                .plus(it.node.text.length)
-                .plus(1)
-        } ?: 1
+    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
+
+    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 }

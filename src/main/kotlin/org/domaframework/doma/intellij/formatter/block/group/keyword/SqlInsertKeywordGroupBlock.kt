@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -24,37 +24,35 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 
-open class SqlViewGroupBlock(
+open class SqlInsertKeywordGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
 ) : SqlKeywordGroupBlock(
         node,
-        IndentType.SECOND,
+        IndentType.TOP,
         wrap,
         alignment,
         spacingBuilder,
     ) {
-    override val indent =
-        ElementIndent(
-            IndentType.SECOND,
-            0,
-            0,
-        )
-
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
-        indent.indentLevel = IndentType.SUB
+        indent.indentLevel = IndentType.TOP
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = node.text.length
+        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createBlockIndentLen(): Int = parentBlock?.indent?.indentLen ?: 0
-
-    override fun isLeaf(): Boolean = true
+    override fun createBlockIndentLen(): Int =
+        parentBlock?.let {
+            if (it.indent.indentLevel == IndentType.SUB) {
+                it.indent.groupIndentLen.plus(1)
+            } else {
+                0
+            }
+        } ?: 0
 }

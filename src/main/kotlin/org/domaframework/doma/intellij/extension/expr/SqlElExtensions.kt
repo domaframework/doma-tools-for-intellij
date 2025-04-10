@@ -18,10 +18,15 @@ package org.domaframework.doma.intellij.extension.expr
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlElClass
+import org.domaframework.doma.intellij.psi.SqlElElseifDirective
+import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElIfDirective
 import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
+import kotlin.invoke
 
 val SqlElStaticFieldAccessExpr.accessElements: List<PsiElement>
     get() {
@@ -43,3 +48,13 @@ val SqlElStaticFieldAccessExpr.fqdn: String
         val fqdn = PsiTreeUtil.getChildrenOfTypeAsList(elClazz, PsiElement::class.java)
         return fqdn.toList().joinToString("") { it.text }
     }
+
+fun SqlCustomElCommentExpr.isConditionOrLoopDirective(): Boolean =
+    PsiTreeUtil.getChildOfType(this, SqlElIfDirective::class.java) != null ||
+        PsiTreeUtil.getChildOfType(this, SqlElForDirective::class.java) != null ||
+        PsiTreeUtil.getChildOfType(
+            this,
+            SqlElElseifDirective::class.java,
+        ) != null ||
+        this.findElementAt(2)?.elementType == SqlTypes.EL_END ||
+        this.findElementAt(2)?.elementType == SqlTypes.EL_ELSE

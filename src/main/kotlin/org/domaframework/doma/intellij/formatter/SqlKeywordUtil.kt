@@ -81,6 +81,7 @@ class SqlKeywordUtil {
 
         private val SECOND_KEYWORD =
             setOf(
+                "set",
                 "from",
                 "where",
                 "order",

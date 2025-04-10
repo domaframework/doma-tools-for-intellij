@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -23,9 +23,12 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.psi.SqlTypes
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 
-class SqlSubQueryGroupBlock(
+/**
+ * Group blocks when generating columns with subqueries
+ */
+class SqlColumnGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
@@ -36,46 +39,39 @@ class SqlSubQueryGroupBlock(
         alignment,
         spacingBuilder,
     ) {
+    var isFirstColumnGroup = node.text != ","
+
+    override val indent =
+        ElementIndent(
+            IndentType.COLUMN,
+            0,
+            0,
+        )
+
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
+        indent.indentLevel = IndentType.COLUMN
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = createGroupIndentLen()
+        indent.groupIndentLen =
+            if (isFirstColumnGroup) indent.indentLen else indent.indentLen.plus(1)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createBlockIndentLen(): Int = 1
-
-    private fun createGroupIndentLen(): Int {
+    override fun createBlockIndentLen(): Int =
         parentBlock?.let {
-            if (it is SqlJoinGroupBlock) {
-                var parentLen = 0
-                val keywords =
-                    it.childBlocks.dropLast(1).takeWhile { it.node.elementType == SqlTypes.KEYWORD }
-                keywords.forEach { keyword ->
-                    parentLen = parentLen.plus(keyword.node.text.length).plus(1)
+            if (it is SqlKeywordGroupBlock) {
+                val parentIndentLen = it.indent.indentLen.plus(it.node.text.length)
+                val subGroup = it.parentBlock as? SqlSubGroupBlock
+                if (subGroup is SqlSubGroupBlock && !subGroup.isFirstLineComment) {
+                    parentIndentLen.plus(3)
+                } else {
+                    parentIndentLen.plus(1)
                 }
-                return it.indent.indentLen
-                    .plus(it.node.text.length)
-                    .plus(2)
-                    .plus(parentLen)
             } else {
-                var parentLen = 0
-                if (prevChildren?.findLast { it.indent.indentLevel == IndentType.COMMA } == null) {
-                    prevChildren
-                        ?.dropLast(1)
-                        ?.forEach { prev ->
-                            parentLen = parentLen.plus(prev.node.text.length).plus(1)
-                        }
-                }
-                return it.indent.groupIndentLen
-                    .plus(parentLen)
-                    .plus(2)
+                it.indent.groupIndentLen.plus(1)
             }
-            return it.indent.groupIndentLen
-                .plus(2)
-        } ?: return 1
-    }
+        } ?: 1
 }

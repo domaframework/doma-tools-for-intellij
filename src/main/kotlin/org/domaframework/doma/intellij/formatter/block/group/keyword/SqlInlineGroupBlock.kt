@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group
+package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Indent
@@ -21,36 +21,48 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 
-/**
- * Column List Group Block attached to Create Table
- */
-class SqlColumnDefinitionGroupBlock(
+open class SqlInlineGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
-) : SqlSubGroupBlock(
+) : SqlNewGroupBlock(
         node,
         wrap,
         alignment,
         spacingBuilder,
     ) {
-    var alignmentColumnName = ""
-
-    // TODO:Customize indentation
-    val offset = 2
+    override val indent =
+        ElementIndent(
+            IndentType.INLINE,
+            0,
+            0,
+        )
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
+        indent.indentLevel = IndentType.INLINE
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen
+        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
+    override fun getIndent(): Indent? {
+        if (parentBlock?.indent?.indentLevel == IndentType.SUB) {
+            return Indent.getSpaceIndent(0)
+        }
+        return Indent.getNoneIndent()
+    }
 
-    override fun createBlockIndentLen(): Int = offset
+    override fun createBlockIndentLen(): Int =
+        parentBlock?.let {
+            it.indent.groupIndentLen
+                .plus(it.node.text.length)
+                .plus(1)
+        } ?: 1
 }

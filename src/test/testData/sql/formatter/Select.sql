@@ -1,5 +1,5 @@
 /** TopBlock */
-SELECT o.*
+SELECT COUNT( DISTINCT (x)),o.*
        , ISNULL(nbor.nearest
                 , 999) AS nearest -- column Line comment
   /** From */
@@ -22,7 +22,7 @@ SELECT o.*
                 /** Join */
                 LEFT OUTER JOIN specobj s
                              /** ON */
-                             ON p.objid = s.bestobjid
+                             ON p.objid = s.bestobjid AND p.plate = s.plate
           /** Where */
           WHERE p.TYPE = DBO.FPHOTOTYPE('Star')
             AND (p.flags & DBO.FPHOTOFLAGS('EDGE')) = 0
@@ -52,3 +52,6 @@ SELECT o.*
 
                           GROUP BY n.objid ) AS nbor
                     ON o.objid = nbor.objid
+                WHERE p.list IN /* params */(1
+                                            ,2
+                                            ,3)
