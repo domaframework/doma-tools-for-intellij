@@ -49,7 +49,7 @@ open class SqlOtherBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.NONE
-        indent.indentLen = createIntendLen()
+        indent.indentLen = createIndentLen()
         indent.groupIndentLen = 0
     }
 
@@ -57,7 +57,7 @@ open class SqlOtherBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    private fun createIntendLen(): Int {
+    private fun createIndentLen(): Int {
         if (isUpdateColumnSubstitutions) {
             parentBlock?.let { return it.indent.groupIndentLen.plus(1) }
                 ?: return indent.indentLen
