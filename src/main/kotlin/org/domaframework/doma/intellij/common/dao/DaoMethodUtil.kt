@@ -110,7 +110,7 @@ fun formatDaoPathFromSqlFilePath(
     if (isInjectionSqlFile(relativeBaseSqlFile)) {
         return ""
     }
-    val sqlPath = relativeBaseSqlFile.virtualFile.path
+    val sqlPath = relativeBaseSqlFile.virtualFile?.path ?: return ""
     var relativeFilePath = sqlPath.substring(projectRootPath.length)
     if (!relativeFilePath.startsWith("/")) {
         relativeFilePath = "/$relativeFilePath"
