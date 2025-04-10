@@ -25,6 +25,7 @@ import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
@@ -42,6 +43,13 @@ open class SqlCommaBlock(
         null,
         spacingBuilder,
     ) {
+    override val indent =
+        ElementIndent(
+            IndentType.COMMA,
+            0,
+            0,
+        )
+
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.COMMA
@@ -56,6 +64,10 @@ open class SqlCommaBlock(
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             if (parent is SqlSubGroupBlock) {
+                if (parent is SqlParallelListBlock) {
+                    return 0
+                }
+
                 val parentIndentLen = parent.indent.groupIndentLen
                 if (parent is SqlUpdateColumnGroupBlock || parent is SqlUpdateValueGroupBlock) {
                     return parentIndentLen

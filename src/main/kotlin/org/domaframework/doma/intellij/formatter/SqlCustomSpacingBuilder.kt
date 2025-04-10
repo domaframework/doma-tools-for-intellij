@@ -21,9 +21,15 @@ import com.intellij.formatting.Spacing
 import com.intellij.psi.tree.IElementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlColumnBlock
+import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
 
 class SqlCustomSpacingBuilder {
     companion object {
@@ -68,10 +74,14 @@ class SqlCustomSpacingBuilder {
         child1: SqlBlock?,
         child2: SqlBlock,
     ): Spacing? {
-        val indentLen: Int = child2.indent.indentLen
+        if (child2.parentBlock is SqlParallelListBlock) {
+            return nonSpacing
+        }
+
         when (child1) {
-            null -> return Spacing.createSpacing(0, 0, 0, false, 0, 0)
+            null -> return nonSpacing
             is SqlWhitespaceBlock -> {
+                val indentLen: Int = child2.indent.indentLen
                 val afterNewLine = child1.node.text.substringAfterLast("\n", "")
                 if (child1.node.text.contains("\n")) {
                     val currentIndent = afterNewLine.length
@@ -84,14 +94,15 @@ class SqlCustomSpacingBuilder {
                     return Spacing.createSpacing(newIndent, newIndent, 0, false, 0, 0)
                 }
             }
+
             else -> {
-                return Spacing.createSpacing(indentLen, indentLen, 1, false, 0, 1)
+                return getSpacing(child2)
             }
         }
         return null
     }
 
-    fun getSpacing(child2: SqlNewGroupBlock): Spacing? =
+    fun getSpacing(child2: SqlBlock): Spacing =
         Spacing.createSpacing(
             child2.indent.indentLen,
             child2.indent.indentLen,
@@ -109,5 +120,31 @@ class SqlCustomSpacingBuilder {
     fun getSpacingColumnDefinitionRaw(child: SqlColumnDefinitionRawGroupBlock): Spacing? {
         val indentLen = child.createBlockIndentLen()
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
+    }
+
+    fun getSpacingRightPattern(block: SqlRightPatternBlock): Spacing? {
+        return when {
+            block.parentBlock is SqlColumnDefinitionGroupBlock ||
+                block.parentBlock is SqlUpdateColumnGroupBlock ||
+                block.parentBlock is SqlUpdateValueGroupBlock -> {
+                return getSpacing(block)
+            }
+
+            block.parentBlock is SqlParallelListBlock -> {
+                if (block.parentBlock
+                        ?.childBlocks
+                        ?.dropLast(1)
+                        ?.lastOrNull() is SqlKeywordGroupBlock
+                ) {
+                    return normalSpacing
+                }
+                return nonSpacing
+            }
+
+            block.parentBlock is SqlDataTypeParamBlock -> nonSpacing
+
+            block.preSpaceRight -> normalSpacing
+            else -> nonSpacing
+        }
     }
 }

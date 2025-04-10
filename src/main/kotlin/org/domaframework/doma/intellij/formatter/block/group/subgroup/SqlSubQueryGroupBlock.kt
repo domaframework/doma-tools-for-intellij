@@ -26,7 +26,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-class SqlSubQueryGroupBlock(
+open class SqlSubQueryGroupBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
