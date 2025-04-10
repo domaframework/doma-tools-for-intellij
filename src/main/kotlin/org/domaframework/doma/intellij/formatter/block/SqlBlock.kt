@@ -580,16 +580,16 @@ open class SqlBlock(
         }
 
         if (child2 is SqlElBlockCommentBlock) {
-            when (child1) {
+            return when (child1) {
                 is SqlElBlockCommentBlock -> {
-                    return SqlCustomSpacingBuilder().getSpacing(child2)
+                    SqlCustomSpacingBuilder().getSpacing(child2)
                 }
 
                 is SqlWhitespaceBlock -> {
-                    return SqlCustomSpacingBuilder().getSpacing(child2)
+                    SqlCustomSpacingBuilder().getSpacing(child2)
                 }
 
-                else -> return SqlCustomSpacingBuilder.normalSpacing
+                else -> SqlCustomSpacingBuilder.normalSpacing
             }
         }
 

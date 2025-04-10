@@ -48,7 +48,7 @@ class SqlLineMakerProvider : RelatedItemLineMarkerProvider() {
         if (!isSupportFileType(file) || isInjectionSqlFile(file)) return
         // Display only on the first line
         if (e.originalElement?.parent?.originalElement !is PsiFile ||
-            e.textRange.startOffset != file.textRange.startOffset
+            e.textRange?.startOffset != file.textRange?.startOffset
         ) {
             return
         }
@@ -66,7 +66,7 @@ class SqlLineMakerProvider : RelatedItemLineMarkerProvider() {
                 identifier.textRange,
                 getIcon(daoFile.toPsiFile(project)),
                 getToolTipTitle(daoFile.toPsiFile(project)),
-                getHandler(daoFile, identifier, file.virtualFile.nameWithoutExtension),
+                getHandler(daoFile, identifier, file.virtualFile?.nameWithoutExtension ?: ""),
                 GutterIconRenderer.Alignment.RIGHT,
             ) {
                 ArrayList<GotoRelatedItem>()

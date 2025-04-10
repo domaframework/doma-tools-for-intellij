@@ -258,7 +258,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             setFieldsAndMethodsCompletionResultSet(matchFields, matchMethod, result)
             return
         }
-        if (top.parent !is PsiFile && top.parent.parent !is PsiDirectory) {
+        if (top.parent !is PsiFile && top.parent?.parent !is PsiDirectory) {
             val staticDirective = top.findNodeParent(SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR)
             staticDirective?.let {
                 topElementType = getElementTypeByStaticFieldAccess(top, it, topText) ?: return

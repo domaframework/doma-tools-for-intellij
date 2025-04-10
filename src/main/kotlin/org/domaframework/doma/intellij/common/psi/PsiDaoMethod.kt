@@ -149,7 +149,7 @@ class PsiDaoMethod(
             val rootDir = psiProject.getContentRoot(daoFile) ?: return@runReadAction
             val sqlFile = File(sqlFilePath)
             val sqlFileName = sqlFile.name
-            val parentDir = "${RESOURCES_PATH}/${sqlFile.parent.replace("\\", "/")}"
+            val parentDir = "${RESOURCES_PATH}/${sqlFile.parent?.replace("\\", "/")}"
             val parenDirPathSpirit = parentDir.split("/").toTypedArray()
 
             WriteCommandAction.runWriteCommandAction(psiProject) {
