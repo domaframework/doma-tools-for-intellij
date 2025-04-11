@@ -61,7 +61,7 @@ jobs:
 
       - name: Update Version
         run: |
-          ./gradlew replaceNewVersion -PnewVersion=${{ github.event.release.tag_name }}
+          ./gradlew replaceNewVersion -PnewVersion=${{ github.event.release.tag_name }} --no-configuration-cache
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

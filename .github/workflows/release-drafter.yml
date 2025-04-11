@@ -72,7 +72,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./gradlew replaceDraftVersion -PdraftVersion=$RELEASE_VERSION
+          ./gradlew replaceDraftVersion -PdraftVersion=$RELEASE_VERSION --no-configuration-cache
 
       - name: Commit New Version
         env:

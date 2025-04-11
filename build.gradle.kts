@@ -648,7 +648,7 @@ tasks.register("replaceDraftVersion") {
             println("Set Replace version in GITHUB_ENV: $draftVersion")
         } catch (e: NullPointerException) {
             println("GITHUB_ENV not found")
-            println(e.stackTrace)
+            println(e.printStackTrace())
         }
     }
 }
