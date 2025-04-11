@@ -605,8 +605,8 @@ fun replaceVersion(ver: String) {
 }
 
 tasks.register("replaceNewVersion") {
+    val releaseVersion = project.properties["newVersion"]?.toString() ?: "0.0.0"
     doLast {
-        val releaseVersion = project.properties["newVersion"]?.toString() ?: "0.0.0"
         val lastVersions = releaseVersion.substringAfter("v").split(".")
         val major = lastVersions[0].toInt()
         val minor = lastVersions[1].toInt()
@@ -619,12 +619,12 @@ tasks.register("replaceNewVersion") {
 }
 
 tasks.register("replaceDraftVersion") {
-    doLast {
-        val draftVersion =
-            project.properties["draftVersion"]
-                .toString()
-                .substringBefore("-beta")
+    val draftVersion =
+        project.properties["draftVersion"]
+            .toString()
+            .substringBefore("-beta")
 
+    doLast {
         println("Release DraftVersion: $draftVersion")
         replaceVersion(draftVersion)
     }
