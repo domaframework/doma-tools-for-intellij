@@ -166,7 +166,7 @@ class PsiDaoMethod(
                     PsiManager
                         .getInstance(psiProject)
                         .findDirectory(virtualFile) ?: return@runWriteCommandAction
-                val sqlVirtualFile = sqlOutputDirPath.createFile(sqlFileName).virtualFile
+                val sqlVirtualFile = sqlOutputDirPath.createFile(sqlFileName).virtualFile ?: return@runWriteCommandAction
                 FileEditorManager
                     .getInstance(psiProject)
                     .openFile(sqlVirtualFile, true)

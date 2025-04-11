@@ -37,6 +37,7 @@ fun getExtension(type: String): String =
  * Does it match the Dao file type condition?
  */
 fun isJavaOrKotlinFileType(daoFile: PsiFile): Boolean {
+    if (daoFile.virtualFile == null) return false
     val fileType = FileTypeManager.getInstance().getFileTypeByFile(daoFile.virtualFile)
     return when (fileType.name) {
         "JAVA", "Kotlin" -> true
@@ -57,7 +58,7 @@ fun isSupportFileType(file: PsiFile): Boolean {
 
 fun isInjectionSqlFile(file: PsiFile): Boolean {
     val extension = file.fileType.defaultExtension
-    val filePath = file.virtualFile.path
+    val filePath = file.virtualFile?.path ?: return false
     return when (extension) {
         "sql" -> true
         else -> false
