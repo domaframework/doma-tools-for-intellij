@@ -544,3 +544,88 @@ spotless {
         endWithNewline()
     }
 }
+
+val encoding: String by project
+
+fun replaceVersionInPluginUtil(ver: String) {
+    ant.withGroovyBuilder {
+        "replaceregexp"(
+            "match" to """(const val PLUGIN_VERSION = ")(\d+\.\d+\.\d+)((?:-beta)*)""",
+            "replace" to "\\1$ver",
+            "encoding" to encoding,
+            "flags" to "g",
+        ) {
+            "fileset"("dir" to ".") {
+                "include"("name" to "**/PluginUtil.kt")
+            }
+        }
+    }
+}
+
+fun replaceVersionGradleProperty(ver: String) {
+    ant.withGroovyBuilder {
+        "replaceregexp"(
+            "match" to """(pluginVersion = )(\d+\.\d+\.\d+)((?:-beta)*)""",
+            "replace" to "\\1$ver",
+            "encoding" to encoding,
+            "flags" to "g",
+        ) {
+            "fileset"("dir" to ".") {
+                "include"("name" to "**/gradle.properties")
+            }
+        }
+    }
+}
+
+fun replaceVersionInLogSetting(ver: String) {
+    ant.withGroovyBuilder {
+        "replaceregexp"(
+            "match" to """(org.domaframework.doma.intellij.plugin.version:-)(\d+\.\d+\.\d+)((?:-beta)*)(})""",
+            "replace" to "\\1$ver\\4",
+            "encoding" to encoding,
+            "flags" to "g",
+        ) {
+            "fileset"("dir" to ".") {
+                "include"("name" to "**/logback.xml")
+                "include"("name" to "**/logback-test.xml")
+            }
+        }
+    }
+}
+
+fun replaceVersion(ver: String) {
+    checkNotNull(ver)
+    replaceVersionInPluginUtil(ver)
+    replaceVersionGradleProperty("$ver-beta")
+    replaceVersionInLogSetting(ver)
+
+    val githubEnv = System.getenv("GITHUB_ENV")
+    val envFile = File(githubEnv)
+    envFile.appendText("REPLACE_VERSION=$ver\n")
+}
+
+tasks.register("replaceNewVersion") {
+    doLast {
+        val releaseVersion = project.properties["newVersion"]?.toString() ?: "0.0.0"
+        val lastVersions = releaseVersion.substringAfter("v").split(".")
+        val major = lastVersions[0].toInt()
+        val minor = lastVersions[1].toInt()
+        val patch = lastVersions[2].toInt() + 1
+
+        val newVersion = "$major.$minor.$patch"
+        println("Release newVersion: $newVersion")
+        replaceVersion(newVersion)
+    }
+}
+
+tasks.register("replaceDraftVersion") {
+    doLast {
+        val draftVersion =
+            project.properties["draftVersion"]
+                .toString()
+                .substringBefore("-beta")
+
+        println("Release DraftVersion: $draftVersion")
+        replaceVersion(draftVersion)
+    }
+}
