@@ -545,12 +545,7 @@ spotless {
     }
 }
 
-val encoding: String by project
-
-fun replaceVersionInPluginUtil(
-    ver: String,
-    encoding: String,
-) {
+fun replaceVersionInPluginUtil(ver: String) {
     ant.withGroovyBuilder {
         "replaceregexp"(
             "match" to """(const val PLUGIN_VERSION = ")(\d+\.\d+\.\d+)((?:-beta)*)""",
@@ -565,10 +560,7 @@ fun replaceVersionInPluginUtil(
     }
 }
 
-fun replaceVersionGradleProperty(
-    ver: String,
-    encoding: String,
-) {
+fun replaceVersionGradleProperty(ver: String) {
     ant.withGroovyBuilder {
         "replaceregexp"(
             "match" to """(pluginVersion = )(\d+\.\d+\.\d+)((?:-beta)*)""",
@@ -583,10 +575,7 @@ fun replaceVersionGradleProperty(
     }
 }
 
-fun replaceVersionInLogSetting(
-    ver: String,
-    encoding: String,
-) {
+fun replaceVersionInLogSetting(ver: String) {
     ant.withGroovyBuilder {
         "replaceregexp"(
             "match" to """(org.domaframework.doma.intellij.plugin.version:-)(\d+\.\d+\.\d+)((?:-beta)*)(})""",
@@ -602,22 +591,15 @@ fun replaceVersionInLogSetting(
     }
 }
 
-fun replaceVersion(
-    ver: String,
-    encoding: String,
-) {
+fun replaceVersion(ver: String) {
     checkNotNull(ver)
-    replaceVersionInPluginUtil(ver, encoding)
-    replaceVersionGradleProperty("$ver-beta", encoding)
-    replaceVersionInLogSetting(ver, encoding)
+    replaceVersionInPluginUtil(ver)
+    replaceVersionGradleProperty("$ver-beta")
+    replaceVersionInLogSetting(ver)
     println("Replace version in PluginUtil.kt, gradle.properties, logback.xml")
-
-    val githubEnv = System.getenv("GITHUB_ENV")
-    val envFile = File(githubEnv)
-    envFile.appendText("REPLACE_VERSION=$ver\n")
-
-    println("Set Replace version in GITHUB_ENV: $ver")
 }
+
+val encoding: String by project
 
 tasks.register("replaceNewVersion") {
     val releaseVersion =
@@ -627,7 +609,6 @@ tasks.register("replaceNewVersion") {
             "0.0.0"
         }
 
-    val projectEncoding = encoding
     doLast {
         val lastVersions = releaseVersion.substringAfter("v").split(".")
         val major = lastVersions[0].toInt()
@@ -636,7 +617,16 @@ tasks.register("replaceNewVersion") {
 
         val newVersion = "$major.$minor.$patch"
         println("Release newVersion: $newVersion")
-        replaceVersion(newVersion, projectEncoding)
+        replaceVersion(newVersion)
+        try {
+            val githubEnv = System.getenv("GITHUB_ENV")
+            val envFile = File(githubEnv)
+            envFile.appendText("REPLACE_VERSION=$newVersion\n")
+            println("Set Replace version in GITHUB_ENV: $newVersion")
+        } catch (e: NullPointerException) {
+            println("GITHUB_ENV not found")
+            println(e.stackTrace)
+        }
     }
 }
 
@@ -647,10 +637,18 @@ tasks.register("replaceDraftVersion") {
         } else {
             "0.0.0"
         }
-    val projectEncoding = encoding
 
     doLast {
         println("Release DraftVersion: $draftVersion")
-        replaceVersion(draftVersion, projectEncoding)
+        replaceVersion(draftVersion)
+        try {
+            val githubEnv = System.getenv("GITHUB_ENV")
+            val envFile = File(githubEnv)
+            envFile.appendText("REPLACE_VERSION=$draftVersion\n")
+            println("Set Replace version in GITHUB_ENV: $draftVersion")
+        } catch (e: NullPointerException) {
+            println("GITHUB_ENV not found")
+            println(e.stackTrace)
+        }
     }
 }
