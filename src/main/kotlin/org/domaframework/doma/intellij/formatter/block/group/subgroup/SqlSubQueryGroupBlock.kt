@@ -56,10 +56,10 @@ open class SqlSubQueryGroupBlock(
                 val keywords =
                     it.childBlocks.dropLast(1).takeWhile { it.node.elementType == SqlTypes.KEYWORD }
                 keywords.forEach { keyword ->
-                    parentLen = parentLen.plus(keyword.node.text.length).plus(1)
+                    parentLen = parentLen.plus(keyword.getNodeText().length).plus(1)
                 }
                 return it.indent.indentLen
-                    .plus(it.node.text.length)
+                    .plus(it.getNodeText().length)
                     .plus(2)
                     .plus(parentLen)
             } else {
@@ -68,7 +68,7 @@ open class SqlSubQueryGroupBlock(
                     prevChildren
                         ?.dropLast(1)
                         ?.forEach { prev ->
-                            parentLen = parentLen.plus(prev.node.text.length).plus(1)
+                            parentLen = parentLen.plus(prev.getNodeText().length).plus(1)
                         }
                 }
                 return it.indent.groupIndentLen

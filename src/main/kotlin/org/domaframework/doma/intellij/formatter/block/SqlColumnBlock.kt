@@ -57,7 +57,7 @@ class SqlColumnBlock(
             if (parentGroupDefinition == null) return 1
 
             val groupMaxAlimentLen = parentGroupDefinition.alignmentColumnName.length
-            val diffColumnName = groupMaxAlimentLen.minus(node.text.length)
+            val diffColumnName = groupMaxAlimentLen.minus(getNodeText().length)
             return diffColumnName.plus(1)
         }
         return 1

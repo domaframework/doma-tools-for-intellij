@@ -76,8 +76,8 @@ open class SqlBlockBuilder {
             ).clear()
     }
 
-    fun getGroupTopNodeIndexByIndentType(indentType: IndentType): Int =
+    fun getGroupTopNodeIndex(condition: (SqlBlock) -> Boolean): Int =
         groupTopNodeIndexHistory.indexOfLast {
-            it.second.indent.indentLevel == indentType
+            condition(it.second)
         }
 }

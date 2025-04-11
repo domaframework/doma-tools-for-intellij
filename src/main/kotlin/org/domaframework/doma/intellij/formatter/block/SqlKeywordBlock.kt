@@ -48,7 +48,7 @@ open class SqlKeywordBlock(
 
         indent.indentLevel = indentLevel
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
+        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
         // updateParentIndentLen()
     }
 
@@ -76,15 +76,15 @@ open class SqlKeywordBlock(
             IndentType.SECOND -> {
                 parentBlock?.let {
                     it.indent.groupIndentLen
-                        .plus(it.node.text.length)
-                        .minus(this.node.text.length)
+                        .plus(it.getNodeText().length)
+                        .minus(this.getNodeText().length)
                 } ?: 1
             }
 
             IndentType.INLINE_SECOND -> {
                 parentBlock?.let {
                     it.indent.groupIndentLen
-                        .plus(it.node.text.length)
+                        .plus(it.getNodeText().length)
                         .plus(1)
                 } ?: 1
             }

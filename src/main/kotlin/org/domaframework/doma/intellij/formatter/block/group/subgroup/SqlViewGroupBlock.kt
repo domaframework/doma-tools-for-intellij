@@ -48,7 +48,7 @@ open class SqlViewGroupBlock(
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.SUB
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = node.text.length
+        indent.groupIndentLen = getNodeText().length
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()

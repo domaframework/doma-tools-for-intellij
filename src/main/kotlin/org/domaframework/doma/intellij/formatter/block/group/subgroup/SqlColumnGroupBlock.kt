@@ -39,7 +39,7 @@ class SqlColumnGroupBlock(
         alignment,
         spacingBuilder,
     ) {
-    var isFirstColumnGroup = node.text != ","
+    var isFirstColumnGroup = getNodeText() != ","
 
     override val indent =
         ElementIndent(
@@ -63,7 +63,7 @@ class SqlColumnGroupBlock(
     override fun createBlockIndentLen(): Int =
         parentBlock?.let {
             if (it is SqlKeywordGroupBlock) {
-                val parentIndentLen = it.indent.indentLen.plus(it.node.text.length)
+                val parentIndentLen = it.indent.indentLen.plus(it.getNodeText().length)
                 val subGroup = it.parentBlock as? SqlSubGroupBlock
                 if (subGroup is SqlSubGroupBlock && !subGroup.isFirstLineComment) {
                     parentIndentLen.plus(3)

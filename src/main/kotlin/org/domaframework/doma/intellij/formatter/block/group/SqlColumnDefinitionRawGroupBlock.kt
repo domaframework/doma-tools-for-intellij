@@ -45,7 +45,7 @@ class SqlColumnDefinitionRawGroupBlock(
     val defaultOffset = 5
     val isFirstColumnRaw = node.elementType != SqlTypes.COMMA
 
-    var columnName = node.text
+    var columnName = getNodeText()
 
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)

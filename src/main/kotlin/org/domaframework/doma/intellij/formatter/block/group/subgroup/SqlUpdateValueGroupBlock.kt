@@ -58,7 +58,7 @@ class SqlUpdateValueGroupBlock(
                         .dropLast(1)
                         .takeWhile { parent.node.elementType == SqlTypes.KEYWORD }
                 return parent.indent.indentLen
-                    .plus(parent.node.text.length)
+                    .plus(parent.getNodeText().length)
                     .plus(3)
             }
             // TODO:Customize indentation

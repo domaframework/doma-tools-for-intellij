@@ -183,7 +183,7 @@ class SqlElConditionLoopCommentBlock(
                     if (grand is SqlColumnGroupBlock) {
                         val grandIndentLen = grand.indent.groupIndentLen
                         var prevTextLen = 1
-                        parent.prevChildren?.dropLast(1)?.forEach { prev -> prevTextLen = prevTextLen.plus(prev.node.text.length) }
+                        parent.prevChildren?.dropLast(1)?.forEach { prev -> prevTextLen = prevTextLen.plus(prev.getNodeText().length) }
                         return grandIndentLen.plus(prevTextLen).plus(1)
                     }
                 }
@@ -195,7 +195,9 @@ class SqlElConditionLoopCommentBlock(
                     .forEach { prev ->
                         prevLen =
                             prevLen.plus(
-                                prev.node.text.length
+                                prev
+                                    .getNodeText()
+                                    .length
                                     .plus(1),
                             )
                     }

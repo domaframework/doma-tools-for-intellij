@@ -48,7 +48,7 @@ open class SqlJoinGroupBlock(
         parentBlock?.childBlocks?.add(this)
         indent.indentLevel = IndentType.JOIN
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
+        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
