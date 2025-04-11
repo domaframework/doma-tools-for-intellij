@@ -598,6 +598,7 @@ fun replaceVersion(ver: String) {
     replaceVersionInPluginUtil(ver)
     replaceVersionGradleProperty("$ver-beta")
     replaceVersionInLogSetting(ver)
+    println("Replace version in PluginUtil.kt, gradle.properties, logback.xml")
 
     val githubEnv = System.getenv("GITHUB_ENV")
     val envFile = File(githubEnv)
@@ -605,7 +606,12 @@ fun replaceVersion(ver: String) {
 }
 
 tasks.register("replaceNewVersion") {
-    val releaseVersion = project.properties["newVersion"]?.toString() ?: "0.0.0"
+    val releaseVersion =
+        if (project.hasProperty("newVersion")) {
+            project.property("newVersion") as String
+        } else {
+            "0.0.0"
+        }
     doLast {
         val lastVersions = releaseVersion.substringAfter("v").split(".")
         val major = lastVersions[0].toInt()
@@ -620,9 +626,11 @@ tasks.register("replaceNewVersion") {
 
 tasks.register("replaceDraftVersion") {
     val draftVersion =
-        project.properties["draftVersion"]
-            .toString()
-            .substringBefore("-beta")
+        if (project.hasProperty("draftVersion")) {
+            project.property("draftVersion") as String
+        } else {
+            "0.0.0"
+        }
 
     doLast {
         println("Release DraftVersion: $draftVersion")
