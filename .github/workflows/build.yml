@@ -90,7 +90,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build plugin
-        run: ./gradlew buildPlugin -PpluginVersion=$RELEASE_VERSION-${{ github.run_number }}
+        run: ./gradlew buildPlugin -PpluginVersion=$RELEASE_VERSION-beta-${{ github.run_number }}
 
       - name: Prepare Plugin Artifact
         id: artifact
