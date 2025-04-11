@@ -545,9 +545,12 @@ spotless {
     }
 }
 
-val encoding: String by project
+val projectEncoding: String by project
 
-fun replaceVersionInPluginUtil(ver: String) {
+fun replaceVersionInPluginUtil(
+    ver: String,
+    encoding: String,
+) {
     ant.withGroovyBuilder {
         "replaceregexp"(
             "match" to """(const val PLUGIN_VERSION = ")(\d+\.\d+\.\d+)((?:-beta)*)""",
@@ -562,7 +565,10 @@ fun replaceVersionInPluginUtil(ver: String) {
     }
 }
 
-fun replaceVersionGradleProperty(ver: String) {
+fun replaceVersionGradleProperty(
+    ver: String,
+    encoding: String,
+) {
     ant.withGroovyBuilder {
         "replaceregexp"(
             "match" to """(pluginVersion = )(\d+\.\d+\.\d+)((?:-beta)*)""",
@@ -577,7 +583,10 @@ fun replaceVersionGradleProperty(ver: String) {
     }
 }
 
-fun replaceVersionInLogSetting(ver: String) {
+fun replaceVersionInLogSetting(
+    ver: String,
+    encoding: String,
+) {
     ant.withGroovyBuilder {
         "replaceregexp"(
             "match" to """(org.domaframework.doma.intellij.plugin.version:-)(\d+\.\d+\.\d+)((?:-beta)*)(})""",
@@ -593,16 +602,21 @@ fun replaceVersionInLogSetting(ver: String) {
     }
 }
 
-fun replaceVersion(ver: String) {
+fun replaceVersion(
+    ver: String,
+    encoding: String,
+) {
     checkNotNull(ver)
-    replaceVersionInPluginUtil(ver)
-    replaceVersionGradleProperty("$ver-beta")
-    replaceVersionInLogSetting(ver)
+    replaceVersionInPluginUtil(ver, encoding)
+    replaceVersionGradleProperty("$ver-beta", encoding)
+    replaceVersionInLogSetting(ver, encoding)
     println("Replace version in PluginUtil.kt, gradle.properties, logback.xml")
 
     val githubEnv = System.getenv("GITHUB_ENV")
     val envFile = File(githubEnv)
     envFile.appendText("REPLACE_VERSION=$ver\n")
+
+    println("Set Replace version in GITHUB_ENV: $ver")
 }
 
 tasks.register("replaceNewVersion") {
@@ -612,6 +626,8 @@ tasks.register("replaceNewVersion") {
         } else {
             "0.0.0"
         }
+
+    val encoding = projectEncoding
     doLast {
         val lastVersions = releaseVersion.substringAfter("v").split(".")
         val major = lastVersions[0].toInt()
@@ -620,7 +636,7 @@ tasks.register("replaceNewVersion") {
 
         val newVersion = "$major.$minor.$patch"
         println("Release newVersion: $newVersion")
-        replaceVersion(newVersion)
+        replaceVersion(newVersion, encoding)
     }
 }
 
@@ -631,9 +647,10 @@ tasks.register("replaceDraftVersion") {
         } else {
             "0.0.0"
         }
+    val encoding = projectEncoding
 
     doLast {
         println("Release DraftVersion: $draftVersion")
-        replaceVersion(draftVersion)
+        replaceVersion(draftVersion, encoding)
     }
 }
