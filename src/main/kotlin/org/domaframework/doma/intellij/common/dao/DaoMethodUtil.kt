@@ -39,7 +39,8 @@ import org.domaframework.doma.intellij.extension.getModule
  */
 fun findDaoMethod(originalFile: PsiFile): PsiMethod? {
     val project = originalFile.project
-    val module = project.getModule(originalFile.virtualFile) ?: return null
+    val virtualFile = originalFile.virtualFile ?: return null
+    val module = project.getModule(virtualFile) ?: return null
 
     if (isInjectionSqlFile(originalFile)) {
         originalFile.let {
@@ -52,7 +53,7 @@ fun findDaoMethod(originalFile: PsiFile): PsiMethod? {
         val relativePath =
             formatDaoPathFromSqlFilePath(
                 originalFile,
-                project.getContentRoot(originalFile.virtualFile)?.path ?: "",
+                project.getContentRoot(virtualFile)?.path ?: "",
                 fileTypeName,
             )
         val daoClassName: String =

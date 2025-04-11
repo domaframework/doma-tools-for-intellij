@@ -42,7 +42,7 @@ class DaoRenameProcessor : RenameJavaClassProcessor() {
         val daoClass = getDaoClass(element.containingFile) ?: return
 
         val project = element.project
-        val virtualFile = element.containingFile.virtualFile
+        val virtualFile = element.containingFile.virtualFile ?: return
         project.getContentRoot(virtualFile)?.let {
             element.module?.getPackagePathFromDaoPath(virtualFile)?.let {
                 if (it.name == daoClass.name) {
