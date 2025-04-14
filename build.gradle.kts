@@ -98,7 +98,7 @@ dependencies {
 
 intellijPlatform {
     pluginConfiguration {
-        version = providers.gradleProperty("pluginVersion")
+        version = providers.gradleProperty("pluginVersion").map { it.substringBefore('-', "") }
         description =
             providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
                 val start = "<!-- Plugin description -->"
@@ -114,16 +114,19 @@ intellijPlatform {
 
         val changelog = project.changelog
         changeNotes =
-            providers.gradleProperty("pluginVersion").map { pluginVersion ->
-                with(changelog) {
-                    renderItem(
-                        (getOrNull(pluginVersion) ?: getUnreleased())
-                            .withHeader(false)
-                            .withEmptySections(false),
-                        Changelog.OutputType.HTML,
-                    )
+            providers
+                .gradleProperty("pluginVersion")
+                .map { it.substringBefore('-', "") }
+                .map { pluginVersion ->
+                    with(changelog) {
+                        renderItem(
+                            (getOrNull(pluginVersion) ?: getUnreleased())
+                                .withHeader(false)
+                                .withEmptySections(false),
+                            Changelog.OutputType.HTML,
+                        )
+                    }
                 }
-            }
 
         ideaVersion {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
@@ -138,9 +141,12 @@ intellijPlatform {
     }
 
     publishing {
+        // TODO: During release, refrain from reformatting the version number.
+        //  Instead, set the release version before tagging to allow releases to any chosen channel.
         token = providers.environmentVariable("PUBLISH_TOKEN")
-        channels =
-            providers.gradleProperty("pluginVersion").map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
+        version =
+            providers.gradleProperty("pluginVersion").map { it.substringBefore('-', "") }
+        channels = listOf("default")
     }
 
     pluginVerification {
