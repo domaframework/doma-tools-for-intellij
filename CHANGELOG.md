@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.5.0] - 2025-04-11
+## [0.5.0] - 2025-04-14
 
 ### New Features
 
@@ -23,6 +23,7 @@
 
 ### Maintenance
 
+- Ci/publish version setting ([#99])
 - Automating development version updates ([#93])
 - Add beta to Build Version ([#91])
 
@@ -43,6 +44,7 @@
 [#86]:https://github.com/domaframework/doma-tools-for-intellij/pull/86
 [#82]:https://github.com/domaframework/doma-tools-for-intellij/pull/82
 [#79]:https://github.com/domaframework/doma-tools-for-intellij/pull/79
+[#99]:https://github.com/domaframework/doma-tools-for-intellij/pull/99
 [#93]:https://github.com/domaframework/doma-tools-for-intellij/pull/93
 [#91]:https://github.com/domaframework/doma-tools-for-intellij/pull/91
 [#90]:https://github.com/domaframework/doma-tools-for-intellij/pull/90
