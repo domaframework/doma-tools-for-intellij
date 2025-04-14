@@ -52,54 +52,6 @@
 [#62]:https://github.com/domaframework/doma-tools-for-intellij/pull/62
 
 
-## [0.5.0] - 2025-04-11
-
-### New Features
-
-- Function Parameter Block Code Completion ([#80])
-
-### Bug Fixes
-
-- Add option --no-configuration-cache ([#96])
-- Execute the required processing within `doLast`. ([#95])
-- Call project before the task execution phase. ([#94])
-- Null check for virtualFile ([#92])
-- SQL format call log ([#88])
-- Prevents the post processor from running if the usage flag is False ([#89])
-- Strengthen checks when referencing nullable objects. ([#87])
-- Fix/formatter indent ([#86])
-- inspection in function parameters ([#82])
-- Fix:Strings are concatenated when completing code for % directives ([#79])
-
-### Maintenance
-
-- Automating development version updates ([#93])
-- Add beta to Build Version ([#91])
-
-### Dependency Updates
-
-- Update plugin org.gradle.toolchains.foojay-resolver-convention to v0.10.0 ([#90])
-- Update plugin spotless to v7.0.3 ([#78])
-- Update dependency org.jetbrains.intellij.platform to v2.5.0 ([#62])
-
-[#80]:https://github.com/domaframework/doma-tools-for-intellij/pull/80
-[#96]:https://github.com/domaframework/doma-tools-for-intellij/pull/96
-[#95]:https://github.com/domaframework/doma-tools-for-intellij/pull/95
-[#94]:https://github.com/domaframework/doma-tools-for-intellij/pull/94
-[#92]:https://github.com/domaframework/doma-tools-for-intellij/pull/92
-[#88]:https://github.com/domaframework/doma-tools-for-intellij/pull/88
-[#89]:https://github.com/domaframework/doma-tools-for-intellij/pull/89
-[#87]:https://github.com/domaframework/doma-tools-for-intellij/pull/87
-[#86]:https://github.com/domaframework/doma-tools-for-intellij/pull/86
-[#82]:https://github.com/domaframework/doma-tools-for-intellij/pull/82
-[#79]:https://github.com/domaframework/doma-tools-for-intellij/pull/79
-[#93]:https://github.com/domaframework/doma-tools-for-intellij/pull/93
-[#91]:https://github.com/domaframework/doma-tools-for-intellij/pull/91
-[#90]:https://github.com/domaframework/doma-tools-for-intellij/pull/90
-[#78]:https://github.com/domaframework/doma-tools-for-intellij/pull/78
-[#62]:https://github.com/domaframework/doma-tools-for-intellij/pull/62
-
-
 ## [0.4.0] - 2025-04-07
 
 ### New Features
@@ -234,5 +186,4 @@
 [0.3.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0...0.3.1
 [0.3.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.1...0.3.2
 [0.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.2...0.4.0
-[0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.4.0...0.5.0
 [0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.4.0...0.5.0
