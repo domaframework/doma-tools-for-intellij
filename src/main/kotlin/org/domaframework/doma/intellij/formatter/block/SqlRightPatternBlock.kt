@@ -48,21 +48,22 @@ open class SqlRightPatternBlock(
     var preSpaceRight = false
 
     fun enableLastRight() {
-        parentBlock?.let {
-            if (it.node.treePrev.elementType == SqlTypes.WORD) {
+        parentBlock?.let { parent ->
+
+            if (parent.node.treePrev.elementType == SqlTypes.WORD) {
                 preSpaceRight = false
                 return
             }
-            if (it is SqlInsertColumnGroupBlock) {
+            if (parent is SqlInsertColumnGroupBlock) {
                 preSpaceRight = false
                 return
             }
-            it.parentBlock?.let {
+            parent.parentBlock?.let { grand ->
                 preSpaceRight = (
-                    it.indent.indentLevel <= IndentType.SECOND &&
-                        it.parentBlock !is SqlInsertKeywordGroupBlock
+                    grand.indent.indentLevel <= IndentType.SECOND &&
+                        grand.parentBlock !is SqlInsertKeywordGroupBlock
                 ) ||
-                    it.indent.indentLevel == IndentType.JOIN
+                    grand.indent.indentLevel == IndentType.JOIN
                 return
             }
         }
@@ -81,6 +82,7 @@ open class SqlRightPatternBlock(
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
+        enableLastRight()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()

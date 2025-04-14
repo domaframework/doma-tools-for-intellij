@@ -21,6 +21,7 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 
 abstract class SqlCommentBlock(
     node: ASTNode,
@@ -44,11 +45,22 @@ abstract class SqlCommentBlock(
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.NONE
-        indent.indentLen = 0
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = 0
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun isLeaf(): Boolean = true
+
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            if (parent.parentBlock !is SqlSubGroupBlock ||
+                parent.parentBlock?.childBlocks?.size != 1
+            ) {
+                return parent.indent.indentLen
+            }
+        }
+        return 1
+    }
 }

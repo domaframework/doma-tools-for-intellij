@@ -21,7 +21,6 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -50,32 +49,33 @@ open class SqlSubQueryGroupBlock(
     override fun createBlockIndentLen(): Int = 1
 
     private fun createGroupIndentLen(): Int {
-        parentBlock?.let {
-            if (it is SqlJoinGroupBlock) {
+        parentBlock?.let { parent ->
+            if (parent is SqlJoinGroupBlock) {
                 var parentLen = 0
                 val keywords =
-                    it.childBlocks.dropLast(1).takeWhile { it.node.elementType == SqlTypes.KEYWORD }
+                    parent.childBlocks.dropLast(1).takeWhile { parent.node.elementType == SqlTypes.KEYWORD }
                 keywords.forEach { keyword ->
                     parentLen = parentLen.plus(keyword.getNodeText().length).plus(1)
                 }
-                return it.indent.indentLen
-                    .plus(it.getNodeText().length)
+                return parent.indent.indentLen
+                    .plus(parent.getNodeText().length)
                     .plus(2)
                     .plus(parentLen)
             } else {
                 var parentLen = 0
-                if (prevChildren?.findLast { it.indent.indentLevel == IndentType.COMMA } == null) {
+                val prevBlocks =
                     prevChildren
                         ?.dropLast(1)
-                        ?.forEach { prev ->
-                            parentLen = parentLen.plus(prev.getNodeText().length).plus(1)
-                        }
-                }
-                return it.indent.groupIndentLen
+                        ?.filter { it.node.startOffset > parent.node.startOffset }
+                prevBlocks
+                    ?.forEach { prev ->
+                        parentLen = parentLen.plus(prev.getNodeText().length).plus(1)
+                    }
+                return parent.indent.groupIndentLen
                     .plus(parentLen)
                     .plus(2)
             }
-            return it.indent.groupIndentLen
+            return parent.indent.groupIndentLen
                 .plus(2)
         } ?: return 1
     }

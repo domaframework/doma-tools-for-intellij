@@ -116,12 +116,18 @@ open class SqlBlock(
                     }
                 }
                 prevNonWhiteSpaceNode = child
-                updateSearchKeywordLevelHistory(childBlock, child)
-                setRightSpace(childBlock)
-                blocks.add(childBlock)
                 if (childBlock is SqlCommentBlock) {
-                    blockBuilder.addCommentBlock(childBlock)
+                    when (childBlock) {
+                        is SqlElConditionLoopCommentBlock ->
+                            blockBuilder.addConditionOrLoopBlock(
+                                childBlock,
+                            )
+
+                        else -> blockBuilder.addCommentBlock(childBlock)
+                    }
                 }
+                updateSearchKeywordLevelHistory(childBlock, child)
+                blocks.add(childBlock)
             } else {
                 if (lastBlock !is SqlLineCommentBlock) {
                     blocks.add(
@@ -161,11 +167,6 @@ open class SqlBlock(
                     child.treePrev.text.contains("\n")
             ) ||
             (childBlock is SqlElConditionLoopCommentBlock)
-
-    private fun setRightSpace(currentBlock: SqlBlock?) {
-        val rightBlock = currentBlock as? SqlRightPatternBlock
-        rightBlock?.enableLastRight()
-    }
 
     private fun isNewGroup(childBlock: SqlBlock): Boolean {
         val isNewGroupType = childBlock.indent.indentLevel.isNewLineGroup()
@@ -257,20 +258,36 @@ open class SqlBlock(
                         return@setParentGroups lastGroupBlock
                     }
                 } else if (lastIndentLevel == childBlock.indent.indentLevel) {
-                    if (!(lastGroupBlock.getNodeText() == "or" && childBlock.getNodeText() == "and")) {
-                        blockBuilder.removeLastGroupTopNodeIndexHistory()
-                    }
-                    if (lastGroupBlock.getNodeText() == "and" && lastGroupBlock.parentBlock?.getNodeText() == "or") {
-                        val orParentIndex =
-                            blockBuilder.getGroupTopNodeIndex { block ->
-                                block is SqlKeywordGroupBlock && block.getNodeText() == "or"
+                    // The AND following an OR will be a child of OR unless surrounded by a subgroup
+                    if (childBlock.getNodeText() == "and" && lastGroupBlock.getNodeText() == "or") {
+                        setParentGroups(
+                            childBlock,
+                        ) { history ->
+                            return@setParentGroups lastGroupBlock
+                        }
+                    } else {
+                        if (childBlock.getNodeText() == "or" &&
+                            lastGroupBlock.getNodeText() == "and" &&
+                            lastGroupBlock.parentBlock?.getNodeText() == "or"
+                        ) {
+                            val orParentIndex =
+                                blockBuilder.getGroupTopNodeIndex { block ->
+                                    block is SqlKeywordGroupBlock && block.getNodeText() == "or"
+                                }
+                            blockBuilder.clearSubListGroupTopNodeIndexHistory(orParentIndex)
+                            setParentGroups(
+                                childBlock,
+                            ) { history ->
+                                return@setParentGroups history.lastOrNull()?.second
                             }
-                        blockBuilder.clearSubListGroupTopNodeIndexHistory(orParentIndex)
-                    }
-                    setParentGroups(
-                        childBlock,
-                    ) { history ->
-                        return@setParentGroups history.lastOrNull()?.second
+                        } else {
+                            blockBuilder.removeLastGroupTopNodeIndexHistory()
+                            setParentGroups(
+                                childBlock,
+                            ) { history ->
+                                return@setParentGroups lastGroupBlock.parentBlock
+                            }
+                        }
                     }
                 } else if (lastIndentLevel < childBlock.indent.indentLevel) {
                     setParentGroups(
@@ -400,7 +417,12 @@ open class SqlBlock(
                 setParentGroups(
                     childBlock,
                 ) { history ->
-                    return@setParentGroups history.last().second
+                    if (childBlock.conditionType.isEnd()) {
+                        val lastConditionLoopCommentBlock = blockBuilder.getConditionOrLoopBlocksLast()
+                        blockBuilder.removeConditionOrLoopBlockLast()
+                        return@setParentGroups lastConditionLoopCommentBlock
+                    }
+                    return@setParentGroups null
                 }
             }
 
@@ -493,7 +515,14 @@ open class SqlBlock(
     ) {
         val parentGroup =
             getParentGroup(blockBuilder.getGroupTopNodeIndexHistory() as MutableList<Pair<Int, SqlBlock>>)
-        childBlock.setParentGroupBlock(parentGroup)
+
+        // // The parent block for SqlElConditionLoopCommentBlock will be set later
+        if (childBlock !is SqlElConditionLoopCommentBlock ||
+            childBlock.conditionType.isEnd()
+        ) {
+            childBlock.setParentGroupBlock(parentGroup)
+        }
+
         if (isNewGroup(childBlock) ||
             (childBlock is SqlSubGroupBlock) ||
             childBlock is SqlViewGroupBlock ||

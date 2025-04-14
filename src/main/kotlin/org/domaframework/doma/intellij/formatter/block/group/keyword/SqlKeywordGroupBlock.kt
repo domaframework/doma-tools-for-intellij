@@ -153,7 +153,6 @@ open class SqlKeywordGroupBlock(
                         return 0
                     }
                     val subGroupBlock = parent.parentBlock as? SqlSubGroupBlock
-                    // val isSubGroupChildParent = parent.isTopParentInSubGroup()
                     val newIndent =
                         if (parent is SqlSubQueryGroupBlock) {
                             return if (getNodeText() == "and") {
@@ -167,9 +166,13 @@ open class SqlKeywordGroupBlock(
                             groupLen
                         } else {
                             var parentLen = 0
+                            val removeStartOffsetLess =
+                                parent.childBlocks.dropLast(1).filter {
+                                    it.node.startOffset >
+                                        parent.node.startOffset
+                                }
                             val keywords =
-                                parent.childBlocks
-                                    .dropLast(1)
+                                removeStartOffsetLess
                                     .takeWhile { it.node.elementType == SqlTypes.KEYWORD }
                             keywords.forEach { keyword ->
                                 parentLen = parentLen.plus(keyword.getNodeText().length).plus(1)
