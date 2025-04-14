@@ -139,8 +139,9 @@ intellijPlatform {
 
     publishing {
         token = providers.environmentVariable("PUBLISH_TOKEN")
-        channels =
-            providers.gradleProperty("pluginVersion").map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
+        version =
+            providers.gradleProperty("pluginVersion").map { it.substringBefore('-', "") }
+        channels = listOf("default")
     }
 
     pluginVerification {
