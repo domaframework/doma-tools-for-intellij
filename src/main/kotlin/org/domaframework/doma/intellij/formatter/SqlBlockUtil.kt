@@ -110,7 +110,7 @@ class SqlBlockUtil(
             IndentType.INLINE -> {
                 if (!SqlKeywordUtil.isSetLineKeyword(
                         child.text,
-                        lastGroupBlock?.node?.text ?: "",
+                        lastGroupBlock?.getNodeText() ?: "",
                     )
                 ) {
                     return SqlInlineGroupBlock(child, wrap, alignment, spacingBuilder)
@@ -152,8 +152,8 @@ class SqlBlockUtil(
             is SqlKeywordGroupBlock -> {
                 val lastKeyword =
                     lastGroup.childBlocks
-                        .lastOrNull { SqlKeywordUtil.isOptionSqlKeyword(it.node.text) }
-                if (lastKeyword != null && lastKeyword.node.text.lowercase() == "in") {
+                        .lastOrNull { SqlKeywordUtil.isOptionSqlKeyword(it.getNodeText()) }
+                if (lastKeyword != null && lastKeyword.getNodeText().lowercase() == "in") {
                     return SqlParallelListBlock(child, wrap, alignment, spacingBuilder)
                 }
                 if (lastGroup is SqlCreateKeywordGroupBlock) {
@@ -213,7 +213,7 @@ class SqlBlockUtil(
         when (lastGroup) {
             is SqlKeywordGroupBlock -> {
                 when {
-                    SqlKeywordUtil.isBeforeTableKeyword(lastGroup.node.text) ->
+                    SqlKeywordUtil.isBeforeTableKeyword(lastGroup.getNodeText()) ->
                         SqlTableBlock(
                             child,
                             wrap,

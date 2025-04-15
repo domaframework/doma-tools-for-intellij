@@ -16,13 +16,17 @@
 package org.domaframework.doma.intellij.formatter
 
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 
 open class SqlBlockBuilder {
     private val groupTopNodeIndexHistory = mutableListOf<Pair<Int, SqlBlock>>()
 
-    private val commentBlocks = mutableListOf<SqlBlock>()
+    private val commentBlocks = mutableListOf<SqlCommentBlock>()
+
+    private val conditionOrLoopBlocks = mutableListOf<SqlElConditionLoopCommentBlock>()
 
     fun getGroupTopNodeIndexHistory(): List<Pair<Int, SqlBlock>> = groupTopNodeIndexHistory
 
@@ -32,7 +36,7 @@ open class SqlBlockBuilder {
         groupTopNodeIndexHistory.add(block)
     }
 
-    fun addCommentBlock(block: SqlBlock) {
+    fun addCommentBlock(block: SqlCommentBlock) {
         commentBlocks.add(block)
     }
 
@@ -41,22 +45,27 @@ open class SqlBlockBuilder {
             var index = 0
             commentBlocks.forEach { block ->
                 if (block !is SqlElBlockCommentBlock) {
-                    val indentLen =
-                        if (index == 0 &&
-                            baseIndent.parentBlock is SqlSubGroupBlock &&
-                            baseIndent.parentBlock?.childBlocks?.size == 1
-                        ) {
-                            1
-                        } else {
-                            baseIndent.indent.indentLen
-                        }
-                    block.indent.indentLevel = IndentType.NONE
-                    block.indent.indentLen = indentLen
-                    block.indent.groupIndentLen = 0
+                    if (index == 0 &&
+                        baseIndent.parentBlock is SqlSubGroupBlock &&
+                        baseIndent.parentBlock?.childBlocks?.size == 1
+                    ) {
+                        block.indent.indentLevel = IndentType.NONE
+                        block.indent.indentLen = 1
+                        block.indent.groupIndentLen = 0
+                    } else {
+                        block.setParentGroupBlock(baseIndent)
+                    }
                     index++
                 }
             }
             commentBlocks.clear()
+        }
+        if (conditionOrLoopBlocks.isNotEmpty()) {
+            conditionOrLoopBlocks.forEach { block ->
+                if (block.parentBlock == null) {
+                    block.setParentGroupBlock(baseIndent)
+                }
+            }
         }
     }
 
@@ -76,8 +85,23 @@ open class SqlBlockBuilder {
             ).clear()
     }
 
-    fun getGroupTopNodeIndexByIndentType(indentType: IndentType): Int =
+    fun getGroupTopNodeIndex(condition: (SqlBlock) -> Boolean): Int =
         groupTopNodeIndexHistory.indexOfLast {
-            it.second.indent.indentLevel == indentType
+            condition(it.second)
         }
+
+    fun getConditionOrLoopBlocksLast(): SqlElConditionLoopCommentBlock? = conditionOrLoopBlocks.lastOrNull()
+
+    fun addConditionOrLoopBlock(block: SqlElConditionLoopCommentBlock) {
+        if (!block.conditionType.isInvalid() && !block.conditionType.isEnd()
+        ) {
+            conditionOrLoopBlocks.add(block)
+        }
+    }
+
+    fun removeConditionOrLoopBlockLast() {
+        if (conditionOrLoopBlocks.isNotEmpty()) {
+            conditionOrLoopBlocks.removeLast()
+        }
+    }
 }

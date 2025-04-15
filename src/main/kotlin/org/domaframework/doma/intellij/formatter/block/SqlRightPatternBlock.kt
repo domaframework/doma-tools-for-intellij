@@ -23,12 +23,14 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlUpdateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
-import org.domaframework.doma.intellij.psi.SqlTypes
 
 /**
  * Parent is always a subclass of a subgroup
@@ -48,21 +50,34 @@ open class SqlRightPatternBlock(
     var preSpaceRight = false
 
     fun enableLastRight() {
-        parentBlock?.let {
-            if (it.node.treePrev.elementType == SqlTypes.WORD) {
+        parentBlock?.let { parent ->
+            // TODO:Customize indentation
+            if (parent is SqlFunctionParamBlock) {
                 preSpaceRight = false
                 return
             }
-            if (it is SqlInsertColumnGroupBlock) {
+            if (parent is SqlInsertColumnGroupBlock) {
                 preSpaceRight = false
                 return
             }
-            it.parentBlock?.let {
+
+            if (parent is SqlSubQueryGroupBlock) {
+                val prevKeywordBlock =
+                    parent.childBlocks
+                        .filter { it.node.startOffset < node.startOffset }
+                        .find { it is SqlKeywordGroupBlock && it.indent.indentLevel == IndentType.TOP }
+                if (prevKeywordBlock != null) {
+                    preSpaceRight = true
+                    return
+                }
+            }
+
+            parent.parentBlock?.let { grand ->
                 preSpaceRight = (
-                    it.indent.indentLevel <= IndentType.SECOND &&
-                        it.parentBlock !is SqlInsertKeywordGroupBlock
+                    grand.indent.indentLevel <= IndentType.SECOND &&
+                        grand.parentBlock !is SqlInsertKeywordGroupBlock
                 ) ||
-                    it.indent.indentLevel == IndentType.JOIN
+                    grand.indent.indentLevel == IndentType.JOIN
                 return
             }
         }
@@ -81,6 +96,7 @@ open class SqlRightPatternBlock(
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
+        enableLastRight()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()

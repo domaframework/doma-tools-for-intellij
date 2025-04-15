@@ -55,7 +55,7 @@ open class SqlKeywordGroupBlock(
         indent.indentLevel = indentLevel
 
         val baseIndentLen = getBaseIndentLen(preChildBlock, block)
-        indent.groupIndentLen = baseIndentLen.plus(node.text.length)
+        indent.groupIndentLen = baseIndentLen.plus(getNodeText().length)
         indent.indentLen = adjustIndentIfFirstChildIsLineComment(baseIndentLen)
         createGroupIndentLen()
     }
@@ -69,13 +69,13 @@ open class SqlKeywordGroupBlock(
         }
         if (preChildBlock != null &&
             preChildBlock.indent.indentLevel == this.indent.indentLevel &&
-            !SqlKeywordUtil.isSetLineKeyword(preChildBlock.node.text, block.node.text)
+            !SqlKeywordUtil.isSetLineKeyword(preChildBlock.getNodeText(), block.getNodeText())
         ) {
             if (indent.indentLevel == IndentType.SECOND) {
-                val diffPreBlockTextLen = node.text.length.minus(preChildBlock.node.text.length)
+                val diffPreBlockTextLen = getNodeText().length.minus(preChildBlock.getNodeText().length)
                 return preChildBlock.indent.indentLen.minus(diffPreBlockTextLen)
             } else {
-                val diffPretextLen = node.text.length.minus(preChildBlock.node.text.length)
+                val diffPretextLen = getNodeText().length.minus(preChildBlock.getNodeText().length)
                 return preChildBlock.indent.indentLen.minus(diffPretextLen)
             }
         } else {
@@ -100,7 +100,7 @@ open class SqlKeywordGroupBlock(
             if (indent.indentLevel == IndentType.TOP) {
                 return if (it is SqlSubGroupBlock) {
                     return if (it.isFirstLineComment) {
-                        it.indent.groupIndentLen.minus(it.node.text.length)
+                        it.indent.groupIndentLen.minus(it.getNodeText().length)
                     } else {
                         val newIndentLen = baseIndent.minus(1)
                         return if (newIndentLen >= 0) newIndentLen else 0
@@ -135,37 +135,50 @@ open class SqlKeywordGroupBlock(
                     } else {
                         parent.parentBlock?.let { grand ->
                             return if (grand is SqlViewGroupBlock) {
-                                groupLen.minus(this.node.text.length)
+                                groupLen.minus(this.getNodeText().length)
                             } else if (grand is SqlSubGroupBlock) {
-                                groupLen.minus(node.text.length).plus(1)
+                                groupLen.minus(getNodeText().length).plus(1)
                             } else {
-                                groupLen.minus(this.node.text.length)
+                                groupLen.minus(this.getNodeText().length)
                             }
-                        } ?: return groupLen.minus(this.node.text.length)
+                        } ?: return groupLen.minus(this.getNodeText().length)
                     }
                 } ?: return 1
             }
 
             IndentType.SECOND_OPTION -> {
-                parentBlock?.let {
-                    val groupLen = it.indent.groupIndentLen.plus(1)
-                    if (it.indent.indentLevel == IndentType.FILE) {
+                parentBlock?.let { parent ->
+                    val groupLen = parent.indent.groupIndentLen
+                    if (parent.indent.indentLevel == IndentType.FILE) {
                         return 0
                     }
-                    val subGroupBlock = it.parentBlock as? SqlSubGroupBlock
+                    val subGroupBlock = parent.parentBlock as? SqlSubGroupBlock
                     val newIndent =
-                        if (it is SqlSubQueryGroupBlock) {
-                            groupLen
-                        } else if (it is SqlKeywordGroupBlock && subGroupBlock != null && subGroupBlock.isFirstLineComment) {
+                        if (parent is SqlSubQueryGroupBlock) {
+                            return if (getNodeText() == "and") {
+                                groupLen
+                            } else {
+                                groupLen.plus(1)
+                            }
+                        } else if (getNodeText() == "and" && parent.getNodeText() == "or") {
+                            return groupLen.plus(1)
+                        } else if (parent is SqlKeywordGroupBlock && subGroupBlock != null && subGroupBlock.isFirstLineComment) {
                             groupLen
                         } else {
                             var parentLen = 0
-                            val keywords = it.childBlocks.dropLast(1).takeWhile { it.node.elementType == SqlTypes.KEYWORD }
+                            val removeStartOffsetLess =
+                                parent.childBlocks.dropLast(1).filter {
+                                    it.node.startOffset >
+                                        parent.node.startOffset
+                                }
+                            val keywords =
+                                removeStartOffsetLess
+                                    .takeWhile { it.node.elementType == SqlTypes.KEYWORD }
                             keywords.forEach { keyword ->
-                                parentLen = parentLen.plus(keyword.node.text.length).plus(1)
+                                parentLen = parentLen.plus(keyword.getNodeText().length).plus(1)
                             }
-                            val parentTextLen = it.indent.groupIndentLen.plus(parentLen)
-                            return parentTextLen.minus(node.text.length)
+                            val parentTextLen = parent.indent.groupIndentLen.plus(parentLen)
+                            return parentTextLen.minus(getNodeText().length)
                         }
                     return newIndent
                 } ?: 1
@@ -190,11 +203,11 @@ open class SqlKeywordGroupBlock(
                 var parentLen = 0
                 val keywords = it.childBlocks.dropLast(1).filter { it.node.elementType == SqlTypes.KEYWORD }
                 keywords.forEach { keyword ->
-                    parentLen = parentLen.plus(keyword.node.text.length).plus(1)
+                    parentLen = parentLen.plus(keyword.getNodeText().length).plus(1)
                 }
                 it.indent.groupIndentLen
                     .plus(parentLen)
-                    .minus(node.text.length)
+                    .minus(getNodeText().length)
             }
         } ?: 1
         return 1

@@ -43,7 +43,7 @@ open class SqlCreateKeywordGroupBlock(
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.TOP
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
+        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()

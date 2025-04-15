@@ -40,7 +40,7 @@ open class SqlUpdateKeywordGroupBlock(
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.SECOND
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
+        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -52,8 +52,8 @@ open class SqlUpdateKeywordGroupBlock(
             if (it.indent.indentLevel == IndentType.SUB) {
                 it.indent.groupIndentLen.plus(1)
             } else {
-                val parentTextLen = it.node.text.length
-                val diffTextLen = parentTextLen.minus(node.text.length)
+                val parentTextLen = it.getNodeText().length
+                val diffTextLen = parentTextLen.minus(getNodeText().length)
                 it.indent.indentLen.plus(diffTextLen)
             }
         } ?: 0

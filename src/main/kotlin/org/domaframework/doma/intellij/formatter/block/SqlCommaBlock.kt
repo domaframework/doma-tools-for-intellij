@@ -54,7 +54,7 @@ open class SqlCommaBlock(
         super.setParentGroupBlock(block)
         indent.indentLevel = IndentType.COMMA
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(node.text.length)
+        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -85,7 +85,7 @@ open class SqlCommaBlock(
                     if (grand is SqlColumnGroupBlock) {
                         val grandIndentLen = grand.indent.groupIndentLen
                         var prevTextLen = 1
-                        parent.prevChildren?.dropLast(1)?.forEach { prev -> prevTextLen = prevTextLen.plus(prev.node.text.length) }
+                        parent.prevChildren?.dropLast(1)?.forEach { prev -> prevTextLen = prevTextLen.plus(prev.getNodeText().length) }
                         return grandIndentLen.plus(prevTextLen).plus(1)
                     }
                 }
@@ -97,7 +97,9 @@ open class SqlCommaBlock(
                     .forEach { prev ->
                         prevLen =
                             prevLen.plus(
-                                prev.node.text.length
+                                prev
+                                    .getNodeText()
+                                    .length
                                     .plus(1),
                             )
                     }

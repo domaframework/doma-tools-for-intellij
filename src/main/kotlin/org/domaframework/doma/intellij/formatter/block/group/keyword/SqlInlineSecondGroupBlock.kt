@@ -36,7 +36,7 @@ open class SqlInlineSecondGroupBlock(
         alignment,
         spacingBuilder,
     ) {
-    val isEndCase = node.text.lowercase() == "end"
+    val isEndCase = getNodeText().lowercase() == "end"
 
     override val indent =
         ElementIndent(
@@ -63,7 +63,7 @@ open class SqlInlineSecondGroupBlock(
                 it.indent.indentLen
             } else {
                 it.indent.groupIndentLen
-                    .plus(it.node.text.length)
+                    .plus(it.getNodeText().length)
             }
         } ?: 1
 }

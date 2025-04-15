@@ -58,10 +58,10 @@ class SqlUpdateColumnGroupBlock(
                 val keywords =
                     it.childBlocks.dropLast(1).takeWhile { it.node.elementType == SqlTypes.KEYWORD }
                 keywords.forEach { keyword ->
-                    parentLen = parentLen.plus(keyword.node.text.length).plus(1)
+                    parentLen = parentLen.plus(keyword.getNodeText().length).plus(1)
                 }
                 return it.indent.indentLen
-                    .plus(it.node.text.length)
+                    .plus(it.getNodeText().length)
                     .plus(1)
                     .plus(parentLen)
             }
@@ -77,11 +77,11 @@ class SqlUpdateColumnGroupBlock(
                 val keywords =
                     it.childBlocks.dropLast(1).takeWhile { it.node.elementType == SqlTypes.KEYWORD }
                 keywords.forEach { keyword ->
-                    parentLen = parentLen.plus(keyword.node.text.length).plus(1)
+                    parentLen = parentLen.plus(keyword.getNodeText().length).plus(1)
                 }
                 it.indent.groupIndentLen =
                     it.indent.indentLen
-                        .plus(it.node.text.length)
+                        .plus(it.getNodeText().length)
                         .plus(parentLen)
             }
         }

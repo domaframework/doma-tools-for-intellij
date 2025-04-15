@@ -23,16 +23,24 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
+import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
+import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElIfDirective
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElConditionLoopCommentBlock(
@@ -48,6 +56,38 @@ class SqlElConditionLoopCommentBlock(
         customSpacingBuilder,
         spacingBuilder,
     ) {
+    enum class SqlConditionLoopCommentBlockType {
+        CONDITION,
+        LOOP,
+        END,
+        UNKNOWN,
+        ;
+
+        fun isEnd(): Boolean = this == END
+
+        fun isInvalid(): Boolean = this == UNKNOWN
+    }
+
+    val conditionType: SqlConditionLoopCommentBlockType = initConditionOrLoopType(node)
+
+    private fun initConditionOrLoopType(node: ASTNode): SqlConditionLoopCommentBlockType {
+        val psi = node.psi
+        if (psi is SqlCustomElCommentExpr && psi.isConditionOrLoopDirective()) {
+            if (PsiTreeUtil.getChildOfType(psi, SqlElForDirective::class.java) != null) {
+                return SqlConditionLoopCommentBlockType.LOOP
+            }
+            if (PsiTreeUtil.getChildOfType(psi, SqlElIfDirective::class.java) != null ||
+                psi.findElementAt(2)?.elementType == SqlTypes.EL_ELSE
+            ) {
+                return SqlConditionLoopCommentBlockType.CONDITION
+            }
+            if (psi.findElementAt(2)?.elementType == SqlTypes.EL_END) {
+                return SqlConditionLoopCommentBlockType.END
+            }
+        }
+        return SqlConditionLoopCommentBlockType.UNKNOWN
+    }
+
     override val indent =
         ElementIndent(
             IndentType.NONE,
@@ -169,39 +209,38 @@ class SqlElConditionLoopCommentBlock(
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            if (parent is SqlSubGroupBlock) {
-                val parentIndentLen = parent.indent.groupIndentLen
-                val grand = parent.parentBlock
-                grand?.let { grand ->
-                    if (grand is SqlCreateKeywordGroupBlock) {
-                        val grandIndentLen = grand.indent.groupIndentLen
-                        return grandIndentLen.plus(parentIndentLen).minus(1)
+            when (parent) {
+                is SqlSubGroupBlock -> {
+                    val parentGroupIndentLen = parent.indent.groupIndentLen
+                    val grand = parent.parentBlock
+                    grand?.let { grand ->
+                        if (grand is SqlCreateKeywordGroupBlock) {
+                            val grandIndentLen = grand.indent.groupIndentLen
+                            return grandIndentLen.plus(parentGroupIndentLen).minus(1)
+                        }
+                        if (grand is SqlInsertKeywordGroupBlock) {
+                            return parentGroupIndentLen
+                        }
+                        if (grand is SqlColumnGroupBlock) {
+                            val grandIndentLen = grand.indent.groupIndentLen
+                            var prevTextLen = 1
+                            parent.prevChildren?.dropLast(1)?.forEach { prev ->
+                                prevTextLen = prevTextLen.plus(prev.getNodeText().length)
+                            }
+                            return grandIndentLen.plus(prevTextLen).plus(1)
+                        }
                     }
-                    if (grand is SqlInsertKeywordGroupBlock) {
-                        return parentIndentLen
-                    }
-                    if (grand is SqlColumnGroupBlock) {
-                        val grandIndentLen = grand.indent.groupIndentLen
-                        var prevTextLen = 1
-                        parent.prevChildren?.dropLast(1)?.forEach { prev -> prevTextLen = prevTextLen.plus(prev.node.text.length) }
-                        return grandIndentLen.plus(prevTextLen).plus(1)
-                    }
+                    return parentGroupIndentLen
                 }
-                return parentIndentLen
-            } else {
-                var prevLen = 0
-                parent.childBlocks
-                    .filter { it.node.elementType == SqlTypes.KEYWORD }
-                    .forEach { prev ->
-                        prevLen =
-                            prevLen.plus(
-                                prev.node.text.length
-                                    .plus(1),
-                            )
-                    }
-                return parent.indent.groupIndentLen
-                    .plus(prevLen)
-                    .plus(1)
+
+                is SqlKeywordGroupBlock, is SqlCommaBlock -> {
+                    return parent.indent.indentLen
+                }
+
+                // Parent of End Block is SqlElConditionLoopCommentBlock
+                is SqlElConditionLoopCommentBlock -> {
+                    return parent.indent.indentLen
+                }
             }
         }
         return 1
