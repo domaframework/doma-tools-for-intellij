@@ -62,7 +62,6 @@ open class SqlBlockBuilder {
         }
         if (conditionOrLoopBlocks.isNotEmpty()) {
             conditionOrLoopBlocks.forEach { block ->
-                println("Update ParentGroup:${block.getNodeText()}")
                 if (block.parentBlock == null) {
                     block.setParentGroupBlock(baseIndent)
                 }

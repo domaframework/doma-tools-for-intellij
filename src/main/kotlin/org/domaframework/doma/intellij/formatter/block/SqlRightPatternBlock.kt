@@ -23,12 +23,14 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlUpdateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
-import org.domaframework.doma.intellij.psi.SqlTypes
 
 /**
  * Parent is always a subclass of a subgroup
@@ -49,8 +51,8 @@ open class SqlRightPatternBlock(
 
     fun enableLastRight() {
         parentBlock?.let { parent ->
-
-            if (parent.node.treePrev.elementType == SqlTypes.WORD) {
+            // TODO:Customize indentation
+            if (parent is SqlFunctionParamBlock) {
                 preSpaceRight = false
                 return
             }
@@ -58,6 +60,18 @@ open class SqlRightPatternBlock(
                 preSpaceRight = false
                 return
             }
+
+            if (parent is SqlSubQueryGroupBlock) {
+                val prevKeywordBlock =
+                    parent.childBlocks
+                        .filter { it.node.startOffset < node.startOffset }
+                        .find { it is SqlKeywordGroupBlock && it.indent.indentLevel == IndentType.TOP }
+                if (prevKeywordBlock != null) {
+                    preSpaceRight = true
+                    return
+                }
+            }
+
             parent.parentBlock?.let { grand ->
                 preSpaceRight = (
                     grand.indent.indentLevel <= IndentType.SECOND &&

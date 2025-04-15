@@ -100,7 +100,6 @@ class SqlElConditionLoopCommentBlock(
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = 0
-        println("setParentGroupBlock:${block?.getNodeText()}")
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> {

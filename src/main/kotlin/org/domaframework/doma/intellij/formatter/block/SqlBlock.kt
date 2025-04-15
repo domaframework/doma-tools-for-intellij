@@ -637,7 +637,7 @@ open class SqlBlock(
         }
 
         // Do not leave a space after the comment block of the bind variable
-        if (child1 is SqlElBlockCommentBlock && child2 !is SqlCommentBlock) {
+        if (child1 is SqlElBlockCommentBlock && child1 !is SqlElConditionLoopCommentBlock && child2 !is SqlCommentBlock) {
             return SqlCustomSpacingBuilder.nonSpacing
         }
 

@@ -78,6 +78,8 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
             .spacing(0, 0, 0, false, 0)
             .around(SqlTypes.WORD)
             .spacing(1, 1, 0, false, 0)
+            .around(SqlTypes.NUMBER)
+            .spacing(1, 1, 0, false, 0)
             .before(SqlTypes.RIGHT_PAREN)
             .spacing(0, 0, 0, false, 0)
             .around(SqlTypes.PLUS)

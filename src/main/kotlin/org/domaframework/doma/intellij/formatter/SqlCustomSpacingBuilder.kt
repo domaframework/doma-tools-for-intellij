@@ -21,6 +21,7 @@ import com.intellij.formatting.Spacing
 import com.intellij.psi.tree.IElementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlColumnBlock
+import org.domaframework.doma.intellij.formatter.block.SqlOtherBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
@@ -30,6 +31,7 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTyp
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlCustomSpacingBuilder {
     companion object {
@@ -147,4 +149,11 @@ class SqlCustomSpacingBuilder {
             else -> nonSpacing
         }
     }
+
+    fun getSpacingOther(block: SqlOtherBlock): Spacing? =
+        when {
+            listOf("=", "-", "+", "*", "/", "%").contains(block.getNodeText()) -> normalSpacing
+            listOf(SqlTypes.LE, SqlTypes.GE, SqlTypes.LT, SqlTypes.GT).contains(block.node.elementType) -> normalSpacing
+            else -> nonSpacing
+        }
 }
