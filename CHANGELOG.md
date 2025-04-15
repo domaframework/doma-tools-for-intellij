@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-04-15
+
+### Bug Fixes
+
+- Fix:sql formatter second option indent ([#102])
+- Update changelog command and fix tag sorting in build.gradle.kts ([#104])
+- Update changelog and improve version handling ([#103])
+
+[#102]:https://github.com/domaframework/doma-tools-for-intellij/pull/102
+[#104]:https://github.com/domaframework/doma-tools-for-intellij/pull/104
+[#103]:https://github.com/domaframework/doma-tools-for-intellij/pull/103
+
+
 ## [0.5.0] - 2025-04-14
 
 ### New Features
@@ -187,3 +200,4 @@
 [0.3.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.1...0.3.2
 [0.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.2...0.4.0
 [0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.4.0...0.5.0
+[0.5.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.5.0...0.5.1
