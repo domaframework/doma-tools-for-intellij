@@ -278,7 +278,7 @@ tasks.register("updateChangelog") {
                 .trim()
         }
 
-        val tagsOutput = runCommand("git tag --sort=-v:creatordate")
+        val tagsOutput = runCommand("git tag --sort=-creatordate")
         val semverRegex = Regex("^\\d+\\.\\d+\\.\\d+$")
         val tags = tagsOutput.lines().filter { semverRegex.matches(it) }
         if (tags.isEmpty()) {
@@ -419,13 +419,14 @@ tasks.register("updateChangelog") {
 
         // Update Version Gradle pluginVersion
         replaceVersionGradleProperty(newVersion)
+        println("Update Gradle Property: $newVersion")
 
         val githubEnv = System.getenv("GITHUB_ENV")
         val envFile = File(githubEnv)
         envFile.appendText("NEW_VERSION=$newVersion\n")
         envFile.appendText("BRANCH=doc/changelog-update-$newVersion\n")
 
-        println("Update CHANGELOG.md :newVersion $newVersion")
+        println("Update newVersion: $newVersion")
     }
 }
 
