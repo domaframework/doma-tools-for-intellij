@@ -2,7 +2,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.gradle.internal.classpath.Instrumented.systemProperty
-import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import java.net.URL
@@ -98,7 +97,7 @@ dependencies {
 
 intellijPlatform {
     pluginConfiguration {
-        version = providers.gradleProperty("pluginVersion").map { it.substringBefore('-', "") }
+        version = providers.gradleProperty("pluginVersion")
         description =
             providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
                 val start = "<!-- Plugin description -->"
@@ -108,25 +107,11 @@ intellijPlatform {
                     if (!containsAll(listOf(start, end))) {
                         throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
                     }
-                    subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
+                    subList(indexOf(start) + 1, indexOf(end))
+                        .joinToString("\n")
+                        .let(::markdownToHTML)
                 }
             }
-
-        val changelog = project.changelog
-        changeNotes =
-            providers
-                .gradleProperty("pluginVersion")
-                .map { it.substringBefore('-', "") }
-                .map { pluginVersion ->
-                    with(changelog) {
-                        renderItem(
-                            (getOrNull(pluginVersion) ?: getUnreleased())
-                                .withHeader(false)
-                                .withEmptySections(false),
-                            Changelog.OutputType.HTML,
-                        )
-                    }
-                }
 
         ideaVersion {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
@@ -141,12 +126,11 @@ intellijPlatform {
     }
 
     publishing {
-        // TODO: During release, refrain from reformatting the version number.
-        //  Instead, set the release version before tagging to allow releases to any chosen channel.
         token = providers.environmentVariable("PUBLISH_TOKEN")
-        version =
-            providers.gradleProperty("pluginVersion").map { it.substringBefore('-', "") }
-        channels = listOf("default")
+        channels =
+            providers
+                .gradleProperty("pluginVersion")
+                .map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
     }
 
     pluginVerification {
@@ -294,7 +278,7 @@ tasks.register("updateChangelog") {
                 .trim()
         }
 
-        val tagsOutput = runCommand("git tag --sort=-v:refname")
+        val tagsOutput = runCommand("git tag --sort=-v:creatordate")
         val semverRegex = Regex("^\\d+\\.\\d+\\.\\d+$")
         val tags = tagsOutput.lines().filter { semverRegex.matches(it) }
         if (tags.isEmpty()) {
@@ -432,6 +416,9 @@ tasks.register("updateChangelog") {
         val repoUrl = "https://github.com/domaframework/doma-tools-for-intellij"
         changelogFile.writeText(updatedContent)
         changelogFile.appendText("[$newVersion]: $repoUrl/compare/$lastTag...$newVersion\n")
+
+        // Update Version Gradle pluginVersion
+        replaceVersionGradleProperty(newVersion)
 
         val githubEnv = System.getenv("GITHUB_ENV")
         val envFile = File(githubEnv)
