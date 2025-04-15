@@ -278,7 +278,7 @@ tasks.register("updateChangelog") {
                 .trim()
         }
 
-        val tagsOutput = runCommand("git tag --sort=-v:creatordate")
+        val tagsOutput = runCommand("git tag --sort=-creatordate")
         val semverRegex = Regex("^\\d+\\.\\d+\\.\\d+$")
         val tags = tagsOutput.lines().filter { semverRegex.matches(it) }
         if (tags.isEmpty()) {

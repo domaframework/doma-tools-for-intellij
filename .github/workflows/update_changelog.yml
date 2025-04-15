@@ -59,7 +59,7 @@ jobs:
       - name: Run Gradle updateChangelog
         id: updateChangelog
         run: |
-          ./gradlew updateChangelog -PreleaseDate=$(date +'%Y-%m-%d')
+          ./gradlew updateChangelog -PreleaseDate=$(date +'%Y-%m-%d') --no-configuration-cache
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
