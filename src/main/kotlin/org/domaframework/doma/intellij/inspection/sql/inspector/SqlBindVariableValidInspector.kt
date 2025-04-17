@@ -158,7 +158,7 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
 
             override fun visitElPrimaryExpr(element: SqlElPrimaryExpr) {
                 super.visitElPrimaryExpr(element)
-                if (!element.isFirstElement()) return
+                if (!element.isFirstElement() || element.prevSibling?.elementType == SqlTypes.AT_SIGN) return
                 val file = element.containingFile ?: return
                 val project = element.project
 
