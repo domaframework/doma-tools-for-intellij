@@ -22,6 +22,8 @@ import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.PsiType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
+import com.intellij.psi.util.elementType
+import com.intellij.psi.util.nextLeafs
 import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.isSupportFileType
@@ -29,17 +31,27 @@ import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
+import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.getIterableClazz
 import org.domaframework.doma.intellij.extension.psi.methodParameters
+import org.domaframework.doma.intellij.inspection.sql.inspector.SqlBindVariableValidInspector.BlockType
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
+import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlReference(
     element: PsiElement,
 ) : PsiReferenceBase<PsiElement>(element) {
     val file: PsiFile? = element.containingFile
+
+    data class ForIfDirectiveBlock(
+        val type: BlockType,
+        val element: PsiElement,
+    )
 
     override fun resolve(): PsiElement? {
         if (file == null || !isSupportFileType(file)) return null
@@ -53,6 +65,18 @@ class SqlReference(
 
         val targetElement = getBlockCommentElements(element)
         if (targetElement.isEmpty()) return null
+
+        val topElm = targetElement.firstOrNull() as SqlElPrimaryExpr
+        findInForDirectiveBlock(topElm)
+            ?.let {
+                PluginLoggerUtil.countLogging(
+                    this::class.java.simpleName,
+                    "ReferenceForDirective",
+                    "Reference",
+                    startTime,
+                )
+                return it
+            }
 
         val daoMethod = findDaoMethod(file) ?: return null
 
@@ -94,7 +118,8 @@ class SqlReference(
         }
 
         // Jump from field or method to definition (assuming the top element is static)
-        val staticAccessParent = PsiTreeUtil.getParentOfType(staticDirection, SqlElStaticFieldAccessExpr::class.java)
+        val staticAccessParent =
+            PsiTreeUtil.getParentOfType(staticDirection, SqlElStaticFieldAccessExpr::class.java)
         if (staticAccessParent != null) {
             val firstChildText =
                 staticAccessParent.children
@@ -233,5 +258,59 @@ class SqlReference(
             if (!isExistProperty) return null
         }
         return null
+    }
+
+    private fun findInForDirectiveBlock(targetElement: PsiElement): PsiElement? {
+        val forBlocks = getForDirectiveBlock(targetElement)
+        val targetName =
+            targetElement.text
+                .replace("_has_next", "")
+                .replace("_index", "")
+        val matchForDirectiveItem = forBlocks.lastOrNull { it.element.text == targetName }
+        if (matchForDirectiveItem != null) {
+            return matchForDirectiveItem.element
+        }
+        return null
+    }
+
+    private fun getForDirectiveBlock(targetElement: PsiElement): List<ForIfDirectiveBlock> {
+        val topElm = targetElement.containingFile.firstChild ?: return emptyList()
+        val directiveBlocks =
+            topElm.nextLeafs
+                .filter { elm ->
+                    elm.elementType == SqlTypes.EL_FOR ||
+                        elm.elementType == SqlTypes.EL_IF ||
+                        elm.elementType == SqlTypes.EL_END
+                }.map {
+                    when (it.elementType) {
+                        SqlTypes.EL_FOR -> {
+                            (it.parent as? SqlElForDirective)
+                                ?.getForItem()
+                                ?.let { item ->
+                                    ForIfDirectiveBlock(
+                                        BlockType.FOR,
+                                        item,
+                                    )
+                                } ?: ForIfDirectiveBlock(
+                                BlockType.FOR,
+                                it,
+                            )
+                        }
+
+                        SqlTypes.EL_IF -> ForIfDirectiveBlock(BlockType.IF, it)
+                        else -> ForIfDirectiveBlock(BlockType.END, it)
+                    }
+                }
+        val preBlocks =
+            directiveBlocks
+                .filter { it.element.textOffset <= targetElement.textOffset }
+        val stack = mutableListOf<ForIfDirectiveBlock>()
+        preBlocks.forEach { block ->
+            when (block.type) {
+                BlockType.FOR, BlockType.IF -> stack.add(block)
+                BlockType.END -> if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
+            }
+        }
+        return stack.filter { it.type == BlockType.FOR }
     }
 }
