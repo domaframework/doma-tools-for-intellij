@@ -41,9 +41,9 @@ import org.domaframework.doma.intellij.extension.psi.getIterableClazz
 import org.domaframework.doma.intellij.extension.psi.isNotWhiteSpace
 import org.domaframework.doma.intellij.extension.psi.methodParameters
 import org.domaframework.doma.intellij.psi.SqlElClass
-import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
+import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
-import org.domaframework.doma.intellij.psi.SqlTypes
 
 /**
  * Action to jump from SQL bind variable to Dao method argument and Entity class
@@ -80,8 +80,7 @@ class JumpToDeclarationFromSqlAction : AnAction() {
 
         val elm = element ?: return
         val elementText = elm.text ?: ""
-        val staticDirection = elm.parent
-        val staticDirective = getStaticDirective(staticDirection, elementText)
+        val staticDirective = getStaticDirective(elm, elementText)
         if (staticDirective != null) {
             e.presentation.isEnabledAndVisible = true
             return
@@ -124,8 +123,7 @@ class JumpToDeclarationFromSqlAction : AnAction() {
         val file = currentFile ?: return
 
         val startTime = System.nanoTime()
-        val staticDirection = elm.parent
-        val staticDirective = getStaticDirective(staticDirection, elementText)
+        val staticDirective = getStaticDirective(elm, elementText)
         if (staticDirective != null) {
             BindVariableElement(staticDirective).jumpToEntity()
             PluginLoggerUtil.countLoggingByAction(
@@ -166,16 +164,15 @@ class JumpToDeclarationFromSqlAction : AnAction() {
         if (staticDirection == null) return null
         val file: PsiFile = currentFile ?: return null
         // Jump to class definition
-        if (staticDirection is SqlElClass) {
+        val classParent = PsiTreeUtil.getParentOfType(staticDirection, SqlElClass::class.java)
+        if (classParent != null) {
             val psiStaticElement = PsiStaticElement(staticDirection.text, file)
             return psiStaticElement.getRefClazz()
         }
 
         // Jump from field or method to definition (assuming the top element is static)
-        val staticAccessParent = staticDirection.parent
-        if (staticDirection is SqlElStaticFieldAccessExpr ||
-            staticAccessParent is SqlElStaticFieldAccessExpr
-        ) {
+        val staticAccessParent = PsiTreeUtil.getParentOfType(staticDirection, SqlElStaticFieldAccessExpr::class.java)
+        if (staticAccessParent != null) {
             val firstChildText =
                 staticAccessParent.children
                     .firstOrNull()
@@ -204,8 +201,7 @@ class JumpToDeclarationFromSqlAction : AnAction() {
     private fun isNotBindVariable(it: PsiElement) =
         (
             it.parent?.elementType is IFileElementType &&
-                it.elementType != SqlTypes.EL_IDENTIFIER &&
-                it !is SqlElPrimaryExpr &&
+                it !is SqlElIdExpr &&
                 !it.isNotWhiteSpace()
         )
 
@@ -258,18 +254,20 @@ class JumpToDeclarationFromSqlAction : AnAction() {
     }
 
     private fun getBlockCommentElements(element: PsiElement): List<PsiElement> {
+        val fieldAccessExpr = PsiTreeUtil.getParentOfType(element, SqlElFieldAccessExpr::class.java)
         val nodeElm =
-            PsiTreeUtil
-                .getChildrenOfType(element.parent, PsiElement::class.java)
-                ?.filter {
-                    (
-                        it.elementType == SqlTypes.EL_IDENTIFIER ||
-                            it is SqlElPrimaryExpr
-                    ) &&
-                        it.textOffset <= element.textOffset
-                }?.toList()
-                ?.sortedBy { it.textOffset } ?: emptyList()
+            if (fieldAccessExpr != null) {
+                PsiTreeUtil
+                    .getChildrenOfType(
+                        fieldAccessExpr,
+                        SqlElIdExpr::class.java,
+                    )?.filter { it.textOffset <= element.textOffset }
+            } else {
+                listOf(element)
+            }
         return nodeElm
+            ?.toList()
+            ?.sortedBy { it.textOffset } ?: emptyList()
     }
 
     /**

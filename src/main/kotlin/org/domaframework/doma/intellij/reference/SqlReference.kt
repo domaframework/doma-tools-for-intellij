@@ -39,7 +39,6 @@ import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
-import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
@@ -66,7 +65,7 @@ class SqlReference(
         val targetElement = getBlockCommentElements(element)
         if (targetElement.isEmpty()) return null
 
-        val topElm = targetElement.firstOrNull() as SqlElPrimaryExpr
+        val topElm = targetElement.firstOrNull() as? PsiElement ?: return null
         findInForDirectiveBlock(topElm)
             ?.let {
                 PluginLoggerUtil.countLogging(
@@ -104,9 +103,8 @@ class SqlReference(
         if (staticDirection == null) return null
         val file: PsiFile = file ?: return null
         // Jump to class definition
-        if (staticDirection is SqlElClass ||
-            staticDirection.parent is SqlElClass
-        ) {
+        val classParent = PsiTreeUtil.getParentOfType(staticDirection, SqlElClass::class.java)
+        if (classParent != null) {
             val psiStaticElement = PsiStaticElement(staticDirection.text, file)
             PluginLoggerUtil.countLogging(
                 this::class.java.simpleName,
@@ -155,11 +153,12 @@ class SqlReference(
     }
 
     private fun getBlockCommentElements(element: PsiElement): List<PsiElement> {
+        val fieldAccessExpr = PsiTreeUtil.getParentOfType(element, SqlElFieldAccessExpr::class.java)
         val nodeElm =
-            if (element.parent is SqlElFieldAccessExpr) {
+            if (fieldAccessExpr != null) {
                 PsiTreeUtil
                     .getChildrenOfType(
-                        element.parent,
+                        fieldAccessExpr,
                         SqlElIdExpr::class.java,
                     )?.filter { it.textOffset <= element.textOffset }
             } else {
