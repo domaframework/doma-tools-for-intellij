@@ -33,10 +33,6 @@ import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 class SqlElStaticFieldReference(
     element: PsiElement,
 ) : PsiReferenceBase<PsiElement>(element) {
-    init {
-        println("SqlElStaticFieldReference initialized with element:  ${element.text}")
-    }
-
     private val cachedResolve: CachedValue<PsiElement?> by lazy {
         CachedValuesManager.getManager(element.project).createCachedValue {
             val result = doResolve()

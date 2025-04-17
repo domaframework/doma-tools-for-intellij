@@ -45,10 +45,6 @@ import org.domaframework.doma.intellij.psi.SqlTypes
 class SqlElIdExprReference(
     element: PsiElement,
 ) : PsiReferenceBase<PsiElement>(element) {
-    init {
-        println("SqlElIdExprReference initialized with element: ${element.text}")
-    }
-
     private val cachedResolve: CachedValue<PsiElement?> by lazy {
         CachedValuesManager.getManager(element.project).createCachedValue {
             val result = doResolve()
@@ -79,6 +75,9 @@ class SqlElIdExprReference(
         if (targetElement.isEmpty()) return null
 
         val topElm = targetElement.firstOrNull() as? PsiElement ?: return null
+
+        if (topElm.prevSibling.elementType == SqlTypes.AT_SIGN) return null
+
         findInForDirectiveBlock(topElm)
             ?.let {
                 PluginLoggerUtil.countLogging(

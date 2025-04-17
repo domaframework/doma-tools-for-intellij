@@ -29,10 +29,6 @@ import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 class SqlElClassExprReference(
     element: PsiElement,
 ) : PsiReferenceBase<PsiElement>(element) {
-    init {
-        println("SqlElClassExprReference initialized with element:  ${element.text}")
-    }
-
     private val cachedResolve: CachedValue<PsiElement?> by lazy {
         CachedValuesManager.getManager(element.project).createCachedValue {
             val result = doResolve()
