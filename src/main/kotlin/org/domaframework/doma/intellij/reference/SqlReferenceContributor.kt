@@ -16,14 +16,19 @@
 package org.domaframework.doma.intellij.reference
 
 import com.intellij.patterns.PlatformPatterns
+import com.intellij.patterns.StandardPatterns
 import com.intellij.psi.PsiReferenceContributor
 import com.intellij.psi.PsiReferenceRegistrar
-import org.domaframework.doma.intellij.psi.SqlCustomElExpr
+import org.domaframework.doma.intellij.psi.SqlElClass
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
 
 class SqlReferenceContributor : PsiReferenceContributor() {
     override fun registerReferenceProviders(registrar: PsiReferenceRegistrar) {
         registrar.registerReferenceProvider(
-            PlatformPatterns.psiElement(SqlCustomElExpr::class.java),
+            StandardPatterns.or(
+                PlatformPatterns.psiElement(SqlElIdExpr::class.java),
+                PlatformPatterns.psiElement(SqlElClass::class.java),
+            ),
             SqlPsiReferenceProvider(),
         )
     }

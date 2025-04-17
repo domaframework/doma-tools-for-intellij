@@ -22,7 +22,6 @@ import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.PsiType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
-import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.isSupportFileType
@@ -33,9 +32,9 @@ import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getIterableClazz
 import org.domaframework.doma.intellij.extension.psi.methodParameters
 import org.domaframework.doma.intellij.psi.SqlElClass
-import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
+import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
-import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlReference(
     element: PsiElement,
@@ -44,17 +43,11 @@ class SqlReference(
 
     override fun resolve(): PsiElement? {
         if (file == null || !isSupportFileType(file)) return null
+        val startTime = System.nanoTime()
         val variableName = element.text
 
-        val startTime = System.nanoTime()
-        val staticDirective = getStaticDirective(element, variableName)
+        val staticDirective = getStaticDirective(element, variableName, startTime)
         if (staticDirective != null) {
-            PluginLoggerUtil.countLogging(
-                this::class.java.simpleName,
-                "ReferenceToStatic",
-                "Reference",
-                startTime,
-            )
             return staticDirective
         }
 
@@ -65,14 +58,15 @@ class SqlReference(
 
         return when (element.textOffset) {
             targetElement.first().textOffset ->
-                jumpToDaoMethodParameter(
+                getReferenceDaoMethodParameter(
                     daoMethod,
                     element,
                     startTime,
                 )
 
-            else -> jumpToEntity(daoMethod, targetElement, startTime)
+            else -> getReferenceEntity(daoMethod, targetElement, startTime)
         }
+
         return null
     }
 
@@ -81,6 +75,7 @@ class SqlReference(
     private fun getStaticDirective(
         staticDirection: PsiElement?,
         elementName: String,
+        startTime: Long,
     ): PsiElement? {
         if (staticDirection == null) return null
         val file: PsiFile = file ?: return null
@@ -89,14 +84,18 @@ class SqlReference(
             staticDirection.parent is SqlElClass
         ) {
             val psiStaticElement = PsiStaticElement(staticDirection.text, file)
+            PluginLoggerUtil.countLogging(
+                this::class.java.simpleName,
+                "ReferenceStaticClass",
+                "Reference",
+                startTime,
+            )
             return psiStaticElement.getRefClazz()
         }
 
         // Jump from field or method to definition (assuming the top element is static)
-        val staticAccessParent = staticDirection.parent
-        if (staticDirection is SqlElStaticFieldAccessExpr ||
-            staticAccessParent is SqlElStaticFieldAccessExpr
-        ) {
+        val staticAccessParent = PsiTreeUtil.getParentOfType(staticDirection, SqlElStaticFieldAccessExpr::class.java)
+        if (staticAccessParent != null) {
             val firstChildText =
                 staticAccessParent.children
                     .firstOrNull()
@@ -109,9 +108,21 @@ class SqlReference(
             val javaClazz = psiStaticElement.getRefClazz() ?: return null
             val psiParentClass = PsiParentClass(PsiTypesUtil.getClassType(javaClazz))
             psiParentClass.findField(elementName)?.let {
+                PluginLoggerUtil.countLogging(
+                    this::class.java.simpleName,
+                    "ReferenceStaticField",
+                    "Reference",
+                    startTime,
+                )
                 return it
             }
             psiParentClass.findMethod(elementName)?.let {
+                PluginLoggerUtil.countLogging(
+                    this::class.java.simpleName,
+                    "ReferenceStaticMethod",
+                    "Reference",
+                    startTime,
+                )
                 return it
             }
         }
@@ -120,20 +131,21 @@ class SqlReference(
 
     private fun getBlockCommentElements(element: PsiElement): List<PsiElement> {
         val nodeElm =
-            PsiTreeUtil
-                .getChildrenOfType(element.parent, PsiElement::class.java)
-                ?.filter {
-                    (
-                        it.elementType == SqlTypes.EL_IDENTIFIER ||
-                            it is SqlElPrimaryExpr
-                    ) &&
-                        it.textOffset <= element.textOffset
-                }?.toList()
-                ?.sortedBy { it.textOffset } ?: emptyList()
+            if (element.parent is SqlElFieldAccessExpr) {
+                PsiTreeUtil
+                    .getChildrenOfType(
+                        element.parent,
+                        SqlElIdExpr::class.java,
+                    )?.filter { it.textOffset <= element.textOffset }
+            } else {
+                listOf(element)
+            }
         return nodeElm
+            ?.toList()
+            ?.sortedBy { it.textOffset } ?: emptyList()
     }
 
-    private fun jumpToDaoMethodParameter(
+    private fun getReferenceDaoMethodParameter(
         daoMethod: PsiMethod,
         it: PsiElement,
         startTime: Long,
@@ -147,7 +159,7 @@ class SqlReference(
             ?.let { originalElm ->
                 PluginLoggerUtil.countLogging(
                     this::class.java.simpleName,
-                    "ReferenceToDaoMethodParameter",
+                    "ReferenceDaoMethodParameter",
                     "Reference",
                     startTime,
                 )
@@ -155,7 +167,7 @@ class SqlReference(
             } ?: return null
     }
 
-    private fun jumpToEntity(
+    private fun getReferenceEntity(
         daoMethod: PsiMethod,
         targetElement: List<PsiElement>,
         startTime: Long,
@@ -170,7 +182,7 @@ class SqlReference(
 
         PluginLoggerUtil.countLogging(
             this::class.java.simpleName,
-            "ReferenceToBindVariable",
+            "ReferenceEntityProperty",
             "Reference",
             startTime,
         )
@@ -206,17 +218,17 @@ class SqlReference(
             parentClass
                 .findField(elm.text)
                 ?.let {
-                    val bindVal = getBindVariableIfLastIndex(index, it.type, it.originalElement)
-                    if (bindVal != null) return bindVal
+                    val reference = getBindVariableIfLastIndex(index, it.type, it.originalElement)
+                    if (reference != null) return reference
                 }
             if (isExistProperty) continue
             parentClass
                 .findMethod(elm.text)
                 ?.let {
                     val returnType = it.returnType ?: return null
-                    val bindVal =
+                    val reference =
                         getBindVariableIfLastIndex(index, returnType, it.originalElement)
-                    if (bindVal != null) return bindVal
+                    if (reference != null) return reference
                 }
             if (!isExistProperty) return null
         }

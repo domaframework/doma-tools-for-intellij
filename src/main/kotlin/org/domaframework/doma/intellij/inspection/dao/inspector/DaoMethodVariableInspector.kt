@@ -27,6 +27,8 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.impl.source.PsiParameterImpl
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
@@ -36,7 +38,8 @@ import org.domaframework.doma.intellij.extension.psi.isCollector
 import org.domaframework.doma.intellij.extension.psi.isFunctionClazz
 import org.domaframework.doma.intellij.extension.psi.isSelectOption
 import org.domaframework.doma.intellij.extension.psi.methodParameters
-import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
+import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 /**
  * Check if Dao method arguments are used in the corresponding SQL file
@@ -94,11 +97,16 @@ class DaoMethodVariableInspector : AbstractBaseJavaLocalInspectionTool() {
             object : PsiRecursiveElementVisitor() {
                 // Recursively explore child elements in a file with PsiRecursiveElementVisitor.
                 override fun visitElement(element: PsiElement) {
-                    if (element is SqlElPrimaryExpr) {
+                    if (element.elementType == SqlTypes.EL_IDENTIFIER && element.prevSibling?.elementType != SqlTypes.DOT) {
                         iterator = args.minus(elements.toSet()).iterator()
                         while (iterator.hasNext()) {
                             val arg = iterator.next()
-                            if (element.text == arg.name) {
+                            val fieldAccessExpr =
+                                PsiTreeUtil.getParentOfType(
+                                    element,
+                                    SqlElStaticFieldAccessExpr::class.java,
+                                )
+                            if (fieldAccessExpr == null && element.text == arg.name) {
                                 elements.add(arg)
                                 break
                             }

@@ -47,6 +47,7 @@ import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.getIterableClazz
 import org.domaframework.doma.intellij.extension.psi.getMethodReturnType
+import org.domaframework.doma.intellij.extension.psi.isFirstElement
 import org.domaframework.doma.intellij.extension.psi.methodParameters
 import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
@@ -157,18 +158,18 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
 
             override fun visitElPrimaryExpr(element: SqlElPrimaryExpr) {
                 super.visitElPrimaryExpr(element)
+                if (!element.isFirstElement()) return
                 val file = element.containingFile ?: return
                 val project = element.project
 
                 // Exclude fixed Literal
                 if (isLiteralOrStatic(element)) return
 
+                if (PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java) != null) return
+
                 // For static property references, match against properties in the class definition
-                if (element.parent is SqlElStaticFieldAccessExpr) {
-                    checkStaticFieldAndMethodAccess(
-                        element.parent as SqlElStaticFieldAccessExpr,
-                        holder,
-                    )
+                val parentStaticFieldAccessExpr = PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java)
+                if (parentStaticFieldAccessExpr != null) {
                     return
                 }
                 if (checkInForDirectiveBlock(element)) return
@@ -212,7 +213,7 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
              * to the target element (`targetElement`)
              * and obtain the `for` block information to which the `targetElement` belongs.
              */
-            fun getForDirectiveBlock(targetElement: PsiElement): List<BlockToken> {
+            private fun getForDirectiveBlock(targetElement: PsiElement): List<BlockToken> {
                 val topElm = targetElement.containingFile.firstChild ?: return emptyList()
                 val directiveBlocks =
                     topElm.nextLeafs
