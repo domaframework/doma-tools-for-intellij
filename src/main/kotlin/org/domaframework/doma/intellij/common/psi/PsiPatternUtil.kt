@@ -25,6 +25,8 @@ import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeaf
 import com.intellij.psi.util.prevLeafs
 import com.intellij.util.ProcessingContext
+import org.domaframework.doma.intellij.psi.SqlElClass
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 object PsiPatternUtil {
@@ -81,6 +83,22 @@ object PsiPatternUtil {
                         ?.originalFile
                         ?.virtualFile
                         ?.extension == extension
+            },
+        )
+
+    fun createReferencePattern(): PsiElementPattern.Capture<PsiElement> =
+        PlatformPatterns.psiElement().with(
+            object : PatternCondition<PsiElement>("PsiReferenceParentCondition") {
+                override fun accepts(
+                    element: PsiElement,
+                    context: ProcessingContext?,
+                ): Boolean {
+                    if (element is SqlElClass) return true
+                    if (element is SqlElIdExpr) {
+                        return PsiTreeUtil.getParentOfType(element, SqlElClass::class.java) == null
+                    }
+                    return false
+                }
             },
         )
 

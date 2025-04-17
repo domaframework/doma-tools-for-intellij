@@ -18,8 +18,12 @@ package org.domaframework.doma.intellij.reference
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceProvider
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import org.domaframework.doma.intellij.psi.SqlCustomElExpr
+import org.domaframework.doma.intellij.psi.SqlElClass
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
+import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 
 class SqlPsiReferenceProvider : PsiReferenceProvider() {
     override fun getReferencesByElement(
@@ -27,6 +31,23 @@ class SqlPsiReferenceProvider : PsiReferenceProvider() {
         context: ProcessingContext,
     ): Array<out PsiReference?> {
         if (element !is SqlCustomElExpr) return PsiReference.EMPTY_ARRAY
-        return arrayOf(SqlReference(element))
+
+        return when (element) {
+            is SqlElClass -> arrayOf(SqlElClassExprReference(element))
+            is SqlElIdExpr ->
+                if (PsiTreeUtil.getParentOfType(element, SqlElClass::class.java) != null) {
+                    arrayOf(SqlElClassExprReference(element))
+                } else if (PsiTreeUtil.getParentOfType(
+                        element,
+                        SqlElStaticFieldAccessExpr::class.java,
+                    ) != null
+                ) {
+                    arrayOf(SqlElStaticFieldReference(element))
+                } else {
+                    arrayOf(SqlElIdExprReference(element))
+                }
+
+            else -> PsiReference.EMPTY_ARRAY
+        }
     }
 }

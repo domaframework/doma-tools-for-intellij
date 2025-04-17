@@ -20,31 +20,42 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiReferenceBase
 import com.intellij.psi.PsiType
+import com.intellij.psi.util.CachedValue
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
+import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.nextLeafs
 import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
-import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.getIterableClazz
 import org.domaframework.doma.intellij.extension.psi.methodParameters
 import org.domaframework.doma.intellij.inspection.sql.inspector.SqlBindVariableValidInspector.BlockType
-import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
-import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-class SqlReference(
+class SqlElIdExprReference(
     element: PsiElement,
 ) : PsiReferenceBase<PsiElement>(element) {
+    init {
+        println("SqlElIdExprReference initialized with element: ${element.text}")
+    }
+
+    private val cachedResolve: CachedValue<PsiElement?> by lazy {
+        CachedValuesManager.getManager(element.project).createCachedValue {
+            val result = doResolve()
+            CachedValueProvider.Result(result, PsiModificationTracker.MODIFICATION_COUNT)
+        }
+    }
+
     val file: PsiFile? = element.containingFile
 
     data class ForIfDirectiveBlock(
@@ -52,16 +63,18 @@ class SqlReference(
         val element: PsiElement,
     )
 
-    override fun resolve(): PsiElement? {
+    override fun resolve(): PsiElement? = cachedResolve.value
+
+    private fun doResolve(): PsiElement? {
         if (file == null || !isSupportFileType(file)) return null
         val startTime = System.nanoTime()
-        val variableName = element.text
+        return superResolveLogic(startTime, file)
+    }
 
-        val staticDirective = getStaticDirective(element, variableName, startTime)
-        if (staticDirective != null) {
-            return staticDirective
-        }
-
+    private fun superResolveLogic(
+        startTime: Long,
+        file: PsiFile,
+    ): PsiElement? {
         val targetElement = getBlockCommentElements(element)
         if (targetElement.isEmpty()) return null
 
@@ -89,68 +102,9 @@ class SqlReference(
 
             else -> getReferenceEntity(daoMethod, targetElement, startTime)
         }
-
-        return null
     }
 
     override fun getVariants(): Array<Any> = emptyArray()
-
-    private fun getStaticDirective(
-        staticDirection: PsiElement?,
-        elementName: String,
-        startTime: Long,
-    ): PsiElement? {
-        if (staticDirection == null) return null
-        val file: PsiFile = file ?: return null
-        // Jump to class definition
-        val classParent = PsiTreeUtil.getParentOfType(staticDirection, SqlElClass::class.java)
-        if (classParent != null) {
-            val psiStaticElement = PsiStaticElement(staticDirection.text, file)
-            PluginLoggerUtil.countLogging(
-                this::class.java.simpleName,
-                "ReferenceStaticClass",
-                "Reference",
-                startTime,
-            )
-            return psiStaticElement.getRefClazz()
-        }
-
-        // Jump from field or method to definition (assuming the top element is static)
-        val staticAccessParent =
-            PsiTreeUtil.getParentOfType(staticDirection, SqlElStaticFieldAccessExpr::class.java)
-        if (staticAccessParent != null) {
-            val firstChildText =
-                staticAccessParent.children
-                    .firstOrNull()
-                    ?.text ?: ""
-            val psiStaticElement =
-                PsiStaticElement(
-                    firstChildText,
-                    file,
-                )
-            val javaClazz = psiStaticElement.getRefClazz() ?: return null
-            val psiParentClass = PsiParentClass(PsiTypesUtil.getClassType(javaClazz))
-            psiParentClass.findField(elementName)?.let {
-                PluginLoggerUtil.countLogging(
-                    this::class.java.simpleName,
-                    "ReferenceStaticField",
-                    "Reference",
-                    startTime,
-                )
-                return it
-            }
-            psiParentClass.findMethod(elementName)?.let {
-                PluginLoggerUtil.countLogging(
-                    this::class.java.simpleName,
-                    "ReferenceStaticMethod",
-                    "Reference",
-                    startTime,
-                )
-                return it
-            }
-        }
-        return null
-    }
 
     private fun getBlockCommentElements(element: PsiElement): List<PsiElement> {
         val fieldAccessExpr = PsiTreeUtil.getParentOfType(element, SqlElFieldAccessExpr::class.java)
