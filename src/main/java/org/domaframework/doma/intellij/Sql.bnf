@@ -68,6 +68,7 @@
   extends("el_invocation_expr_group|el_primary_expr")=el_factor_expr
   extends("el_logical_expr_group|el_factor_expr")=el_term_expr
   extends(".*expr")=el_expr
+  mixin("el_primary_expr|el_class_exrp")="org.domaframework.doma.intellij.psi.SqlCustomExprImpl"
   consumeTokenMethod("literal|word|.*directive|.*expr")="consumeTokenFast"
 }
 
@@ -166,5 +167,8 @@ el_parameters ::= "(" (el_expr ("," el_expr)*)? ")" {pin=1}
 // primary
 el_primary_expr ::= el_literal_expr | el_id_expr | el_paren_expr
 private el_literal_expr ::= EL_NULL | BOOLEAN | (EL_PLUS | EL_MINUS)? EL_NUMBER | EL_STRING | EL_CHAR
-private el_id_expr ::= EL_IDENTIFIER
+el_id_expr ::= EL_IDENTIFIER
+{
+    mixin="org.domaframework.doma.intellij.psi.SqlElPrimaryExprImpl"
+}
 private el_paren_expr ::= "(" el_expr ")" {pin=1}

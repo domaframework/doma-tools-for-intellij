@@ -24,6 +24,14 @@
         instance="org.domaframework.doma.intellij.setting.DomaToolsConfigurable"
         displayName="Doma Tools" />
 
+    <psi.referenceContributor
+      implementation="org.domaframework.doma.intellij.reference.SqlReferenceContributor"
+      language="DomaSql"
+    />
+
+    <lang.elementManipulator forClass="org.domaframework.doma.intellij.psi.SqlCustomElExpr"
+      implementationClass="org.domaframework.doma.intellij.reference.SqlElExprManipulator" />
+
     <!-- Gutter -->
     <codeInsight.lineMarkerProvider language="JAVA"
       implementationClass="org.domaframework.doma.intellij.gutter.dao.DaoMethodProvider"/>
@@ -42,7 +50,8 @@
 
     <!-- Completion -->
     <completion.contributor language="DomaSql"
-      implementationClass="org.domaframework.doma.intellij.contributor.sql.SqlCompletionContributor" order="first" />
+      implementationClass="org.domaframework.doma.intellij.contributor.sql.SqlCompletionContributor"
+      order="first" />
 
     <!-- Formatter -->
     <lang.formatter language="DomaSql"
