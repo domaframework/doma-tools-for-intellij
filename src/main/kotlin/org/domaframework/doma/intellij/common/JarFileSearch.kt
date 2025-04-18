@@ -31,7 +31,12 @@ fun getJarRoot(
             .findFileByPath("$jarRootPath/")
     val methodDaoFilePath =
         getMethodDaoFilePath(virtualFile, jarRootPath, originalFile)
-    return jarRoot?.findFileByRelativePath(methodDaoFilePath)
+
+    val jarRootFile =
+        jarRoot?.findFileByRelativePath(methodDaoFilePath.plus(".class"))
+            ?: jarRoot?.findFileByRelativePath(methodDaoFilePath.plus(".java"))
+
+    return jarRootFile
 }
 
 fun getMethodDaoFilePath(
@@ -45,6 +50,6 @@ fun getMethodDaoFilePath(
                 jarRootPath,
             ).replace("/$RESOURCES_META_INF_PATH", "")
             .replace("/${originalFile.name}", "")
-            .plus(".class")
+
     return methodDaoFilePath
 }

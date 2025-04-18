@@ -28,6 +28,7 @@ fun getExtension(type: String): String =
         "JAVA" -> "java"
         "Kotlin" -> "kt"
         "SQL" -> "sql"
+        "CLASS" -> "class"
         else -> {
             ""
         }

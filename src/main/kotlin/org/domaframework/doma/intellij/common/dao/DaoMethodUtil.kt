@@ -85,6 +85,7 @@ fun findDaoMethod(
                 return daoMethod
             }
         } else {
+            val fileType = getExtension(daoFile.fileType.name)
             val jarRootPath = virtualFile.path.substringBefore("jar!").plus("jar!")
             val methodDaoFilePath = getMethodDaoFilePath(virtualFile, jarRootPath, originalFile)
             val daoClassName = getDaoClassName(methodDaoFilePath, "CLASS")
@@ -98,7 +99,7 @@ fun findDaoMethod(
                         val fqn =
                             methodDaoFilePath
                                 .trimStart('/')
-                                .removeSuffix(".class")
+                                .removeSuffix(".$fileType")
                                 .replace('/', '.')
                         JavaPsiFacade
                             .getInstance(project)

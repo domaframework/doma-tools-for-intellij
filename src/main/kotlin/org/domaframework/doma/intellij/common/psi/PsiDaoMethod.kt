@@ -34,6 +34,7 @@ import com.intellij.psi.PsiNameValuePair
 import com.intellij.util.IncorrectOperationException
 import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.RESOURCES_PATH
 import org.domaframework.doma.intellij.common.dao.formatSqlPathFromDaoPath
+import org.domaframework.doma.intellij.common.getExtension
 import org.domaframework.doma.intellij.extension.findFile
 import org.domaframework.doma.intellij.extension.getContentRoot
 import org.domaframework.doma.intellij.extension.getModule
@@ -107,28 +108,28 @@ class PsiDaoMethod(
         val methodName = psiMethod.name
 
         val sqlExtension = daoType.extension
-
-        if (psiMethod.containingFile.virtualFile == null) {
+        val contentRoot = this.psiProject.getContentRoot(daoFile)?.path
+        if (contentRoot == null) {
+            val fileType = getExtension(daoFile.fileType.name)
             val daoRelativePath =
                 psiMethod.containingFile.originalFile.virtualFile.path
                     .substringAfter(".jar!")
             sqlFilePath =
-                "META-INF${daoRelativePath.replace(".class","")}/$methodName.$sqlExtension"
+                "META-INF${daoRelativePath.replace(".$fileType","")}/$methodName.$sqlExtension"
         } else {
-            val contentRoot = this.psiProject.getContentRoot(daoFile)?.path
-
-            sqlFilePath = contentRoot?.let {
-                formatSqlPathFromDaoPath(it, daoFile)
-                    .replace("main/", "")
-                    .plus("/$methodName.$sqlExtension")
-            } ?: ""
+            sqlFilePath =
+                contentRoot.let {
+                    formatSqlPathFromDaoPath(it, daoFile)
+                        .replace("main/", "")
+                        .plus("/$methodName.$sqlExtension")
+                }
         }
     }
 
     private fun setSqlFile() {
         if (isUseSqlFileMethod()) {
             val module = psiProject.getModule(daoFile)
-            if (psiMethod.containingFile.virtualFile == null) {
+            if (module == null) {
                 val daoPath = daoFile.path
                 val jarRootPath =
                     daoPath.substringBefore(".jar!") + ".jar!"
@@ -140,7 +141,7 @@ class PsiDaoMethod(
                 return
             } else {
                 sqlFile =
-                    module?.getResourcesSQLFile(
+                    module.getResourcesSQLFile(
                         sqlFilePath,
                         isTest,
                     )
