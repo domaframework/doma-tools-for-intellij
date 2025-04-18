@@ -21,6 +21,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiAnnotation
@@ -53,7 +54,9 @@ class PsiDaoMethod(
     var sqlFile: VirtualFile? = null
     private var sqlFilePath: String = ""
 
-    private val daoFile: VirtualFile = psiMethod.containingFile.virtualFile
+    private val daoFile: VirtualFile =
+        psiMethod.containingFile.virtualFile
+            ?: psiMethod.containingFile.originalFile.virtualFile
     var daoType: DomaAnnotationType = DomaAnnotationType.Unknown
     private var sqlFileOption: Boolean = false
 
@@ -70,6 +73,7 @@ class PsiDaoMethod(
         sqlFileOption = isSqlFile == true
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     private fun setDaoAnnotationType() {
         DomaAnnotationType.entries.forEach { type ->
             if (type != DomaAnnotationType.Sql &&
@@ -103,24 +107,45 @@ class PsiDaoMethod(
         val methodName = psiMethod.name
 
         val sqlExtension = daoType.extension
-        val contentRoot = this.psiProject.getContentRoot(daoFile)?.path
 
-        sqlFilePath = contentRoot?.let {
-            formatSqlPathFromDaoPath(it, daoFile)
-                .replace("main/", "")
-                .plus("/$methodName.$sqlExtension")
-        } ?: ""
+        if (psiMethod.containingFile.virtualFile == null) {
+            val daoRelativePath =
+                psiMethod.containingFile.originalFile.virtualFile.path
+                    .substringAfter(".jar!")
+            sqlFilePath =
+                "META-INF${daoRelativePath.replace(".class","")}/$methodName.$sqlExtension"
+        } else {
+            val contentRoot = this.psiProject.getContentRoot(daoFile)?.path
+
+            sqlFilePath = contentRoot?.let {
+                formatSqlPathFromDaoPath(it, daoFile)
+                    .replace("main/", "")
+                    .plus("/$methodName.$sqlExtension")
+            } ?: ""
+        }
     }
 
     private fun setSqlFile() {
         if (isUseSqlFileMethod()) {
             val module = psiProject.getModule(daoFile)
-            sqlFile =
-                module?.getResourcesSQLFile(
-                    sqlFilePath,
-                    isTest,
-                )
-            return
+            if (psiMethod.containingFile.virtualFile == null) {
+                val daoPath = daoFile.path
+                val jarRootPath =
+                    daoPath.substringBefore(".jar!") + ".jar!"
+                val jarRoot =
+                    StandardFileSystems
+                        .jar()
+                        .findFileByPath("$jarRootPath/")
+                sqlFile = jarRoot?.findFileByRelativePath(sqlFilePath)
+                return
+            } else {
+                sqlFile =
+                    module?.getResourcesSQLFile(
+                        sqlFilePath,
+                        isTest,
+                    )
+                return
+            }
         }
         // the injection part as a custom language file
         getSqlAnnotation()?.let { annotation ->

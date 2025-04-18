@@ -18,14 +18,20 @@ package org.domaframework.doma.intellij.common.dao
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiClassOwner
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.RESOURCES_PATH
 import org.domaframework.doma.intellij.common.getExtension
+import org.domaframework.doma.intellij.common.getJarRoot
+import org.domaframework.doma.intellij.common.getMethodDaoFilePath
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.common.searchDaoFile
@@ -37,10 +43,13 @@ import org.domaframework.doma.intellij.extension.getModule
 /**
  * Get Dao method corresponding to SQL file
  */
-fun findDaoMethod(originalFile: PsiFile): PsiMethod? {
+fun findDaoMethod(
+    originalFile: PsiFile,
+    daoFile: VirtualFile? = null,
+): PsiMethod? {
     val project = originalFile.project
     val virtualFile = originalFile.virtualFile ?: return null
-    val module = project.getModule(virtualFile) ?: return null
+    val module = project.getModule(virtualFile)
 
     if (isInjectionSqlFile(originalFile)) {
         originalFile.let {
@@ -49,35 +58,62 @@ fun findDaoMethod(originalFile: PsiFile): PsiMethod? {
     } else if (isSupportFileType(originalFile)) {
         // TODO: Add Support Kotlin
         val fileTypeName = "JAVA"
-        val daoFile = findDaoFile(project, originalFile) ?: return null
-        val relativePath =
-            formatDaoPathFromSqlFilePath(
-                originalFile,
-                project.getContentRoot(virtualFile)?.path ?: "",
-                fileTypeName,
-            )
-        val daoClassName: String =
-            relativePath
-                .substringBefore(".")
-                .replace("/", ".")
-                .replace("\\", ".")
-                .substringAfter(".${getExtension(fileTypeName)}")
-                .replace("..", ".")
-                .trim('.')
-
-        val daoJavaFile = project.findFile(daoFile)
-        findDaoClass(module, daoClassName)?.let { daoClass ->
-            val methodName = originalFile.name.substringBeforeLast(".")
-            val daoMethod =
-                when (daoJavaFile) {
-                    is PsiJavaFile -> findUseSqlDaoMethod(daoJavaFile, methodName)
-                    else -> null
-                }
-            return daoMethod
+        val methodName = virtualFile.nameWithoutExtension
+        val daoFile = daoFile ?: findDaoFile(project, originalFile) ?: return null
+        if (module != null) {
+            val relativePath =
+                formatDaoPathFromSqlFilePath(
+                    originalFile,
+                    project.getContentRoot(virtualFile)?.path ?: "",
+                    fileTypeName,
+                )
+            val daoClassName: String =
+                relativePath
+                    .substringBefore(".")
+                    .replace("/", ".")
+                    .replace("\\", ".")
+                    .substringAfter(".${getExtension(fileTypeName)}")
+                    .replace("..", ".")
+                    .trim('.')
+            val daoJavaFile = project.findFile(daoFile)
+            findDaoClass(module, daoClassName)?.let { daoClass ->
+                val daoMethod =
+                    when (daoJavaFile) {
+                        is PsiJavaFile -> findUseSqlDaoMethod(daoJavaFile, methodName)
+                        else -> null
+                    }
+                return daoMethod
+            }
+        } else {
+            val jarRootPath = virtualFile.path.substringBefore("jar!").plus("jar!")
+            val methodDaoFilePath = getMethodDaoFilePath(virtualFile, jarRootPath, originalFile)
+            val daoClassName = getDaoClassName(methodDaoFilePath, "CLASS")
+            val daoFile = getJarRoot(virtualFile, originalFile) ?: return null
+            val psiClassFile = PsiManager.getInstance(originalFile.project).findFile(daoFile)
+            val psiClassOwner = psiClassFile as? PsiClassOwner ?: return null
+            val psiClass =
+                psiClassOwner.classes
+                    .firstOrNull { it.name == daoClassName }
+                    ?: run {
+                        val fqn =
+                            methodDaoFilePath
+                                .trimStart('/')
+                                .removeSuffix(".class")
+                                .replace('/', '.')
+                        JavaPsiFacade
+                            .getInstance(project)
+                            .findClass(fqn, GlobalSearchScope.allScope(project))
+                    } ?: return null
+            return psiClass.findMethodsByName(methodName, false).firstOrNull()
         }
     }
     return null
 }
+
+private fun getDaoClassName(
+    methodDaoFilePath: String,
+    extensionName: String,
+): String = methodDaoFilePath.substringBefore(".${extensionName.lowercase()}").substringAfter("dao/")
 
 /**
  * Get jump destination Dao method file from SQL file
@@ -86,9 +122,12 @@ fun findDaoFile(
     project: Project,
     sqlFile: PsiFile,
 ): VirtualFile? {
-    val virtualFile = sqlFile.virtualFile ?: return null
-    project.getModule(virtualFile) ?: return null
-    val contentRoot = project.getContentRoot(virtualFile) ?: return null
+    val virtualFile = sqlFile.virtualFile
+
+    val contentRoot = project.getContentRoot(virtualFile)
+    if (contentRoot == null) {
+        return getJarRoot(virtualFile, sqlFile)
+    }
     // TODO: Add Support Kotlin
     val relativeFilePath =
         formatDaoPathFromSqlFilePath(sqlFile, contentRoot.path, "JAVA")

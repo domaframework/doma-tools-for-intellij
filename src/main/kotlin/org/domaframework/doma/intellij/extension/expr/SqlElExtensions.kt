@@ -26,7 +26,6 @@ import org.domaframework.doma.intellij.psi.SqlElIfDirective
 import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
-import kotlin.invoke
 
 val SqlElStaticFieldAccessExpr.accessElements: List<PsiElement>
     get() {
