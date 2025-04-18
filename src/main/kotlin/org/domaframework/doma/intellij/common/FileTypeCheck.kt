@@ -40,7 +40,7 @@ fun isJavaOrKotlinFileType(daoFile: PsiFile): Boolean {
     if (daoFile.virtualFile == null) return false
     val fileType = FileTypeManager.getInstance().getFileTypeByFile(daoFile.virtualFile)
     return when (fileType.name) {
-        "JAVA", "Kotlin" -> true
+        "JAVA", "Kotlin", "CLASS" -> true
         else -> false
     }
 }
