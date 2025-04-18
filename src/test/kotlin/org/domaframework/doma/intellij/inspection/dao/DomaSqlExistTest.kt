@@ -32,7 +32,7 @@ class DomaSqlExistTest : DomaSqlTest() {
             "ScriptTestDao.java",
             "SqlProcessorTestDao.java",
         )
-        addResourceFile(
+        addResourceEmptyFile(
             "SelectTestDao/existsSQLFile.sql",
             "InsertTestDao/existsSQLFile.sql",
             "UpdateTestDao/existsSQLFile.sql",

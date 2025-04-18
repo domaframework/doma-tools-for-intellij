@@ -61,7 +61,7 @@ class DaoJumpActionTest : DomaSqlTest() {
             "$packageName/$notDisplayedPackage/SqlProcessorInvalidCaretTestDao.java",
             "$packageName/$notDisplayedPackage/InvalidCaretTestDao.java",
         )
-        addResourceFile(
+        addResourceEmptyFile(
             "$packageName/SelectGutterTestDao/existsSQLFile1.sql",
             "$packageName/InsertGutterTestDao/existsSQLFile1.sql",
             "$packageName/UpdateGutterTestDao/existsSQLFile1.sql",
@@ -72,7 +72,7 @@ class DaoJumpActionTest : DomaSqlTest() {
             "$packageName/ScriptGutterTestDao/existsSQLFile1.script",
             "$packageName/SqlProcessorGutterTestDao/existsSQLFile1.sql",
         )
-        addResourceFile(
+        addResourceEmptyFile(
             "$packageName/SelectGutterTestDao/existsSQLFile2.sql",
             "$packageName/InsertGutterTestDao/existsSQLFile2.sql",
             "$packageName/UpdateGutterTestDao/existsSQLFile2.sql",

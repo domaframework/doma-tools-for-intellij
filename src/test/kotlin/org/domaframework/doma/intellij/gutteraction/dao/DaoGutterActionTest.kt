@@ -45,7 +45,7 @@ class DaoGutterActionTest : DomaSqlTest() {
             "$packageName/ScriptGutterTestDao.java",
             "$packageName/SqlProcessorGutterTestDao.java",
         )
-        addResourceFile(
+        addResourceEmptyFile(
             "$packageName/SelectGutterTestDao/existsSQLFile1.sql",
             "$packageName/InsertGutterTestDao/existsSQLFile1.sql",
             "$packageName/UpdateGutterTestDao/existsSQLFile1.sql",
@@ -56,7 +56,7 @@ class DaoGutterActionTest : DomaSqlTest() {
             "$packageName/ScriptGutterTestDao/existsSQLFile1.script",
             "$packageName/SqlProcessorGutterTestDao/existsSQLFile1.sql",
         )
-        addResourceFile(
+        addResourceEmptyFile(
             "$packageName/SelectGutterTestDao/existsSQLFile2.sql",
             "$packageName/InsertGutterTestDao/existsSQLFile2.sql",
             "$packageName/UpdateGutterTestDao/existsSQLFile2.sql",
@@ -67,7 +67,7 @@ class DaoGutterActionTest : DomaSqlTest() {
             "$packageName/ScriptGutterTestDao/existsSQLFile2.script",
             "$packageName/SqlProcessorGutterTestDao/existsSQLFile2.sql",
         )
-        addResourceFile(
+        addResourceEmptyFile(
             "$packageName/BatchInsertGutterTestDao/existsSQLFile3.sql",
             "$packageName/BatchUpdateGutterTestDao/existsSQLFile3.sql",
             "$packageName/BatchDeleteGutterTestDao/existsSQLFile3.sql",
