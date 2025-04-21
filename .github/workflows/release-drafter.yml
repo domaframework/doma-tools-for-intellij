@@ -23,7 +23,10 @@ jobs:
       - name: Check Commit Message
         id: check
         run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ ^Merge\ pull\ request\ #[0-9]+\ from\ ${{ github.repository_owner }}/doc/changelog-update-.*$ ]]; then
+          # Define a regex pattern to match commit messages for changelog updates
+          CHANGELOG_UPDATE_PATTERN="^Merge pull request #[0-9]+ from ${{ github.repository_owner }}/doc/changelog-update-.*$"
+          
+          if [[ "${{ github.event.head_commit.message }}" =~ $CHANGELOG_UPDATE_PATTERN ]]; then
             echo "This commit is not target. Skip the workflow."
             echo "SKIP_JOB=true" >> $GITHUB_OUTPUT
           else
