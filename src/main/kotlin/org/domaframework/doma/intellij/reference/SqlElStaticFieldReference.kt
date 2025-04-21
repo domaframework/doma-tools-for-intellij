@@ -94,7 +94,8 @@ class SqlElStaticFieldReference(
         if (targetElements.isEmpty()) return null
 
         val topElm = targetElements.firstOrNull() as? PsiElement ?: return null
-        if (topElm.prevSibling.elementType != SqlTypes.AT_SIGN) return null
+        val prevSibling = topElm.prevSibling ?: return null
+        if (prevSibling.elementType != SqlTypes.AT_SIGN) return null
         var index = 1
         for (staticFieldAccess in targetElements) {
             if (index >= targetElements.size) {
