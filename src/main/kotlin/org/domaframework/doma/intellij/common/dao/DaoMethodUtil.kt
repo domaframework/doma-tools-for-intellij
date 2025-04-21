@@ -67,6 +67,7 @@ fun findDaoMethod(
                     project.getContentRoot(virtualFile)?.path ?: "",
                     fileTypeName,
                 )
+            // get ClassPath with package name
             val daoClassName: String =
                 relativePath
                     .substringBefore(".")
@@ -88,7 +89,7 @@ fun findDaoMethod(
             val fileType = getExtension(daoFile.fileType.name)
             val jarRootPath = virtualFile.path.substringBefore("jar!").plus("jar!")
             val methodDaoFilePath = getMethodDaoFilePath(virtualFile, jarRootPath, originalFile)
-            val daoClassName = getDaoClassName(methodDaoFilePath, "CLASS")
+            val daoClassName = getDaoClassName(methodDaoFilePath, fileType)
             val daoFile = getJarRoot(virtualFile, originalFile) ?: return null
             val psiClassFile = PsiManager.getInstance(originalFile.project).findFile(daoFile)
             val psiClassOwner = psiClassFile as? PsiClassOwner ?: return null
@@ -114,7 +115,7 @@ fun findDaoMethod(
 private fun getDaoClassName(
     methodDaoFilePath: String,
     extensionName: String,
-): String = methodDaoFilePath.substringBefore(".${extensionName.lowercase()}").substringAfter("dao/")
+): String = methodDaoFilePath.substringBefore(".$extensionName").substringAfter("dao/")
 
 /**
  * Get jump destination Dao method file from SQL file
