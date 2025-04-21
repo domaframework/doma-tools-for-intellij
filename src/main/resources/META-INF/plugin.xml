@@ -24,6 +24,14 @@
         instance="org.domaframework.doma.intellij.setting.DomaToolsConfigurable"
         displayName="Doma Tools" />
 
+    <psi.referenceContributor
+      implementation="org.domaframework.doma.intellij.reference.SqlReferenceContributor"
+      language="DomaSql"
+    />
+
+    <lang.elementManipulator forClass="org.domaframework.doma.intellij.psi.SqlCustomElExpr"
+      implementationClass="org.domaframework.doma.intellij.reference.SqlElExprManipulator" />
+
     <!-- Gutter -->
     <codeInsight.lineMarkerProvider language="JAVA"
       implementationClass="org.domaframework.doma.intellij.gutter.dao.DaoMethodProvider"/>
@@ -42,7 +50,8 @@
 
     <!-- Completion -->
     <completion.contributor language="DomaSql"
-      implementationClass="org.domaframework.doma.intellij.contributor.sql.SqlCompletionContributor" order="first" />
+      implementationClass="org.domaframework.doma.intellij.contributor.sql.SqlCompletionContributor"
+      order="first" />
 
     <!-- Formatter -->
     <lang.formatter language="DomaSql"
@@ -98,12 +107,6 @@
         text="Jump to Dao"
         description="Jump from SQL file to Dao method definition">
         <keyboard-shortcut keymap="$default" first-keystroke="alt D"/>
-      </action>
-      <action id="org.domaframework.doma.intellij.JumpToDeclarationFromSql"
-        class="org.domaframework.doma.intellij.action.sql.JumpToDeclarationFromSqlAction"
-        text="Jump to Declaration"
-        description="Jump from SQL bind variable to declaration">
-        <keyboard-shortcut keymap="$default" first-keystroke="alt E"/>
       </action>
       <action id="org.domaframework.doma.intellij.GenerateSqlAction"
         class="org.domaframework.doma.intellij.action.dao.GenerateSqlAction"

@@ -22,8 +22,8 @@ import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
 import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElIfDirective
-import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 import kotlin.invoke
@@ -31,13 +31,8 @@ import kotlin.invoke
 val SqlElStaticFieldAccessExpr.accessElements: List<PsiElement>
     get() {
         return PsiTreeUtil
-            .getChildrenOfType(this, PsiElement::class.java)
-            ?.filter {
-                (
-                    it.elementType == SqlTypes.EL_IDENTIFIER ||
-                        it is SqlElPrimaryExpr
-                )
-            }?.sortedBy { it.textOffset }
+            .getChildrenOfType(this, SqlElIdExpr::class.java)
+            ?.sortedBy { it.textOffset }
             ?.toList()
             ?: emptyList()
     }

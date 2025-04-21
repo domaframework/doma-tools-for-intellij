@@ -13,13 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.extension.psi
+package org.domaframework.doma.intellij.reference
 
-import com.intellij.psi.PsiElement
-import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.psi.SqlElForDirective
-import org.domaframework.doma.intellij.psi.SqlElIdExpr
+import com.intellij.psi.PsiReferenceContributor
+import com.intellij.psi.PsiReferenceRegistrar
+import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
 
-fun SqlElForDirective.getForItem(): PsiElement? =
-    PsiTreeUtil
-        .getChildOfType(this, SqlElIdExpr::class.java)
+class SqlReferenceContributor : PsiReferenceContributor() {
+    override fun registerReferenceProviders(registrar: PsiReferenceRegistrar) {
+        registrar.registerReferenceProvider(
+            PsiPatternUtil.createReferencePattern(),
+            SqlPsiReferenceProvider(),
+        )
+    }
+}

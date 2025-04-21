@@ -15,11 +15,12 @@
  */
 package org.domaframework.doma.intellij.extension.psi
 
-import com.intellij.psi.PsiElement
-import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.psi.SqlElForDirective
-import org.domaframework.doma.intellij.psi.SqlElIdExpr
+import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 
-fun SqlElForDirective.getForItem(): PsiElement? =
-    PsiTreeUtil
-        .getChildOfType(this, SqlElIdExpr::class.java)
+fun SqlElPrimaryExpr.isFirstElement(): Boolean =
+    if (this.parent is SqlElFieldAccessExpr) {
+        this.parent.children.indexOf(this) == 0
+    } else {
+        true
+    }

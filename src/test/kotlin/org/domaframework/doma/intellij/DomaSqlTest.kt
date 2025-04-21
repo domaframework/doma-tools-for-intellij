@@ -148,7 +148,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         )
     }
 
-    fun addResourceFile(vararg sqlFileNames: String) {
+    fun addResourceEmptyFile(vararg sqlFileNames: String) {
         for (sqlFileName in sqlFileNames) {
             myFixture.addFileToProject(
                 "$resourceRoot/META-INF/$packagePath/dao/$sqlFileName",

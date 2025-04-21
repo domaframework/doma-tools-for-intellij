@@ -23,6 +23,7 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
 import org.domaframework.doma.intellij.contributor.sql.provider.SqlParameterCompletionProvider
+import org.domaframework.doma.intellij.setting.SqlLanguage
 import org.jetbrains.kotlin.idea.completion.or
 
 /**
@@ -41,7 +42,7 @@ open class SqlCompletionContributor : CompletionContributor() {
                         .inFile(
                             PlatformPatterns
                                 .psiFile()
-                                .withName(StandardPatterns.string().endsWith(".sql")),
+                                .withLanguage(SqlLanguage.INSTANCE),
                         ),
                     PsiPatternUtil
                         .createPattern(PsiComment::class.java)

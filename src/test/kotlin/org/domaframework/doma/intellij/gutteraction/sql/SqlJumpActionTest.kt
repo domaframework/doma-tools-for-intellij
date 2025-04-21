@@ -24,7 +24,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.vfs.VirtualFile
 import org.domaframework.doma.intellij.DomaSqlTest
 import java.awt.event.InputEvent
 import java.awt.event.MouseEvent
@@ -34,110 +33,40 @@ import java.awt.event.MouseEvent
  */
 class SqlJumpActionTest : DomaSqlTest() {
     private val packageName = "gutteraction"
+    private val testDaoName = "JumpActionTestDao"
 
     override fun setUp() {
         super.setUp()
-        addDaoJavaFile("$packageName/JumpActionTestDao.java")
-        addDaoJavaFile("$packageName/JumpDeclarationActionSqlAnnotationTestDao.java")
+        addDaoJavaFile("$packageName/$testDaoName.java")
         addSqlFile(
-            "$packageName/JumpActionTestDao/jumpToDaoFile.sql",
-            "$packageName/JumpActionTestDao/notDisplayGutterWithNonExistentDaoMethod.sql",
-            "$packageName/JumpActionTestDao/jumpToDaoMethodArgumentDefinition.sql",
-            "$packageName/JumpActionTestDao/jumpToClassFieldDefinition.sql",
-            "$packageName/JumpActionTestDao/jumpsToClassMethodDefinition.sql",
-            "$packageName/JumpActionTestDao/jumpToStaticFieldDefinition.sql",
-            "$packageName/JumpActionTestDao/jumpToStaticMethodDefinition.sql",
+            "$packageName/$testDaoName/jumpToDaoFile.sql",
+            "$packageName/$testDaoName/notDisplayGutterWithNonExistentDaoMethod.sql",
+            "$packageName/$testDaoName/jumpToDaoMethodArgumentDefinition.sql",
+            "$packageName/$testDaoName/jumpToClassFieldDefinition.sql",
+            "$packageName/$testDaoName/jumpsToClassMethodDefinition.sql",
+            "$packageName/$testDaoName/jumpToStaticFieldDefinition.sql",
+            "$packageName/$testDaoName/jumpToStaticMethodDefinition.sql",
         )
     }
 
     fun testJumpActionFromSQLFileToDaoMethodCanBePerformed() {
-        val sqlName = "$packageName/JumpActionTestDao/jumpToDaoFile.sql"
+        val sqlName = "$packageName/$testDaoName/jumpToDaoFile.sql"
         val action: AnAction? = getJumDaoActionTest(sqlName)
         assertNotNull("Not Found Action", action)
         if (action == null) return
 
         isDisplayedActionTest(action)
-        jumpToDaoTest(action, "JumpActionTestDao.java")
+        jumpToDaoTest(action, "$testDaoName.java")
     }
 
     fun testNotDisplayedJumpMethodActionInSQLForNonExistentDaoMethod() {
-        val sqlName = "$packageName/JumpActionTestDao/notDisplayGutterWithNonExistentDaoMethod.sql"
+        val sqlName = "$packageName/$testDaoName/notDisplayGutterWithNonExistentDaoMethod.sql"
         val action: AnAction? = getJumDaoActionTest(sqlName)
         assertNotNull("Not Found Action", action)
         if (action == null) return
 
         isNotDisplayedActionTest(action)
-        canNotJumpToDaoTest(action, "JumpActionTestDao.java")
-    }
-
-    fun testNotDisplayedJumpDeclarationActionInSQLForNonExistentDaoMethod() {
-        val sqlName = "$packageName/JumpActionTestDao/notDisplayGutterWithNonExistentDaoMethod.sql"
-        val action: AnAction? = getJumDeclarationActionTest(sqlName)
-        assertNotNull("Not Found Action", action)
-        if (action == null) return
-
-        isNotDisplayedActionTest(action)
-        canNotJumpToDaoTest(action, "JumpActionTestDao.java")
-    }
-
-    fun testJumpToDaoMethodArgumentDefinition() {
-        val sqlName = "$packageName/JumpActionTestDao/jumpToDaoMethodArgumentDefinition.sql"
-        val action: AnAction? = getJumpVariableActionTest(sqlName)
-        assertNotNull("Not Found Action", action)
-        if (action == null) return
-
-        isDisplayedActionTest(action)
-        jumpToDaoTest(action, "JumpActionTestDao.java")
-    }
-
-    fun testJumpToClassFieldDefinition() {
-        val sqlName = "$packageName/JumpActionTestDao/jumpToClassFieldDefinition.sql"
-        val action: AnAction? = getJumpVariableActionTest(sqlName)
-        assertNotNull("Not Found Action", action)
-        if (action == null) return
-
-        isDisplayedActionTest(action)
-        jumpToDaoTest(action, "Project.java")
-    }
-
-    fun testJumpsToClassMethodDefinition() {
-        val sqlName = "$packageName/JumpActionTestDao/jumpsToClassMethodDefinition.sql"
-        val action: AnAction? = getJumpVariableActionTest(sqlName)
-        assertNotNull("Not Found Action", action)
-        if (action == null) return
-
-        isDisplayedActionTest(action)
-        jumpToDaoTest(action, "Employee.java")
-    }
-
-    fun testJumpToStaticFieldDefinition() {
-        val sqlName = "$packageName/JumpActionTestDao/jumpToStaticFieldDefinition.sql"
-        val action: AnAction? = getJumpVariableActionTest(sqlName)
-        assertNotNull("Not Found Action", action)
-        if (action == null) return
-
-        isDisplayedActionTest(action)
-        jumpToDaoTest(action, "ProjectDetail.java")
-    }
-
-    fun testJumpToStaticMethodDefinition() {
-        val sqlName = "$packageName/JumpActionTestDao/jumpToStaticMethodDefinition.sql"
-        val action: AnAction? = getJumpVariableActionTest(sqlName)
-        assertNotNull("Not Found Action", action)
-        if (action == null) return
-
-        isDisplayedActionTest(action)
-        jumpToDaoTest(action, "ProjectDetail.java")
-    }
-
-    fun testJumpToDeclarationSqlAnnotation() {
-        val dao = findDaoClass("$packageName.JumpDeclarationActionSqlAnnotationTestDao")
-        val action: AnAction? = getJumpVariableActionTestOnSqlAnnotation(dao.containingFile.virtualFile)
-        assertNotNull("Not Found Action", action)
-        if (action == null) return
-
-        isDisplayedActionTest(action)
-        jumpToDaoTest(action, "Employee.java")
+        canNotJumpToDaoTest(action, "$testDaoName.java")
     }
 
     private fun getJumDaoActionTest(sqlName: String): AnAction? {
@@ -148,40 +77,6 @@ class SqlJumpActionTest : DomaSqlTest() {
         myFixture.configureFromExistingVirtualFile(sql)
 
         val actionId = "org.domaframework.doma.intellij.JumpToDaoFromSQL"
-        val action: AnAction = ActionManager.getInstance().getAction(actionId)
-        assertNotNull("Not Found Action", action)
-        return action
-    }
-
-    private fun getJumDeclarationActionTest(sqlName: String): AnAction? {
-        val sql = findSqlFile(sqlName)
-        assertNotNull("Not Found SQL File", sql)
-        if (sql == null) return null
-
-        myFixture.configureFromExistingVirtualFile(sql)
-
-        val actionId = "org.domaframework.doma.intellij.JumpToDeclarationFromSql"
-        val action: AnAction = ActionManager.getInstance().getAction(actionId)
-        assertNotNull("Not Found Action", action)
-        return action
-    }
-
-    private fun getJumpVariableActionTestOnSqlAnnotation(daoFile: VirtualFile): AnAction {
-        myFixture.configureFromExistingVirtualFile(daoFile)
-        val actionId = "org.domaframework.doma.intellij.JumpToDeclarationFromSql"
-        val action: AnAction = ActionManager.getInstance().getAction(actionId)
-        assertNotNull("Not Found Action", action)
-        return action
-    }
-
-    private fun getJumpVariableActionTest(sqlName: String): AnAction? {
-        val sql = findSqlFile(sqlName)
-        assertNotNull("Not Found SQL File", sql)
-        if (sql == null) return null
-
-        myFixture.configureFromExistingVirtualFile(sql)
-
-        val actionId = "org.domaframework.doma.intellij.JumpToDeclarationFromSql"
         val action: AnAction = ActionManager.getInstance().getAction(actionId)
         assertNotNull("Not Found Action", action)
         return action

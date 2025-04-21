@@ -59,13 +59,13 @@ import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElGeExpr
 import org.domaframework.doma.intellij.psi.SqlElGtExpr
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElIfDirective
 import org.domaframework.doma.intellij.psi.SqlElLeExpr
 import org.domaframework.doma.intellij.psi.SqlElLtExpr
 import org.domaframework.doma.intellij.psi.SqlElNeExpr
 import org.domaframework.doma.intellij.psi.SqlElOrExpr
 import org.domaframework.doma.intellij.psi.SqlElParameters
-import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.jetbrains.kotlin.idea.base.util.module
 
@@ -176,14 +176,9 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         if (parent is SqlElFieldAccessExpr) {
             blocks =
                 PsiTreeUtil
-                    .getChildrenOfTypeAsList(parent, PsiElement::class.java)
-                    .filter {
-                        (
-                            it is SqlElPrimaryExpr ||
-                                it.elementType == SqlTypes.EL_IDENTIFIER
-                        ) &&
-                            it.parent !is SqlElClass
-                    }.toList()
+                    .getChildrenOfTypeAsList(parent, SqlElIdExpr::class.java)
+                    .filter { it.parent !is SqlElClass }
+                    .toList()
             if (blocks.isEmpty()) {
                 val parent =
                     PsiTreeUtil.findFirstParent(parent) {
@@ -194,10 +189,9 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
 
                 blocks =
                     PsiTreeUtil
-                        .getChildrenOfTypeAsList(parent, PsiElement::class.java)
+                        .getChildrenOfTypeAsList(parent, SqlElIdExpr::class.java)
                         .filter {
-                            it.elementType == SqlTypes.EL_IDENTIFIER &&
-                                (targetElement.startOffsetInParent) >= it.startOffsetInParent
+                            targetElement.startOffsetInParent >= it.startOffsetInParent
                         }.toList()
             }
         } else {
@@ -321,7 +315,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
     }
 
     private fun getSearchElementText(elm: PsiElement): String =
-        if (elm is SqlElPrimaryExpr || elm.elementType == SqlTypes.EL_IDENTIFIER) {
+        if (elm.elementType == SqlTypes.EL_IDENTIFIER) {
             elm.text
         } else {
             ""
