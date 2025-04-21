@@ -543,7 +543,7 @@ fun replaceVersionInPluginUtil(ver: String) {
     ant.withGroovyBuilder {
         "replaceregexp"(
             "match" to """(const val PLUGIN_VERSION = ")(\d+\.\d+\.\d+)((?:-\S+)*)""",
-            "replace" to "\\1$ver",
+            "replace" to "\\1$ver\"",
             "encoding" to encoding,
             "flags" to "g",
         ) {
