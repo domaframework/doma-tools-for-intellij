@@ -65,13 +65,7 @@ You can reformat entire directories and files with "Code > Reformat Code".
 
 If you want to enable the plugin's formatting function, check "Enable SQL Format" in "Settings > Other Settings > Doma Tools". (The default is OFF.)
 
-## Settings
-Some functions of "Doma Tools" can be customized from the settings screen.
-
-- Enabling/disabling inspections and customizing error levels
-- Highlight color settings for SQL elements
-![setting_highlight.png](images/setting_highlight.png)
-- Customize action shortcut keys
+![enableFormat.png](images/enableFormat.png)
 
 ## Reference resolution
 Ctrl+Click on a bind variable in an SQL file to jump to its source symbol:
@@ -84,3 +78,11 @@ This feature works in source JARs as well, but in binary JARs, if the DAO method
 - You can also jump using the **Go To > Declaration Usage** menu.
 
 ![reference.png](images/reference.png)
+
+## Settings
+Some functions of "Doma Tools" can be customized from the settings screen.
+
+- Enabling/disabling inspections and customizing error levels
+- Highlight color settings for SQL elements
+![setting_highlight.png](images/setting_highlight.png)
+- Customize action shortcut keys
