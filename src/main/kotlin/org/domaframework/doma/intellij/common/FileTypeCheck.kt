@@ -28,6 +28,7 @@ fun getExtension(type: String): String =
         "JAVA" -> "java"
         "Kotlin" -> "kt"
         "SQL" -> "sql"
+        "CLASS" -> "class"
         else -> {
             ""
         }
@@ -40,7 +41,7 @@ fun isJavaOrKotlinFileType(daoFile: PsiFile): Boolean {
     if (daoFile.virtualFile == null) return false
     val fileType = FileTypeManager.getInstance().getFileTypeByFile(daoFile.virtualFile)
     return when (fileType.name) {
-        "JAVA", "Kotlin" -> true
+        "JAVA", "Kotlin", "CLASS" -> true
         else -> false
     }
 }
