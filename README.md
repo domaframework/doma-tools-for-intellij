@@ -64,6 +64,7 @@ This feature is in preview. You cannot customize the indentation or keywords to 
 You can reformat entire directories and files with "Code > Reformat Code".
 
 If you want to enable the plugin's formatting function, check "Enable SQL Format" in "Settings > Other Settings > Doma Tools". (The default is OFF.)
+
 ## Settings
 Some functions of "Doma Tools" can be customized from the settings screen.
 
@@ -71,3 +72,15 @@ Some functions of "Doma Tools" can be customized from the settings screen.
 - Highlight color settings for SQL elements
 ![setting_highlight.png](images/setting_highlight.png)
 - Customize action shortcut keys
+
+## Reference resolution
+Ctrl+Click on a bind variable in an SQL file to jump to its source symbol:
+
+This feature works in source JARs as well, but in binary JARs, if the DAO method’s argument parameter names have been changed, the references cannot be resolved and the feature will not function.
+
+- The DAO method’s argument parameter definition
+- The field and method definitions on that parameter’s type
+- The class definition referenced by @ClassName@
+- You can also jump using the **Go To > Declaration Usage** menu.
+
+![reference.png](images/reference.png)
