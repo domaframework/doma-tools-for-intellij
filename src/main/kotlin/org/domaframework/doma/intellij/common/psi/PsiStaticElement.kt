@@ -15,8 +15,10 @@
  */
 package org.domaframework.doma.intellij.common.psi
 
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
+import com.intellij.psi.search.GlobalSearchScope
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.psi.SqlElExpr
 import org.jetbrains.kotlin.idea.base.util.module
@@ -26,7 +28,7 @@ import org.jetbrains.kotlin.idea.base.util.module
  */
 class PsiStaticElement(
     elExprList: List<SqlElExpr>? = null,
-    originalFile: PsiFile,
+    private val originalFile: PsiFile,
 ) {
     private var fqdn = elExprList?.joinToString(".") { e -> e.text } ?: ""
     private val module = originalFile.module
@@ -38,5 +40,10 @@ class PsiStaticElement(
                 .substringBefore("@")
     }
 
-    fun getRefClazz(): PsiClass? = module?.getJavaClazz(true, fqdn)
+    fun getRefClazz(): PsiClass? =
+        module?.getJavaClazz(true, fqdn)
+            ?: JavaPsiFacade.getInstance(originalFile.project).findClass(
+                fqdn,
+                GlobalSearchScope.allScope(originalFile.project),
+            )
 }

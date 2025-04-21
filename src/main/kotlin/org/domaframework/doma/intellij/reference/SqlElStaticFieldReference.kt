@@ -24,11 +24,14 @@ import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
+import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiStaticElement
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElStaticFieldReference(
     element: PsiElement,
@@ -73,37 +76,73 @@ class SqlElStaticFieldReference(
         // Jump from field or method to definition (assuming the top element is static)
         val staticAccessParent =
             PsiTreeUtil.getParentOfType(staticDirection, SqlElStaticFieldAccessExpr::class.java)
-        if (staticAccessParent != null) {
-            val firstChildText =
-                staticAccessParent.children
-                    .firstOrNull()
-                    ?.text ?: ""
-            val psiStaticElement =
-                PsiStaticElement(
-                    firstChildText,
-                    file,
-                )
-            val javaClazz = psiStaticElement.getRefClazz() ?: return null
-            val psiParentClass = PsiParentClass(PsiTypesUtil.getClassType(javaClazz))
-            psiParentClass.findField(elementName)?.let {
-                PluginLoggerUtil.countLogging(
-                    this::class.java.simpleName,
-                    "ReferenceStaticField",
-                    "Reference",
-                    startTime,
-                )
-                return it
+        if (staticAccessParent == null) return null
+
+        val firstChildText =
+            staticAccessParent.children
+                .firstOrNull()
+                ?.text ?: ""
+        val psiStaticElement =
+            PsiStaticElement(
+                firstChildText,
+                file,
+            )
+        val javaClazz = psiStaticElement.getRefClazz() ?: return null
+        var parentClass = PsiParentClass(PsiTypesUtil.getClassType(javaClazz))
+
+        val targetElements = getBlockCommentElements(element)
+        if (targetElements.isEmpty()) return null
+
+        val topElm = targetElements.firstOrNull() as? PsiElement ?: return null
+        if (topElm.prevSibling.elementType != SqlTypes.AT_SIGN) return null
+        var index = 1
+        for (staticFieldAccess in targetElements) {
+            if (index >= targetElements.size) {
+                parentClass.findField(elementName)?.let {
+                    PluginLoggerUtil.countLogging(
+                        this::class.java.simpleName,
+                        "ReferenceStaticField",
+                        "Reference",
+                        startTime,
+                    )
+                    return it
+                }
+                parentClass.findMethod(elementName)?.let {
+                    PluginLoggerUtil.countLogging(
+                        this::class.java.simpleName,
+                        "ReferenceStaticMethod",
+                        "Reference",
+                        startTime,
+                    )
+                    return it
+                }
             }
-            psiParentClass.findMethod(elementName)?.let {
-                PluginLoggerUtil.countLogging(
-                    this::class.java.simpleName,
-                    "ReferenceStaticMethod",
-                    "Reference",
-                    startTime,
-                )
-                return it
-            }
+
+            val newParentType =
+                parentClass.findField(staticFieldAccess.text)?.type
+                    ?: parentClass.findMethod(staticFieldAccess.text)?.returnType
+            if (newParentType == null) return null
+
+            parentClass = PsiParentClass(newParentType)
+            index++
         }
         return null
+    }
+
+    private fun getBlockCommentElements(element: PsiElement): List<PsiElement> {
+        val fieldAccessExpr = PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java)
+        val nodeElm =
+            if (fieldAccessExpr != null) {
+                PsiTreeUtil
+                    .getChildrenOfType(
+                        fieldAccessExpr,
+                        SqlElIdExpr::class.java,
+                    )?.filter { it.textOffset <= element.textOffset }
+            } else {
+                listOf(element)
+            }
+        return nodeElm
+            ?.toList()
+            ?.sortedBy { it.textOffset } ?: emptyList()
     }
 }
