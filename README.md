@@ -27,9 +27,6 @@ Shortcut keys can be used for actions
 - **Jump to Dao**
   - Jump to action from SQL to Dao
   - You can also jump to the Dao Method from the gutter icon that is displayed together.
-- **Jump to Declaration**
-  - Jump to action from SQL bind variable to declaration location
-  - ex: Dao arguments, fields, method declaration
 
 ## Inspection
 Check that bind variables are used appropriately for Dao and SQL associations.

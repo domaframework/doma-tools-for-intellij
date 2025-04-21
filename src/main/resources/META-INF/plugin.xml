@@ -108,12 +108,6 @@
         description="Jump from SQL file to Dao method definition">
         <keyboard-shortcut keymap="$default" first-keystroke="alt D"/>
       </action>
-      <action id="org.domaframework.doma.intellij.JumpToDeclarationFromSql"
-        class="org.domaframework.doma.intellij.action.sql.JumpToDeclarationFromSqlAction"
-        text="Jump to Declaration"
-        description="Jump from SQL bind variable to declaration">
-        <keyboard-shortcut keymap="$default" first-keystroke="alt E"/>
-      </action>
       <action id="org.domaframework.doma.intellij.GenerateSqlAction"
         class="org.domaframework.doma.intellij.action.dao.GenerateSqlAction"
         text="Generate SQL"
