@@ -71,10 +71,10 @@ class SqlElIdExprReference(
         startTime: Long,
         file: PsiFile,
     ): PsiElement? {
-        val targetElement = getBlockCommentElements(element)
-        if (targetElement.isEmpty()) return null
+        val targetElements = getBlockCommentElements(element)
+        if (targetElements.isEmpty()) return null
 
-        val topElm = targetElement.firstOrNull() as? PsiElement ?: return null
+        val topElm = targetElements.firstOrNull() as? PsiElement ?: return null
 
         if (topElm.prevSibling.elementType == SqlTypes.AT_SIGN) return null
 
@@ -92,14 +92,14 @@ class SqlElIdExprReference(
         val daoMethod = findDaoMethod(file) ?: return null
 
         return when (element.textOffset) {
-            targetElement.first().textOffset ->
+            targetElements.first().textOffset ->
                 getReferenceDaoMethodParameter(
                     daoMethod,
                     element,
                     startTime,
                 )
 
-            else -> getReferenceEntity(daoMethod, targetElement, startTime)
+            else -> getReferenceEntity(daoMethod, targetElements, startTime)
         }
     }
 
@@ -124,13 +124,13 @@ class SqlElIdExprReference(
 
     private fun getReferenceDaoMethodParameter(
         daoMethod: PsiMethod,
-        it: PsiElement,
+        bindElement: PsiElement,
         startTime: Long,
     ): PsiElement? {
         daoMethod
             .let { method ->
                 method.methodParameters.firstOrNull { param ->
-                    param.name == it.text
+                    param.name == bindElement.text
                 }
             }?.originalElement
             ?.let { originalElm ->

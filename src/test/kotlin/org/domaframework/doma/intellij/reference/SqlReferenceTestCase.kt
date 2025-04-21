@@ -72,8 +72,11 @@ class SqlReferenceTestCase : DomaSqlTest() {
             "referenceStaticField",
             mapOf(
                 "doma.example.entity.ProjectDetail" to "$classResolve:ProjectDetail",
+                "doma.example.entity.Project" to "$classResolve:Project",
                 "projectCategory" to "$fieldResolve:projectCategory",
                 "getTermNumber" to "$methodResolve:getTermNumber",
+                "getFirstEmployee" to "$methodResolve:getFirstEmployee",
+                "employeeId" to "$fieldResolve:employeeId",
             ),
         )
     }
