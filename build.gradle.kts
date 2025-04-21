@@ -387,11 +387,11 @@ tasks.register("updateChangelog") {
             }
         }
 
-        val newVersion = versionInfo.getNewVersion()
+        val releaseVersion = versionInfo.getNewVersion()
         val prLinks = mutableListOf<String>()
         val newEntry = StringBuilder()
 
-        newEntry.append("## [$newVersion] - $releaseDate\n\n")
+        newEntry.append("## [$releaseVersion] - $releaseDate\n\n")
         categories.keys.forEach { category ->
             val hitItems = categorized[category]
             if (!hitItems.isNullOrEmpty()) {
@@ -415,18 +415,18 @@ tasks.register("updateChangelog") {
             }
         val repoUrl = "https://github.com/domaframework/doma-tools-for-intellij"
         changelogFile.writeText(updatedContent)
-        changelogFile.appendText("[$newVersion]: $repoUrl/compare/$lastTag...$newVersion\n")
+        changelogFile.appendText("[$releaseVersion]: $repoUrl/compare/$lastTag...$releaseVersion\n")
 
         // Update Version Gradle pluginVersion
-        replaceVersionGradleProperty(newVersion)
-        println("Update Gradle Property: $newVersion")
+        replaceVersion(releaseVersion)
+        println("Update Version Pre Release: $releaseVersion")
 
         val githubEnv = System.getenv("GITHUB_ENV")
         val envFile = File(githubEnv)
-        envFile.appendText("NEW_VERSION=$newVersion\n")
-        envFile.appendText("BRANCH=doc/changelog-update-$newVersion\n")
+        envFile.appendText("NEW_VERSION=$releaseVersion\n")
+        envFile.appendText("BRANCH=doc/changelog-update-$releaseVersion\n")
 
-        println("Update newVersion: $newVersion")
+        println("Update newVersion: $releaseVersion")
     }
 }
 
@@ -542,8 +542,8 @@ spotless {
 fun replaceVersionInPluginUtil(ver: String) {
     ant.withGroovyBuilder {
         "replaceregexp"(
-            "match" to """(const val PLUGIN_VERSION = ")(\d+\.\d+\.\d+)((?:-beta)*)""",
-            "replace" to "\\1$ver",
+            "match" to """(const val PLUGIN_VERSION = ")(\d+\.\d+\.\d+)((?:-\S+)*)(")""",
+            "replace" to "\\1$ver\"",
             "encoding" to encoding,
             "flags" to "g",
         ) {
@@ -557,7 +557,7 @@ fun replaceVersionInPluginUtil(ver: String) {
 fun replaceVersionGradleProperty(ver: String) {
     ant.withGroovyBuilder {
         "replaceregexp"(
-            "match" to """(pluginVersion = )(\d+\.\d+\.\d+)((?:-beta)*)""",
+            "match" to """(pluginVersion = )(\d+\.\d+\.\d+)((?:-\S+)*)""",
             "replace" to "\\1$ver",
             "encoding" to encoding,
             "flags" to "g",
@@ -572,7 +572,7 @@ fun replaceVersionGradleProperty(ver: String) {
 fun replaceVersionInLogSetting(ver: String) {
     ant.withGroovyBuilder {
         "replaceregexp"(
-            "match" to """(org.domaframework.doma.intellij.plugin.version:-)(\d+\.\d+\.\d+)((?:-beta)*)(})""",
+            "match" to """(org.domaframework.doma.intellij.plugin.version:-)(\d+\.\d+\.\d+)((?:-\S+)*)(})""",
             "replace" to "\\1$ver\\4",
             "encoding" to encoding,
             "flags" to "g",
@@ -588,7 +588,7 @@ fun replaceVersionInLogSetting(ver: String) {
 fun replaceVersion(ver: String) {
     checkNotNull(ver)
     replaceVersionInPluginUtil(ver)
-    replaceVersionGradleProperty("$ver-beta")
+    replaceVersionGradleProperty(ver)
     replaceVersionInLogSetting(ver)
     println("Replace version in PluginUtil.kt, gradle.properties, logback.xml")
 }
@@ -609,7 +609,7 @@ tasks.register("replaceNewVersion") {
         val minor = lastVersions[1].toInt()
         val patch = lastVersions[2].toInt() + 1
 
-        val newVersion = "$major.$minor.$patch"
+        val newVersion = "$major.$minor.$patch-beta"
         println("Release newVersion: $newVersion")
         replaceVersion(newVersion)
         try {
@@ -634,7 +634,7 @@ tasks.register("replaceDraftVersion") {
 
     doLast {
         println("Release DraftVersion: $draftVersion")
-        replaceVersion(draftVersion)
+        replaceVersion("$draftVersion-beta")
         try {
             val githubEnv = System.getenv("GITHUB_ENV")
             val envFile = File(githubEnv)
