@@ -16,8 +16,19 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      skip_job: ${{ steps.check.outputs.SKIP_JOB }}
 
     steps:
+      - name: Check Commit Message
+        id: check
+        run: |
+          if [[ "${{ github.event.head_commit.message }}" =~ ^Merge\ pull\ request\ #[0-9]+\ from\ ${{ github.repository_owner }}/doc/changelog-update-.*$ ]]; then
+            echo "This commit is not target. Skip the workflow."
+            echo "SKIP_JOB=true" >> $GITHUB_OUTPUT
+          else
+            echo "SKIP_JOB=false" >> $GITHUB_OUTPUT
+          fi
       - uses: release-drafter/release-drafter@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -26,7 +37,7 @@ jobs:
 
   update_version:
     needs: update_release_draft
-    if: ${{ !contains(github.head_ref, 'doc/changelog-update-') }}
+    if: ${{ needs.update_release_draft.outputs.skip_job != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
