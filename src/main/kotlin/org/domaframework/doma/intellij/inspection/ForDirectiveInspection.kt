@@ -17,12 +17,18 @@ package org.domaframework.doma.intellij.inspection
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.util.CachedValue
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.nextLeafs
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.sql.foritem.ForDeclarationDaoBaseItem
 import org.domaframework.doma.intellij.common.sql.foritem.ForDirectiveItemBase
 import org.domaframework.doma.intellij.common.sql.foritem.ForItem
+import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
 import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.getForItemDeclaration
@@ -32,7 +38,9 @@ import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-class ForDirectiveInspection {
+class ForDirectiveInspection(
+    private val shorName: String,
+) {
     data class BlockToken(
         val type: BlockType,
         val item: PsiElement,
@@ -45,7 +53,10 @@ class ForDirectiveInspection {
         END,
     }
 
-    fun getForItemInForDirectiveBlock(targetElement: PsiElement): ForItem? {
+    private val cachedForDirectiveBlocks: MutableMap<PsiElement, CachedValue<List<BlockToken>>> =
+        mutableMapOf()
+
+    fun getForItem(targetElement: PsiElement): ForItem? {
         val forBlocks = getForDirectiveBlock(targetElement)
         val targetName =
             targetElement.text
@@ -55,49 +66,89 @@ class ForDirectiveInspection {
         forItem?.let { return ForItem(it.item) } ?: return null
     }
 
+    fun checkForItem(blockElements: List<PsiElement>): ValidationResult? {
+        val targetElement: PsiElement = blockElements.firstOrNull() ?: return null
+        val file = targetElement.containingFile ?: return null
+
+        val forItem = getForItem(targetElement)
+        var errorElement: ValidationResult? = ValidationDaoParamResult(targetElement, "", shorName, targetElement.textRange)
+        if (forItem != null) {
+            val declarationItem =
+                getDeclarationItem(forItem, file)
+
+            if (declarationItem != null && declarationItem is ForDeclarationDaoBaseItem) {
+                val forItemElementsParentClass = declarationItem.getPsiParentClass()
+                if (forItemElementsParentClass != null) {
+                    val validator =
+                        SqlElForItemFieldAccessorChildElementValidator(
+                            blockElements,
+                            forItemElementsParentClass,
+                            shorName,
+                        )
+                    errorElement = validator.validateChildren()
+                }
+            }
+        }
+        return errorElement
+    }
+
     /**
      * Count the `for`, `if`, and `end` elements from the beginning
      * to the target element (`targetElement`)
      * and obtain the `for` block information to which the `targetElement` belongs.
      */
     private fun getForDirectiveBlock(targetElement: PsiElement): List<BlockToken> {
-        val topElm = targetElement.containingFile.firstChild ?: return emptyList()
-        val directiveBlocks =
-            topElm.nextLeafs
-                .filter { elm ->
-                    elm.elementType == SqlTypes.EL_FOR ||
-                        elm.elementType == SqlTypes.EL_IF ||
-                        elm.elementType == SqlTypes.EL_END
-                }.map {
-                    when (it.elementType) {
-                        SqlTypes.EL_FOR -> {
-                            val item = (it.parent as? SqlElForDirective)?.getForItem()
-                            BlockToken(
-                                BlockType.FOR,
-                                item ?: it,
-                                item?.textOffset ?: 0,
+        val cachedValue =
+            cachedForDirectiveBlocks.getOrPut(targetElement) {
+                CachedValuesManager.getManager(targetElement.project).createCachedValue {
+                    val topElm =
+                        targetElement.containingFile.firstChild
+                            ?: return@createCachedValue CachedValueProvider.Result.create(
+                                emptyList(),
+                                targetElement.containingFile,
                             )
+                    val directiveBlocks =
+                        topElm.nextLeafs
+                            .filter { elm ->
+                                elm.elementType == SqlTypes.EL_FOR ||
+                                    elm.elementType == SqlTypes.EL_IF ||
+                                    elm.elementType == SqlTypes.EL_END
+                            }.map {
+                                when (it.elementType) {
+                                    SqlTypes.EL_FOR -> {
+                                        val item = (it.parent as? SqlElForDirective)?.getForItem()
+                                        BlockToken(
+                                            BlockType.FOR,
+                                            item ?: it,
+                                            item?.textOffset ?: 0,
+                                        )
+                                    }
+
+                                    SqlTypes.EL_IF -> BlockToken(BlockType.IF, it, it.textOffset)
+                                    else -> BlockToken(BlockType.END, it, it.textOffset)
+                                }
+                            }
+                    val preBlocks =
+                        directiveBlocks
+                            .filter { it.position <= targetElement.textOffset }
+                    val stack = mutableListOf<BlockToken>()
+                    preBlocks.forEach { block ->
+                        when (block.type) {
+                            BlockType.FOR, BlockType.IF -> stack.add(block)
+                            BlockType.END -> if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
                         }
-
-                        SqlTypes.EL_IF -> BlockToken(BlockType.IF, it, it.textOffset)
-                        else -> BlockToken(BlockType.END, it, it.textOffset)
                     }
-                }
-        val preBlocks =
-            directiveBlocks
-                .filter { it.position <= targetElement.textOffset }
-        val stack = mutableListOf<BlockToken>()
-        preBlocks.forEach { block ->
-            when (block.type) {
-                BlockType.FOR, BlockType.IF -> stack.add(block)
-                BlockType.END -> if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
-            }
-        }
 
-        return stack.filter { it.type == BlockType.FOR }
+                    CachedValueProvider.Result.create(
+                        stack.filter { it.type == BlockType.FOR },
+                        targetElement.containingFile,
+                    )
+                }
+            }
+        return cachedValue.value
     }
 
-    fun getDeclarationItem(
+    private fun getDeclarationItem(
         forItem: ForItem,
         file: PsiFile,
         searchIndex: Int = 0,
@@ -108,13 +159,21 @@ class ForDirectiveInspection {
         val blockElement = declarationElement.getDeclarationChildren()
         val topElm = blockElement.firstOrNull() ?: return null
 
-        val parentForItem = getForItemInForDirectiveBlock(topElm)
+        val parentForItem = getForItem(topElm)
         val index = searchIndex + 1
         if (parentForItem != null) {
             val parentDeclaration = getDeclarationItem(parentForItem, file, index)
             if (parentDeclaration is ForDeclarationDaoBaseItem) return parentDeclaration
         }
 
+        return getForDeclarationDaoParamBase(topElm, searchIndex, file)
+    }
+
+    private fun getForDeclarationDaoParamBase(
+        topElm: PsiElement,
+        searchIndex: Int,
+        file: PsiFile,
+    ): ForDeclarationDaoBaseItem? {
         val daoMethod = findDaoMethod(file) ?: return null
         val params = daoMethod.methodParameters
         val validDaoParam =

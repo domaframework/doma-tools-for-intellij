@@ -21,6 +21,7 @@ import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
+import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElIfDirective
@@ -28,13 +29,17 @@ import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 val SqlElStaticFieldAccessExpr.accessElements: List<PsiElement>
-    get() {
-        return PsiTreeUtil
-            .getChildrenOfType(this, SqlElIdExpr::class.java)
-            ?.sortedBy { it.textOffset }
-            ?.toList()
-            ?: emptyList()
-    }
+    get() =
+        this.elIdExprList
+            .sortedBy { it.textOffset }
+            .toList()
+
+val SqlElFieldAccessExpr.accessElements: List<SqlElIdExpr?>
+    get() =
+        this.elExprList
+            .mapNotNull { it as SqlElIdExpr }
+            .sortedBy { it.textOffset }
+            .toList()
 
 val SqlElStaticFieldAccessExpr.fqdn: String
     get() {

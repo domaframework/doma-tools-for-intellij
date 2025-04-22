@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.sql
+package org.domaframework.doma.intellij.common.sql.validator
 
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
 
-data class HighlightingElementData(
-    val identify: PsiElement,
-    val parent: PsiParentClass?,
-)
+class SqlElForItemFieldAccessorChildElementValidator(
+    override val blocks: List<PsiElement>,
+    private val declarationType: PsiParentClass,
+    override val shorName: String,
+) : SqlElChildElementValidator(blocks, shorName) {
+    override fun validateChildren(): ValidationResult? = validateFieldAccess(declarationType)
+}

@@ -16,9 +16,8 @@
 package org.domaframework.doma.intellij.common.sql.foritem
 
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.PsiTreeUtil
+import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
-import org.domaframework.doma.intellij.psi.SqlElIdExpr
 
 /**
  *  definition source in the For directive
@@ -28,9 +27,6 @@ open class ForDeclarationItem(
     override val element: PsiElement,
 ) : ForDirectiveItemBase(element) {
     fun getDeclarationChildren(): List<PsiElement> =
-        if (element is SqlElFieldAccessExpr) {
-            PsiTreeUtil.getChildrenOfType(element, SqlElIdExpr::class.java)?.toList() ?: emptyList()
-        } else {
-            listOf(element)
-        }
+        (element as? SqlElFieldAccessExpr)?.accessElements?.mapNotNull { it as PsiElement }
+            ?: listOf(element)
 }
