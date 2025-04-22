@@ -15,42 +15,41 @@
  */
 package org.domaframework.doma.intellij.extension.psi
 
+import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiParameter
-import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 
 /**
  * For List type, if the annotation type is Batch type,
  * return the content type.
  */
-fun PsiParameter.getIterableClazz(annotationType: DomaAnnotationType): PsiParentClass {
-    val immediate: PsiClassReferenceType? = this.type as? PsiClassReferenceType
-    if (immediate != null) {
-        if (immediate.name == "List" && annotationType.isBatchAnnotation()) {
-            val listType =
-                (this.type as PsiClassReferenceType).parameters.firstOrNull()
-                    ?: return PsiParentClass(this.type)
-            return PsiParentClass(listType)
-        }
+fun PsiParameter.getIterableClazz(annotationType: DomaAnnotationType): PsiParentClass = getIterableClazz(annotationType.isBatchAnnotation())
+
+fun PsiParameter.getIterableClazz(useListParam: Boolean): PsiParentClass {
+    val immediate = this.type as? PsiClassType
+    val classType = immediate?.let { PsiClassTypeUtil.getPsiTypeByList(it, useListParam) }
+    if (classType != null) {
+        return PsiParentClass(classType)
     }
     return PsiParentClass(this.type)
 }
 
 val PsiParameter.isFunctionClazz: Boolean
     get() =
-        (this.typeElement?.type as? PsiClassReferenceType)
+        (this.typeElement?.type as? PsiClassType)
             ?.resolve()
             ?.qualifiedName
             ?.contains("java.util.function") == true
 
 val PsiParameter.isSelectOption: Boolean
     get() =
-        (this.typeElement?.type as? PsiClassReferenceType)
+        (this.typeElement?.type as? PsiClassType)
             ?.resolve()
             ?.qualifiedName == "org.seasar.doma.jdbc.SelectOptions"
 
 val PsiParameter.isCollector: Boolean
     get() =
-        (this.typeElement?.type as? PsiClassReferenceType)
+        (this.typeElement?.type as? PsiClassType)
             ?.resolve()
             ?.qualifiedName == "java.util.stream.Collector"

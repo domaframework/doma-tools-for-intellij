@@ -36,7 +36,7 @@ import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.getIterableClazz
 import org.domaframework.doma.intellij.extension.psi.methodParameters
-import org.domaframework.doma.intellij.inspection.sql.inspector.SqlBindVariableValidInspector.BlockType
+import org.domaframework.doma.intellij.inspection.ForDirectiveInspection.BlockType
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
@@ -45,6 +45,8 @@ import org.domaframework.doma.intellij.psi.SqlTypes
 class SqlElIdExprReference(
     element: PsiElement,
 ) : PsiReferenceBase<PsiElement>(element) {
+    var psiClassType: PsiType? = null
+
     private val cachedResolve: CachedValue<PsiElement?> by lazy {
         CachedValuesManager.getManager(element.project).createCachedValue {
             val result = doResolve()
@@ -91,19 +93,20 @@ class SqlElIdExprReference(
 
         val daoMethod = findDaoMethod(file) ?: return null
 
-        return when (element.textOffset) {
-            targetElements.first().textOffset ->
-                getReferenceDaoMethodParameter(
-                    daoMethod,
-                    element,
-                    startTime,
-                )
+        val symbolElement =
+            when (element.textOffset) {
+                targetElements.first().textOffset ->
+                    getReferenceDaoMethodParameter(
+                        daoMethod,
+                        element,
+                        startTime,
+                    )
 
-            else -> getReferenceEntity(daoMethod, targetElements, startTime)
-        }
+                else -> getReferenceEntity(daoMethod, targetElements, startTime)
+            }
+
+        return symbolElement
     }
-
-    override fun getVariants(): Array<Any> = emptyArray()
 
     private fun getBlockCommentElements(element: PsiElement): List<PsiElement> {
         val fieldAccessExpr = PsiTreeUtil.getParentOfType(element, SqlElFieldAccessExpr::class.java)
@@ -132,15 +135,15 @@ class SqlElIdExprReference(
                 method.methodParameters.firstOrNull { param ->
                     param.name == bindElement.text
                 }
-            }?.originalElement
-            ?.let { originalElm ->
+            }?.let { originalElm ->
                 PluginLoggerUtil.countLogging(
                     this::class.java.simpleName,
                     "ReferenceDaoMethodParameter",
                     "Reference",
                     startTime,
                 )
-                return originalElm
+                psiClassType = originalElm.type
+                return originalElm.originalElement
             } ?: return null
     }
 
@@ -185,6 +188,7 @@ class SqlElIdExprReference(
                 return originalElement
             }
             parentClass = PsiParentClass(type)
+            psiClassType = type
             return null
         }
 
@@ -203,6 +207,7 @@ class SqlElIdExprReference(
                 .findMethod(elm.text)
                 ?.let {
                     val returnType = it.returnType ?: return null
+                    psiClassType = returnType
                     val reference =
                         getBindVariableIfLastIndex(index, returnType, it.originalElement)
                     if (reference != null) return reference

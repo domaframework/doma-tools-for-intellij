@@ -22,11 +22,13 @@ import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiModificationTracker
+import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.isSupportFileType
-import org.domaframework.doma.intellij.common.psi.PsiStaticElement
+import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElForDirective
 
-class SqlElClassExprReference(
+class SqlElForDirectiveIdExprReference(
     element: PsiElement,
 ) : PsiReferenceBase<PsiElement>(element) {
     private val cachedResolve: CachedValue<PsiElement?> by lazy {
@@ -43,23 +45,27 @@ class SqlElClassExprReference(
     private fun doResolve(): PsiElement? {
         if (file == null || !isSupportFileType(file)) return null
         val startTime = System.nanoTime()
-        return superResolveLogic(startTime, file)
+        return superResolveLogic(startTime)
     }
 
-    private fun superResolveLogic(
-        startTime: Long,
-        file: PsiFile,
-    ): PsiElement? {
-        val variableName = element.text
-        val psiStaticElement = PsiStaticElement(variableName, file)
+    private fun superResolveLogic(startTime: Long): PsiElement? {
+        val declarationItem = getDeclarationItem()
         PluginLoggerUtil.countLogging(
             this::class.java.simpleName,
-            "ReferenceStaticClass",
+            "ReferenceForDirectiveItem",
             "Reference",
             startTime,
         )
-        return psiStaticElement.getRefClazz()
+        return declarationItem
     }
 
     override fun getVariants(): Array<Any> = emptyArray()
+
+    private fun getDeclarationItem(): PsiElement? {
+        val forDirectiveParent = PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java)
+        if (forDirectiveParent == null) return null
+
+        return PsiTreeUtil.getChildrenOfType(forDirectiveParent, SqlElFieldAccessExpr::class.java)?.last()
+            ?: PsiTreeUtil.getChildrenOfType(forDirectiveParent, SqlElFieldAccessExpr::class.java)?.last()
+    }
 }

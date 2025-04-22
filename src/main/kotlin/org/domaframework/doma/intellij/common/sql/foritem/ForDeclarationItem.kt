@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.extension.psi
+package org.domaframework.doma.intellij.common.sql.foritem
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.common.sql.foritem.ForDeclarationItem
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
-import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 
-fun SqlElForDirective.getForItem(): PsiElement? =
-    PsiTreeUtil
-        .getChildOfType(this, SqlElIdExpr::class.java)
-
-fun SqlElForDirective.getForItemDeclaration(): ForDeclarationItem? {
-    val declarationElm =
-        PsiTreeUtil.getChildrenOfType(this, SqlElFieldAccessExpr::class.java)?.last()
-            ?: PsiTreeUtil.getChildrenOfType(this, SqlElIdExpr::class.java)?.last()
-    return declarationElm?.let { ForDeclarationItem(it) }
+/**
+ *  definition source in the For directive
+ *  %for [ForItem] : [ForDeclarationItem]
+ */
+open class ForDeclarationItem(
+    override val element: PsiElement,
+) : ForDirectiveItemBase(element) {
+    fun getDeclarationChildren(): List<PsiElement> =
+        if (element is SqlElFieldAccessExpr) {
+            PsiTreeUtil.getChildrenOfType(element, SqlElIdExpr::class.java)?.toList() ?: emptyList()
+        } else {
+            listOf(element)
+        }
 }
