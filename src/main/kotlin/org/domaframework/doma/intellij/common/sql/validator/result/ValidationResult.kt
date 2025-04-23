@@ -57,6 +57,9 @@ abstract class ValidationResult(
         project: Project,
     )
 
+    /**
+     * Highlight level is determined according to the settings
+     */
     protected fun problemHighlightType(
         project: Project,
         shortName: String,

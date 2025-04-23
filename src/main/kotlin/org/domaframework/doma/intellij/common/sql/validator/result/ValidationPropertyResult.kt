@@ -23,6 +23,9 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
+/**
+ * This class indicates that there is no field or method defined in the class that matches the target name.
+ */
 class ValidationPropertyResult(
     override val identify: PsiElement,
     override val parentClass: PsiParentClass?,

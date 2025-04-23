@@ -21,6 +21,9 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
+/**
+ * This class represents successful completion of field access analysis.
+ */
 class ValidationCompleteResult(
     override val identify: PsiElement,
     override val parentClass: PsiParentClass,

@@ -40,8 +40,7 @@ class ForDeclarationDaoBaseItem(
             SqlElFieldAccessorChildElementValidator(
                 blocks,
                 element.containingFile,
-                "",
-                daoParameter,
+                topDaoParameter = daoParameter,
             )
 
         var lastType: PsiParentClass? = null

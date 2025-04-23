@@ -67,6 +67,10 @@ class ForDirectiveInspection(
         forItem?.let { return ForItem(it.item) } ?: return null
     }
 
+    /**
+     * Analyze the field access of the for item definition and finally get the declared type
+     * @return [ValidationResult] is used to display the analysis results.
+     */
     fun checkForItem(blockElements: List<PsiElement>): ValidationResult? {
         val targetElement: PsiElement = blockElements.firstOrNull() ?: return null
         val file = targetElement.containingFile ?: return null
