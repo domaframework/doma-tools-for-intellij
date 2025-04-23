@@ -61,11 +61,18 @@ class SqlElForDirectiveIdExprReference(
 
     override fun getVariants(): Array<Any> = emptyArray()
 
+    /**
+     * In the for directive, set the reference on the left side to the element on the right side.
+     */
     private fun getDeclarationItem(): PsiElement? {
-        val forDirectiveParent = PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java)
-        if (forDirectiveParent == null) return null
+        val forDirectiveParent =
+            PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java) ?: return null
 
-        return PsiTreeUtil.getChildrenOfType(forDirectiveParent, SqlElFieldAccessExpr::class.java)?.last()
-            ?: PsiTreeUtil.getChildrenOfType(forDirectiveParent, SqlElFieldAccessExpr::class.java)?.last()
+        return PsiTreeUtil
+            .getChildrenOfType(forDirectiveParent, SqlElFieldAccessExpr::class.java)
+            ?.last()
+            ?: PsiTreeUtil
+                .getChildrenOfType(forDirectiveParent, SqlElFieldAccessExpr::class.java)
+                ?.last()
     }
 }

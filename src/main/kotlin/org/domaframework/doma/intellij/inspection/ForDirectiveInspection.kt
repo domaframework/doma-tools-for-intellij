@@ -97,6 +97,32 @@ class ForDirectiveInspection(
         return errorElement
     }
 
+    fun getFieldAccessParentClass(blockElements: List<PsiElement>): ValidationResult? {
+        val targetElement: PsiElement = blockElements.firstOrNull() ?: return null
+        val file = targetElement.containingFile ?: return null
+
+        val forItem = getForItem(targetElement)
+        var errorElement: ValidationResult? = ValidationDaoParamResult(targetElement, "", shorName)
+        if (forItem != null) {
+            val declarationItem =
+                getDeclarationItem(forItem, file)
+
+            if (declarationItem != null && declarationItem is ForDeclarationDaoBaseItem) {
+                val forItemElementsParentClass = declarationItem.getPsiParentClass()
+                if (forItemElementsParentClass != null) {
+                    val validator =
+                        SqlElForItemFieldAccessorChildElementValidator(
+                            blockElements,
+                            forItemElementsParentClass,
+                            shorName,
+                        )
+                    errorElement = validator.validateChildren(dropIndex = 1)
+                }
+            }
+        }
+        return errorElement
+    }
+
     /**
      * Count the `for`, `if`, and `end` elements from the beginning
      * to the target element (`targetElement`)

@@ -21,6 +21,7 @@ import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
 import org.domaframework.doma.intellij.extension.psi.findParameter
@@ -34,33 +35,33 @@ class SqlElFieldAccessorChildElementValidator(
     private val topDaoParameter: PsiParameter? = null,
 ) : SqlElChildElementValidator(blocks, shorName) {
     override fun validateChildren(
+        dropIndex: Int,
         findFieldMethod: (PsiType) -> PsiParentClass,
         complete: (PsiParentClass) -> Unit,
     ): ValidationResult? {
-        val daoMethod = findDaoMethod(file) ?: return null
-        val topElement: PsiElement = blocks.firstOrNull() ?: return null
-        val validDaoParam =
-            topDaoParameter
-                ?: daoMethod.findParameter(topElement.text)
-
-        if (validDaoParam == null) {
-            return ValidationDaoParamResult(
-                topElement,
-                daoMethod.name,
-                shorName,
+        val parentClassResult = getParentClass()
+        val parentClass = parentClassResult?.parentClass
+        if (parentClassResult is ValidationCompleteResult && parentClass != null) {
+            return validateFieldAccess(
+                parentClass,
+                complete = complete,
             )
         }
 
-        val parentClass =
-            validDaoParam.getIterableClazz(daoMethod.getDomaAnnotationType())
-
-        return validateFieldAccess(
-            parentClass,
-            complete = complete,
-        )
+        return parentClassResult
     }
 
-    override fun validateChildren(): ValidationResult? {
+    override fun validateChildren(dropIndex: Int): ValidationResult? {
+        val parentClassResult = getParentClass()
+        val parentClass = parentClassResult?.parentClass
+        if (parentClassResult is ValidationCompleteResult && parentClass != null) {
+            return validateFieldAccess(parentClass)
+        }
+
+        return parentClassResult
+    }
+
+    private fun getParentClass(): ValidationResult? {
         val daoMethod = findDaoMethod(file) ?: return null
         val topElement: PsiElement = blocks.firstOrNull() ?: return null
         val validDaoParam =
@@ -75,9 +76,9 @@ class SqlElFieldAccessorChildElementValidator(
             )
         }
 
-        val parentClass =
-            validDaoParam.getIterableClazz(daoMethod.getDomaAnnotationType())
-
-        return validateFieldAccess(parentClass)
+        return ValidationCompleteResult(
+            topElement,
+            validDaoParam.getIterableClazz(daoMethod.getDomaAnnotationType()),
+        )
     }
 }

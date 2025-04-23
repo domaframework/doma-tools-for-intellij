@@ -35,6 +35,7 @@ class SqlElStaticFieldAccessorChildElementValidator(
     override val shorName: String,
 ) : SqlElChildElementValidator(blocks, shorName) {
     override fun validateChildren(
+        dropIndex: Int,
         findFieldMethod: (PsiType) -> PsiParentClass,
         complete: (PsiParentClass) -> Unit,
     ): ValidationResult? {
@@ -52,7 +53,7 @@ class SqlElStaticFieldAccessorChildElementValidator(
         }
     }
 
-    override fun validateChildren(): ValidationResult? {
+    override fun validateChildren(dropIndex: Int): ValidationResult? {
         val getParentResult = getParent()
         when (getParentResult) {
             is ValidationCompleteResult -> {

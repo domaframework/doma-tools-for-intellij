@@ -265,8 +265,28 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         }
 
         if (topElementType == null) {
-            topElementType = getTopElementClassType(top, elements, originalFile, topText, result) ?: return
+            val forDeclaration = ForDirectiveInspection("")
+            val forItem = forDeclaration.getForItem(top)
+            if (forItem != null) {
+                val errorElement = forDeclaration.checkForItem(elements)
+                if (errorElement is ValidationCompleteResult) {
+                    topElementType = errorElement.parentClass.type
+                    val parentClass = errorElement.parentClass
+                    val searchWord = cleanString(positionText)
+                    setFieldsAndMethodsCompletionResultSet(
+                        parentClass.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
+                        parentClass.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
+                        result,
+                    )
+                    return
+                }
+                topElementType =
+                    getElementTypeByFieldAccess(originalFile, topText, elements, result)
+                        ?: return
+            }
         }
+
+        if (topElementType == null) return
 
         val fieldAccessorChildElementValidator =
             SqlElForItemFieldAccessorChildElementValidator(
@@ -302,25 +322,6 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             } ?: { parentMethods = emptyArray() }
             setFieldsAndMethodsCompletionResultSet(parentProperties, parentMethods, result)
         }
-    }
-
-    private fun getTopElementClassType(
-        top: PsiElement,
-        elements: List<PsiElement>,
-        originalFile: PsiFile,
-        topText: String,
-        result: CompletionResultSet,
-    ): PsiType? {
-        val forDeclaration = ForDirectiveInspection("")
-        val forItem = forDeclaration.getForItem(top)
-        if (forItem != null) {
-            val errorElement = forDeclaration.checkForItem(elements)
-            if (errorElement is ValidationCompleteResult) {
-                return errorElement.parentClass.type
-            }
-            return null
-        }
-        return getElementTypeByFieldAccess(originalFile, topText, elements, result)
     }
 
     private fun setStaticFieldAccess(

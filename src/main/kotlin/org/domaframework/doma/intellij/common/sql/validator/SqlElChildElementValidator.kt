@@ -34,20 +34,42 @@ abstract class SqlElChildElementValidator(
     open val blocks: List<PsiElement>,
     open val shorName: String,
 ) {
-    abstract fun validateChildren(): ValidationResult?
+    abstract fun validateChildren(dropIndex: Int = 0): ValidationResult?
 
     open fun validateChildren(
+        dropIndex: Int = 0,
         findFieldMethod: (PsiType) -> PsiParentClass = { type: PsiType -> PsiParentClass(type) },
         complete: (PsiParentClass) -> Unit,
     ): ValidationResult? = null
 
     protected fun validateFieldAccess(
         topParent: PsiParentClass,
+        dropLastIndex: Int = 0,
+        findFieldMethod: ((PsiType) -> PsiParentClass)? = { type -> PsiParentClass(type) },
+        complete: ((PsiParentClass) -> Unit) = { parent: PsiParentClass? -> },
+    ): ValidationResult? =
+        getFieldAccessParentClass(
+            topParent,
+            dropLastIndex,
+            findFieldMethod = findFieldMethod,
+            complete = complete,
+        )
+
+    protected fun getFieldAccessParentClass(
+        topParent: PsiParentClass,
+        dropLastIndex: Int = 0,
         findFieldMethod: ((PsiType) -> PsiParentClass)? = { type -> PsiParentClass(type) },
         complete: ((PsiParentClass) -> Unit) = { parent: PsiParentClass? -> },
     ): ValidationResult? {
         var parent = topParent
         var competeResult: ValidationCompleteResult? = null
+
+        if (dropLastIndex > 0 && blocks.drop(1).dropLast(dropLastIndex).isEmpty()) {
+            return ValidationCompleteResult(
+                blocks.last(),
+                parent,
+            )
+        }
 
         var getMethodReturnType: PsiType? =
             if (PsiClassTypeUtil.isCollect(topParent.type)) {
@@ -56,7 +78,7 @@ abstract class SqlElChildElementValidator(
                 null
             }
         var listParamIndex = 0
-        for (element in blocks.drop(1)) {
+        for (element in blocks.drop(1).dropLast(dropLastIndex)) {
             val searchElm = cleanString(getSearchElementText(element))
             if (searchElm.isEmpty()) {
                 complete.invoke(parent)

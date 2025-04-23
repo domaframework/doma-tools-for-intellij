@@ -26,13 +26,15 @@ class SqlElForItemFieldAccessorChildElementValidator(
     override val shorName: String = "",
 ) : SqlElChildElementValidator(blocks, shorName) {
     override fun validateChildren(
+        dropIndex: Int,
         findFieldMethod: (PsiType) -> PsiParentClass,
         complete: (PsiParentClass) -> Unit,
     ): ValidationResult? =
         validateFieldAccess(
             declarationType,
+            dropIndex,
             complete = complete,
         )
 
-    override fun validateChildren(): ValidationResult? = validateFieldAccess(declarationType)
+    override fun validateChildren(dropIndex: Int): ValidationResult? = validateFieldAccess(declarationType, dropIndex)
 }
