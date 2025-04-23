@@ -36,9 +36,11 @@ import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
-import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.directive.DirectiveCompletion
+import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.findNodeParent
 import org.domaframework.doma.intellij.extension.psi.findSelfBlocks
@@ -46,11 +48,11 @@ import org.domaframework.doma.intellij.extension.psi.findStaticField
 import org.domaframework.doma.intellij.extension.psi.findStaticMethod
 import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getIterableClazz
-import org.domaframework.doma.intellij.extension.psi.getMethodReturnType
 import org.domaframework.doma.intellij.extension.psi.isNotWhiteSpace
 import org.domaframework.doma.intellij.extension.psi.searchParameter
 import org.domaframework.doma.intellij.extension.psi.searchStaticField
 import org.domaframework.doma.intellij.extension.psi.searchStaticMethod
+import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
 import org.domaframework.doma.intellij.psi.SqlElAndExpr
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
@@ -117,6 +119,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 val blockElements = getAccessElementTextBlocks(originalPosition)
                 generateCompletionList(
                     blockElements,
+                    pos.text,
                     originalFile,
                     result,
                 )
@@ -237,6 +240,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
      */
     private fun generateCompletionList(
         elements: List<PsiElement>,
+        positionText: String,
         originalFile: PsiFile,
         result: CompletionResultSet,
     ) {
@@ -250,12 +254,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val topText = cleanString(getSearchElementText(top))
         val prevWord = PsiPatternUtil.getBindSearchWord(originalFile, elements.last(), " ")
         if (prevWord.startsWith("@") && prevWord.endsWith("@")) {
-            val clazz = getRefClazz(top) { prevWord.replace("@", "") } ?: return
-            val matchFields = clazz.searchStaticField(topText)
-            val matchMethod = clazz.searchStaticMethod(topText)
-
-            // When you enter here, it is the top element, so return static fields and methods.
-            setFieldsAndMethodsCompletionResultSet(matchFields, matchMethod, result)
+            setStaticFieldAccess(top, prevWord, topText, result)
             return
         }
         if (top.parent !is PsiFile && top.parent?.parent !is PsiDirectory) {
@@ -264,54 +263,78 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 topElementType = getElementTypeByStaticFieldAccess(top, it, topText) ?: return
             }
         }
+
         if (topElementType == null) {
-            topElementType =
-                getElementTypeByFieldAccess(originalFile, topText, elements, result) ?: return
+            topElementType = getTopElementClassType(top, elements, originalFile, topText, result) ?: return
         }
 
-        // If the name of the return value type is E, get the nested types in order from topElementType.
-        // Loop through the remaining child elements and generate a code completion list
-        // that displays by type of terminal element
+        val fieldAccessorChildElementValidator =
+            SqlElForItemFieldAccessorChildElementValidator(
+                elements,
+                PsiParentClass(topElementType),
+            )
+
         var psiParentClass = PsiParentClass(topElementType)
         var parentProperties: Array<PsiField> = psiParentClass.clazz?.allFields ?: emptyArray()
         var parentMethods: Array<PsiMethod> = psiParentClass.clazz?.allMethods ?: emptyArray()
-        var index = 1
-        var listParamIndex = 0
-        for (elm in elements.drop(1)) {
-            index++
-            val searchElm = cleanString(getSearchElementText(elm))
-            if (searchElm.isEmpty()) {
-                setFieldsAndMethodsCompletionResultSet(
-                    (psiParentClass.searchField(searchElm)?.toTypedArray() ?: emptyArray()),
-                    (psiParentClass.searchMethod(searchElm)?.toTypedArray() ?: emptyArray()),
-                    result,
-                )
-                return
-            }
 
-            if (index < elements.size) {
-                psiParentClass.findField(searchElm)?.let {
-                    if (psiParentClass.type != it.type) {
-                        if (!PsiTypeChecker.isTargetType(it.type)) return
-                        psiParentClass = PsiParentClass(it.type)
-                    }
-                }
-                psiParentClass.findMethod(searchElm)?.let {
-                    if (it.returnType == null) return
-                    val listType = it.getMethodReturnType(topElementType, listParamIndex) ?: return
-                    psiParentClass = PsiParentClass(listType)
-                }
-                listParamIndex++
-            } else {
-                psiParentClass.searchField(searchElm)?.let {
-                    parentProperties = it.toTypedArray()
-                } ?: { parentProperties = emptyArray() }
-                psiParentClass.searchMethod(searchElm)?.let {
-                    parentMethods = it.toTypedArray()
-                } ?: { parentMethods = emptyArray() }
-                setFieldsAndMethodsCompletionResultSet(parentProperties, parentMethods, result)
-            }
+        val errorElement =
+            fieldAccessorChildElementValidator.validateChildren(
+                complete = { parent ->
+                    val searchWord = cleanString(positionText)
+                    parentProperties = parent.searchField(searchWord)?.toTypedArray() ?: emptyArray()
+                    parentMethods = parent.searchMethod(searchWord)?.toTypedArray() ?: emptyArray()
+                    setFieldsAndMethodsCompletionResultSet(
+                        parentProperties,
+                        parentMethods,
+                        result,
+                    )
+                },
+            )
+
+        if (errorElement is ValidationPropertyResult) {
+            val parent = errorElement.parentClass ?: return
+            parent.searchField(cleanString(positionText))?.let {
+                parentProperties = it.toTypedArray()
+            } ?: { parentProperties = emptyArray() }
+            parent.searchMethod(cleanString(positionText))?.let {
+                parentMethods = it.toTypedArray()
+            } ?: { parentMethods = emptyArray() }
+            setFieldsAndMethodsCompletionResultSet(parentProperties, parentMethods, result)
         }
+    }
+
+    private fun getTopElementClassType(
+        top: PsiElement,
+        elements: List<PsiElement>,
+        originalFile: PsiFile,
+        topText: String,
+        result: CompletionResultSet,
+    ): PsiType? {
+        val forDeclaration = ForDirectiveInspection("")
+        val forItem = forDeclaration.getForItem(top)
+        if (forItem != null) {
+            val errorElement = forDeclaration.checkForItem(elements)
+            if (errorElement is ValidationCompleteResult) {
+                return errorElement.parentClass.type
+            }
+            return null
+        }
+        return getElementTypeByFieldAccess(originalFile, topText, elements, result)
+    }
+
+    private fun setStaticFieldAccess(
+        top: PsiElement,
+        prevWord: String,
+        topText: String,
+        result: CompletionResultSet,
+    ) {
+        val clazz = getRefClazz(top) { prevWord.replace("@", "") } ?: return
+        val matchFields = clazz.searchStaticField(topText)
+        val matchMethod = clazz.searchStaticMethod(topText)
+
+        // When you enter here, it is the top element, so return static fields and methods.
+        setFieldsAndMethodsCompletionResultSet(matchFields, matchMethod, result)
     }
 
     private fun getSearchElementText(elm: PsiElement): String =
@@ -359,8 +382,8 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val matchParams = daoMethod.searchParameter(topText)
         val firstElement = matchParams.firstOrNull() ?: return null
         if (elements.isEmpty() || elements.size <= 1) {
-            matchParams.map { p ->
-                result.addElement(LookupElementBuilder.create(p.name))
+            matchParams.map { match ->
+                result.addElement(LookupElementBuilder.create(match.name))
             }
             return null
         }

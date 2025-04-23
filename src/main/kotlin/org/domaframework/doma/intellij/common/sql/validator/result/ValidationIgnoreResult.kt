@@ -19,14 +19,11 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-class ValidationDaoParamResult(
-    override val identify: PsiElement,
-    private val daoName: String,
-    override val shortName: String,
-) : ValidationResult(identify, null, shortName) {
+class ValidationIgnoreResult(
+    override val identify: PsiElement?,
+) : ValidationResult(identify, null, "") {
     override fun setHighlight(
         highlightRange: TextRange,
         identify: PsiElement,
@@ -34,16 +31,5 @@ class ValidationDaoParamResult(
         parent: PsiParentClass?,
         project: Project,
     ) {
-        val project = identify.project
-        holder.registerProblem(
-            identify,
-            MessageBundle.message(
-                "inspector.invalid.dao.parameter",
-                daoName,
-                identify.text ?: "",
-            ),
-            problemHighlightType(project, shortName),
-            highlightRange,
-        )
     }
 }

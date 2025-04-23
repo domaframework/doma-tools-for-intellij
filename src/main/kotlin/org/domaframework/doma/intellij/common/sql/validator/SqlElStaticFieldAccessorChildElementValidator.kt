@@ -16,7 +16,10 @@
 package org.domaframework.doma.intellij.common.sql.validator
 
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationIgnoreResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
 import org.domaframework.doma.intellij.extension.expr.fqdn
@@ -31,11 +34,45 @@ class SqlElStaticFieldAccessorChildElementValidator(
     private val staticAccuser: SqlElStaticFieldAccessExpr,
     override val shorName: String,
 ) : SqlElChildElementValidator(blocks, shorName) {
+    override fun validateChildren(
+        findFieldMethod: (PsiType) -> PsiParentClass,
+        complete: (PsiParentClass) -> Unit,
+    ): ValidationResult? {
+        val errorElement = getParent()
+        when (errorElement) {
+            is ValidationCompleteResult -> {
+                val parent = errorElement.parentClass
+                return validateFieldAccess(
+                    parent,
+                    complete = complete,
+                )
+            }
+            is ValidationIgnoreResult -> return null
+            else -> return errorElement
+        }
+    }
+
     override fun validateChildren(): ValidationResult? {
-        val staticTopElement = blocks.firstOrNull() ?: return null
-        val module = staticAccuser.module ?: return null
+        val getParentResult = getParent()
+        when (getParentResult) {
+            is ValidationCompleteResult -> {
+                val parent = getParentResult.parentClass
+                return validateFieldAccess(parent)
+            }
+            is ValidationIgnoreResult -> return null
+            else -> return getParentResult
+        }
+    }
+
+    private fun getParent(): ValidationResult {
+        val staticTopElement =
+            blocks.firstOrNull()
+                ?: return ValidationIgnoreResult(blocks.firstOrNull())
+        val module = staticAccuser.module ?: return ValidationIgnoreResult(staticTopElement)
         val fqdn = staticAccuser.fqdn
-        val clazz = module.getJavaClazz(false, fqdn) ?: return null
+        val clazz =
+            module.getJavaClazz(false, fqdn)
+                ?: return ValidationIgnoreResult(staticTopElement)
 
         var parent = PsiParentClass(clazz.psiClassType)
         val nextSibling = staticTopElement.nextSibling
@@ -56,14 +93,13 @@ class SqlElStaticFieldAccessorChildElementValidator(
                 staticTopElement,
                 parent,
                 shorName,
-                staticTopElement.textRange,
             )
         }
 
         (topField?.type ?: topMethod?.returnType)
             ?.let { parent = PsiParentClass(it) }
-            ?: return null
+            ?: return ValidationIgnoreResult(staticTopElement)
 
-        return validateFieldAccess(parent)
+        return ValidationCompleteResult(staticTopElement, parent)
     }
 }

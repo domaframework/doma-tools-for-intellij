@@ -28,6 +28,7 @@ import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.sql.validator.SqlElFieldAccessorChildElementValidator
 import org.domaframework.doma.intellij.common.sql.validator.SqlElStaticFieldAccessorChildElementValidator
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
@@ -116,7 +117,6 @@ class SqlInspectionVisitor(
                     element,
                     daoMethod.name,
                     shortName,
-                    element.textRange,
                 )
             errorElement.highlightElement(holder)
         }
@@ -171,7 +171,7 @@ class SqlInspectionVisitor(
         val forDirectiveInspection = ForDirectiveInspection(this.shortName)
         var errorElement: ValidationResult? =
             forDirectiveInspection.checkForItem(blockElement.toList())
-        if (errorElement == null) return
+        if (errorElement is ValidationCompleteResult) return
         if (errorElement is ValidationPropertyResult) {
             errorElement.highlightElement(holder)
             return
@@ -203,7 +203,6 @@ class SqlInspectionVisitor(
                 this.shortName,
             )
         val errorElement: ValidationResult? = validator.validateChildren()
-
         errorElement?.highlightElement(holder)
     }
 }

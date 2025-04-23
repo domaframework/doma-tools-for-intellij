@@ -27,17 +27,18 @@ import com.intellij.psi.PsiErrorElement
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
 abstract class ValidationResult(
-    open val identify: PsiElement,
+    open val identify: PsiElement?,
     open val parentClass: PsiParentClass?,
     open val shortName: String,
-    open val highlightRange: TextRange,
 ) {
     fun highlightElement(holder: ProblemsHolder) {
+        val element = identify ?: return
         if (identify is PsiErrorElement) return
-        val project = identify.project
-        val highlightElm = identify.originalElement
+
+        val project = element.project
+        val highlightElm = element.originalElement
         val highlightRange =
-            TextRange(0, identify.textRange.length)
+            TextRange(0, element.textRange.length)
 
         setHighlight(
             highlightRange,

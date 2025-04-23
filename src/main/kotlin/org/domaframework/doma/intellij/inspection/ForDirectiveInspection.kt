@@ -29,13 +29,12 @@ import org.domaframework.doma.intellij.common.sql.foritem.ForItem
 import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
+import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.getForItemDeclaration
-import org.domaframework.doma.intellij.extension.psi.getIterableClazz
-import org.domaframework.doma.intellij.extension.psi.methodParameters
-import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class ForDirectiveInspection(
@@ -52,6 +51,8 @@ class ForDirectiveInspection(
         IF,
         END,
     }
+
+    var declarationFieldElements = mutableListOf<SqlElIdExpr>()
 
     private val cachedForDirectiveBlocks: MutableMap<PsiElement, CachedValue<List<BlockToken>>> =
         mutableMapOf()
@@ -71,7 +72,7 @@ class ForDirectiveInspection(
         val file = targetElement.containingFile ?: return null
 
         val forItem = getForItem(targetElement)
-        var errorElement: ValidationResult? = ValidationDaoParamResult(targetElement, "", shorName, targetElement.textRange)
+        var errorElement: ValidationResult? = ValidationDaoParamResult(targetElement, "", shorName)
         if (forItem != null) {
             val declarationItem =
                 getDeclarationItem(forItem, file)
@@ -156,8 +157,8 @@ class ForDirectiveInspection(
         val forDirectiveParent = forItem.getParentForDirectiveExpr() ?: return null
         val declarationElement =
             forDirectiveParent.getForItemDeclaration() ?: return null
-        val blockElement = declarationElement.getDeclarationChildren()
-        val topElm = blockElement.firstOrNull() ?: return null
+        declarationFieldElements = declarationElement.getDeclarationChildren().toMutableList()
+        val topElm = declarationFieldElements.firstOrNull() ?: return null
 
         val parentForItem = getForItem(topElm)
         val index = searchIndex + 1
@@ -175,22 +176,14 @@ class ForDirectiveInspection(
         file: PsiFile,
     ): ForDeclarationDaoBaseItem? {
         val daoMethod = findDaoMethod(file) ?: return null
-        val params = daoMethod.methodParameters
-        val validDaoParam =
-            params.firstOrNull { p ->
-                p.name == topElm.text
-            }
+        val validDaoParam = daoMethod.findParameter(topElm.text)
         if (validDaoParam == null) return null
-        val parentClass =
-            validDaoParam.getIterableClazz(daoMethod.getDomaAnnotationType())
 
-        return parentClass.clazz?.psiClassType?.let {
-            ForDeclarationDaoBaseItem(
-                topElm,
-                validDaoParam,
-                searchIndex,
-                daoMethod.getDomaAnnotationType(),
-            )
-        }
+        return ForDeclarationDaoBaseItem(
+            declarationFieldElements,
+            searchIndex,
+            daoMethod.getDomaAnnotationType(),
+            validDaoParam,
+        )
     }
 }

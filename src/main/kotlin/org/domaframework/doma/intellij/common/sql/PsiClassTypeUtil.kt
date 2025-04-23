@@ -15,8 +15,10 @@
  */
 package org.domaframework.doma.intellij.common.sql
 
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiType
+import com.intellij.psi.search.GlobalSearchScope
 
 class PsiClassTypeUtil {
     companion object {
@@ -29,5 +31,45 @@ class PsiClassTypeUtil {
             }
             return classType
         }
+
+        fun isIterableType(
+            type: PsiClassType,
+            project: Project,
+        ): Boolean {
+            val iterableType =
+                PsiType.getTypeByName(
+                    "java.lang.Iterable",
+                    project,
+                    GlobalSearchScope.allScope(project),
+                )
+            return iterableType.isAssignableFrom(type)
+        }
+
+        fun getParameterType(
+            project: Project,
+            baseType: PsiType?,
+            preReturnListType: PsiType,
+            index: Int,
+        ): PsiClassType? {
+            val returnType = baseType as? PsiClassType ?: return null
+            val preReturnType = preReturnListType as? PsiClassType ?: return null
+
+            if (returnType.name == "E" && isIterableType(preReturnListType, project)) {
+                var count = 1
+                var type: PsiType? = preReturnType.parameters.firstOrNull()
+                while (index > count && type != null && type is PsiClassType) {
+                    type = type.parameters.firstOrNull()
+                    count++
+                }
+                return type as? PsiClassType
+            }
+            return null
+        }
+
+        fun isCollect(type: PsiType): Boolean =
+            type.superTypes
+                .firstOrNull()
+                ?.presentableText
+                ?.startsWith("Collection") == true
     }
 }

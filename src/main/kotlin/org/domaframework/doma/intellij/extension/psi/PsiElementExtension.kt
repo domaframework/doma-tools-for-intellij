@@ -22,6 +22,7 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeafs
+import org.domaframework.doma.intellij.psi.SqlElParameters
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 fun PsiElement.isNotWhiteSpace(): Boolean = this !is PsiWhiteSpace
@@ -35,7 +36,7 @@ fun PsiElement.findSelfBlocks(): List<PsiElement> {
         elms = elms.plus(it)
         if (!it.isNotWhiteSpace() ||
             it.elementType == SqlTypes.AT_SIGN ||
-            it.elementType == SqlTypes.LEFT_PAREN ||
+            (it.elementType == SqlTypes.LEFT_PAREN && it.parent !is SqlElParameters) ||
             it.elementType == SqlTypes.COMMA
         ) {
             break
@@ -43,10 +44,8 @@ fun PsiElement.findSelfBlocks(): List<PsiElement> {
     }
 
     elms
-        .filter {
-            it.elementType == SqlTypes.EL_PRIMARY_EXPR ||
-                it.elementType == SqlTypes.EL_IDENTIFIER
-        }.toList()
+        .filter { it.elementType == SqlTypes.EL_IDENTIFIER }
+        .toList()
         .plus(this)
         .also { elms = it }
     if (elms.isNotEmpty()) {

@@ -27,8 +27,7 @@ class ValidationPropertyResult(
     override val identify: PsiElement,
     override val parentClass: PsiParentClass?,
     override val shortName: String,
-    override val highlightRange: TextRange,
-) : ValidationResult(identify, parentClass, shortName, highlightRange) {
+) : ValidationResult(identify, parentClass, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
         identify: PsiElement,
