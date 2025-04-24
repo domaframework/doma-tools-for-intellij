@@ -51,8 +51,8 @@ class SqlInspectionVisitor(
     var file: PsiFile? = null
 
     private fun setFile(element: PsiElement): Boolean {
-        if (file == null && element.containingFile != null) {
-            file = element.containingFile ?: return true
+        if (file == null) {
+            file = element.containingFile
         }
         return false
     }
@@ -97,7 +97,7 @@ class SqlInspectionVisitor(
         val visitFile: PsiFile = file ?: return
 
         val forDirectiveInspection =
-            ForDirectiveInspection(this.shortName)
+            ForDirectiveInspection(this.shortName, visitFile)
 
         if (isLiteralOrStatic(element)) return
         PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java)?.let { return }
@@ -168,9 +168,9 @@ class SqlInspectionVisitor(
         blockElement: List<SqlElIdExpr>,
         file: PsiFile,
     ) {
-        val forDirectiveInspection = ForDirectiveInspection(this.shortName)
+        val forDirectiveInspection = ForDirectiveInspection(this.shortName, file)
         var errorElement: ValidationResult? =
-            forDirectiveInspection.checkForItem(blockElement.toList())
+            forDirectiveInspection.validateFieldAccessByForItem(blockElement.toList())
         if (errorElement is ValidationCompleteResult) return
         if (errorElement is ValidationPropertyResult) {
             errorElement.highlightElement(holder)

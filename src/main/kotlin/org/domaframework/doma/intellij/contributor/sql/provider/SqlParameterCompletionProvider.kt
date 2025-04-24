@@ -244,6 +244,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         originalFile: PsiFile,
         result: CompletionResultSet,
     ) {
+        val searchText = cleanString(positionText)
         var topElementType: PsiType? = null
         val top =
             when {
@@ -265,28 +266,10 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         }
 
         if (topElementType == null) {
-            val forDeclaration = ForDirectiveInspection("")
-            val forItem = forDeclaration.getForItem(top)
-            if (forItem != null) {
-                val errorElement = forDeclaration.checkForItem(elements)
-                if (errorElement is ValidationCompleteResult) {
-                    topElementType = errorElement.parentClass.type
-                    val parentClass = errorElement.parentClass
-                    val searchWord = cleanString(positionText)
-                    setFieldsAndMethodsCompletionResultSet(
-                        parentClass.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
-                        parentClass.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
-                        result,
-                    )
-                    return
-                }
-                topElementType =
-                    getElementTypeByFieldAccess(originalFile, topText, elements, result)
-                        ?: return
-            }
+            if (getForItemTopElementType(top, elements, searchText, result)) return
+            topElementType =
+                getElementTypeByFieldAccess(originalFile, topText, elements, result) ?: return
         }
-
-        if (topElementType == null) return
 
         val fieldAccessorChildElementValidator =
             SqlElForItemFieldAccessorChildElementValidator(
@@ -301,9 +284,9 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val errorElement =
             fieldAccessorChildElementValidator.validateChildren(
                 complete = { parent ->
-                    val searchWord = cleanString(positionText)
-                    parentProperties = parent.searchField(searchWord)?.toTypedArray() ?: emptyArray()
-                    parentMethods = parent.searchMethod(searchWord)?.toTypedArray() ?: emptyArray()
+                    parentProperties =
+                        parent.searchField(searchText)?.toTypedArray() ?: emptyArray()
+                    parentMethods = parent.searchMethod(searchText)?.toTypedArray() ?: emptyArray()
                     setFieldsAndMethodsCompletionResultSet(
                         parentProperties,
                         parentMethods,
@@ -314,10 +297,10 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
 
         if (errorElement is ValidationPropertyResult) {
             val parent = errorElement.parentClass ?: return
-            parent.searchField(cleanString(positionText))?.let {
+            parent.searchField(searchText)?.let {
                 parentProperties = it.toTypedArray()
             } ?: { parentProperties = emptyArray() }
-            parent.searchMethod(cleanString(positionText))?.let {
+            parent.searchMethod(searchText)?.let {
                 parentMethods = it.toTypedArray()
             } ?: { parentMethods = emptyArray() }
             setFieldsAndMethodsCompletionResultSet(parentProperties, parentMethods, result)
@@ -412,5 +395,30 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                     .withTypeText(method.returnType?.presentableText ?: "")
             result.addElement(lookupElm)
         }
+    }
+
+    private fun getForItemTopElementType(
+        top: PsiElement,
+        elements: List<PsiElement>,
+        positionText: String,
+        result: CompletionResultSet,
+    ): Boolean {
+        val file = top.containingFile ?: return false
+        val forDeclaration = ForDirectiveInspection(file = file)
+        val forItem = forDeclaration.getForItem(top)
+        if (forItem != null) {
+            val errorElement = forDeclaration.validateFieldAccessByForItem(elements)
+            if (errorElement is ValidationCompleteResult) {
+                val parentClass = errorElement.parentClass
+                val searchWord = cleanString(positionText)
+                setFieldsAndMethodsCompletionResultSet(
+                    parentClass.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
+                    parentClass.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
+                    result,
+                )
+                return true
+            }
+        }
+        return false
     }
 }

@@ -22,6 +22,7 @@ import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.nextLeafs
+import com.intellij.psi.util.startOffset
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.sql.foritem.ForDeclarationDaoBaseItem
 import org.domaframework.doma.intellij.common.sql.foritem.ForDirectiveItemBase
@@ -38,7 +39,8 @@ import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class ForDirectiveInspection(
-    private val shorName: String,
+    private val shorName: String = "",
+    private val file: PsiFile,
 ) {
     data class BlockToken(
         val type: BlockType,
@@ -71,9 +73,8 @@ class ForDirectiveInspection(
      * Analyze the field access of the for item definition and finally get the declared type
      * @return [ValidationResult] is used to display the analysis results.
      */
-    fun checkForItem(blockElements: List<PsiElement>): ValidationResult? {
+    fun validateFieldAccessByForItem(blockElements: List<PsiElement>): ValidationResult? {
         val targetElement: PsiElement = blockElements.firstOrNull() ?: return null
-        val file = targetElement.containingFile ?: return null
 
         val forItem = getForItem(targetElement)
         var errorElement: ValidationResult? = ValidationDaoParamResult(targetElement, "", shorName)
@@ -133,17 +134,20 @@ class ForDirectiveInspection(
             cachedForDirectiveBlocks.getOrPut(targetElement) {
                 CachedValuesManager.getManager(targetElement.project).createCachedValue {
                     val topElm =
-                        targetElement.containingFile.firstChild
+                        file.firstChild
                             ?: return@createCachedValue CachedValueProvider.Result.create(
                                 emptyList(),
-                                targetElement.containingFile,
+                                file,
                             )
                     val directiveBlocks =
                         topElm.nextLeafs
                             .filter { elm ->
-                                elm.elementType == SqlTypes.EL_FOR ||
-                                    elm.elementType == SqlTypes.EL_IF ||
-                                    elm.elementType == SqlTypes.EL_END
+                                (
+                                    elm.elementType == SqlTypes.EL_FOR ||
+                                        elm.elementType == SqlTypes.EL_IF ||
+                                        elm.elementType == SqlTypes.EL_END
+                                ) &&
+                                    elm.startOffset < targetElement.startOffset
                             }.map {
                                 when (it.elementType) {
                                     SqlTypes.EL_FOR -> {
@@ -159,11 +163,8 @@ class ForDirectiveInspection(
                                     else -> BlockToken(BlockType.END, it, it.textOffset)
                                 }
                             }
-                    val preBlocks =
-                        directiveBlocks
-                            .filter { it.position <= targetElement.textOffset }
                     val stack = mutableListOf<BlockToken>()
-                    preBlocks.forEach { block ->
+                    directiveBlocks.forEach { block ->
                         when (block.type) {
                             BlockType.FOR, BlockType.IF -> stack.add(block)
                             BlockType.END -> if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
@@ -172,7 +173,7 @@ class ForDirectiveInspection(
 
                     CachedValueProvider.Result.create(
                         stack.filter { it.type == BlockType.FOR },
-                        targetElement.containingFile,
+                        file,
                     )
                 }
             }
