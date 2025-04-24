@@ -300,9 +300,8 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             parent.searchField(searchText)?.let {
                 parentProperties = it.toTypedArray()
             } ?: { parentProperties = emptyArray() }
-            parent.searchMethod(searchText)?.let {
-                parentMethods = it.toTypedArray()
-            } ?: { parentMethods = emptyArray() }
+            val methods = parent.searchMethod(searchText)
+            parentMethods = methods?.toTypedArray() ?: emptyArray()
             setFieldsAndMethodsCompletionResultSet(parentProperties, parentMethods, result)
         }
     }
