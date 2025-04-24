@@ -17,38 +17,19 @@ package org.domaframework.doma.intellij.reference
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiReferenceBase
-import com.intellij.psi.util.CachedValue
-import com.intellij.psi.util.CachedValueProvider
-import com.intellij.psi.util.CachedValuesManager
-import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.PluginLoggerUtil
-import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
 
 class SqlElForDirectiveIdExprReference(
     element: PsiElement,
-) : PsiReferenceBase<PsiElement>(element) {
-    private val cachedResolve: CachedValue<PsiElement?> by lazy {
-        CachedValuesManager.getManager(element.project).createCachedValue {
-            val result = doResolve()
-            CachedValueProvider.Result(result, PsiModificationTracker.MODIFICATION_COUNT)
-        }
-    }
-
-    val file: PsiFile? = element.containingFile
-
-    override fun resolve(): PsiElement? = cachedResolve.value
-
-    private fun doResolve(): PsiElement? {
-        if (file == null || !isSupportFileType(file)) return null
-        val startTime = System.nanoTime()
-        return superResolveLogic(startTime)
-    }
-
-    private fun superResolveLogic(startTime: Long): PsiElement? {
+) : SqlElExprReference(element) {
+    override fun superResolveLogic(
+        startTime: Long,
+        file: PsiFile,
+    ): PsiElement? {
         val declarationItem = getDeclarationItem()
         PluginLoggerUtil.countLogging(
             this::class.java.simpleName,
@@ -58,8 +39,6 @@ class SqlElForDirectiveIdExprReference(
         )
         return declarationItem
     }
-
-    override fun getVariants(): Array<Any> = emptyArray()
 
     /**
      * In the for directive, set the reference on the left side to the element on the right side.
@@ -72,7 +51,7 @@ class SqlElForDirectiveIdExprReference(
             .getChildrenOfType(forDirectiveParent, SqlElFieldAccessExpr::class.java)
             ?.last()
             ?: PsiTreeUtil
-                .getChildrenOfType(forDirectiveParent, SqlElFieldAccessExpr::class.java)
+                .getChildrenOfType(forDirectiveParent, SqlElIdExpr::class.java)
                 ?.last()
     }
 }

@@ -18,17 +18,9 @@ package org.domaframework.doma.intellij.reference
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiReferenceBase
-import com.intellij.psi.PsiType
-import com.intellij.psi.util.CachedValue
-import com.intellij.psi.util.CachedValueProvider
-import com.intellij.psi.util.CachedValuesManager
-import com.intellij.psi.util.PsiModificationTracker
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
-import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
@@ -39,48 +31,28 @@ import org.domaframework.doma.intellij.extension.psi.getIterableClazz
 import org.domaframework.doma.intellij.extension.psi.methodParameters
 import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
-import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElIdExprReference(
     element: PsiElement,
-) : PsiReferenceBase<PsiElement>(element) {
-    var psiClassType: PsiType? = null
-
-    private val cachedResolve: CachedValue<PsiElement?> by lazy {
-        CachedValuesManager.getManager(element.project).createCachedValue {
-            val result = doResolve()
-            CachedValueProvider.Result(result, PsiModificationTracker.MODIFICATION_COUNT)
-        }
-    }
-
-    val file: PsiFile? = element.containingFile
-
-    override fun resolve(): PsiElement? = cachedResolve.value
-
-    private fun doResolve(): PsiElement? {
-        if (file == null || !isSupportFileType(file)) return null
-        val startTime = System.nanoTime()
-        return superResolveLogic(startTime, file)
-    }
-
-    private fun superResolveLogic(
+) : SqlElExprReference(element) {
+    override fun superResolveLogic(
         startTime: Long,
         file: PsiFile,
     ): PsiElement? {
-        val targetElements = getBlockCommentElements(element)
+        val targetElements = getBlockCommentElements(element, SqlElFieldAccessExpr::class.java)
         if (targetElements.isEmpty()) return null
 
         val topElm = targetElements.firstOrNull() as? PsiElement ?: return null
 
         if (topElm.prevSibling.elementType == SqlTypes.AT_SIGN) return null
 
-        val forDirectiveInspection = ForDirectiveInspection("")
+        val forDirectiveInspection = ForDirectiveInspection(file = file)
         val forItem = forDirectiveInspection.getForItem(topElm)
         if (forItem != null && element.textOffset == topElm.textOffset) {
             PluginLoggerUtil.countLogging(
                 this::class.java.simpleName,
-                "ReferenceForDirective",
+                "ReferenceForDirectiveItem",
                 "Reference",
                 startTime,
             )
@@ -122,23 +94,6 @@ class SqlElIdExprReference(
             }
 
         return symbolElement
-    }
-
-    private fun getBlockCommentElements(element: PsiElement): List<PsiElement> {
-        val fieldAccessExpr = PsiTreeUtil.getParentOfType(element, SqlElFieldAccessExpr::class.java)
-        val nodeElm =
-            if (fieldAccessExpr != null) {
-                PsiTreeUtil
-                    .getChildrenOfType(
-                        fieldAccessExpr,
-                        SqlElIdExpr::class.java,
-                    )?.filter { it.textOffset <= element.textOffset }
-            } else {
-                listOf(element)
-            }
-        return nodeElm
-            ?.toList()
-            ?.sortedBy { it.textOffset } ?: emptyList()
     }
 
     private fun getReferenceDaoMethodParameter(
