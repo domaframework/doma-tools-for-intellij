@@ -24,9 +24,11 @@ class PsiClassTypeUtil {
     companion object {
         fun getPsiTypeByList(
             classType: PsiClassType,
+            project: Project,
             useListParam: Boolean,
         ): PsiType? {
-            if (classType.className == "List" && useListParam) {
+            val isIterableType = isIterableType(classType, project)
+            if (isIterableType && useListParam) {
                 return classType.parameters.firstOrNull()
             }
             return classType
@@ -65,11 +67,5 @@ class PsiClassTypeUtil {
             }
             return null
         }
-
-        fun isCollect(type: PsiType): Boolean =
-            type.superTypes
-                .firstOrNull()
-                ?.presentableText
-                ?.startsWith("Collection") == true
     }
 }

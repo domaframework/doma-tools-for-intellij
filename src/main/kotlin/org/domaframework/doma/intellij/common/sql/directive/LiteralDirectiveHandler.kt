@@ -22,6 +22,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
+import org.domaframework.doma.intellij.extension.psi.searchParameter
 
 class LiteralDirectiveHandler(
     private val originalFile: PsiFile,
@@ -37,11 +38,9 @@ class LiteralDirectiveHandler(
             result,
         ) { daoMethod, bind ->
             daoMethod
-                ?.parameterList
-                ?.parameters
+                ?.searchParameter(bind)
                 ?.filter {
-                    it.name.startsWith(bind) &&
-                        PsiTypeChecker.isTargetType(it.type)
+                    PsiTypeChecker.isTargetType(it.type)
                 }?.map { param -> VariableLookupItem(param) }
                 ?.toList()
                 ?: emptyList()

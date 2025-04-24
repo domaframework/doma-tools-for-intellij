@@ -18,33 +18,33 @@ package org.domaframework.doma.intellij.common.sql.validator
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationIgnoreResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
 import org.domaframework.doma.intellij.extension.expr.fqdn
-import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElParameters
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
-import org.jetbrains.kotlin.idea.base.util.module
 
 class SqlElStaticFieldAccessorChildElementValidator(
     override val blocks: List<PsiElement>,
     private val staticAccuser: SqlElStaticFieldAccessExpr,
-    override val shorName: String,
+    override val shorName: String = "",
 ) : SqlElChildElementValidator(blocks, shorName) {
     override fun validateChildren(
         dropIndex: Int,
         findFieldMethod: (PsiType) -> PsiParentClass,
         complete: (PsiParentClass) -> Unit,
     ): ValidationResult? {
-        val errorElement = getParent()
+        val errorElement = getFieldTopParent()
         when (errorElement) {
             is ValidationCompleteResult -> {
                 val parent = errorElement.parentClass
                 return validateFieldAccess(
                     parent,
+                    dropLastIndex = dropIndex,
                     complete = complete,
                 )
             }
@@ -54,28 +54,34 @@ class SqlElStaticFieldAccessorChildElementValidator(
     }
 
     override fun validateChildren(dropIndex: Int): ValidationResult? {
-        val getParentResult = getParent()
+        val getParentResult = getFieldTopParent()
         when (getParentResult) {
             is ValidationCompleteResult -> {
+                if (blocks.size == 1) {
+                    return getParentResult
+                }
                 val parent = getParentResult.parentClass
-                return validateFieldAccess(parent)
+                return validateFieldAccess(parent, dropLastIndex = dropIndex)
             }
             is ValidationIgnoreResult -> return null
             else -> return getParentResult
         }
     }
 
-    private fun getParent(): ValidationResult {
+    private fun getFieldTopParent(): ValidationResult {
         val staticTopElement =
             blocks.firstOrNull()
                 ?: return ValidationIgnoreResult(blocks.firstOrNull())
-        val module = staticAccuser.module ?: return ValidationIgnoreResult(staticTopElement)
         val fqdn = staticAccuser.fqdn
-        val clazz =
-            module.getJavaClazz(false, fqdn)
-                ?: return ValidationIgnoreResult(staticTopElement)
+        val file = staticAccuser.containingFile
+        val psiStaticElement = PsiStaticElement(fqdn, file)
+        val clazz = psiStaticElement.getRefClazz() ?: return ValidationIgnoreResult(staticTopElement)
 
         var parent = PsiParentClass(clazz.psiClassType)
+        if (blocks.size == 1) {
+            return ValidationCompleteResult(blocks.first(), parent)
+        }
+
         val nextSibling = staticTopElement.nextSibling
         val topField =
             if (nextSibling !is SqlElParameters) {

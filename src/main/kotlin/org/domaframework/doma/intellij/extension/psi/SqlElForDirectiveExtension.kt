@@ -16,17 +16,41 @@
 package org.domaframework.doma.intellij.extension.psi
 
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiErrorElement
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.childLeafs
+import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.sql.foritem.ForDeclarationItem
+import org.domaframework.doma.intellij.psi.SqlBlockComment
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 fun SqlElForDirective.getForItem(): PsiElement? =
     PsiTreeUtil
         .getChildOfType(this, SqlElIdExpr::class.java)
 
 fun SqlElForDirective.getForItemDeclaration(): ForDeclarationItem? {
+    val parentCommentBlock =
+        PsiTreeUtil.getParentOfType(this, SqlBlockComment::class.java)
+            ?: return null
+    val childLeafs = parentCommentBlock.childLeafs()
+    val start = childLeafs.firstOrNull { it.elementType == SqlTypes.SEPARATOR } ?: return null
+    val end = childLeafs.last()
+
+    val rightItems =
+        childLeafs
+            .filter {
+                it.textOffset > start.textOffset &&
+                    it.textOffset < end.textOffset &&
+                    it !is PsiWhiteSpace &&
+                    it !is PsiErrorElement
+            }.toList()
+    if (rightItems.isEmpty()) {
+        return null
+    }
     val declarationElm =
         PsiTreeUtil.getChildrenOfType(this, SqlElFieldAccessExpr::class.java)?.last()
             ?: PsiTreeUtil.getChildrenOfType(this, SqlElIdExpr::class.java)?.last()

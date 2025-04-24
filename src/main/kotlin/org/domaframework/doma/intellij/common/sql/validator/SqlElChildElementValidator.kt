@@ -15,6 +15,7 @@
  */
 package org.domaframework.doma.intellij.common.sql.validator
 
+import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
 import com.intellij.psi.util.elementType
@@ -24,15 +25,13 @@ import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
-import org.domaframework.doma.intellij.extension.psi.getMethodReturnType
-import org.domaframework.doma.intellij.extension.psi.getParameterType
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElParameters
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 abstract class SqlElChildElementValidator(
     open val blocks: List<PsiElement>,
-    open val shorName: String,
+    open val shorName: String = "",
 ) {
     abstract fun validateChildren(dropIndex: Int = 0): ValidationResult?
 
@@ -61,7 +60,12 @@ abstract class SqlElChildElementValidator(
         findFieldMethod: ((PsiType) -> PsiParentClass)? = { type -> PsiParentClass(type) },
         complete: ((PsiParentClass) -> Unit) = { parent: PsiParentClass? -> },
     ): ValidationResult? {
+        val project = blocks.firstOrNull()?.project ?: return null
+
         var parent = topParent
+        val parentType = parent.type
+        val classType = parentType as? PsiClassType ?: return null
+
         var competeResult: ValidationCompleteResult? = null
 
         if (dropLastIndex > 0 && blocks.drop(1).dropLast(dropLastIndex).isEmpty()) {
@@ -71,9 +75,9 @@ abstract class SqlElChildElementValidator(
             )
         }
 
-        var getMethodReturnType: PsiType? =
-            if (PsiClassTypeUtil.isCollect(topParent.type)) {
-                topParent.type
+        var parentListBaseType: PsiType? =
+            if (PsiClassTypeUtil.isIterableType(classType, project)) {
+                parentType
             } else {
                 null
             }
@@ -90,28 +94,41 @@ abstract class SqlElChildElementValidator(
 
             val field =
                 parent
-                    .findField(element.text)
+                    .findField(searchElm)
                     ?.let { match ->
-                        val type = match.type
-                        val methodReturnType =
-                            getMethodReturnType?.let { match.getParameterType(it, type, listParamIndex) }
-                                ?: type
-                        if (PsiClassTypeUtil.isCollect(type)) {
-                            getMethodReturnType = type
+                        val type =
+                            parentListBaseType?.let { PsiClassTypeUtil.getParameterType(project, match.type, it, listParamIndex) }
+                                ?: match.type
+                        val classType = type as? PsiClassType
+                        if (classType != null && PsiClassTypeUtil.isIterableType(classType, element.project)) {
+                            parentListBaseType = type
                             listParamIndex = 0
                         }
-                        findFieldMethod?.invoke(methodReturnType)
+                        findFieldMethod?.invoke(type)
                     }
             val method =
                 parent
-                    .findMethod(element.text)
+                    .findMethod(searchElm)
                     ?.let { match ->
                         val returnType = match.returnType ?: return null
                         val methodReturnType =
-                            getMethodReturnType?.let { match.getMethodReturnType(it, listParamIndex) }
+                            parentListBaseType?.let {
+                                PsiClassTypeUtil.getParameterType(
+                                    project,
+                                    returnType,
+                                    it,
+                                    listParamIndex,
+                                )
+                            }
                                 ?: returnType
-                        if (PsiClassTypeUtil.isCollect(returnType)) {
-                            getMethodReturnType = returnType
+                        val classType = methodReturnType as? PsiClassType
+                        if (classType != null &&
+                            PsiClassTypeUtil.isIterableType(
+                                classType,
+                                element.project,
+                            )
+                        ) {
+                            parentListBaseType = methodReturnType
                             listParamIndex = 0
                         }
                         findFieldMethod?.invoke(methodReturnType)

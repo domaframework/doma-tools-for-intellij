@@ -28,7 +28,7 @@ fun PsiParameter.getIterableClazz(annotationType: DomaAnnotationType): PsiParent
 
 fun PsiParameter.getIterableClazz(useListParam: Boolean): PsiParentClass {
     val immediate = this.type as? PsiClassType
-    val classType = immediate?.let { PsiClassTypeUtil.getPsiTypeByList(it, useListParam) }
+    val classType = immediate?.let { PsiClassTypeUtil.getPsiTypeByList(it, this.project, useListParam) }
     if (classType != null) {
         return PsiParentClass(classType)
     }

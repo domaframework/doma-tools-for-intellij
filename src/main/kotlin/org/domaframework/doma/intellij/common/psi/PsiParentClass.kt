@@ -49,7 +49,7 @@ class PsiParentClass(
 
     fun searchField(fieldName: String): List<PsiField>? =
         fields?.filter { f ->
-            f.name.startsWith(fieldName) &&
+            f.name.contains(fieldName) &&
                 PropertyModifyUtil.filterPrivateField(f, type)
         }
 
@@ -80,7 +80,7 @@ class PsiParentClass(
         fields
             ?.filter { f ->
                 f.hasModifierProperty(PsiModifier.STATIC) &&
-                    f.name.startsWith(fieldName) &&
+                    f.name.contains(fieldName) &&
                     PropertyModifyUtil.filterPrivateField(f, type)
             }
 

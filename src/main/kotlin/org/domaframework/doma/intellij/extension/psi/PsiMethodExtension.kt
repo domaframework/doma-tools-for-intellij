@@ -16,18 +16,15 @@
 package org.domaframework.doma.intellij.extension.psi
 
 import com.intellij.codeInsight.AnnotationUtil
-import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
-import com.intellij.psi.PsiType
-import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 
 fun PsiMethod.findParameter(searchName: String): PsiParameter? = this.methodParameters.firstOrNull { it.name == searchName }
 
 val PsiMethod.methodParameters: List<PsiParameter>
     get() = this.parameterList.parameters.toList()
 
-fun PsiMethod.searchParameter(searchName: String): List<PsiParameter> = this.methodParameters.filter { it.name.startsWith(searchName) }
+fun PsiMethod.searchParameter(searchName: String): List<PsiParameter> = this.methodParameters.filter { it.name.contains(searchName) }
 
 @OptIn(ExperimentalStdlibApi::class)
 fun PsiMethod.getDomaAnnotationType(): DomaAnnotationType {
@@ -38,18 +35,3 @@ fun PsiMethod.getDomaAnnotationType(): DomaAnnotationType {
     }
     return DomaAnnotationType.Unknown
 }
-
-/**
- * If the type of the variable referenced from the Dao argument is List type,
- * search processing to obtain the nested type
- */
-fun PsiMethod.getMethodReturnType(
-    preReturnListType: PsiType,
-    index: Int,
-): PsiClassType? =
-    PsiClassTypeUtil.getParameterType(
-        this.project,
-        this.returnType,
-        preReturnListType,
-        index,
-    )
