@@ -15,12 +15,9 @@
  */
 package org.domaframework.doma.intellij.common.sql.foritem
 
-import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiParameter
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
-import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.sql.validator.SqlElFieldAccessorChildElementValidator
-import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 
 /**
@@ -31,9 +28,8 @@ import org.domaframework.doma.intellij.psi.SqlElIdExpr
  */
 class ForDeclarationDaoBaseItem(
     private val blocks: List<SqlElIdExpr>,
-    val nestIndex: Int,
-    val domaAnnotationType: DomaAnnotationType,
     val daoParameter: PsiParameter? = null,
+    val index: Int = 0,
 ) : ForDeclarationItem(blocks.first()) {
     fun getPsiParentClass(): PsiParentClass? {
         val daoParamFieldValidator =
@@ -44,26 +40,12 @@ class ForDeclarationDaoBaseItem(
             )
 
         var lastType: PsiParentClass? = null
-        val errorElement =
-            daoParamFieldValidator.validateChildren(
-                complete = { parent ->
-                    lastType = parent
-                },
-            )
-        if (errorElement != null || lastType == null) return null
-
-        val topElm = blocks.first()
-        (lastType.type as? PsiClassType)?.let { if (!PsiClassTypeUtil.isIterableType(it, topElm.project)) return null }
-
-        var nestClassType: PsiClassType? = (lastType.type as? PsiClassType)
-        var i = 0
-        if (domaAnnotationType.isBatchAnnotation()) {
-            nestClassType?.parameters?.firstOrNull() as? PsiClassType?
-        }
-        while (nestClassType != null && i <= nestIndex && PsiClassTypeUtil.isIterableType(nestClassType, topElm.project)) {
-            nestClassType = nestClassType.parameters.firstOrNull() as? PsiClassType?
-            i++
-        }
-        return nestClassType?.let { PsiParentClass(it) }
+        daoParamFieldValidator.validateChildren(
+            complete = { parent ->
+                lastType = parent
+            },
+        )
+        if (lastType == null) return null
+        return lastType
     }
 }

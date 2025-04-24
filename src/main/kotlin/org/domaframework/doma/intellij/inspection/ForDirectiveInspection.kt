@@ -15,19 +15,22 @@
  */
 package org.domaframework.doma.intellij.inspection
 
+import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
-import com.intellij.psi.util.nextLeafs
-import com.intellij.psi.util.startOffset
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
+import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.sql.foritem.ForDeclarationDaoBaseItem
 import org.domaframework.doma.intellij.common.sql.foritem.ForDirectiveItemBase
 import org.domaframework.doma.intellij.common.sql.foritem.ForItem
 import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
 import org.domaframework.doma.intellij.extension.psi.findParameter
@@ -39,7 +42,7 @@ import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class ForDirectiveInspection(
-    private val shorName: String = "",
+    private val shortName: String = "",
     private val file: PsiFile,
 ) {
     data class BlockToken(
@@ -69,32 +72,106 @@ class ForDirectiveInspection(
         forItem?.let { return ForItem(it.item) } ?: return null
     }
 
+    fun getForItem(
+        targetElement: PsiElement,
+        forBlocks: List<BlockToken>,
+    ): ForItem? {
+        val targetName =
+            targetElement.text
+                .replace("_has_next", "")
+                .replace("_index", "")
+        val forItem = forBlocks.lastOrNull { it.item.text == targetName }
+        forItem?.let { return ForItem(it.item) } ?: return null
+    }
+
     /**
      * Analyze the field access of the for item definition and finally get the declared type
      * @return [ValidationResult] is used to display the analysis results.
      */
     fun validateFieldAccessByForItem(blockElements: List<PsiElement>): ValidationResult? {
         val targetElement: PsiElement = blockElements.firstOrNull() ?: return null
+        val topElm = blockElements.first()
 
-        val forItem = getForItem(targetElement)
-        var errorElement: ValidationResult? = ValidationDaoParamResult(targetElement, "", shorName)
+        val firDirectives = getForDirectiveBlock(targetElement)
+        val forItem = getForItem(targetElement, firDirectives)
+        var errorElement: ValidationResult? = ValidationDaoParamResult(targetElement, "", shortName)
+        val daoMethod = findDaoMethod(file) ?: return null
+        val domaAnnotationType = daoMethod.getDomaAnnotationType()
+
         if (forItem != null) {
             val declarationItem =
                 getDeclarationItem(forItem, file)
 
             if (declarationItem != null && declarationItem is ForDeclarationDaoBaseItem) {
-                val forItemElementsParentClass = declarationItem.getPsiParentClass()
-                if (forItemElementsParentClass != null) {
-                    val validator =
-                        SqlElForItemFieldAccessorChildElementValidator(
-                            blockElements,
-                            forItemElementsParentClass,
-                            shorName,
-                        )
-                    errorElement = validator.validateChildren()
+                val daoParamDeclarativeType =
+                    declarationItem.getPsiParentClass()
+                        ?: return ValidationDaoParamResult(targetElement, daoMethod.name, shortName)
+
+                (daoParamDeclarativeType.type as? PsiClassType)
+                    ?.let { if (!PsiClassTypeUtil.isIterableType(it, topElm.project)) return null }
+
+                val nestIndex = declarationItem.index
+                var lastType = daoParamDeclarativeType.type
+                var nestClassType: PsiClassType? = (lastType as? PsiClassType)
+
+                var i = 0
+                var listIndex = 1
+
+                if (domaAnnotationType.isBatchAnnotation()) {
+                    nestClassType = nestClassType?.parameters?.firstOrNull() as? PsiClassType?
                 }
+
+                // Each time searching for the next for directive item, recursively analyze the type if the field is Access.
+                while (nestClassType != null &&
+                    i <= nestIndex &&
+
+                    PsiClassTypeUtil.isIterableType(
+                        nestClassType,
+                        topElm.project,
+                    )
+                ) {
+                    // Get the definition type for each for directive passed through
+                    val targetForDirective = firDirectives[i]
+                    val currentForItem = ForItem(targetForDirective.item)
+                    val currentForDirectiveExpr = currentForItem.getParentForDirectiveExpr() ?: return null
+                    val currentDeclaration =
+                        currentForDirectiveExpr.getForItemDeclaration() ?: return null
+                    val declarationChildren = currentDeclaration.getDeclarationChildren()
+                    if (declarationChildren.size > 1) {
+                        // If the for item is defined by a field access, the final type is obtained.
+                        val validator =
+                            SqlElForItemFieldAccessorChildElementValidator(
+                                declarationChildren,
+                                PsiParentClass(nestClassType),
+                                shortName,
+                            )
+                        val currentLastType = validator.validateChildren()
+                        nestClassType = currentLastType?.parentClass?.type as? PsiClassType?
+                        listIndex = 1
+                    } else {
+                        // Get the nesting count from the List type definition obtained along the way
+                        repeat(listIndex) {
+                            if (nestClassType != null &&
+                                PsiClassTypeUtil.isIterableType(nestClassType, topElm.project)
+                            ) {
+                                nestClassType =
+                                    nestClassType.parameters.firstOrNull() as? PsiClassType?
+                            }
+                        }
+                        listIndex++
+                    }
+                    i++
+                }
+                return nestClassType?.let {
+                    ValidationCompleteResult(
+                        topElm,
+                        PsiParentClass(nestClassType),
+                    )
+                }
+                    ?: errorElement
             }
         }
+
         return errorElement
     }
 
@@ -103,7 +180,7 @@ class ForDirectiveInspection(
         val file = targetElement.containingFile ?: return null
 
         val forItem = getForItem(targetElement)
-        var errorElement: ValidationResult? = ValidationDaoParamResult(targetElement, "", shorName)
+        var errorElement: ValidationResult? = ValidationDaoParamResult(targetElement, "", shortName)
         if (forItem != null) {
             val declarationItem =
                 getDeclarationItem(forItem, file)
@@ -115,7 +192,7 @@ class ForDirectiveInspection(
                         SqlElForItemFieldAccessorChildElementValidator(
                             blockElements,
                             forItemElementsParentClass,
-                            shorName,
+                            shortName,
                         )
                     errorElement = validator.validateChildren(dropIndex = 1)
                 }
@@ -123,6 +200,8 @@ class ForDirectiveInspection(
         }
         return errorElement
     }
+
+    fun getForDirectiveBlockSize(target: PsiElement): Int = getForDirectiveBlock(target).size
 
     /**
      * Count the `for`, `if`, and `end` elements from the beginning
@@ -133,22 +212,18 @@ class ForDirectiveInspection(
         val cachedValue =
             cachedForDirectiveBlocks.getOrPut(targetElement) {
                 CachedValuesManager.getManager(targetElement.project).createCachedValue {
-                    val topElm =
-                        file.firstChild
-                            ?: return@createCachedValue CachedValueProvider.Result.create(
-                                emptyList(),
-                                file,
-                            )
                     val directiveBlocks =
-                        topElm.nextLeafs
+                        PsiTreeUtil
+                            .findChildrenOfType(file, PsiElement::class.java)
                             .filter { elm ->
                                 (
                                     elm.elementType == SqlTypes.EL_FOR ||
                                         elm.elementType == SqlTypes.EL_IF ||
                                         elm.elementType == SqlTypes.EL_END
                                 ) &&
-                                    elm.startOffset < targetElement.startOffset
-                            }.map {
+                                    elm.textOffset <= targetElement.textOffset
+                            }.sortedBy { it.textOffset }
+                            .map {
                                 when (it.elementType) {
                                     SqlTypes.EL_FOR -> {
                                         val item = (it.parent as? SqlElForDirective)?.getForItem()
@@ -212,9 +287,8 @@ class ForDirectiveInspection(
 
         return ForDeclarationDaoBaseItem(
             declarationFieldElements,
-            searchIndex,
-            daoMethod.getDomaAnnotationType(),
             validDaoParam,
+            searchIndex,
         )
     }
 }

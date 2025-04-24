@@ -41,7 +41,7 @@ abstract class SqlElChildElementValidator(
         complete: (PsiParentClass) -> Unit,
     ): ValidationResult? = null
 
-    protected fun validateFieldAccess(
+    fun validateFieldAccess(
         topParent: PsiParentClass,
         dropLastIndex: Int = 0,
         findFieldMethod: ((PsiType) -> PsiParentClass)? = { type -> PsiParentClass(type) },

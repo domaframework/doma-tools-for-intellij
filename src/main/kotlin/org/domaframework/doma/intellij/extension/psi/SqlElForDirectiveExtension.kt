@@ -19,7 +19,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.childLeafs
 import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.sql.foritem.ForDeclarationItem
 import org.domaframework.doma.intellij.psi.SqlBlockComment
@@ -36,7 +35,7 @@ fun SqlElForDirective.getForItemDeclaration(): ForDeclarationItem? {
     val parentCommentBlock =
         PsiTreeUtil.getParentOfType(this, SqlBlockComment::class.java)
             ?: return null
-    val childLeafs = parentCommentBlock.childLeafs()
+    val childLeafs = PsiTreeUtil.findChildrenOfType(parentCommentBlock, PsiElement::class.java)
     val start = childLeafs.firstOrNull { it.elementType == SqlTypes.SEPARATOR } ?: return null
     val end = childLeafs.last()
 

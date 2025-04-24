@@ -407,9 +407,16 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val forDeclaration = ForDirectiveInspection(file = file)
         val forItem = forDeclaration.getForItem(top)
         if (forItem != null) {
-            val errorElement = forDeclaration.validateFieldAccessByForItem(elements)
+            val errorElement = forDeclaration.validateFieldAccessByForItem(elements.dropLast(1))
             if (errorElement is ValidationCompleteResult) {
-                val parentClass = errorElement.parentClass
+                val validator =
+                    SqlElForItemFieldAccessorChildElementValidator(
+                        elements,
+                        errorElement.parentClass,
+                    )
+                val forValidationResult = validator.validateChildren(1)?.parentClass ?: return false
+
+                val parentClass = forValidationResult
                 val searchWord = cleanString(positionText)
                 setFieldsAndMethodsCompletionResultSet(
                     parentClass.searchField(searchWord)?.toTypedArray() ?: emptyArray(),

@@ -96,11 +96,14 @@ class SqlInspectionVisitor(
         if (setFile(element)) return
         val visitFile: PsiFile = file ?: return
 
+        if (isLiteralOrStatic(element)) return
+        PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java)?.let { return }
+
         val forDirectiveInspection =
             ForDirectiveInspection(this.shortName, visitFile)
 
-        if (isLiteralOrStatic(element)) return
-        PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java)?.let { return }
+        val forDirectivesSize = forDirectiveInspection.getForDirectiveBlockSize(element)
+        if (forDirectivesSize == 0) return
 
         // Element names defined in the For directory are not checked.
         val forItem = forDirectiveInspection.getForItem(element)
