@@ -38,10 +38,10 @@ class SqlElStaticFieldAccessorChildElementValidator(
         findFieldMethod: (PsiType) -> PsiParentClass,
         complete: (PsiParentClass) -> Unit,
     ): ValidationResult? {
-        val errorElement = getFieldTopParent()
-        when (errorElement) {
+        val getParentResult = getFieldTopParent()
+        when (getParentResult) {
             is ValidationCompleteResult -> {
-                val parent = errorElement.parentClass
+                val parent = getParentResult.parentClass
                 return validateFieldAccess(
                     parent,
                     dropLastIndex = dropIndex,
@@ -49,7 +49,7 @@ class SqlElStaticFieldAccessorChildElementValidator(
                 )
             }
             is ValidationIgnoreResult -> return null
-            else -> return errorElement
+            else -> return getParentResult
         }
     }
 

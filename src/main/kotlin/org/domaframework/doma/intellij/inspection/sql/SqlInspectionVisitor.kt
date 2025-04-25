@@ -27,6 +27,7 @@ import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.sql.validator.SqlElFieldAccessorChildElementValidator
+import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
 import org.domaframework.doma.intellij.common.sql.validator.SqlElStaticFieldAccessorChildElementValidator
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
@@ -99,8 +100,10 @@ class SqlInspectionVisitor(
         if (isLiteralOrStatic(element)) return
         PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java)?.let { return }
 
+        val daoMethod = findDaoMethod(visitFile) ?: return
+
         val forDirectiveInspection =
-            ForDirectiveInspection(this.shortName, visitFile)
+            ForDirectiveInspection(daoMethod, this.shortName)
 
         val forDirectivesSize = forDirectiveInspection.getForDirectiveBlockSize(element)
         if (forDirectivesSize == 0) return
@@ -111,9 +114,7 @@ class SqlInspectionVisitor(
             return
         }
 
-        val daoMethod = findDaoMethod(visitFile) ?: return
         val validDaoParam = daoMethod.findParameter(element.text)
-
         if (validDaoParam == null) {
             val errorElement =
                 ValidationDaoParamResult(
@@ -171,10 +172,20 @@ class SqlInspectionVisitor(
         blockElement: List<SqlElIdExpr>,
         file: PsiFile,
     ) {
-        val forDirectiveInspection = ForDirectiveInspection(this.shortName, file)
+        val daoMethod = findDaoMethod(file) ?: return
+        val forDirectiveInspection = ForDirectiveInspection(daoMethod, this.shortName)
         var errorElement: ValidationResult? =
             forDirectiveInspection.validateFieldAccessByForItem(blockElement.toList())
-        if (errorElement is ValidationCompleteResult) return
+        if (errorElement is ValidationCompleteResult) {
+            val currentFieldAccessValidator =
+                SqlElForItemFieldAccessorChildElementValidator(
+                    blockElement,
+                    errorElement.parentClass,
+                    this.shortName,
+                )
+            errorElement = currentFieldAccessValidator.validateChildren()
+            if (errorElement is ValidationCompleteResult) return
+        }
         if (errorElement is ValidationPropertyResult) {
             errorElement.highlightElement(holder)
             return

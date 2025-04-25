@@ -266,7 +266,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         }
 
         if (topElementType == null) {
-            if (getForItemTopElementType(top, elements, searchText, result)) return
+            if (isFieldAccessByForItem(top, elements, searchText, result)) return
             topElementType =
                 getElementTypeByFieldAccess(originalFile, topText, elements, result) ?: return
         }
@@ -396,17 +396,18 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         }
     }
 
-    private fun getForItemTopElementType(
+    private fun isFieldAccessByForItem(
         top: PsiElement,
         elements: List<PsiElement>,
         positionText: String,
         result: CompletionResultSet,
     ): Boolean {
         val file = top.containingFile ?: return false
-        val forDeclaration = ForDirectiveInspection(file = file)
+        val daoMethod = findDaoMethod(file) ?: return false
+        val forDeclaration = ForDirectiveInspection(daoMethod)
         val forItem = forDeclaration.getForItem(top)
         if (forItem != null) {
-            val errorElement = forDeclaration.validateFieldAccessByForItem(elements.dropLast(1))
+            val errorElement = forDeclaration.validateFieldAccessByForItem(elements)
             if (errorElement is ValidationCompleteResult) {
                 val validator =
                     SqlElForItemFieldAccessorChildElementValidator(

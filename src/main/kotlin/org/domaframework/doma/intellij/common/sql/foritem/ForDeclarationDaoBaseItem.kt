@@ -31,6 +31,9 @@ class ForDeclarationDaoBaseItem(
     val daoParameter: PsiParameter? = null,
     val index: Int = 0,
 ) : ForDeclarationItem(blocks.first()) {
+    /***
+     * Obtain the type information of the For item defined from the Dao parameters.
+     */
     fun getPsiParentClass(): PsiParentClass? {
         val daoParamFieldValidator =
             SqlElFieldAccessorChildElementValidator(

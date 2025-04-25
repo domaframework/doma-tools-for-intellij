@@ -17,13 +17,12 @@ package org.domaframework.doma.intellij.inspection
 
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
-import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.sql.foritem.ForDeclarationDaoBaseItem
@@ -32,6 +31,7 @@ import org.domaframework.doma.intellij.common.sql.foritem.ForItem
 import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
@@ -42,8 +42,8 @@ import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class ForDirectiveInspection(
+    private val daoMethod: PsiMethod,
     private val shortName: String = "",
-    private val file: PsiFile,
 ) {
     data class BlockToken(
         val type: BlockType,
@@ -64,12 +64,7 @@ class ForDirectiveInspection(
 
     fun getForItem(targetElement: PsiElement): ForItem? {
         val forBlocks = getForDirectiveBlock(targetElement)
-        val targetName =
-            targetElement.text
-                .replace("_has_next", "")
-                .replace("_index", "")
-        val forItem = forBlocks.lastOrNull { it.item.text == targetName }
-        forItem?.let { return ForItem(it.item) } ?: return null
+        return getForItem(targetElement, forBlocks)
     }
 
     fun getForItem(
@@ -95,12 +90,11 @@ class ForDirectiveInspection(
         val firDirectives = getForDirectiveBlock(targetElement)
         val forItem = getForItem(targetElement, firDirectives)
         var errorElement: ValidationResult? = ValidationDaoParamResult(targetElement, "", shortName)
-        val daoMethod = findDaoMethod(file) ?: return null
         val domaAnnotationType = daoMethod.getDomaAnnotationType()
 
         if (forItem != null) {
             val declarationItem =
-                getDeclarationItem(forItem, file)
+                getDeclarationTopItem(forItem, 0)
 
             if (declarationItem != null && declarationItem is ForDeclarationDaoBaseItem) {
                 val daoParamDeclarativeType =
@@ -123,12 +117,7 @@ class ForDirectiveInspection(
 
                 // Each time searching for the next for directive item, recursively analyze the type if the field is Access.
                 while (nestClassType != null &&
-                    i <= nestIndex &&
-
-                    PsiClassTypeUtil.isIterableType(
-                        nestClassType,
-                        topElm.project,
-                    )
+                    i <= nestIndex
                 ) {
                     // Get the definition type for each for directive passed through
                     val targetForDirective = firDirectives[i]
@@ -147,6 +136,18 @@ class ForDirectiveInspection(
                             )
                         val currentLastType = validator.validateChildren()
                         nestClassType = currentLastType?.parentClass?.type as? PsiClassType?
+                        if (nestClassType != null &&
+                            !PsiClassTypeUtil.isIterableType(
+                                nestClassType,
+                                topElm.project,
+                            )
+                        ) {
+                            return ValidationPropertyResult(
+                                currentForItem.element,
+                                currentLastType?.parentClass,
+                                "",
+                            )
+                        }
                         listIndex = 1
                     } else {
                         // Get the nesting count from the List type definition obtained along the way
@@ -175,32 +176,6 @@ class ForDirectiveInspection(
         return errorElement
     }
 
-    fun getFieldAccessParentClass(blockElements: List<PsiElement>): ValidationResult? {
-        val targetElement: PsiElement = blockElements.firstOrNull() ?: return null
-        val file = targetElement.containingFile ?: return null
-
-        val forItem = getForItem(targetElement)
-        var errorElement: ValidationResult? = ValidationDaoParamResult(targetElement, "", shortName)
-        if (forItem != null) {
-            val declarationItem =
-                getDeclarationItem(forItem, file)
-
-            if (declarationItem != null && declarationItem is ForDeclarationDaoBaseItem) {
-                val forItemElementsParentClass = declarationItem.getPsiParentClass()
-                if (forItemElementsParentClass != null) {
-                    val validator =
-                        SqlElForItemFieldAccessorChildElementValidator(
-                            blockElements,
-                            forItemElementsParentClass,
-                            shortName,
-                        )
-                    errorElement = validator.validateChildren(dropIndex = 1)
-                }
-            }
-        }
-        return errorElement
-    }
-
     fun getForDirectiveBlockSize(target: PsiElement): Int = getForDirectiveBlock(target).size
 
     /**
@@ -212,6 +187,7 @@ class ForDirectiveInspection(
         val cachedValue =
             cachedForDirectiveBlocks.getOrPut(targetElement) {
                 CachedValuesManager.getManager(targetElement.project).createCachedValue {
+                    val file = targetElement.containingFile ?: return@createCachedValue null
                     val directiveBlocks =
                         PsiTreeUtil
                             .findChildrenOfType(file, PsiElement::class.java)
@@ -255,9 +231,11 @@ class ForDirectiveInspection(
         return cachedValue.value
     }
 
-    private fun getDeclarationItem(
+    /***
+     * Get the top element to define the item.
+     */
+    private fun getDeclarationTopItem(
         forItem: ForItem,
-        file: PsiFile,
         searchIndex: Int = 0,
     ): ForDirectiveItemBase? {
         val forDirectiveParent = forItem.getParentForDirectiveExpr() ?: return null
@@ -269,19 +247,10 @@ class ForDirectiveInspection(
         val parentForItem = getForItem(topElm)
         val index = searchIndex + 1
         if (parentForItem != null) {
-            val parentDeclaration = getDeclarationItem(parentForItem, file, index)
+            val parentDeclaration = getDeclarationTopItem(parentForItem, index)
             if (parentDeclaration is ForDeclarationDaoBaseItem) return parentDeclaration
         }
 
-        return getForDeclarationDaoParamBase(topElm, searchIndex, file)
-    }
-
-    private fun getForDeclarationDaoParamBase(
-        topElm: PsiElement,
-        searchIndex: Int,
-        file: PsiFile,
-    ): ForDeclarationDaoBaseItem? {
-        val daoMethod = findDaoMethod(file) ?: return null
         val validDaoParam = daoMethod.findParameter(topElm.text)
         if (validDaoParam == null) return null
 

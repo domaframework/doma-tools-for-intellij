@@ -46,8 +46,8 @@ class SqlElIdExprReference(
         val topElm = targetElements.firstOrNull() as? PsiElement ?: return null
 
         if (topElm.prevSibling.elementType == SqlTypes.AT_SIGN) return null
-
-        val forDirectiveInspection = ForDirectiveInspection(file = file)
+        val daoMethod = findDaoMethod(file) ?: return null
+        val forDirectiveInspection = ForDirectiveInspection(daoMethod)
         val forItem = forDirectiveInspection.getForItem(topElm)
         if (forItem != null && element.textOffset == topElm.textOffset) {
             PluginLoggerUtil.countLogging(
@@ -59,38 +59,43 @@ class SqlElIdExprReference(
             return forItem.element
         }
 
-        val errorElement = forDirectiveInspection.getFieldAccessParentClass(targetElements)
+        val errorElement = forDirectiveInspection.validateFieldAccessByForItem(targetElements)
         var parentClass = (errorElement as? ValidationCompleteResult)?.parentClass
         if (errorElement is ValidationCompleteResult && parentClass != null) {
-            val searchText = targetElements.lastOrNull()?.let { cleanString(it.text) } ?: ""
-            val reference = parentClass.findField(searchText) ?: parentClass.findMethod(searchText)
-            PluginLoggerUtil.countLogging(
-                this::class.java.simpleName,
-                "ReferenceEntityProperty",
-                "Reference",
-                startTime,
-            )
-            return reference
+            val validator =
+                SqlElForItemFieldAccessorChildElementValidator(
+                    targetElements,
+                    parentClass,
+                )
+            val targetReferenceClass = validator.validateChildren(1)
+            if (targetReferenceClass is ValidationCompleteResult) {
+                val searchText = targetElements.lastOrNull()?.let { cleanString(it.text) } ?: ""
+                val targetParent = targetReferenceClass.parentClass
+                val reference =
+                    targetParent.findField(searchText) ?: targetParent.findMethod(searchText)
+                PluginLoggerUtil.countLogging(
+                    this::class.java.simpleName,
+                    "ReferenceEntityProperty",
+                    "Reference",
+                    startTime,
+                )
+                return reference
+            }
         }
 
-        val daoMethod = findDaoMethod(file)
-        if (daoMethod != null) {
-            val topParam = daoMethod.findParameter(topElm.text) ?: return null
-            parentClass = topParam.getIterableClazz(daoMethod.getDomaAnnotationType())
-        }
+        val topParam = daoMethod.findParameter(topElm.text) ?: return null
+        parentClass = topParam.getIterableClazz(daoMethod.getDomaAnnotationType())
 
         val symbolElement =
             when (element.textOffset) {
                 targetElements.first().textOffset ->
-                    daoMethod?.let {
-                        getReferenceDaoMethodParameter(
-                            it,
-                            element,
-                            startTime,
-                        )
-                    }
+                    getReferenceDaoMethodParameter(
+                        daoMethod,
+                        element,
+                        startTime,
+                    )
 
-                else -> parentClass?.let { getReferenceEntity(it, targetElements, startTime) }
+                else -> getReferenceEntity(parentClass, targetElements, startTime)
             }
 
         return symbolElement
