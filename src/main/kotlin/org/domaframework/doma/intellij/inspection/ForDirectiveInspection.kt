@@ -119,6 +119,7 @@ class ForDirectiveInspection(
                 while (nestClassType != null &&
                     i <= nestIndex
                 ) {
+                    // TODO: Refactoring
                     // Get the definition type for each for directive passed through
                     val targetForDirective = firDirectives[i]
                     val currentForItem = ForItem(targetForDirective.item)
@@ -135,18 +136,21 @@ class ForDirectiveInspection(
                                 shortName,
                             )
                         val currentLastType = validator.validateChildren()
-                        nestClassType = currentLastType?.parentClass?.type as? PsiClassType?
-                        if (nestClassType != null &&
-                            !PsiClassTypeUtil.isIterableType(
-                                nestClassType,
-                                topElm.project,
-                            )
-                        ) {
-                            return ValidationPropertyResult(
-                                currentForItem.element,
-                                currentLastType?.parentClass,
-                                "",
-                            )
+                        val currentLastTypeParentType = currentLastType?.parentClass?.type as? PsiClassType?
+                        if (currentLastTypeParentType != null) {
+                            if (!PsiClassTypeUtil.isIterableType(
+                                    currentLastTypeParentType,
+                                    topElm.project,
+                                )
+                            ) {
+                                return ValidationPropertyResult(
+                                    currentForItem.element,
+                                    currentLastType.parentClass,
+                                    "",
+                                )
+                            } else {
+                                nestClassType = currentLastTypeParentType.parameters.firstOrNull() as? PsiClassType?
+                            }
                         }
                         listIndex = 1
                     } else {
@@ -196,8 +200,7 @@ class ForDirectiveInspection(
                                     elm.elementType == SqlTypes.EL_FOR ||
                                         elm.elementType == SqlTypes.EL_IF ||
                                         elm.elementType == SqlTypes.EL_END
-                                ) &&
-                                    elm.textOffset <= targetElement.textOffset
+                                )
                             }.sortedBy { it.textOffset }
                             .map {
                                 when (it.elementType) {
