@@ -119,7 +119,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 val blockElements = getAccessElementTextBlocks(originalPosition)
                 generateCompletionList(
                     blockElements,
-                    pos.text,
+                    pos,
                     originalFile,
                     result,
                 )
@@ -163,7 +163,11 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         var blocks: List<PsiElement> = emptyList()
         // If the immediate parent is a for, if, elseif directive,
         // get the field access element list from its own forward element.
-        val parent = targetElement.parent
+        val parent =
+            PsiTreeUtil.findFirstParent(targetElement) {
+                it.elementType != SqlTypes.EL_ID_EXPR &&
+                    it.elementType != SqlTypes.EL_IDENTIFIER
+            }
         if (parent is SqlElForDirective ||
             parent is SqlElIfDirective ||
             parent is SqlElElseifDirective
@@ -202,7 +206,15 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             var parameterParent: PsiElement? =
                 PsiTreeUtil.getParentOfType(targetElement, SqlElParameters::class.java)
             if (parameterParent != null) {
-                blocks = emptyList()
+                val children = mutableListOf<PsiElement>()
+                parameterParent.children.forEach { child ->
+                    if (child is SqlElFieldAccessExpr) {
+                        children.addAll(child.children)
+                    } else {
+                        child.add(child)
+                    }
+                }
+                return children
             } else {
                 // Completion for subsequent arguments
                 parameterParent =
@@ -217,7 +229,24 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                             ) != null
                         }
                 if (parameterParent != null) {
-                    blocks = emptyList()
+                    val errorElement = targetElement.prevLeafs.firstOrNull { it is PsiErrorElement }
+                    if (errorElement != null) {
+                        parameterParent = (errorElement.parent as? SqlElParameters)
+                        val children = mutableListOf<PsiElement>()
+                        parameterParent
+                            ?.children
+                            ?.reversed()
+                            ?.takeWhile {
+                                it.nextSibling?.elementType != SqlTypes.COMMA
+                            }?.forEach { child ->
+                                if (child is SqlElFieldAccessExpr) {
+                                    children.addAll(child.children)
+                                } else {
+                                    children.add(child)
+                                }
+                            }
+                        blocks = children.reversed().takeWhile { it.nextSibling?.elementType != SqlTypes.COMMA }
+                    }
                 }
             }
         }
@@ -240,17 +269,17 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
      */
     private fun generateCompletionList(
         elements: List<PsiElement>,
-        positionText: String,
+        position: PsiElement,
         originalFile: PsiFile,
         result: CompletionResultSet,
     ) {
-        val searchText = cleanString(positionText)
+        val searchText = cleanString(getSearchElementText(position))
         var topElementType: PsiType? = null
-        val top =
-            when {
-                elements.isEmpty() -> return
-                else -> elements.first()
-            }
+        if (elements.isEmpty()) {
+            getElementTypeByFieldAccess(originalFile, elements, result)
+            return
+        }
+        val top = elements.first()
 
         val topText = cleanString(getSearchElementText(top))
         val prevWord = PsiPatternUtil.getBindSearchWord(originalFile, elements.last(), " ")
@@ -268,7 +297,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         if (topElementType == null) {
             if (isFieldAccessByForItem(top, elements, searchText, result)) return
             topElementType =
-                getElementTypeByFieldAccess(originalFile, topText, elements, result) ?: return
+                getElementTypeByFieldAccess(originalFile, elements, result) ?: return
         }
 
         val fieldAccessorChildElementValidator =
@@ -320,9 +349,9 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         setFieldsAndMethodsCompletionResultSet(matchFields, matchMethod, result)
     }
 
-    private fun getSearchElementText(elm: PsiElement): String =
-        if (elm.elementType == SqlTypes.EL_IDENTIFIER) {
-            elm.text
+    private fun getSearchElementText(elm: PsiElement?): String =
+        if (elm is SqlElIdExpr || elm.elementType == SqlTypes.EL_IDENTIFIER) {
+            elm?.text ?: ""
         } else {
             ""
         }
@@ -357,20 +386,23 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
      */
     private fun getElementTypeByFieldAccess(
         originalFile: PsiFile,
-        topText: String,
         elements: List<PsiElement>,
         result: CompletionResultSet,
     ): PsiType? {
         val daoMethod = findDaoMethod(originalFile) ?: return null
+        val topText = cleanString(getSearchElementText(elements.firstOrNull()))
         val matchParams = daoMethod.searchParameter(topText)
-        val firstElement = matchParams.firstOrNull() ?: return null
-        if (elements.isEmpty() || elements.size <= 1) {
+        val findParam = matchParams.find { it.name == topText }
+        if (elements.size <= 1 && findParam == null) {
             matchParams.map { match ->
                 result.addElement(LookupElementBuilder.create(match.name))
             }
             return null
         }
-        val immediate = firstElement.getIterableClazz(daoMethod.getDomaAnnotationType())
+        if (findParam == null) {
+            return null
+        }
+        val immediate = findParam.getIterableClazz(daoMethod.getDomaAnnotationType())
         return immediate.type
     }
 
