@@ -218,6 +218,13 @@ class ForDirectiveInspection(
                                 }
                             }
                     val stack = mutableListOf<BlockToken>()
+                    val filterPosition = directiveBlocks.filter { it.position < targetElement.textOffset }
+                    filterPosition.forEach { block ->
+                        when (block.type) {
+                            BlockType.FOR, BlockType.IF -> stack.add(block)
+                            BlockType.END -> if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
+                        }
+                    }
                     directiveBlocks.forEach { block ->
                         when (block.type) {
                             BlockType.FOR, BlockType.IF -> stack.add(block)
