@@ -60,17 +60,16 @@ abstract class SqlElExprReference(
         element: PsiElement,
         base: Class<R>,
     ): List<PsiElement> {
-        val fieldAccessExpr = PsiTreeUtil.getParentOfType(element, base)
+        val fieldAccessExpr = PsiTreeUtil.findFirstParent(element) { it !is SqlElIdExpr }
+        if (fieldAccessExpr != null && !base.isInstance(fieldAccessExpr)) return listOf(element)
+
         val nodeElm =
-            if (fieldAccessExpr != null) {
-                PsiTreeUtil
-                    .getChildrenOfType(
-                        fieldAccessExpr,
-                        SqlElIdExpr::class.java,
-                    )?.filter { it.textOffset <= element.textOffset }
-            } else {
-                listOf(element)
-            }
+            PsiTreeUtil
+                .getChildrenOfType(
+                    fieldAccessExpr,
+                    SqlElIdExpr::class.java,
+                )?.filter { it.textOffset <= element.textOffset }
+
         return nodeElm
             ?.toList()
             ?.sortedBy { it.textOffset } ?: emptyList()
