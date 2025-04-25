@@ -38,6 +38,7 @@ import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.isFirstElement
 import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElNewExpr
 import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
@@ -105,8 +106,10 @@ class SqlInspectionVisitor(
         val forDirectiveInspection =
             ForDirectiveInspection(daoMethod, this.shortName)
 
-        val forDirectivesSize = forDirectiveInspection.getForDirectiveBlockSize(element)
-        if (forDirectivesSize == 0) return
+        if (PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java) != null) {
+            val forDirectivesSize = forDirectiveInspection.getForDirectiveBlockSize(element)
+            if (forDirectivesSize == 0) return
+        }
 
         // Element names defined in the For directory are not checked.
         val forItem = forDirectiveInspection.getForItem(element)
@@ -198,7 +201,6 @@ class SqlInspectionVisitor(
                 this.shortName,
             )
         errorElement = validator.validateChildren()
-
         errorElement?.highlightElement(holder)
     }
 
