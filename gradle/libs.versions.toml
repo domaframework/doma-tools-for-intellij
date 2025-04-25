@@ -20,7 +20,7 @@ kotlinTest = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
 domacore = { module = "org.seasar.doma:doma-core", version.ref = "doma" }
 google-java-format = { module = "com.google.googlejavaformat:google-java-format", version = "1.26.0" }
 ktlint = { module = "com.pinterest.ktlint:ktlint-cli", version = "1.5.0" }
-jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.18.3" }
+jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.19.0" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
