@@ -41,7 +41,7 @@ class ForDeclarationStaticFieldAccessorItem(
             SqlElStaticFieldAccessorChildElementValidator(
                 blocks,
                 staticFieldAccessExpr,
-                shorName = shortName,
+                shortName = shortName,
             )
 
         var lastPsiParentClass: PsiParentClass? = null

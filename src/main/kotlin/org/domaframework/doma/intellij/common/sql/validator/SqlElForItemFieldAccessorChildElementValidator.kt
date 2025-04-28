@@ -23,8 +23,8 @@ import org.domaframework.doma.intellij.common.sql.validator.result.ValidationRes
 class SqlElForItemFieldAccessorChildElementValidator(
     override val blocks: List<PsiElement>,
     private val declarationType: PsiParentClass,
-    override val shorName: String = "",
-) : SqlElChildElementValidator(blocks, shorName) {
+    override val shortName: String = "",
+) : SqlElChildElementValidator(blocks, shortName) {
     val project = blocks.firstOrNull()?.project
 
     override fun validateChildren(

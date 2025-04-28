@@ -31,8 +31,8 @@ import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 class SqlElStaticFieldAccessorChildElementValidator(
     override val blocks: List<PsiElement>,
     private val staticAccuser: SqlElStaticFieldAccessExpr,
-    override val shorName: String = "",
-) : SqlElChildElementValidator(blocks, shorName) {
+    override val shortName: String = "",
+) : SqlElChildElementValidator(blocks, shortName) {
     val project = staticAccuser.containingFile.project
 
     override fun validateChildren(
@@ -99,7 +99,7 @@ class SqlElStaticFieldAccessorChildElementValidator(
             return ValidationPropertyResult(
                 staticTopElement,
                 parent,
-                shorName,
+                shortName,
             )
         }
 

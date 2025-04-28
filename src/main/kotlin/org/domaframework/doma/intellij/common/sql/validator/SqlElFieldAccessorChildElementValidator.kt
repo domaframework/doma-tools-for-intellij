@@ -31,9 +31,9 @@ import org.domaframework.doma.intellij.extension.psi.getIterableClazz
 class SqlElFieldAccessorChildElementValidator(
     override val blocks: List<PsiElement>,
     private val file: PsiFile,
-    override val shorName: String = "",
+    override val shortName: String = "",
     private val topDaoParameter: PsiParameter? = null,
-) : SqlElChildElementValidator(blocks, shorName) {
+) : SqlElChildElementValidator(blocks, shortName) {
     val project = file.project
 
     override fun validateChildren(
@@ -75,7 +75,7 @@ class SqlElFieldAccessorChildElementValidator(
             return ValidationDaoParamResult(
                 topElement,
                 daoMethod.name,
-                shorName,
+                shortName,
             )
         }
 

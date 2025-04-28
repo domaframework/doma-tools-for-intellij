@@ -32,7 +32,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes
 
 abstract class SqlElChildElementValidator(
     open val blocks: List<PsiElement>,
-    open val shorName: String = "",
+    open val shortName: String = "",
 ) {
     abstract fun validateChildren(dropIndex: Int = 0): ValidationResult?
 
@@ -140,7 +140,7 @@ abstract class SqlElChildElementValidator(
                 return ValidationPropertyResult(
                     element,
                     parent,
-                    shorName,
+                    shortName,
                 )
             } else {
                 if (field != null && element.nextSibling !is SqlElParameters) {

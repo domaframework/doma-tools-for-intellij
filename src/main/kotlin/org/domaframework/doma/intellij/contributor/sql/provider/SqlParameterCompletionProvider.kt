@@ -211,7 +211,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                     if (child is SqlElFieldAccessExpr) {
                         children.addAll(child.children)
                     } else {
-                        child.add(child)
+                        children.add(child)
                     }
                 }
                 return children
