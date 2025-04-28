@@ -16,4 +16,10 @@ public interface ReferenceTestDao {
   @Select
   ProjectDetail referenceStaticField();
 
+  @Select
+  List<Employee> referenceListFieldMethod(List<Employee> employeesList);
+
+  @Select
+  List<Employee> referenceForItem(List<List<List<Employee>>> employeesList);
+
 }

@@ -26,7 +26,8 @@
         /*%end*/
         -- Reference error for a non-existent field
         /*%for child : employee.<error descr="The field or method [projectIds] does not exist in the class [EmployeeSummary]">projectIds</error> */
-           AND pe.parent_project = /* child.projectId */0
+           -- An error occurred because the referenced element was not correctly defined.
+           AND pe.parent_project = /* <error descr="The bind variable [child] does not exist in the Dao method [bindVariableForNonEntityClass]">child</error>.projectId */0
            -- Reference error for a non-existent method
           AND pe.member_id IN /* employee.<error descr="The field or method [getTopProject] does not exist in the class [EmployeeSummary]">getTopProject</error>() */(0,1,2)
         /*%end */

@@ -1,5 +1,6 @@
 package doma.example.entity;
 
+import java.util.List;
 import java.time.LocalDate;
 import org.seasar.doma.Entity;
 import org.seasar.doma.Id;
@@ -13,7 +14,7 @@ public class Employee extends User {
   public String employeeName;
   private String department;
   private String rank;
-  public  List<Project> projects;
+  public static  List<Project> projects;
 
   public Integer managerId;
 

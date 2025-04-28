@@ -109,10 +109,10 @@ class SqlCompleteTest : DomaSqlTest() {
             listOf(
                 "elseif",
                 "else",
-                "end",
-                "expand",
             ),
             listOf(
+                "end",
+                "expand",
                 "employee",
                 "if",
                 "populate",

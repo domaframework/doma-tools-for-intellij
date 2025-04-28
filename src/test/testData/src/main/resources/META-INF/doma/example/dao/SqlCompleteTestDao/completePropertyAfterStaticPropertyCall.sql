@@ -8,4 +8,4 @@ from project p
   on p.project_id = pd.project_id
  where
   -- Code completion for static fields and methods
-  and pd.manager_id = /* @doma.example.entity.ProjectDetail@manager.<caret>m */'TODO'
+  and pd.manager_id = /* @doma.example.entity.ProjectDetail@manager.<caret>mana */'TODO'
