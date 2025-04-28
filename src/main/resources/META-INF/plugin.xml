@@ -24,13 +24,17 @@
         instance="org.domaframework.doma.intellij.setting.DomaToolsConfigurable"
         displayName="Doma Tools" />
 
+    <!-- Reference -->
     <psi.referenceContributor
       implementation="org.domaframework.doma.intellij.reference.SqlReferenceContributor"
       language="DomaSql"
     />
-
     <lang.elementManipulator forClass="org.domaframework.doma.intellij.psi.SqlCustomElExpr"
       implementationClass="org.domaframework.doma.intellij.reference.SqlElExprManipulator" />
+
+    <!-- Document -->
+    <lang.documentationProvider language="DomaSql"
+      implementationClass="org.domaframework.doma.intellij.document.ForItemElementDocumentationProvider" />
 
     <!-- Gutter -->
     <codeInsight.lineMarkerProvider language="JAVA"
