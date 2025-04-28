@@ -59,9 +59,9 @@ class SqlElIdExprReference(
             return forItem.element
         }
 
-        val errorElement = forDirectiveInspection.validateFieldAccessByForItem(targetElements)
-        var parentClass = (errorElement as? ValidationCompleteResult)?.parentClass
-        if (errorElement is ValidationCompleteResult && parentClass != null) {
+        val validateResult = forDirectiveInspection.validateFieldAccessByForItem(targetElements)
+        var parentClass = (validateResult as? ValidationCompleteResult)?.parentClass
+        if (validateResult is ValidationCompleteResult && parentClass != null) {
             val validator =
                 SqlElForItemFieldAccessorChildElementValidator(
                     targetElements,
@@ -138,9 +138,9 @@ class SqlElIdExprReference(
                 targetElement.dropLast(1),
                 topParentClass,
             )
-        val errorElement = validator.validateChildren()
-        if (errorElement != null) {
-            val targetClass = errorElement.parentClass ?: return null
+        val validateResult = validator.validateChildren()
+        if (validateResult != null) {
+            val targetClass = validateResult.parentClass ?: return null
             val searchText = targetElement.lastOrNull()?.text ?: ""
             val reference = targetClass.findField(searchText) ?: targetClass.findMethod(searchText)
             PluginLoggerUtil.countLogging(

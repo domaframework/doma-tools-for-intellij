@@ -229,9 +229,9 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                             ) != null
                         }
                 if (parameterParent != null) {
-                    val errorElement = targetElement.prevLeafs.firstOrNull { it is PsiErrorElement }
-                    if (errorElement != null) {
-                        parameterParent = (errorElement.parent as? SqlElParameters)
+                    val validateResult = targetElement.prevLeafs.firstOrNull { it is PsiErrorElement }
+                    if (validateResult != null) {
+                        parameterParent = (validateResult.parent as? SqlElParameters)
                         val children = mutableListOf<PsiElement>()
                         parameterParent
                             ?.children
@@ -310,7 +310,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         var parentProperties: Array<PsiField> = psiParentClass.clazz?.allFields ?: emptyArray()
         var parentMethods: Array<PsiMethod> = psiParentClass.clazz?.allMethods ?: emptyArray()
 
-        val errorElement =
+        val validateResult =
             fieldAccessorChildElementValidator.validateChildren(
                 complete = { parent ->
                     parentProperties =
@@ -324,8 +324,8 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 },
             )
 
-        if (errorElement is ValidationPropertyResult) {
-            val parent = errorElement.parentClass ?: return
+        if (validateResult is ValidationPropertyResult) {
+            val parent = validateResult.parentClass ?: return
             parent.searchField(searchText)?.let {
                 parentProperties = it.toTypedArray()
             } ?: { parentProperties = emptyArray() }
@@ -439,12 +439,12 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val forDeclaration = ForDirectiveInspection(daoMethod)
         val forItem = forDeclaration.getForItem(top)
         if (forItem != null) {
-            val errorElement = forDeclaration.validateFieldAccessByForItem(elements)
-            if (errorElement is ValidationCompleteResult) {
+            val validateResult = forDeclaration.validateFieldAccessByForItem(elements)
+            if (validateResult is ValidationCompleteResult) {
                 val validator =
                     SqlElForItemFieldAccessorChildElementValidator(
                         elements,
-                        errorElement.parentClass,
+                        validateResult.parentClass,
                     )
                 val forValidationResult = validator.validateChildren(1)?.parentClass ?: return false
 

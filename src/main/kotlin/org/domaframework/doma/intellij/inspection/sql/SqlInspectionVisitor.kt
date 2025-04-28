@@ -125,13 +125,13 @@ class SqlInspectionVisitor(
 
         val validDaoParam = daoMethod.findParameter(element.text)
         if (validDaoParam == null) {
-            val errorElement =
+            val validateResult =
                 ValidationDaoParamResult(
                     element,
                     daoMethod.name,
                     shortName,
                 )
-            errorElement.highlightElement(holder)
+            validateResult.highlightElement(holder)
         }
     }
 
@@ -183,20 +183,20 @@ class SqlInspectionVisitor(
     ) {
         val daoMethod = findDaoMethod(file) ?: return
         val forDirectiveInspection = ForDirectiveInspection(daoMethod, this.shortName)
-        var errorElement: ValidationResult? =
+        var validateResult: ValidationResult? =
             forDirectiveInspection.validateFieldAccessByForItem(blockElement.toList())
-        if (errorElement is ValidationCompleteResult) {
+        if (validateResult is ValidationCompleteResult) {
             val currentFieldAccessValidator =
                 SqlElForItemFieldAccessorChildElementValidator(
                     blockElement,
-                    errorElement.parentClass,
+                    validateResult.parentClass,
                     this.shortName,
                 )
-            errorElement = currentFieldAccessValidator.validateChildren()
-            if (errorElement is ValidationCompleteResult) return
+            validateResult = currentFieldAccessValidator.validateChildren()
+            if (validateResult is ValidationCompleteResult) return
         }
-        if (errorElement is ValidationPropertyResult) {
-            errorElement.highlightElement(holder)
+        if (validateResult is ValidationPropertyResult) {
+            validateResult.highlightElement(holder)
             return
         }
 
@@ -206,8 +206,8 @@ class SqlInspectionVisitor(
                 file,
                 this.shortName,
             )
-        errorElement = validator.validateChildren()
-        errorElement?.highlightElement(holder)
+        validateResult = validator.validateChildren()
+        validateResult?.highlightElement(holder)
     }
 
     /**
@@ -224,7 +224,7 @@ class SqlInspectionVisitor(
                 staticAccuser,
                 this.shortName,
             )
-        val errorElement: ValidationResult? = validator.validateChildren()
-        errorElement?.highlightElement(holder)
+        val validateResult: ValidationResult? = validator.validateChildren()
+        validateResult?.highlightElement(holder)
     }
 }
