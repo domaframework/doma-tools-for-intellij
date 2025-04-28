@@ -3,7 +3,7 @@ update employee e set
  , e.rank = /* employee.rank */1
 where
  e.employee_id = /* employee.employeeId */1
- /*%for member : <caret>p */
+ /*%for member : <caret>pro */
    /*%if member.department.startWith("200")  */
     and e.department = /* member.department */'department'
    /*%elseif member.department.startWith("100") */

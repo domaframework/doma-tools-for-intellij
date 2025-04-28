@@ -19,9 +19,9 @@ public class Project {
   public static Integr projectNumber;
   private static String projectCategory;
 
-  public static Interer cost;
+  public static Integer cost;
 
-  public Employee getFirstEmployee() {
+  public static Employee getFirstEmployee() {
     return employees.get(0);
   }
 

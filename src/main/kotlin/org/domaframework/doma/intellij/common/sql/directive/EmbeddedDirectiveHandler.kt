@@ -21,6 +21,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
+import org.domaframework.doma.intellij.extension.psi.searchParameter
 
 class EmbeddedDirectiveHandler(
     private val originalFile: PsiFile,
@@ -36,11 +37,8 @@ class EmbeddedDirectiveHandler(
             result,
         ) { daoMethod, bind ->
             daoMethod
-                ?.parameterList
-                ?.parameters
-                ?.filter {
-                    it.name.startsWith(bind)
-                }?.map { param -> VariableLookupItem(param) }
+                ?.searchParameter(bind)
+                ?.map { param -> VariableLookupItem(param) }
                 ?.toList()
                 ?: emptyList()
         }

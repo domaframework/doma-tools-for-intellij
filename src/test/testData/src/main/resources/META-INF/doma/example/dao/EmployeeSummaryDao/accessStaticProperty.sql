@@ -26,7 +26,7 @@ where
     AND (
     -- static method call
     /*%for member : @doma.example.entity.ProjectDetail@members*/
-    /*%if member.hasNext() */
+    /*%if member_has_next */
       pd.member_id = /* member.employeeId */0
       /*# "OR"*/
     /*%end */

@@ -17,24 +17,41 @@ package org.domaframework.doma.intellij.reference
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.PluginLoggerUtil
-import org.domaframework.doma.intellij.common.psi.PsiStaticElement
+import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
 
-class SqlElClassExprReference(
+class SqlElForDirectiveIdExprReference(
     element: PsiElement,
 ) : SqlElExprReference(element) {
     override fun superResolveLogic(
         startTime: Long,
         file: PsiFile,
     ): PsiElement? {
-        val variableName = element.text
-        val psiStaticElement = PsiStaticElement(variableName, file)
+        val declarationItem = getDeclarationItem()
         PluginLoggerUtil.countLogging(
             this::class.java.simpleName,
-            "ReferenceStaticClass",
+            "ReferenceForDirectiveItem",
             "Reference",
             startTime,
         )
-        return psiStaticElement.getRefClazz()
+        return declarationItem
+    }
+
+    /**
+     * In the for directive, set the reference on the left side to the element on the right side.
+     */
+    private fun getDeclarationItem(): PsiElement? {
+        val forDirectiveParent =
+            PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java) ?: return null
+
+        return PsiTreeUtil
+            .getChildrenOfType(forDirectiveParent, SqlElFieldAccessExpr::class.java)
+            ?.last()
+            ?: PsiTreeUtil
+                .getChildrenOfType(forDirectiveParent, SqlElIdExpr::class.java)
+                ?.last()
     }
 }

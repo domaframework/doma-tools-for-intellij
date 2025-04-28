@@ -14,7 +14,7 @@
    /*%if employees.size() > 0 */
      where
      /*%for member : employees */
-        p.employee_id = /* member.employee_id */0
+        p.employee_id = /* member.<error descr="The field or method [employee_id] does not exist in the class [Employee]">employee_id</error> */0
      /*%end */
    -- Cannot be used as a class inside List-type
    /*%elseif employees.<error descr="The field or method [rank] does not exist in the class [List]">rank</error> > 3*/

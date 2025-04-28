@@ -36,9 +36,11 @@ import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
-import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.directive.DirectiveCompletion
+import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.findNodeParent
 import org.domaframework.doma.intellij.extension.psi.findSelfBlocks
@@ -46,11 +48,11 @@ import org.domaframework.doma.intellij.extension.psi.findStaticField
 import org.domaframework.doma.intellij.extension.psi.findStaticMethod
 import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getIterableClazz
-import org.domaframework.doma.intellij.extension.psi.getMethodReturnType
 import org.domaframework.doma.intellij.extension.psi.isNotWhiteSpace
 import org.domaframework.doma.intellij.extension.psi.searchParameter
 import org.domaframework.doma.intellij.extension.psi.searchStaticField
 import org.domaframework.doma.intellij.extension.psi.searchStaticMethod
+import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
 import org.domaframework.doma.intellij.psi.SqlElAndExpr
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
@@ -117,6 +119,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 val blockElements = getAccessElementTextBlocks(originalPosition)
                 generateCompletionList(
                     blockElements,
+                    pos,
                     originalFile,
                     result,
                 )
@@ -160,7 +163,11 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         var blocks: List<PsiElement> = emptyList()
         // If the immediate parent is a for, if, elseif directive,
         // get the field access element list from its own forward element.
-        val parent = targetElement.parent
+        val parent =
+            PsiTreeUtil.findFirstParent(targetElement) {
+                it.elementType != SqlTypes.EL_ID_EXPR &&
+                    it.elementType != SqlTypes.EL_IDENTIFIER
+            }
         if (parent is SqlElForDirective ||
             parent is SqlElIfDirective ||
             parent is SqlElElseifDirective
@@ -199,7 +206,15 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             var parameterParent: PsiElement? =
                 PsiTreeUtil.getParentOfType(targetElement, SqlElParameters::class.java)
             if (parameterParent != null) {
-                blocks = emptyList()
+                val children = mutableListOf<PsiElement>()
+                parameterParent.children.forEach { child ->
+                    if (child is SqlElFieldAccessExpr) {
+                        children.addAll(child.children)
+                    } else {
+                        children.add(child)
+                    }
+                }
+                return children
             } else {
                 // Completion for subsequent arguments
                 parameterParent =
@@ -214,7 +229,24 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                             ) != null
                         }
                 if (parameterParent != null) {
-                    blocks = emptyList()
+                    val validateResult = targetElement.prevLeafs.firstOrNull { it is PsiErrorElement }
+                    if (validateResult != null) {
+                        parameterParent = (validateResult.parent as? SqlElParameters)
+                        val children = mutableListOf<PsiElement>()
+                        parameterParent
+                            ?.children
+                            ?.reversed()
+                            ?.takeWhile {
+                                it.nextSibling?.elementType != SqlTypes.COMMA
+                            }?.forEach { child ->
+                                if (child is SqlElFieldAccessExpr) {
+                                    children.addAll(child.children)
+                                } else {
+                                    children.add(child)
+                                }
+                            }
+                        blocks = children.reversed().takeWhile { it.nextSibling?.elementType != SqlTypes.COMMA }
+                    }
                 }
             }
         }
@@ -237,25 +269,22 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
      */
     private fun generateCompletionList(
         elements: List<PsiElement>,
+        position: PsiElement,
         originalFile: PsiFile,
         result: CompletionResultSet,
     ) {
+        val searchText = cleanString(getSearchElementText(position))
         var topElementType: PsiType? = null
-        val top =
-            when {
-                elements.isEmpty() -> return
-                else -> elements.first()
-            }
+        if (elements.isEmpty()) {
+            getElementTypeByFieldAccess(originalFile, elements, result)
+            return
+        }
+        val top = elements.first()
 
         val topText = cleanString(getSearchElementText(top))
         val prevWord = PsiPatternUtil.getBindSearchWord(originalFile, elements.last(), " ")
         if (prevWord.startsWith("@") && prevWord.endsWith("@")) {
-            val clazz = getRefClazz(top) { prevWord.replace("@", "") } ?: return
-            val matchFields = clazz.searchStaticField(topText)
-            val matchMethod = clazz.searchStaticMethod(topText)
-
-            // When you enter here, it is the top element, so return static fields and methods.
-            setFieldsAndMethodsCompletionResultSet(matchFields, matchMethod, result)
+            setStaticFieldAccess(top, prevWord, topText, result)
             return
         }
         if (top.parent !is PsiFile && top.parent?.parent !is PsiDirectory) {
@@ -264,59 +293,65 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 topElementType = getElementTypeByStaticFieldAccess(top, it, topText) ?: return
             }
         }
+
         if (topElementType == null) {
+            if (isFieldAccessByForItem(top, elements, searchText, result)) return
             topElementType =
-                getElementTypeByFieldAccess(originalFile, topText, elements, result) ?: return
+                getElementTypeByFieldAccess(originalFile, elements, result) ?: return
         }
 
-        // If the name of the return value type is E, get the nested types in order from topElementType.
-        // Loop through the remaining child elements and generate a code completion list
-        // that displays by type of terminal element
+        val fieldAccessorChildElementValidator =
+            SqlElForItemFieldAccessorChildElementValidator(
+                elements,
+                PsiParentClass(topElementType),
+            )
+
         var psiParentClass = PsiParentClass(topElementType)
         var parentProperties: Array<PsiField> = psiParentClass.clazz?.allFields ?: emptyArray()
         var parentMethods: Array<PsiMethod> = psiParentClass.clazz?.allMethods ?: emptyArray()
-        var index = 1
-        var listParamIndex = 0
-        for (elm in elements.drop(1)) {
-            index++
-            val searchElm = cleanString(getSearchElementText(elm))
-            if (searchElm.isEmpty()) {
-                setFieldsAndMethodsCompletionResultSet(
-                    (psiParentClass.searchField(searchElm)?.toTypedArray() ?: emptyArray()),
-                    (psiParentClass.searchMethod(searchElm)?.toTypedArray() ?: emptyArray()),
-                    result,
-                )
-                return
-            }
 
-            if (index < elements.size) {
-                psiParentClass.findField(searchElm)?.let {
-                    if (psiParentClass.type != it.type) {
-                        if (!PsiTypeChecker.isTargetType(it.type)) return
-                        psiParentClass = PsiParentClass(it.type)
-                    }
-                }
-                psiParentClass.findMethod(searchElm)?.let {
-                    if (it.returnType == null) return
-                    val listType = it.getMethodReturnType(topElementType, listParamIndex) ?: return
-                    psiParentClass = PsiParentClass(listType)
-                }
-                listParamIndex++
-            } else {
-                psiParentClass.searchField(searchElm)?.let {
-                    parentProperties = it.toTypedArray()
-                } ?: { parentProperties = emptyArray() }
-                psiParentClass.searchMethod(searchElm)?.let {
-                    parentMethods = it.toTypedArray()
-                } ?: { parentMethods = emptyArray() }
-                setFieldsAndMethodsCompletionResultSet(parentProperties, parentMethods, result)
-            }
+        val validateResult =
+            fieldAccessorChildElementValidator.validateChildren(
+                complete = { parent ->
+                    parentProperties =
+                        parent.searchField(searchText)?.toTypedArray() ?: emptyArray()
+                    parentMethods = parent.searchMethod(searchText)?.toTypedArray() ?: emptyArray()
+                    setFieldsAndMethodsCompletionResultSet(
+                        parentProperties,
+                        parentMethods,
+                        result,
+                    )
+                },
+            )
+
+        if (validateResult is ValidationPropertyResult) {
+            val parent = validateResult.parentClass ?: return
+            parent.searchField(searchText)?.let {
+                parentProperties = it.toTypedArray()
+            } ?: { parentProperties = emptyArray() }
+            val methods = parent.searchMethod(searchText)
+            parentMethods = methods?.toTypedArray() ?: emptyArray()
+            setFieldsAndMethodsCompletionResultSet(parentProperties, parentMethods, result)
         }
     }
 
-    private fun getSearchElementText(elm: PsiElement): String =
-        if (elm.elementType == SqlTypes.EL_IDENTIFIER) {
-            elm.text
+    private fun setStaticFieldAccess(
+        top: PsiElement,
+        prevWord: String,
+        topText: String,
+        result: CompletionResultSet,
+    ) {
+        val clazz = getRefClazz(top) { prevWord.replace("@", "") } ?: return
+        val matchFields = clazz.searchStaticField(topText)
+        val matchMethod = clazz.searchStaticMethod(topText)
+
+        // When you enter here, it is the top element, so return static fields and methods.
+        setFieldsAndMethodsCompletionResultSet(matchFields, matchMethod, result)
+    }
+
+    private fun getSearchElementText(elm: PsiElement?): String =
+        if (elm is SqlElIdExpr || elm.elementType == SqlTypes.EL_IDENTIFIER) {
+            elm?.text ?: ""
         } else {
             ""
         }
@@ -351,20 +386,23 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
      */
     private fun getElementTypeByFieldAccess(
         originalFile: PsiFile,
-        topText: String,
         elements: List<PsiElement>,
         result: CompletionResultSet,
     ): PsiType? {
         val daoMethod = findDaoMethod(originalFile) ?: return null
+        val topText = cleanString(getSearchElementText(elements.firstOrNull()))
         val matchParams = daoMethod.searchParameter(topText)
-        val firstElement = matchParams.firstOrNull() ?: return null
-        if (elements.isEmpty() || elements.size <= 1) {
-            matchParams.map { p ->
-                result.addElement(LookupElementBuilder.create(p.name))
+        val findParam = matchParams.find { it.name == topText }
+        if (elements.size <= 1 && findParam == null) {
+            matchParams.map { match ->
+                result.addElement(LookupElementBuilder.create(match.name))
             }
             return null
         }
-        val immediate = firstElement.getIterableClazz(daoMethod.getDomaAnnotationType())
+        if (findParam == null) {
+            return null
+        }
+        val immediate = findParam.getIterableClazz(daoMethod.getDomaAnnotationType())
         return immediate.type
     }
 
@@ -388,5 +426,38 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                     .withTypeText(method.returnType?.presentableText ?: "")
             result.addElement(lookupElm)
         }
+    }
+
+    private fun isFieldAccessByForItem(
+        top: PsiElement,
+        elements: List<PsiElement>,
+        positionText: String,
+        result: CompletionResultSet,
+    ): Boolean {
+        val file = top.containingFile ?: return false
+        val daoMethod = findDaoMethod(file) ?: return false
+        val forDeclaration = ForDirectiveInspection(daoMethod)
+        val forItem = forDeclaration.getForItem(top)
+        if (forItem != null) {
+            val validateResult = forDeclaration.validateFieldAccessByForItem(elements)
+            if (validateResult is ValidationCompleteResult) {
+                val validator =
+                    SqlElForItemFieldAccessorChildElementValidator(
+                        elements,
+                        validateResult.parentClass,
+                    )
+                val forValidationResult = validator.validateChildren(1)?.parentClass ?: return false
+
+                val parentClass = forValidationResult
+                val searchWord = cleanString(positionText)
+                setFieldsAndMethodsCompletionResultSet(
+                    parentClass.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
+                    parentClass.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
+                    result,
+                )
+                return true
+            }
+        }
+        return false
     }
 }

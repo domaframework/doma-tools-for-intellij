@@ -1,2 +1,2 @@
 select * from employee
-where id = /* employee.employeeParam(employee.employeeId, employee.<caret>m) */1
+where id = /* employee.employeeParam(employee.employeeId, employee.<caret>mana) */1
