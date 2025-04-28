@@ -27,7 +27,7 @@ import org.domaframework.doma.intellij.psi.SqlElIdExpr
 open class ForDeclarationItem(
     override val element: PsiElement,
 ) : ForDirectiveItemBase(element) {
-    fun getDeclarationChildren(): List<SqlElIdExpr> =
+    open fun getDeclarationChildren(): List<SqlElIdExpr> =
         (element as? SqlElFieldAccessExpr)?.accessElements?.mapNotNull { it as SqlElIdExpr }
             ?: listOf(element as SqlElIdExpr)
 }

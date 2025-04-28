@@ -28,7 +28,7 @@ import org.domaframework.doma.intellij.psi.SqlElIfDirective
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-val SqlElStaticFieldAccessExpr.accessElements: List<PsiElement>
+val SqlElStaticFieldAccessExpr.accessElements: List<SqlElIdExpr>
     get() =
         this.elIdExprList
             .sortedBy { it.textOffset }

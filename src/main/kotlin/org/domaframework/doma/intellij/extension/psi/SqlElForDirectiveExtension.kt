@@ -25,6 +25,7 @@ import org.domaframework.doma.intellij.psi.SqlBlockComment
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
+import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 fun SqlElForDirective.getForItem(): PsiElement? =
@@ -51,7 +52,8 @@ fun SqlElForDirective.getForItemDeclaration(): ForDeclarationItem? {
         return null
     }
     val declarationElm =
-        PsiTreeUtil.getChildrenOfType(this, SqlElFieldAccessExpr::class.java)?.last()
+        PsiTreeUtil.getChildrenOfType(this, SqlElStaticFieldAccessExpr::class.java)?.last()
+            ?: PsiTreeUtil.getChildrenOfType(this, SqlElFieldAccessExpr::class.java)?.last()
             ?: PsiTreeUtil.getChildrenOfType(this, SqlElIdExpr::class.java)?.last()
     return declarationElm?.let { ForDeclarationItem(it) }
 }

@@ -26,15 +26,15 @@ import org.domaframework.doma.intellij.psi.SqlElIdExpr
  *   %for [ForItem] : [ForDeclarationItem]
  *    ...
  */
-class ForDeclarationDaoBaseItem(
+open class ForDeclarationDaoBaseItem(
     private val blocks: List<SqlElIdExpr>,
     val daoParameter: PsiParameter? = null,
-    val index: Int = 0,
+    open val index: Int = 0,
 ) : ForDeclarationItem(blocks.first()) {
     /***
      * Obtain the type information of the For item defined from the Dao parameters.
      */
-    fun getPsiParentClass(): PsiParentClass? {
+    open fun getPsiParentClass(): PsiParentClass? {
         val daoParamFieldValidator =
             SqlElFieldAccessorChildElementValidator(
                 blocks,

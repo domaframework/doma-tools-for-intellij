@@ -25,7 +25,7 @@ import org.domaframework.doma.intellij.common.psi.PsiParentClass
 /**
  * no Dao parameter matching the name of the field access top was found
  */
-class ValidationDaoParamResult(
+open class ValidationDaoParamResult(
     override val identify: PsiElement,
     private val daoName: String,
     override val shortName: String,
