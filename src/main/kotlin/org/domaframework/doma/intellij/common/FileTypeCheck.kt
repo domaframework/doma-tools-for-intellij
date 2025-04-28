@@ -79,6 +79,11 @@ fun searchDaoFile(
     if (projectRootPath.endsWith(SRC_MAIN_PATH)) {
         return contentRoot.findFileByRelativePath(relativeDaoFilePath)
     }
+
+    if (projectRootPath.length > originFilePath.length) {
+        return null
+    }
+
     val subProject =
         originFilePath.substring(projectRootPath.length, originFilePath.indexOf(SRC_MAIN_PATH))
     return contentRoot
