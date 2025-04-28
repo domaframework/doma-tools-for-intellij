@@ -26,6 +26,7 @@ import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
+import org.domaframework.doma.intellij.common.sql.foritem.ForItem
 import org.domaframework.doma.intellij.common.sql.validator.SqlElFieldAccessorChildElementValidator
 import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
 import org.domaframework.doma.intellij.common.sql.validator.SqlElStaticFieldAccessorChildElementValidator
@@ -35,6 +36,7 @@ import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPro
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
 import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.extension.psi.findParameter
+import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.isFirstElement
 import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
@@ -107,6 +109,10 @@ class SqlInspectionVisitor(
             ForDirectiveInspection(daoMethod, this.shortName)
 
         if (PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java) != null) {
+            val currentForItem = ForItem(element)
+            val leftSideForItem = currentForItem.getParentForDirectiveExpr()?.getForItem()
+            if (leftSideForItem == element) return
+
             val forDirectivesSize = forDirectiveInspection.getForDirectiveBlockSize(element)
             if (forDirectivesSize == 0) return
         }

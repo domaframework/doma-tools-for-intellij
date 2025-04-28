@@ -40,10 +40,19 @@ class SqlElStaticFieldReference(
                 staticAccessParent,
             )
 
-        val errorElement = validator.validateChildren(dropIndex = 1)
-        if (errorElement is ValidationCompleteResult) {
+        val initialPsiParentClass = validator.getClassType() ?: return null
+        val project = file.project
+        val fieldAccessLastParentResult =
+            if (targetElements.size == 1) {
+                validator.validateFieldAccess(project, initialPsiParentClass, dropLastIndex = 1)
+            } else if (targetElements.size >= 2) {
+                validator.validateChildren(1)
+            } else {
+                null
+            }
+        if (fieldAccessLastParentResult is ValidationCompleteResult) {
             val searchText = element.text ?: ""
-            val parent = errorElement.parentClass
+            val parent = fieldAccessLastParentResult.parentClass
             return parent.findField(searchText) ?: parent.findMethod(searchText)
         }
 

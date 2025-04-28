@@ -33,6 +33,8 @@ class SqlElStaticFieldAccessorChildElementValidator(
     private val staticAccuser: SqlElStaticFieldAccessExpr,
     override val shorName: String = "",
 ) : SqlElChildElementValidator(blocks, shorName) {
+    val project = staticAccuser.containingFile.project
+
     override fun validateChildren(
         dropIndex: Int,
         findFieldMethod: (PsiType) -> PsiParentClass,
@@ -43,6 +45,7 @@ class SqlElStaticFieldAccessorChildElementValidator(
             is ValidationCompleteResult -> {
                 val parent = getParentResult.parentClass
                 return validateFieldAccess(
+                    project,
                     parent,
                     dropLastIndex = dropIndex,
                     complete = complete,
@@ -57,31 +60,28 @@ class SqlElStaticFieldAccessorChildElementValidator(
         val getParentResult = getFieldTopParent()
         when (getParentResult) {
             is ValidationCompleteResult -> {
-                if (blocks.size == 1) {
-                    return getParentResult
-                }
                 val parent = getParentResult.parentClass
-                return validateFieldAccess(parent, dropLastIndex = dropIndex)
+                return validateFieldAccess(project, parent, dropLastIndex = dropIndex)
             }
             is ValidationIgnoreResult -> return null
             else -> return getParentResult
         }
     }
 
-    private fun getFieldTopParent(): ValidationResult {
-        val staticTopElement =
-            blocks.firstOrNull()
-                ?: return ValidationIgnoreResult(blocks.firstOrNull())
+    fun getClassType(): PsiParentClass? {
         val fqdn = staticAccuser.fqdn
         val file = staticAccuser.containingFile
         val psiStaticElement = PsiStaticElement(fqdn, file)
-        val clazz = psiStaticElement.getRefClazz() ?: return ValidationIgnoreResult(staticTopElement)
+        val clazz = psiStaticElement.getRefClazz() ?: return null
 
-        var parent = PsiParentClass(clazz.psiClassType)
-        if (blocks.size == 1) {
-            return ValidationCompleteResult(blocks.first(), parent)
-        }
+        return PsiParentClass(clazz.psiClassType)
+    }
 
+    private fun getFieldTopParent(): ValidationResult? {
+        var parent = getClassType() ?: return ValidationIgnoreResult(null)
+        val staticTopElement =
+            blocks.firstOrNull()
+                ?: return ValidationCompleteResult(staticAccuser.elClass, parent)
         val nextSibling = staticTopElement.nextSibling
         val topField =
             if (nextSibling !is SqlElParameters) {

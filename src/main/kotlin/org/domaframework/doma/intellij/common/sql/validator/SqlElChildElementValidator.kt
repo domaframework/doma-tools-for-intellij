@@ -15,6 +15,7 @@
  */
 package org.domaframework.doma.intellij.common.sql.validator
 
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
@@ -42,12 +43,14 @@ abstract class SqlElChildElementValidator(
     ): ValidationResult? = null
 
     fun validateFieldAccess(
+        project: Project,
         topParent: PsiParentClass,
         dropLastIndex: Int = 0,
         findFieldMethod: ((PsiType) -> PsiParentClass)? = { type -> PsiParentClass(type) },
         complete: ((PsiParentClass) -> Unit) = { parent: PsiParentClass? -> },
     ): ValidationResult? =
         getFieldAccessParentClass(
+            project,
             topParent,
             dropLastIndex,
             findFieldMethod = findFieldMethod,
@@ -55,20 +58,19 @@ abstract class SqlElChildElementValidator(
         )
 
     protected fun getFieldAccessParentClass(
+        project: Project,
         topParent: PsiParentClass,
         dropLastIndex: Int = 0,
         findFieldMethod: ((PsiType) -> PsiParentClass)? = { type -> PsiParentClass(type) },
         complete: ((PsiParentClass) -> Unit) = { parent: PsiParentClass? -> },
     ): ValidationResult? {
-        val project = blocks.firstOrNull()?.project ?: return null
-
         var parent = topParent
         val parentType = parent.type
         val classType = parentType as? PsiClassType ?: return null
 
         var competeResult: ValidationCompleteResult? = null
 
-        if (dropLastIndex > 0 && blocks.drop(1).dropLast(dropLastIndex).isEmpty()) {
+        if (dropLastIndex > 0 && blocks.size <= dropLastIndex + 1) {
             return ValidationCompleteResult(
                 blocks.last(),
                 parent,

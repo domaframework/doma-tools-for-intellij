@@ -34,6 +34,8 @@ class SqlElFieldAccessorChildElementValidator(
     override val shorName: String = "",
     private val topDaoParameter: PsiParameter? = null,
 ) : SqlElChildElementValidator(blocks, shorName) {
+    val project = file.project
+
     override fun validateChildren(
         dropIndex: Int,
         findFieldMethod: (PsiType) -> PsiParentClass,
@@ -43,6 +45,7 @@ class SqlElFieldAccessorChildElementValidator(
         val parentClass = parentClassResult?.parentClass
         if (parentClassResult is ValidationCompleteResult && parentClass != null) {
             return validateFieldAccess(
+                project,
                 parentClass,
                 complete = complete,
             )
@@ -55,7 +58,7 @@ class SqlElFieldAccessorChildElementValidator(
         val parentClassResult = getParentClass()
         val parentClass = parentClassResult?.parentClass
         if (parentClassResult is ValidationCompleteResult && parentClass != null) {
-            return validateFieldAccess(parentClass)
+            return validateFieldAccess(project, parentClass)
         }
 
         return parentClassResult

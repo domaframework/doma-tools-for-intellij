@@ -118,6 +118,17 @@ class ForDirectiveInspection(
 
         for ((i, targetForDirective) in forDirectives.withIndex()) {
             if (nestClassType == null) break
+            val targetDirectiveParent =
+                PsiTreeUtil.getParentOfType(
+                    targetForDirective.item,
+                    SqlElForDirective::class.java,
+                )
+            val targetElementParent =
+                PsiTreeUtil.getParentOfType(
+                    topElm,
+                    SqlElForDirective::class.java,
+                )
+            if (targetDirectiveParent == targetElementParent) continue
 
             val currentForItem = ForItem(targetForDirective.item)
             val currentDeclaration = currentForItem.getParentForDirectiveExpr()?.getForItemDeclaration() ?: continue
