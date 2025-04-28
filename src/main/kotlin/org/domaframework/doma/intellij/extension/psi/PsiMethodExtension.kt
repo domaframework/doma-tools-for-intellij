@@ -24,7 +24,7 @@ fun PsiMethod.findParameter(searchName: String): PsiParameter? = this.methodPara
 val PsiMethod.methodParameters: List<PsiParameter>
     get() = this.parameterList.parameters.toList()
 
-fun PsiMethod.searchParameter(searchName: String): List<PsiParameter> = this.methodParameters.filter { it.name.contains(searchName) }
+fun PsiMethod.searchParameter(searchName: String): List<PsiParameter> = this.methodParameters.filter { it.name.startsWith(searchName) }
 
 @OptIn(ExperimentalStdlibApi::class)
 fun PsiMethod.getDomaAnnotationType(): DomaAnnotationType {

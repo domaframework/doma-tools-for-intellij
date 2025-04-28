@@ -29,7 +29,7 @@ val PsiClass.psiClassType: PsiClassType
 fun PsiClass.searchStaticField(searchName: String): Array<PsiField> =
     this.allFields
         .filter {
-            it.name.contains(searchName) &&
+            it.name.startsWith(searchName) &&
                 it.hasModifierProperty(PsiModifier.STATIC) &&
                 PropertyModifyUtil.filterPrivateField(it, this.psiClassType)
         }.toTypedArray()
@@ -44,7 +44,7 @@ fun PsiClass.findStaticField(searchName: String): PsiField? =
 fun PsiClass.searchStaticMethod(searchName: String): Array<PsiMethod> =
     this.allMethods
         .filter {
-            it.name.contains(searchName) &&
+            it.name.startsWith(searchName) &&
                 it.hasModifierProperty(PsiModifier.STATIC) &&
                 it.hasModifierProperty(PsiModifier.PUBLIC)
         }.toTypedArray()

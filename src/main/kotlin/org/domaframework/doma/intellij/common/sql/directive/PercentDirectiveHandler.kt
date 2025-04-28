@@ -48,7 +48,7 @@ class PercentDirectiveHandler(
                 "for",
                 "!",
             ).filter {
-                it.contains(bind)
+                it.startsWith(bind)
             }.map {
                 LookupElementBuilder
                     .create(it)
