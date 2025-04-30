@@ -2,33 +2,6 @@
 
 ## [Unreleased]
 
-## [0.6.0-beta] - 2025-04-30
-
-### New Features
-
-- Add For Item Element Documentation ([#126])
-- resolution for elements defined in the %for directive ([#117])
-- File jump in jar ([#110])
-- Add A reference to the SQL symbol type definer ([#107])
-
-### Bug Fixes
-
-- Added a condition to output logs only when references are resolved ([#128])
-- Fix: StringIndexOutOfBoundsException: Range In FileTypeCheck ([#122])
-- Support reference resolution for bind variables that reference classpath resources within JAR files. ([#115])
-- Fix:sql formatter second option indent ([#102])
-- Update changelog command and fix tag sorting in build.gradle.kts ([#104])
-- Update changelog and improve version handling ([#103])
-
-### Maintenance
-
-- Overwriting a development version with a release version ([#109])
-
-### Dependency Updates
-
-- Update dependency gradle to v8.14 ([#121])
-- Update dependency com.fasterxml.jackson.module:jackson-module-kotlin to v2.19.0 ([#120])
-
 ## [0.6.0] - 2025-04-30
 
 ### New Features
@@ -183,7 +156,6 @@
 
 [Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.6.0-beta...HEAD
 [0.6.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.5.0...v0.6.0
-[0.6.0-beta]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.6.0...v0.6.0-beta
 [0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.1...v0.3.2
