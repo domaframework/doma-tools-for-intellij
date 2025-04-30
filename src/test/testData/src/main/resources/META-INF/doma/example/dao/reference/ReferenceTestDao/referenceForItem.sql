@@ -1,11 +1,14 @@
 SELECT id
   FROM project_detail
- WHERE category = /* employeesList.get(0).get(0).get(0).projects.get(0).projectCategory */'category'
+  -- List<List<Employee>> employeesList
+ WHERE category = /* employeesList.get(0).get(0).projects.get(0).projectCategory */'category'
 /*%for employees : employeesList */
   /*%if employees_has_next */
     /*# "OR" */
   /*%end */
+   -- List<Employee> employees
   /*%for employee : employees */
+      -- Employee employee
      /*%for project : employee.projects */
         project_id = /* project.projectId */
      /*%end */

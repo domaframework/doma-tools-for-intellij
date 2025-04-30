@@ -62,8 +62,11 @@ class ForDirectiveInspection(
     private val cachedForDirectiveBlocks: MutableMap<PsiElement, CachedValue<List<BlockToken>>> =
         mutableMapOf()
 
-    fun getForItem(targetElement: PsiElement): ForItem? {
-        val forBlocks = getForDirectiveBlock(targetElement)
+    fun getForItem(
+        targetElement: PsiElement,
+        skipSelf: Boolean = true,
+    ): ForItem? {
+        val forBlocks = getForDirectiveBlock(targetElement, skipSelf)
         return getForItem(targetElement, forBlocks)
     }
 
@@ -83,11 +86,14 @@ class ForDirectiveInspection(
      * Analyze the field access of the for item definition and finally get the declared type
      * @return [ValidationResult] is used to display the analysis results.
      */
-    fun validateFieldAccessByForItem(blockElements: List<PsiElement>): ValidationResult? {
+    fun validateFieldAccessByForItem(
+        blockElements: List<PsiElement>,
+        skipSelf: Boolean = true,
+    ): ValidationResult? {
         val targetElement: PsiElement = blockElements.firstOrNull() ?: return null
         val topElm = blockElements.first()
 
-        val forDirectives = getForDirectiveBlock(targetElement)
+        val forDirectives = getForDirectiveBlock(targetElement, skipSelf)
         val forItem = getForItem(targetElement, forDirectives) ?: return createErrorResult(targetElement)
         val domaAnnotationType = daoMethod.getDomaAnnotationType()
 
@@ -114,8 +120,8 @@ class ForDirectiveInspection(
         topElm: PsiElement,
     ): PsiClassType? {
         var nestClassType: PsiClassType? = if (isBatchAnnotation) initialType.parameters.firstOrNull() as? PsiClassType else initialType
-        var listIndex = 1
 
+        // Follow the For directive and get the definition type of the current directive from the top definition type.
         for ((i, targetForDirective) in forDirectives.withIndex()) {
             if (nestClassType == null) break
             val targetDirectiveParent =
@@ -128,26 +134,28 @@ class ForDirectiveInspection(
                     topElm,
                     SqlElForDirective::class.java,
                 )
+
+            // Skip if the For directive in the search target is the same directory as the self.
             if (targetDirectiveParent == targetElementParent) continue
 
             val currentForItem = ForItem(targetForDirective.item)
             val currentDeclaration = currentForItem.getParentForDirectiveExpr()?.getForItemDeclaration() ?: continue
-
             val declarationType = processDeclarationElement(currentDeclaration, nestClassType, i)
             if (declarationType != null) {
                 if (!PsiClassTypeUtil.isIterableType(declarationType, topElm.project)) {
                     return null
                 }
                 nestClassType = declarationType.parameters.firstOrNull() as? PsiClassType
-                listIndex = 1
             } else {
-                nestClassType = processListType(nestClassType, listIndex, topElm)
-                listIndex++
+                nestClassType = processListType(nestClassType, topElm)
             }
         }
         return nestClassType
     }
 
+    /**
+     * Check the For directive definition element of the search target and get the declaration type
+     */
     private fun processDeclarationElement(
         currentDeclaration: ForDeclarationItem,
         nestClassType: PsiClassType,
@@ -162,23 +170,25 @@ class ForDirectiveInspection(
 
         val declarationChildren = currentDeclaration.getDeclarationChildren()
         if (declarationChildren.size > 1) {
+            // Gets the type of reference property if it is defined with field access
             val validator = SqlElForItemFieldAccessorChildElementValidator(declarationChildren, PsiParentClass(nestClassType), shortName)
             return validator.validateChildren()?.parentClass?.type as? PsiClassType
         }
         return null
     }
 
+    /**
+     * Dig down the List definition type for the number of nesting levels
+     * from the top For directive definition type to obtain the type that applies to the current directive.
+     */
     private fun processListType(
         nestClassType: PsiClassType,
-        listIndex: Int,
         topElm: PsiElement,
     ): PsiClassType? {
         var currentType: PsiClassType? = nestClassType
-        repeat(listIndex) {
-            currentType?.let { type ->
-                if (PsiClassTypeUtil.isIterableType(type, topElm.project)) {
-                    currentType = type.parameters.firstOrNull() as? PsiClassType
-                }
+        currentType?.let { type ->
+            if (PsiClassTypeUtil.isIterableType(type, topElm.project)) {
+                currentType = type.parameters.firstOrNull() as? PsiClassType
             }
         }
         return currentType
@@ -191,7 +201,10 @@ class ForDirectiveInspection(
      * to the target element (`targetElement`)
      * and obtain the `for` block information to which the `targetElement` belongs.
      */
-    private fun getForDirectiveBlock(targetElement: PsiElement): List<BlockToken> {
+    private fun getForDirectiveBlock(
+        targetElement: PsiElement,
+        skipSelf: Boolean = true,
+    ): List<BlockToken> {
         val cachedValue =
             cachedForDirectiveBlocks.getOrPut(targetElement) {
                 CachedValuesManager.getManager(targetElement.project).createCachedValue {
@@ -222,7 +235,12 @@ class ForDirectiveInspection(
                                 }
                             }
                     val stack = mutableListOf<BlockToken>()
-                    val filterPosition = directiveBlocks.filter { it.position < targetElement.textOffset }
+                    val filterPosition =
+                        if (skipSelf) {
+                            directiveBlocks.filter { it.position < targetElement.textOffset }
+                        } else {
+                            directiveBlocks.filter { it.position <= targetElement.textOffset }
+                        }
                     filterPosition.forEach { block ->
                         when (block.type) {
                             BlockType.FOR, BlockType.IF -> stack.add(block)
