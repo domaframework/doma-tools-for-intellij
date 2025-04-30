@@ -28,7 +28,6 @@ import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCom
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getIterableClazz
-import org.domaframework.doma.intellij.extension.psi.methodParameters
 import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -73,12 +72,14 @@ class SqlElIdExprReference(
                 val targetParent = targetReferenceClass.parentClass
                 val reference =
                     targetParent.findField(searchText) ?: targetParent.findMethod(searchText)
-                PluginLoggerUtil.countLogging(
-                    this::class.java.simpleName,
-                    "ReferenceEntityProperty",
-                    "Reference",
-                    startTime,
-                )
+                if (reference != null) {
+                    PluginLoggerUtil.countLogging(
+                        this::class.java.simpleName,
+                        "ReferenceEntityProperty",
+                        "Reference",
+                        startTime,
+                    )
+                }
                 return reference
             }
         }
@@ -106,21 +107,16 @@ class SqlElIdExprReference(
         bindElement: PsiElement,
         startTime: Long,
     ): PsiElement? {
-        daoMethod
-            .let { method ->
-                method.methodParameters.firstOrNull { param ->
-                    param.name == bindElement.text
-                }
-            }?.let { originalElm ->
-                PluginLoggerUtil.countLogging(
-                    this::class.java.simpleName,
-                    "ReferenceDaoMethodParameter",
-                    "Reference",
-                    startTime,
-                )
-                psiClassType = originalElm.type
-                return originalElm.originalElement
-            } ?: return null
+        daoMethod.findParameter(bindElement.text)?.let { originalElm ->
+            PluginLoggerUtil.countLogging(
+                this::class.java.simpleName,
+                "ReferenceDaoMethodParameter",
+                "Reference",
+                startTime,
+            )
+            psiClassType = originalElm.type
+            return originalElm.originalElement
+        } ?: return null
     }
 
     private fun getReferenceEntity(
@@ -128,9 +124,19 @@ class SqlElIdExprReference(
         targetElement: List<PsiElement>,
         startTime: Long,
     ): PsiElement? {
+        val searchText = cleanString(targetElement.lastOrNull()?.text ?: "")
         if (targetElement.size <= 2) {
-            val searchText = targetElement.lastOrNull()?.text ?: ""
-            return topParentClass.findField(searchText) ?: topParentClass.findMethod(searchText)
+            val reference =
+                topParentClass.findField(searchText) ?: topParentClass.findMethod(searchText)
+            if (reference != null) {
+                PluginLoggerUtil.countLogging(
+                    this::class.java.simpleName,
+                    "ReferenceEntityProperty",
+                    "Reference",
+                    startTime,
+                )
+            }
+            return reference
         }
 
         val validator =
@@ -141,14 +147,15 @@ class SqlElIdExprReference(
         val validateResult = validator.validateChildren()
         if (validateResult != null) {
             val targetClass = validateResult.parentClass ?: return null
-            val searchText = targetElement.lastOrNull()?.text ?: ""
             val reference = targetClass.findField(searchText) ?: targetClass.findMethod(searchText)
-            PluginLoggerUtil.countLogging(
-                this::class.java.simpleName,
-                "ReferenceEntityProperty",
-                "Reference",
-                startTime,
-            )
+            if (reference != null) {
+                PluginLoggerUtil.countLogging(
+                    this::class.java.simpleName,
+                    "ReferenceEntityProperty",
+                    "Reference",
+                    startTime,
+                )
+            }
             return reference
         }
         return null

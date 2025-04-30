@@ -31,12 +31,14 @@ class SqlElForDirectiveIdExprReference(
         file: PsiFile,
     ): PsiElement? {
         val declarationItem = getDeclarationItem()
-        PluginLoggerUtil.countLogging(
-            this::class.java.simpleName,
-            "ReferenceForDirectiveItem",
-            "Reference",
-            startTime,
-        )
+        if (declarationItem != null) {
+            PluginLoggerUtil.countLogging(
+                this::class.java.simpleName,
+                "ReferenceForDirectiveItem",
+                "Reference",
+                startTime,
+            )
+        }
         return declarationItem
     }
 
