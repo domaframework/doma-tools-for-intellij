@@ -29,6 +29,21 @@
 - Update dependency gradle to v8.14 ([#121])
 - Update dependency com.fasterxml.jackson.module:jackson-module-kotlin to v2.19.0 ([#120])
 
+[#126]:https://github.com/domaframework/doma-tools-for-intellij/pull/126
+[#117]:https://github.com/domaframework/doma-tools-for-intellij/pull/117
+[#110]:https://github.com/domaframework/doma-tools-for-intellij/pull/110
+[#107]:https://github.com/domaframework/doma-tools-for-intellij/pull/107
+[#128]:https://github.com/domaframework/doma-tools-for-intellij/pull/128
+[#122]:https://github.com/domaframework/doma-tools-for-intellij/pull/122
+[#115]:https://github.com/domaframework/doma-tools-for-intellij/pull/115
+[#102]:https://github.com/domaframework/doma-tools-for-intellij/pull/102
+[#104]:https://github.com/domaframework/doma-tools-for-intellij/pull/104
+[#103]:https://github.com/domaframework/doma-tools-for-intellij/pull/103
+[#109]:https://github.com/domaframework/doma-tools-for-intellij/pull/109
+[#121]:https://github.com/domaframework/doma-tools-for-intellij/pull/121
+[#120]:https://github.com/domaframework/doma-tools-for-intellij/pull/120
+
+
 ## [0.5.0] - 2025-04-14
 
 ### New Features
@@ -155,28 +170,16 @@
   - Change Dao package name or SQL file directory configuration when changing configuration
 
 [Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.6.0...HEAD
-[0.6.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.2...v0.4.0
-[0.3.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0...v0.3.1
+[0.6.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.5.0...0.6.0
+[0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.4.0...0.5.0
+[0.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.2...0.4.0
+[0.3.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.1...0.3.2
+[0.3.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0...0.3.1
 [0.3.0]: https://github.com/domaframework/doma-tools-for-intellij/commits/v0.3.0
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
-[#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
-[#104]: https://github.com/domaframework/doma-tools-for-intellij/pull/104
-[#107]: https://github.com/domaframework/doma-tools-for-intellij/pull/107
-[#109]: https://github.com/domaframework/doma-tools-for-intellij/pull/109
 [#11]: https://github.com/domaframework/doma-tools-for-intellij/pull/11
-[#110]: https://github.com/domaframework/doma-tools-for-intellij/pull/110
-[#115]: https://github.com/domaframework/doma-tools-for-intellij/pull/115
-[#117]: https://github.com/domaframework/doma-tools-for-intellij/pull/117
 [#12]: https://github.com/domaframework/doma-tools-for-intellij/pull/12
-[#120]: https://github.com/domaframework/doma-tools-for-intellij/pull/120
-[#121]: https://github.com/domaframework/doma-tools-for-intellij/pull/121
-[#122]: https://github.com/domaframework/doma-tools-for-intellij/pull/122
-[#126]: https://github.com/domaframework/doma-tools-for-intellij/pull/126
-[#128]: https://github.com/domaframework/doma-tools-for-intellij/pull/128
 [#20]: https://github.com/domaframework/doma-tools-for-intellij/pull/20
 [#21]: https://github.com/domaframework/doma-tools-for-intellij/pull/21
 [#24]: https://github.com/domaframework/doma-tools-for-intellij/pull/24
