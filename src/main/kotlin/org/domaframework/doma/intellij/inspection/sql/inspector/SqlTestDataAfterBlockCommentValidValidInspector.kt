@@ -18,16 +18,16 @@ package org.domaframework.doma.intellij.inspection.sql.inspector
 import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
-import org.domaframework.doma.intellij.inspection.sql.visitor.SqlInspectionVisitor
+import org.domaframework.doma.intellij.inspection.sql.visitor.SqlTestDataAfterBlockCommentVisitor
 import org.domaframework.doma.intellij.psi.SqlVisitor
 
 /**
  * Code inspection for SQL bind variables
  */
-class SqlBindVariableValidInspector : LocalInspectionTool() {
-    override fun getDisplayName(): String = "Match checking between SQL bind variables and Declaration"
+class SqlTestDataAfterBlockCommentValidValidInspector : LocalInspectionTool() {
+    override fun getDisplayName(): String = "Check whether test data exists after the bind variable"
 
-    override fun getShortName(): String = "org.domaframework.doma.intellij.validBindVariable"
+    override fun getShortName(): String = "org.domaframework.doma.intellij.existaftertestdata"
 
     override fun getGroupDisplayName(): String = "DomaTools"
 
@@ -40,5 +40,5 @@ class SqlBindVariableValidInspector : LocalInspectionTool() {
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
-    ): SqlVisitor = SqlInspectionVisitor(holder, this.shortName)
+    ): SqlVisitor = SqlTestDataAfterBlockCommentVisitor(holder, this.shortName)
 }
