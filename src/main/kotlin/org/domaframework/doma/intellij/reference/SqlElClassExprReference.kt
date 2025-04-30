@@ -29,12 +29,15 @@ class SqlElClassExprReference(
     ): PsiElement? {
         val variableName = element.text
         val psiStaticElement = PsiStaticElement(variableName, file)
-        PluginLoggerUtil.countLogging(
-            this::class.java.simpleName,
-            "ReferenceStaticClass",
-            "Reference",
-            startTime,
-        )
-        return psiStaticElement.getRefClazz()
+        val reference = psiStaticElement.getRefClazz()
+        if (reference == null) {
+            PluginLoggerUtil.countLogging(
+                this::class.java.simpleName,
+                "ReferenceStaticClass",
+                "Reference",
+                startTime,
+            )
+        }
+        return reference
     }
 }
