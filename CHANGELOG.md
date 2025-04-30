@@ -29,21 +29,6 @@
 - Update dependency gradle to v8.14 ([#121])
 - Update dependency com.fasterxml.jackson.module:jackson-module-kotlin to v2.19.0 ([#120])
 
-[#126]:https://github.com/domaframework/doma-tools-for-intellij/pull/126
-[#117]:https://github.com/domaframework/doma-tools-for-intellij/pull/117
-[#110]:https://github.com/domaframework/doma-tools-for-intellij/pull/110
-[#107]:https://github.com/domaframework/doma-tools-for-intellij/pull/107
-[#128]:https://github.com/domaframework/doma-tools-for-intellij/pull/128
-[#122]:https://github.com/domaframework/doma-tools-for-intellij/pull/122
-[#115]:https://github.com/domaframework/doma-tools-for-intellij/pull/115
-[#102]:https://github.com/domaframework/doma-tools-for-intellij/pull/102
-[#104]:https://github.com/domaframework/doma-tools-for-intellij/pull/104
-[#103]:https://github.com/domaframework/doma-tools-for-intellij/pull/103
-[#109]:https://github.com/domaframework/doma-tools-for-intellij/pull/109
-[#121]:https://github.com/domaframework/doma-tools-for-intellij/pull/121
-[#120]:https://github.com/domaframework/doma-tools-for-intellij/pull/120
-
-
 ## [0.5.0] - 2025-04-14
 
 ### New Features
@@ -75,25 +60,6 @@
 - Update plugin spotless to v7.0.3 ([#78])
 - Update dependency org.jetbrains.intellij.platform to v2.5.0 ([#62])
 
-[#80]:https://github.com/domaframework/doma-tools-for-intellij/pull/80
-[#96]:https://github.com/domaframework/doma-tools-for-intellij/pull/96
-[#95]:https://github.com/domaframework/doma-tools-for-intellij/pull/95
-[#94]:https://github.com/domaframework/doma-tools-for-intellij/pull/94
-[#92]:https://github.com/domaframework/doma-tools-for-intellij/pull/92
-[#88]:https://github.com/domaframework/doma-tools-for-intellij/pull/88
-[#89]:https://github.com/domaframework/doma-tools-for-intellij/pull/89
-[#87]:https://github.com/domaframework/doma-tools-for-intellij/pull/87
-[#86]:https://github.com/domaframework/doma-tools-for-intellij/pull/86
-[#82]:https://github.com/domaframework/doma-tools-for-intellij/pull/82
-[#79]:https://github.com/domaframework/doma-tools-for-intellij/pull/79
-[#99]:https://github.com/domaframework/doma-tools-for-intellij/pull/99
-[#93]:https://github.com/domaframework/doma-tools-for-intellij/pull/93
-[#91]:https://github.com/domaframework/doma-tools-for-intellij/pull/91
-[#90]:https://github.com/domaframework/doma-tools-for-intellij/pull/90
-[#78]:https://github.com/domaframework/doma-tools-for-intellij/pull/78
-[#62]:https://github.com/domaframework/doma-tools-for-intellij/pull/62
-
-
 ## [0.4.0] - 2025-04-07
 
 ### New Features
@@ -108,12 +74,6 @@
 
 - Update dependency com.google.googlejavaformat:google-java-format to v1.26.0 ([#68])
 - Update dependency org.jetbrains.kotlin.jvm to v2.1.20 ([#61])
-
-[#69]:https://github.com/domaframework/doma-tools-for-intellij/pull/69
-[#70]:https://github.com/domaframework/doma-tools-for-intellij/pull/70
-[#68]:https://github.com/domaframework/doma-tools-for-intellij/pull/68
-[#61]:https://github.com/domaframework/doma-tools-for-intellij/pull/61
-
 
 ## [0.3.2] - 2025-03-27
 
@@ -136,19 +96,6 @@
 ### Dependency Updates
 
 - Update dependency ch.qos.logback:logback-classic to v1.5.18 ([#60])
-
-[#56]:https://github.com/domaframework/doma-tools-for-intellij/pull/56
-[#57]:https://github.com/domaframework/doma-tools-for-intellij/pull/57
-[#58]:https://github.com/domaframework/doma-tools-for-intellij/pull/58
-[#59]:https://github.com/domaframework/doma-tools-for-intellij/pull/59
-[#64]:https://github.com/domaframework/doma-tools-for-intellij/pull/64
-[#65]:https://github.com/domaframework/doma-tools-for-intellij/pull/65
-[#48]:https://github.com/domaframework/doma-tools-for-intellij/pull/48
-[#49]:https://github.com/domaframework/doma-tools-for-intellij/pull/49
-[#45]:https://github.com/domaframework/doma-tools-for-intellij/pull/45
-[#43]:https://github.com/domaframework/doma-tools-for-intellij/pull/43
-[#60]:https://github.com/domaframework/doma-tools-for-intellij/pull/60
-
 
 ## [0.3.1] - 2025-03-11
 
@@ -174,22 +121,6 @@
 - Update dependency org.seasar.doma:doma-core to v3.5.1 ([#11])
 - Update dependency org.slf4j:slf4j-api to v2.0.17 ([#8])
 - Update dependency ch.qos.logback:logback-classic to v1.5.17 ([#7])
-
-[#20]:https://github.com/domaframework/doma-tools-for-intellij/pull/20
-[#21]:https://github.com/domaframework/doma-tools-for-intellij/pull/21
-[#35]:https://github.com/domaframework/doma-tools-for-intellij/pull/35
-[#34]:https://github.com/domaframework/doma-tools-for-intellij/pull/34
-[#26]:https://github.com/domaframework/doma-tools-for-intellij/pull/26
-[#25]:https://github.com/domaframework/doma-tools-for-intellij/pull/25
-[#27]:https://github.com/domaframework/doma-tools-for-intellij/pull/27
-[#10]:https://github.com/domaframework/doma-tools-for-intellij/pull/10
-[#24]:https://github.com/domaframework/doma-tools-for-intellij/pull/24
-[#9]:https://github.com/domaframework/doma-tools-for-intellij/pull/9
-[#12]:https://github.com/domaframework/doma-tools-for-intellij/pull/12
-[#11]:https://github.com/domaframework/doma-tools-for-intellij/pull/11
-[#8]:https://github.com/domaframework/doma-tools-for-intellij/pull/8
-[#7]:https://github.com/domaframework/doma-tools-for-intellij/pull/7
-
 
 ## [0.3.0] - 2025-03-07
 
@@ -223,10 +154,69 @@
   - Rename SQL file directory when renaming Dao
   - Change Dao package name or SQL file directory configuration when changing configuration
 
-[Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/commits/main
-[0.3.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0
-[0.3.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0...0.3.1
-[0.3.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.1...0.3.2
-[0.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.2...0.4.0
-[0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.4.0...0.5.0
-[0.6.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.5.0...0.6.0
+[Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.2...v0.4.0
+[0.3.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/domaframework/doma-tools-for-intellij/commits/v0.3.0
+[#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
+[#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
+[#104]: https://github.com/domaframework/doma-tools-for-intellij/pull/104
+[#107]: https://github.com/domaframework/doma-tools-for-intellij/pull/107
+[#109]: https://github.com/domaframework/doma-tools-for-intellij/pull/109
+[#11]: https://github.com/domaframework/doma-tools-for-intellij/pull/11
+[#110]: https://github.com/domaframework/doma-tools-for-intellij/pull/110
+[#115]: https://github.com/domaframework/doma-tools-for-intellij/pull/115
+[#117]: https://github.com/domaframework/doma-tools-for-intellij/pull/117
+[#12]: https://github.com/domaframework/doma-tools-for-intellij/pull/12
+[#120]: https://github.com/domaframework/doma-tools-for-intellij/pull/120
+[#121]: https://github.com/domaframework/doma-tools-for-intellij/pull/121
+[#122]: https://github.com/domaframework/doma-tools-for-intellij/pull/122
+[#126]: https://github.com/domaframework/doma-tools-for-intellij/pull/126
+[#128]: https://github.com/domaframework/doma-tools-for-intellij/pull/128
+[#20]: https://github.com/domaframework/doma-tools-for-intellij/pull/20
+[#21]: https://github.com/domaframework/doma-tools-for-intellij/pull/21
+[#24]: https://github.com/domaframework/doma-tools-for-intellij/pull/24
+[#25]: https://github.com/domaframework/doma-tools-for-intellij/pull/25
+[#26]: https://github.com/domaframework/doma-tools-for-intellij/pull/26
+[#27]: https://github.com/domaframework/doma-tools-for-intellij/pull/27
+[#34]: https://github.com/domaframework/doma-tools-for-intellij/pull/34
+[#35]: https://github.com/domaframework/doma-tools-for-intellij/pull/35
+[#43]: https://github.com/domaframework/doma-tools-for-intellij/pull/43
+[#45]: https://github.com/domaframework/doma-tools-for-intellij/pull/45
+[#48]: https://github.com/domaframework/doma-tools-for-intellij/pull/48
+[#49]: https://github.com/domaframework/doma-tools-for-intellij/pull/49
+[#56]: https://github.com/domaframework/doma-tools-for-intellij/pull/56
+[#57]: https://github.com/domaframework/doma-tools-for-intellij/pull/57
+[#58]: https://github.com/domaframework/doma-tools-for-intellij/pull/58
+[#59]: https://github.com/domaframework/doma-tools-for-intellij/pull/59
+[#60]: https://github.com/domaframework/doma-tools-for-intellij/pull/60
+[#61]: https://github.com/domaframework/doma-tools-for-intellij/pull/61
+[#62]: https://github.com/domaframework/doma-tools-for-intellij/pull/62
+[#64]: https://github.com/domaframework/doma-tools-for-intellij/pull/64
+[#65]: https://github.com/domaframework/doma-tools-for-intellij/pull/65
+[#68]: https://github.com/domaframework/doma-tools-for-intellij/pull/68
+[#69]: https://github.com/domaframework/doma-tools-for-intellij/pull/69
+[#7]: https://github.com/domaframework/doma-tools-for-intellij/pull/7
+[#70]: https://github.com/domaframework/doma-tools-for-intellij/pull/70
+[#78]: https://github.com/domaframework/doma-tools-for-intellij/pull/78
+[#79]: https://github.com/domaframework/doma-tools-for-intellij/pull/79
+[#8]: https://github.com/domaframework/doma-tools-for-intellij/pull/8
+[#80]: https://github.com/domaframework/doma-tools-for-intellij/pull/80
+[#82]: https://github.com/domaframework/doma-tools-for-intellij/pull/82
+[#86]: https://github.com/domaframework/doma-tools-for-intellij/pull/86
+[#87]: https://github.com/domaframework/doma-tools-for-intellij/pull/87
+[#88]: https://github.com/domaframework/doma-tools-for-intellij/pull/88
+[#89]: https://github.com/domaframework/doma-tools-for-intellij/pull/89
+[#9]: https://github.com/domaframework/doma-tools-for-intellij/pull/9
+[#90]: https://github.com/domaframework/doma-tools-for-intellij/pull/90
+[#91]: https://github.com/domaframework/doma-tools-for-intellij/pull/91
+[#92]: https://github.com/domaframework/doma-tools-for-intellij/pull/92
+[#93]: https://github.com/domaframework/doma-tools-for-intellij/pull/93
+[#94]: https://github.com/domaframework/doma-tools-for-intellij/pull/94
+[#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
+[#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
+[#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
