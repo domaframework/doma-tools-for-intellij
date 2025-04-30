@@ -2,6 +2,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.gradle.internal.classpath.Instrumented.systemProperty
+import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import java.net.URL
@@ -112,6 +113,20 @@ intellijPlatform {
                         .let(::markdownToHTML)
                 }
             }
+
+        val changelog = project.changelog
+        changeNotes =
+            version
+                .map { pluginVersion ->
+                    with(changelog) {
+                        renderItem(
+                            (getOrNull(pluginVersion) ?: getUnreleased())
+                                .withHeader(false)
+                                .withEmptySections(false),
+                            Changelog.OutputType.HTML,
+                        )
+                    }
+                }
 
         ideaVersion {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
