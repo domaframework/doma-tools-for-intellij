@@ -4,13 +4,11 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    types: [opened, reopened, synchronize]
   workflow_dispatch:
 
 jobs:
   update_release_draft:
-    if: ${{ !contains(github.head_ref, 'doc/changelog-update-') }}
+    if: ${{ !contains(github.head_ref, 'doc/changelog-update-') && startsWith(github.event.head_commit.message, 'Merge pull request') }}
     permissions:
       contents: write
       pull-requests: write
@@ -107,3 +105,4 @@ jobs:
           fi
           git commit -am "Update Version With Release Draft - $REPLACE_VERSION"
           git push origin main
+
