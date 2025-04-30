@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.reference
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
+import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.sql.validator.SqlElStaticFieldAccessorChildElementValidator
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
@@ -53,6 +54,12 @@ class SqlElStaticFieldReference(
         if (fieldAccessLastParentResult is ValidationCompleteResult) {
             val searchText = element.text ?: ""
             val parent = fieldAccessLastParentResult.parentClass
+            PluginLoggerUtil.countLogging(
+                this::class.java.simpleName,
+                "ReferenceStaticProperty",
+                "Reference",
+                startTime,
+            )
             return parent.findField(searchText) ?: parent.findMethod(searchText)
         }
 
