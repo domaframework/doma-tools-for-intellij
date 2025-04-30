@@ -54,27 +54,17 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
         val currentForItem = ForItem(originalElement)
         val forDirectiveExpr = currentForItem.getParentForDirectiveExpr()
         if (forDirectiveExpr != null) {
-            if (forDirectiveExpr.getForItem()?.textOffset != originalElement.textOffset) {
-                val declarationClassType =
-                    forDirectiveInspection.validateFieldAccessByForItem(
-                        listOf(originalElement),
-                        skipSelf = false,
-                    )
-                if (declarationClassType != null) {
-                    generateDocumentInForDirective(
-                        declarationClassType,
-                        forDirectiveExpr,
-                        originalElement,
-                        result,
-                    )
-                }
-            } else {
-                val declarationSide = forDirectiveExpr.getForItemDeclaration() ?: return ""
-                val children = declarationSide.getDeclarationChildren()
-                generateDocumentInForItem(
+            val declarationClassType =
+                forDirectiveInspection.validateFieldAccessByForItem(
+                    listOf(originalElement),
+                    skipSelf = false,
+                )
+            if (declarationClassType != null) {
+                generateDocumentInForDirective(
                     forDirectiveInspection,
+                    declarationClassType,
+                    forDirectiveExpr,
                     originalElement,
-                    children,
                     result,
                 )
             }
@@ -85,35 +75,30 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
     }
 
     private fun generateDocumentInForItem(
-        forDirectiveInspection: ForDirectiveInspection,
         originalElement: PsiElement,
         declarationChildren: List<SqlElIdExpr>,
+        declarationClassType: PsiParentClass,
         result: MutableList<String?>,
     ) {
-        val declarationClassType =
-            forDirectiveInspection.validateFieldAccessByForItem(listOf(originalElement), false)
-        if (declarationClassType is ValidationCompleteResult) {
-            val parentClass = declarationClassType.parentClass
-            val forItemValidator =
-                SqlElForItemFieldAccessorChildElementValidator(
-                    declarationChildren,
-                    parentClass,
-                )
-            val declarationClassTypeResult = forItemValidator.validateChildren()
-            if (declarationClassTypeResult is ValidationCompleteResult) {
-                var resultParent = declarationClassTypeResult.parentClass
-                var classType: PsiClassType? = resultParent.type as? PsiClassType
-                if (classType != null &&
-                    PsiClassTypeUtil.isIterableType(classType, originalElement.project)
-                ) {
-                    classType = classType.parameters.firstOrNull() as? PsiClassType
-                }
-                if (classType != null) {
-                    resultParent = PsiParentClass(classType)
-                    result.add("${generateTypeLink(resultParent)} ${originalElement.text}")
-                }
+        val parentClass = declarationClassType
+        val forItemValidator =
+            SqlElForItemFieldAccessorChildElementValidator(
+                declarationChildren,
+                parentClass,
+            )
+        forItemValidator.validateChildren(complete = { lastType ->
+            var resultParent = lastType
+            var classType: PsiClassType? = resultParent.type as? PsiClassType
+            if (classType != null &&
+                PsiClassTypeUtil.isIterableType(classType, originalElement.project)
+            ) {
+                classType = classType.parameters.firstOrNull() as? PsiClassType
             }
-        }
+            if (classType != null) {
+                resultParent = PsiParentClass(classType)
+                result.add("${generateTypeLink(resultParent)} ${originalElement.text}")
+            }
+        })
     }
 
     private fun generateDocumentInBindVariable(
@@ -130,6 +115,7 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
     }
 
     private fun generateDocumentInForDirective(
+        forDirectiveInspection: ForDirectiveInspection,
         declarationClassType: ValidationResult,
         forDirectiveExpr: SqlElForDirective,
         originalElement: PsiElement,
@@ -138,10 +124,22 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
         val parentClass = declarationClassType.parentClass
         val parentType = parentClass?.type as? PsiClassType
 
-        if (forDirectiveExpr.getForItem()?.textOffset == originalElement.textOffset) {
+        if (forDirectiveExpr.getForItem()?.textOffset != originalElement.textOffset) {
             generateDocumentForItemSelf(parentType, originalElement, result)
         } else {
-            result.add("${generateTypeLink(parentClass)} ${originalElement.text}")
+            val declarationSide = forDirectiveExpr.getForItemDeclaration() ?: return
+            val children = declarationSide.getDeclarationChildren()
+
+            val declarationClassType =
+                forDirectiveInspection.validateFieldAccessByForItem(listOf(originalElement), false)
+            if (declarationClassType is ValidationCompleteResult) {
+                generateDocumentInForItem(
+                    originalElement,
+                    children,
+                    declarationClassType.parentClass,
+                    result,
+                )
+            }
         }
     }
 
@@ -150,17 +148,8 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
         originalElement: PsiElement,
         result: MutableList<String?>,
     ) {
-        val targetClassType =
-            if (parentType != null &&
-                PsiClassTypeUtil.isIterableType(parentType, originalElement.project)
-            ) {
-                parentType.parameters.firstOrNull()
-            } else {
-                null
-            }
-
-        if (targetClassType != null) {
-            val forItemParentClassType = PsiParentClass(targetClassType)
+        if (parentType != null) {
+            val forItemParentClassType = PsiParentClass(parentType)
             result.add("${generateTypeLink(forItemParentClassType)} ${originalElement.text}")
         }
     }
