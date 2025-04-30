@@ -1,0 +1,121 @@
+/*
+ * Copyright Doma Tools Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.domaframework.doma.intellij.document
+
+import com.intellij.psi.PsiElement
+import org.domaframework.doma.intellij.DomaSqlTest
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
+
+class SqlSymbolDocumentTestCase : DomaSqlTest() {
+    val testPackage = "document"
+    val testDaoName = "DocumentTestDao"
+    val myDocumentationProvider: ForItemElementDocumentationProvider = ForItemElementDocumentationProvider()
+
+    override fun setUp() {
+        super.setUp()
+        addDaoJavaFile("$testPackage/$testDaoName.java")
+        addSqlFile("$testPackage/$testDaoName/documentForItemDaoParam.sql")
+        addSqlFile("$testPackage/$testDaoName/documentForItemDeclaration.sql")
+        addSqlFile("$testPackage/$testDaoName/documentForItemElement.sql")
+        addSqlFile("$testPackage/$testDaoName/documentForItemElementInBindVariable.sql")
+        addSqlFile("$testPackage/$testDaoName/documentForItemElementInIfDirective.sql")
+        addSqlFile("$testPackage/$testDaoName/documentForItemElementByFieldAccess.sql")
+    }
+
+    fun testDocumentForItemDaoParam() {
+        val sqlName = "documentForItemDaoParam"
+        val result: String? = null
+
+        documentationTest(sqlName, result)
+    }
+
+    fun testDocumentForItemDeclaration() {
+        val sqlName = "documentForItemDeclaration"
+        val result =
+            "<a href=\"psi_element://java.util.List\">List</a><<a href=\"psi_element://java.util.List\">" +
+                "List</a><<a href=\"psi_element://java.lang.Integer\">Integer</a>>> employeeIds"
+
+        documentationTest(sqlName, result)
+    }
+
+    fun testDocumentForItemElement() {
+        val sqlName = "documentForItemElement"
+        val result =
+            "<a href=\"psi_element://java.util.List\">List</a><<a href=\"psi_element://java.util.List\">" +
+                "List</a><<a href=\"psi_element://java.lang.Integer\">Integer</a>>> employeeIds"
+
+        documentationFindTextTest(sqlName, "employeeIds", result)
+    }
+
+    fun testDocumentForItemElementInBindVariable() {
+        val sqlName = "documentForItemElementInBindVariable"
+        val result =
+            "<a href=\"psi_element://java.util.List\">List</a><" +
+                "<a href=\"psi_element://java.lang.Integer\">Integer</a>> ids"
+
+        documentationTest(sqlName, result)
+    }
+
+    fun testDocumentForItemElementInIfDirective() {
+        val sqlName = "documentForItemElementInIfDirective"
+        val result =
+            "<a href=\"psi_element://java.util.List\">List</a><" +
+                "<a href=\"psi_element://java.lang.Integer\">Integer</a>> ids"
+
+        documentationTest(sqlName, result)
+    }
+
+    fun testDocumentForItemElementByFieldAccess() {
+        val sqlName = "documentForItemElementByFieldAccess"
+        val result =
+            "<a href=\"psi_element://doma.example.entity.Project\">Project</a> project"
+
+        documentationTest(sqlName, result)
+    }
+
+    private fun documentationTest(
+        sqlName: String,
+        result: String?,
+    ) {
+        val sqlFile = findSqlFile("$testPackage/$testDaoName/$sqlName.sql")
+        assertNotNull("Not Found SQL File", sqlFile)
+        if (sqlFile == null) return
+
+        myFixture.configureFromExistingVirtualFile(sqlFile)
+        var originalElement: PsiElement = myFixture.elementAtCaret
+        println("originalElement: ${originalElement.text}")
+
+        val resultDocument = myDocumentationProvider.generateDoc(originalElement, originalElement)
+        assertEquals("Documentation should contain expected text", result, resultDocument)
+    }
+
+    private fun documentationFindTextTest(
+        sqlName: String,
+        originalElementName: String,
+        result: String?,
+    ) {
+        val sqlFile = findSqlFile("$testPackage/$testDaoName/$sqlName.sql")
+        assertNotNull("Not Found SQL File", sqlFile)
+        if (sqlFile == null) return
+
+        myFixture.configureFromExistingVirtualFile(sqlFile)
+        var originalElement: PsiElement = myFixture.findElementByText(originalElementName, SqlElIdExpr::class.java)
+        println("originalElement: ${originalElement.text}")
+
+        val resultDocument = myDocumentationProvider.generateDoc(originalElement, originalElement)
+        assertEquals("Documentation should contain expected text", result, resultDocument)
+    }
+}
