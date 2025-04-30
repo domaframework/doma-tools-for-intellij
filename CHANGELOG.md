@@ -2,6 +2,48 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-04-30
+
+### New Features
+
+- Add For Item Element Documentation ([#126])
+- resolution for elements defined in the %for directive ([#117])
+- File jump in jar ([#110])
+- Add A reference to the SQL symbol type definer ([#107])
+
+### Bug Fixes
+
+- Added a condition to output logs only when references are resolved ([#128])
+- Fix: StringIndexOutOfBoundsException: Range In FileTypeCheck ([#122])
+- Support reference resolution for bind variables that reference classpath resources within JAR files. ([#115])
+- Fix:sql formatter second option indent ([#102])
+- Update changelog command and fix tag sorting in build.gradle.kts ([#104])
+- Update changelog and improve version handling ([#103])
+
+### Maintenance
+
+- Overwriting a development version with a release version ([#109])
+
+### Dependency Updates
+
+- Update dependency gradle to v8.14 ([#121])
+- Update dependency com.fasterxml.jackson.module:jackson-module-kotlin to v2.19.0 ([#120])
+
+[#126]:https://github.com/domaframework/doma-tools-for-intellij/pull/126
+[#117]:https://github.com/domaframework/doma-tools-for-intellij/pull/117
+[#110]:https://github.com/domaframework/doma-tools-for-intellij/pull/110
+[#107]:https://github.com/domaframework/doma-tools-for-intellij/pull/107
+[#128]:https://github.com/domaframework/doma-tools-for-intellij/pull/128
+[#122]:https://github.com/domaframework/doma-tools-for-intellij/pull/122
+[#115]:https://github.com/domaframework/doma-tools-for-intellij/pull/115
+[#102]:https://github.com/domaframework/doma-tools-for-intellij/pull/102
+[#104]:https://github.com/domaframework/doma-tools-for-intellij/pull/104
+[#103]:https://github.com/domaframework/doma-tools-for-intellij/pull/103
+[#109]:https://github.com/domaframework/doma-tools-for-intellij/pull/109
+[#121]:https://github.com/domaframework/doma-tools-for-intellij/pull/121
+[#120]:https://github.com/domaframework/doma-tools-for-intellij/pull/120
+
+
 ## [0.5.0] - 2025-04-14
 
 ### New Features
@@ -187,3 +229,4 @@
 [0.3.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.1...0.3.2
 [0.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.3.2...0.4.0
 [0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.4.0...0.5.0
+[0.6.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.5.0...0.6.0
