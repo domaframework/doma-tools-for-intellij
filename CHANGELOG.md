@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.6.1] - 2025-05-01
+
+
+
 ## [0.6.0] - 2025-04-30
 
 ### New Features
@@ -220,3 +224,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[0.6.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.6.0...0.6.1
