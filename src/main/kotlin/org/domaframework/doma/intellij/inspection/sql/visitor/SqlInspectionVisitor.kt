@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.sql
+package org.domaframework.doma.intellij.inspection.sql.visitor
 
 import com.intellij.codeInspection.ProblemsHolder
-import com.intellij.lang.injection.InjectedLanguageManager
-import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteralExpression
@@ -42,25 +40,14 @@ import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
-import org.domaframework.doma.intellij.psi.SqlElNewExpr
 import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
-import org.domaframework.doma.intellij.psi.SqlVisitor
 
 class SqlInspectionVisitor(
     private val holder: ProblemsHolder,
     private val shortName: String,
-) : SqlVisitor() {
-    var file: PsiFile? = null
-
-    private fun setFile(element: PsiElement): Boolean {
-        if (file == null) {
-            file = element.containingFile
-        }
-        return false
-    }
-
+) : SqlVisitorBase() {
     override fun visitElement(element: PsiElement) {
         if (setFile(element)) return
         val visitFile: PsiFile = file ?: return
@@ -134,38 +121,6 @@ class SqlInspectionVisitor(
             validateResult.highlightElement(holder)
         }
     }
-
-    /**
-     * For processing inside Sql annotations, get it as an injected custom language
-     */
-    private fun initInjectionElement(
-        basePsiFile: PsiFile,
-        project: Project,
-        literal: PsiLiteralExpression,
-    ): PsiFile? =
-        when (isJavaOrKotlinFileType(basePsiFile)) {
-            true -> {
-                val injectedLanguageManager =
-                    InjectedLanguageManager.getInstance(project)
-                injectedLanguageManager
-                    .getInjectedPsiFiles(literal)
-                    ?.firstOrNull()
-                    ?.first as? PsiFile
-            }
-
-            false -> null
-        }
-
-    private fun isLiteralOrStatic(targetElement: PsiElement): Boolean =
-        (
-            targetElement.firstChild?.elementType == SqlTypes.EL_STRING ||
-                targetElement.firstChild?.elementType == SqlTypes.EL_CHAR ||
-                targetElement.firstChild?.elementType == SqlTypes.EL_NUMBER ||
-                targetElement.firstChild?.elementType == SqlTypes.EL_NULL ||
-                targetElement.firstChild?.elementType == SqlTypes.BOOLEAN ||
-                targetElement.firstChild is SqlElNewExpr ||
-                targetElement.text.startsWith("@")
-        )
 
     private fun getFieldAccessBlocks(element: SqlElFieldAccessExpr): List<SqlElIdExpr> {
         val blockElements = element.accessElements
