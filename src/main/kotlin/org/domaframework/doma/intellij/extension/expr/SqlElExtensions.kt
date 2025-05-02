@@ -15,11 +15,9 @@
  */
 package org.domaframework.doma.intellij.extension.expr
 
-import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
-import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
@@ -43,13 +41,6 @@ val SqlElFieldAccessExpr.accessElements: List<SqlElIdExpr?>
 
 fun SqlElFieldAccessExpr.accessElementsPrevOriginalElement(targetTextOffset: Int): List<SqlElIdExpr> =
     this.accessElements.filter { it != null && it.textOffset <= targetTextOffset }.mapNotNull { it }
-
-val SqlElStaticFieldAccessExpr.fqdn: String
-    get() {
-        val elClazz = PsiTreeUtil.getChildOfType(this, SqlElClass::class.java) ?: return ""
-        val fqdn = PsiTreeUtil.getChildrenOfTypeAsList(elClazz, PsiElement::class.java)
-        return fqdn.toList().joinToString("") { it.text }
-    }
 
 fun SqlCustomElCommentExpr.isConditionOrLoopDirective(): Boolean =
     PsiTreeUtil.getChildOfType(this, SqlElIfDirective::class.java) != null ||
