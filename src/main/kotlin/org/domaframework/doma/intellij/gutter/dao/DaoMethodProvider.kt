@@ -26,11 +26,11 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNameIdentifierOwner
 import org.domaframework.doma.intellij.bundle.MessageBundle
-import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.dao.jumpSqlFromDao
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.setting.SqlIcon
 import java.awt.event.MouseEvent
 import javax.swing.Icon

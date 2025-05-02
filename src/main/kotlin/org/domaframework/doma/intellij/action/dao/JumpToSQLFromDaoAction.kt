@@ -22,11 +22,11 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.dao.jumpSqlFromDao
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
 class JumpToSQLFromDaoAction : AnAction() {
     private var currentFile: PsiFile? = null

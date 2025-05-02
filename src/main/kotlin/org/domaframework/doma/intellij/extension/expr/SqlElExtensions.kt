@@ -41,6 +41,9 @@ val SqlElFieldAccessExpr.accessElements: List<SqlElIdExpr?>
             .sortedBy { it.textOffset }
             .toList()
 
+fun SqlElFieldAccessExpr.accessElementsPrevOriginalElement(targetTextOffset: Int): List<SqlElIdExpr> =
+    this.accessElements.filter { it != null && it.textOffset <= targetTextOffset }.mapNotNull { it }
+
 val SqlElStaticFieldAccessExpr.fqdn: String
     get() {
         val elClazz = PsiTreeUtil.getChildOfType(this, SqlElClass::class.java) ?: return ""

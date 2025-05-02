@@ -18,9 +18,12 @@ package org.domaframework.doma.intellij.reference
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.common.PluginLoggerUtil
-import org.domaframework.doma.intellij.common.sql.validator.SqlElStaticFieldAccessorChildElementValidator
+import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
+import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
+import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 
 class SqlElStaticFieldReference(
@@ -36,25 +39,36 @@ class SqlElStaticFieldReference(
 
         val targetElements =
             getBlockCommentElements(element, SqlElStaticFieldAccessExpr::class.java)
-        val validator =
-            SqlElStaticFieldAccessorChildElementValidator(
-                targetElements,
-                staticAccessParent,
-            )
 
-        val initialPsiParentClass = validator.getClassType() ?: return null
-        val project = file.project
-        val fieldAccessLastParentResult =
-            if (targetElements.size == 1) {
-                validator.validateFieldAccess(project, initialPsiParentClass, dropLastIndex = 1)
-            } else if (targetElements.size >= 2) {
-                validator.validateChildren(1)
-            } else {
-                null
-            }
-        if (fieldAccessLastParentResult is ValidationCompleteResult) {
+        val psiStaticClass = PsiStaticElement(staticAccessParent.elClass.elIdExprList, staticAccessParent.containingFile)
+        val referenceClass = psiStaticClass.getRefClazz() ?: return null
+        val referenceParentClass = PsiParentClass(referenceClass.psiClassType)
+        if (targetElements.size == 1) {
             val searchText = element.text ?: ""
-            val parent = fieldAccessLastParentResult.parentClass
+            val reference = referenceParentClass.findField(searchText) ?: referenceParentClass.findMethod(searchText)
+            if (reference != null) {
+                PluginLoggerUtil.countLogging(
+                    this::class.java.simpleName,
+                    "ReferenceStaticProperty",
+                    "Reference",
+                    startTime,
+                )
+            }
+            return reference
+        }
+        val topFieldClassType = ForDirectiveUtil.getStaticFieldAccessTopElementClassType(staticAccessParent, referenceClass)
+        val result =
+            topFieldClassType?.let {
+                ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+                    targetElements,
+                    staticAccessParent.project,
+                    it,
+                    dropLastIndex = 1,
+                )
+            }
+        if (result is ValidationCompleteResult) {
+            val parent = result.parentClass
+            val searchText = element.text ?: ""
             val reference = parent.findField(searchText) ?: parent.findMethod(searchText)
             if (reference != null) {
                 PluginLoggerUtil.countLogging(
@@ -66,7 +80,6 @@ class SqlElStaticFieldReference(
             }
             return reference
         }
-
         return null
     }
 }

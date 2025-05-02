@@ -20,11 +20,11 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.psi.PsiFile
-import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoFile
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.dao.jumpToDaoMethod
 import org.domaframework.doma.intellij.common.isSupportFileType
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
 /***
  * Action to jump from SQL file to corresponding Dao function

@@ -19,24 +19,22 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteralExpression
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
-import org.domaframework.doma.intellij.common.sql.foritem.ForItem
-import org.domaframework.doma.intellij.common.sql.validator.SqlElFieldAccessorChildElementValidator
-import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
-import org.domaframework.doma.intellij.common.sql.validator.SqlElStaticFieldAccessorChildElementValidator
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
+import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.psi.PsiStaticElement
+import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
+import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.isFirstElement
-import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
@@ -90,36 +88,21 @@ class SqlInspectionVisitor(
         if (isLiteralOrStatic(element)) return
         PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java)?.let { return }
 
+        val forDirectiveExp = PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java)
+        if (forDirectiveExp != null && forDirectiveExp.getForItem() == element) return
+
+        val forItem = ForDirectiveUtil.findForItem(element)
+        if (forItem != null) return
+
         val daoMethod = findDaoMethod(visitFile) ?: return
+        val param = daoMethod.findParameter(cleanString(element.text))
+        if (param != null) return
 
-        val forDirectiveInspection =
-            ForDirectiveInspection(daoMethod, this.shortName)
-
-        if (PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java) != null) {
-            val currentForItem = ForItem(element)
-            val leftSideForItem = currentForItem.getParentForDirectiveExpr()?.getForItem()
-            if (leftSideForItem == element) return
-
-            val forDirectivesSize = forDirectiveInspection.getForDirectiveBlockSize(element)
-            if (forDirectivesSize == 0) return
-        }
-
-        // Element names defined in the For directory are not checked.
-        val forItem = forDirectiveInspection.getForItem(element)
-        if (forItem != null) {
-            return
-        }
-
-        val validDaoParam = daoMethod.findParameter(element.text)
-        if (validDaoParam == null) {
-            val validateResult =
-                ValidationDaoParamResult(
-                    element,
-                    daoMethod.name,
-                    shortName,
-                )
-            validateResult.highlightElement(holder)
-        }
+        ValidationDaoParamResult(
+            element,
+            daoMethod.name,
+            this.shortName,
+        ).highlightElement(holder)
     }
 
     private fun getFieldAccessBlocks(element: SqlElFieldAccessExpr): List<SqlElIdExpr> {
@@ -136,33 +119,52 @@ class SqlInspectionVisitor(
         blockElement: List<SqlElIdExpr>,
         file: PsiFile,
     ) {
+        val topElement = blockElement.firstOrNull() ?: return
         val daoMethod = findDaoMethod(file) ?: return
-        val forDirectiveInspection = ForDirectiveInspection(daoMethod, this.shortName)
-        var validateResult: ValidationResult? =
-            forDirectiveInspection.validateFieldAccessByForItem(blockElement.toList())
-        if (validateResult is ValidationCompleteResult) {
-            val currentFieldAccessValidator =
-                SqlElForItemFieldAccessorChildElementValidator(
-                    blockElement,
-                    validateResult.parentClass,
-                    this.shortName,
-                )
-            validateResult = currentFieldAccessValidator.validateChildren()
-            if (validateResult is ValidationCompleteResult) return
-        }
-        if (validateResult is ValidationPropertyResult) {
-            validateResult.highlightElement(holder)
-            return
-        }
+        val project = topElement.project
+        val forDirectiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(topElement)
+        val forItem = ForDirectiveUtil.findForItem(topElement, forDirectives = forDirectiveBlocks)
+        var isBatchAnnotation = false
+        val topElementParentClass =
+            if (forItem != null) {
+                val result = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks)
+                if (result == null) {
+                    errorHighlight(topElement, daoMethod, holder)
+                    return
+                }
+                result
+            } else {
+                val paramType = daoMethod.findParameter(cleanString(topElement.text))?.type
+                if (paramType == null) {
+                    errorHighlight(topElement, daoMethod, holder)
+                    return
+                }
+                isBatchAnnotation = PsiDaoMethod(project, daoMethod).daoType.isBatchAnnotation()
+                PsiParentClass(paramType)
+            }
 
-        val validator =
-            SqlElFieldAccessorChildElementValidator(
+        val result =
+            ForDirectiveUtil.getFieldAccessLastPropertyClassType(
                 blockElement,
-                file,
-                this.shortName,
+                project,
+                topElementParentClass,
+                shortName = this.shortName,
+                isBatchAnnotation = isBatchAnnotation,
             )
-        validateResult = validator.validateChildren()
-        validateResult?.highlightElement(holder)
+
+        result?.highlightElement(holder)
+    }
+
+    private fun errorHighlight(
+        topElement: SqlElIdExpr,
+        daoMethod: PsiMethod,
+        holder: ProblemsHolder,
+    ) {
+        ValidationDaoParamResult(
+            topElement,
+            daoMethod.name,
+            this.shortName,
+        ).highlightElement(holder)
     }
 
     /**
@@ -173,13 +175,17 @@ class SqlInspectionVisitor(
         holder: ProblemsHolder,
     ) {
         val blockElements = staticAccuser.accessElements
-        val validator =
-            SqlElStaticFieldAccessorChildElementValidator(
-                blockElements,
-                staticAccuser,
-                this.shortName,
-            )
-        val validateResult: ValidationResult? = validator.validateChildren()
-        validateResult?.highlightElement(holder)
+        val psiStaticClass = PsiStaticElement(staticAccuser.elClass.elIdExprList, staticAccuser.containingFile)
+        val referenceClass = psiStaticClass.getRefClazz() ?: return
+        val topParentClass = ForDirectiveUtil.getStaticFieldAccessTopElementClassType(staticAccuser, referenceClass)
+        val result =
+            topParentClass?.let {
+                ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+                    blockElements,
+                    staticAccuser.project,
+                    it,
+                )
+            }
+        result?.highlightElement(holder)
     }
 }

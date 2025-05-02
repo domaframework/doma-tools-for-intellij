@@ -18,7 +18,7 @@ package org.domaframework.doma.intellij.setting
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
-import org.domaframework.doma.intellij.common.PluginUtil
+import org.domaframework.doma.intellij.common.util.PluginUtil
 
 class DomaToolStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {

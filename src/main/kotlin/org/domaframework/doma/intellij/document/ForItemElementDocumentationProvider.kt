@@ -16,16 +16,25 @@
 package org.domaframework.doma.intellij.document
 
 import com.intellij.lang.documentation.AbstractDocumentationProvider
-import com.intellij.psi.PsiClassType
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
+import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.common.sql.foritem.ForItem
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
+import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
+import org.domaframework.doma.intellij.extension.expr.accessElements
+import org.domaframework.doma.intellij.extension.expr.accessElementsPrevOriginalElement
+import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getForItem
-import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
-import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.extension.psi.psiClassType
+import org.domaframework.doma.intellij.psi.SqlElClass
+import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
+import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.toml.lang.psi.ext.elementType
 import java.util.LinkedList
@@ -42,83 +51,98 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
                 originalElement,
             )
         }
-
+        val project = originalElement.project
         val file = originalElement.containingFile
-        val daoMethod = findDaoMethod(file) ?: return ""
-        val forDirectiveInspection = ForDirectiveInspection(daoMethod, "")
 
-        val currentForItem = ForItem(originalElement)
-        val forDirectiveExpr = currentForItem.getParentForDirectiveExpr()
-        if (forDirectiveExpr != null) {
-            val declarationClassType =
-                forDirectiveInspection.validateFieldAccessByForItem(
-                    listOf(originalElement),
-                    skipSelf = false,
-                )
-            if (declarationClassType != null) {
-                generateDocumentInForDirective(
-                    forDirectiveInspection,
-                    declarationClassType,
-                    forDirectiveExpr,
-                    originalElement,
-                    result,
-                )
-            }
-        } else {
-            generateDocumentInForItemVariable(
-                forDirectiveInspection,
+        val staticFieldAccessExpr =
+            PsiTreeUtil.getParentOfType(originalElement, SqlElStaticFieldAccessExpr::class.java)
+        if (staticFieldAccessExpr != null) {
+            generateStaticFieldDocument(
+                staticFieldAccessExpr,
+                file,
                 originalElement,
+                project,
                 result,
-            ) { parent -> return@generateDocumentInForItemVariable parent }
+            )
+        } else {
+            generateDaoFieldAccessDocument(originalElement, project, result)
         }
         return result.joinToString("\n")
     }
 
-    private fun generateDocumentInForItemVariable(
-        forDirectiveInspection: ForDirectiveInspection,
+    private fun generateDaoFieldAccessDocument(
         originalElement: PsiElement,
-        result: MutableList<String?>,
-        nestClass: (PsiParentClass?) -> PsiParentClass?,
-    ) {
-        val declarationClassType =
-            forDirectiveInspection.validateFieldAccessByForItem(listOf(originalElement))
-        if (declarationClassType != null) {
-            val parentClass = nestClass(declarationClassType.parentClass)
-            result.add("${generateTypeLink(parentClass)} ${originalElement.text}")
-        }
-    }
-
-    private fun generateDocumentInForDirective(
-        forDirectiveInspection: ForDirectiveInspection,
-        declarationClassType: ValidationResult,
-        forDirectiveExpr: SqlElForDirective,
-        originalElement: PsiElement,
+        project: Project,
         result: MutableList<String?>,
     ) {
-        val parentClass = declarationClassType.parentClass
-        val parentType = parentClass?.type as? PsiClassType
+        var topParentType: PsiParentClass? = null
+        val selfSkip = isSelfSkip(originalElement)
+        val forDirectives = ForDirectiveUtil.getForDirectiveBlocks(originalElement, selfSkip)
+        val fieldAccessExpr =
+            PsiTreeUtil.getParentOfType(
+                originalElement,
+                SqlElFieldAccessExpr::class.java,
+            )
+        val fieldAccessBlocks =
+            fieldAccessExpr?.accessElementsPrevOriginalElement(originalElement.textOffset)
+        val searchElement = fieldAccessBlocks?.firstOrNull() ?: originalElement
 
-        if (forDirectiveExpr.getForItem()?.textOffset != originalElement.textOffset) {
-            generateDocumentForItemSelf(parentType, originalElement, result)
+        var isBatchAnnotation = false
+        if (ForDirectiveUtil.findForItem(searchElement, forDirectives = forDirectives) != null) {
+            topParentType = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectives)
         } else {
-            generateDocumentInForItemVariable(forDirectiveInspection, originalElement, result) { parent ->
-                val nestClass =
-                    (parent?.type as? PsiClassType)?.parameters?.firstOrNull()
-                        ?: return@generateDocumentInForItemVariable parent
-                return@generateDocumentInForItemVariable PsiParentClass(nestClass)
-            }
+            val daoMethod = findDaoMethod(originalElement.containingFile) ?: return
+            val param = daoMethod.findParameter(originalElement.text) ?: return
+            isBatchAnnotation = PsiDaoMethod(project, daoMethod).daoType.isBatchAnnotation()
+            topParentType = PsiParentClass(param.type)
         }
+        if (fieldAccessExpr != null && fieldAccessBlocks != null) {
+            topParentType?.let {
+                ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+                    fieldAccessBlocks,
+                    project,
+                    it,
+                    isBatchAnnotation = isBatchAnnotation,
+                    complete = { lastType ->
+                        result.add("${generateTypeLink(lastType)} ${originalElement.text}")
+                    },
+                )
+            }
+            return
+        }
+        result.add("${generateTypeLink(topParentType)} ${originalElement.text}")
     }
 
-    private fun generateDocumentForItemSelf(
-        parentType: PsiClassType?,
+    private fun generateStaticFieldDocument(
+        staticFieldAccessExpr: SqlElStaticFieldAccessExpr,
+        file: PsiFile,
         originalElement: PsiElement,
+        project: Project,
         result: MutableList<String?>,
     ) {
-        if (parentType != null) {
-            val forItemParentClassType = PsiParentClass(parentType)
-            result.add("${generateTypeLink(forItemParentClassType)} ${originalElement.text}")
+        val fieldAccessBlocks = staticFieldAccessExpr.accessElements
+        val staticElement = PsiStaticElement(fieldAccessBlocks, file)
+        val referenceClass = staticElement.getRefClazz() ?: return
+        if (PsiTreeUtil.getParentOfType(originalElement, SqlElClass::class.java) != null) {
+            val clazzType = PsiParentClass(referenceClass.psiClassType)
+            result.add("${generateTypeLink(clazzType)} ${originalElement.text}")
+            return
         }
+
+        ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+            fieldAccessBlocks.filter { it.textOffset <= originalElement.textOffset },
+            project,
+            PsiParentClass(referenceClass.psiClassType),
+            complete = { lastType ->
+                result.add("${generateTypeLink(lastType)} ${originalElement.text}")
+            },
+        )
+    }
+
+    private fun isSelfSkip(targetElement: PsiElement): Boolean {
+        val forItem = ForItem(targetElement)
+        val forDirectiveExpr = forItem.getParentForDirectiveExpr()
+        return !(forDirectiveExpr != null && forDirectiveExpr.getForItem()?.textOffset == targetElement.textOffset)
     }
 
     override fun generateHoverDoc(
