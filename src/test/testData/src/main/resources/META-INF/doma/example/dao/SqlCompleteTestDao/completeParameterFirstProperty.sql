@@ -1,1 +1,1 @@
-select * from employee where id = /* employee.department.startWith(employee.<caret>) */1
+select * from employee where id = /* employee.department.startsWith(employee.<caret> ) */1

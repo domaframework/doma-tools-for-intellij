@@ -54,6 +54,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         addEntityJavaFile("EmployeeSummary.java")
         addEntityJavaFile("Project.java")
         addEntityJavaFile("ProjectDetail.java")
+        addEntityJavaFile("Principal.java")
     }
 
     @Throws(Exception::class)

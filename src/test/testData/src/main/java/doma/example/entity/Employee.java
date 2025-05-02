@@ -14,7 +14,7 @@ public class Employee extends User {
   public String employeeName;
   private String department;
   private String rank;
-  public static  List<Project> projects;
+  public static List<Project> projects;
 
   public Integer managerId;
 
