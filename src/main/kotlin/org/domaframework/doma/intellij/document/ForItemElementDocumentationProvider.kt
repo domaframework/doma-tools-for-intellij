@@ -20,13 +20,9 @@ import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
-import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.sql.foritem.ForItem
-import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
 import org.domaframework.doma.intellij.extension.psi.getForItem
-import org.domaframework.doma.intellij.extension.psi.getForItemDeclaration
 import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
@@ -69,47 +65,25 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
                 )
             }
         } else {
-            generateDocumentInBindVariable(forDirectiveInspection, originalElement, result)
+            generateDocumentInForItemVariable(
+                forDirectiveInspection,
+                originalElement,
+                result,
+            ) { parent -> return@generateDocumentInForItemVariable parent }
         }
         return result.joinToString("\n")
     }
 
-    private fun generateDocumentInForItem(
-        originalElement: PsiElement,
-        declarationChildren: List<SqlElIdExpr>,
-        declarationClassType: PsiParentClass,
-        result: MutableList<String?>,
-    ) {
-        val parentClass = declarationClassType
-        val forItemValidator =
-            SqlElForItemFieldAccessorChildElementValidator(
-                declarationChildren,
-                parentClass,
-            )
-        forItemValidator.validateChildren(complete = { lastType ->
-            var resultParent = lastType
-            var classType: PsiClassType? = resultParent.type as? PsiClassType
-            if (classType != null &&
-                PsiClassTypeUtil.isIterableType(classType, originalElement.project)
-            ) {
-                classType = classType.parameters.firstOrNull() as? PsiClassType
-            }
-            if (classType != null) {
-                resultParent = PsiParentClass(classType)
-                result.add("${generateTypeLink(resultParent)} ${originalElement.text}")
-            }
-        })
-    }
-
-    private fun generateDocumentInBindVariable(
+    private fun generateDocumentInForItemVariable(
         forDirectiveInspection: ForDirectiveInspection,
         originalElement: PsiElement,
         result: MutableList<String?>,
+        nestClass: (PsiParentClass?) -> PsiParentClass?,
     ) {
         val declarationClassType =
             forDirectiveInspection.validateFieldAccessByForItem(listOf(originalElement))
         if (declarationClassType != null) {
-            val parentClass = declarationClassType.parentClass
+            val parentClass = nestClass(declarationClassType.parentClass)
             result.add("${generateTypeLink(parentClass)} ${originalElement.text}")
         }
     }
@@ -127,18 +101,11 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
         if (forDirectiveExpr.getForItem()?.textOffset != originalElement.textOffset) {
             generateDocumentForItemSelf(parentType, originalElement, result)
         } else {
-            val declarationSide = forDirectiveExpr.getForItemDeclaration() ?: return
-            val children = declarationSide.getDeclarationChildren()
-
-            val declarationClassType =
-                forDirectiveInspection.validateFieldAccessByForItem(listOf(originalElement), false)
-            if (declarationClassType is ValidationCompleteResult) {
-                generateDocumentInForItem(
-                    originalElement,
-                    children,
-                    declarationClassType.parentClass,
-                    result,
-                )
+            generateDocumentInForItemVariable(forDirectiveInspection, originalElement, result) { parent ->
+                val nestClass =
+                    (parent?.type as? PsiClassType)?.parameters?.firstOrNull()
+                        ?: return@generateDocumentInForItemVariable parent
+                return@generateDocumentInForItemVariable PsiParentClass(nestClass)
             }
         }
     }
