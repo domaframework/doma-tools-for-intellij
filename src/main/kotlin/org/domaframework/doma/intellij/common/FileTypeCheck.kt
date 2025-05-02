@@ -46,6 +46,14 @@ fun isJavaOrKotlinFileType(daoFile: PsiFile): Boolean {
     }
 }
 
+fun isJavaOrKotlinFileType(file: VirtualFile): Boolean {
+    val fileType = file.fileType
+    return when (fileType.name) {
+        "JAVA", "Kotlin", "CLASS" -> true
+        else -> false
+    }
+}
+
 /*
  * Determine whether the open file is an SQL template file extension
  */

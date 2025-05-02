@@ -16,22 +16,30 @@
 package org.domaframework.doma.intellij.common.sql.directive
 
 import com.intellij.codeInsight.completion.CompletionResultSet
+import com.intellij.codeInsight.lookup.AutoCompletionPolicy
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.lookup.VariableLookupItem
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiType
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
 import org.domaframework.doma.intellij.common.psi.PsiStaticElement
+import org.domaframework.doma.intellij.common.sql.cleanString
+import org.domaframework.doma.intellij.extension.getContentRoot
 import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
+import org.jetbrains.kotlin.idea.util.getSourceRoot
 
 class StaticDirectiveHandler(
     private val originalFile: PsiElement,
@@ -80,7 +88,63 @@ class StaticDirectiveHandler(
                         CompletionSuggest(fields ?: emptyList(), methods ?: emptyList())
                     }
                 }
-        } else if (element.prevSibling?.elementType == SqlTypes.AT_SIGN) {
+        }
+        if (handleResult) return true
+
+        if (PsiTreeUtil.nextLeaf(element)?.elementType == SqlTypes.AT_SIGN ||
+            element.elementType == SqlTypes.AT_SIGN
+        ) {
+            handleResult =
+                staticClassPath(
+                    result,
+                ) { file, root ->
+                    val rootChildren = root.children
+                    if (PsiTreeUtil.prevLeaf(element)?.elementType == SqlTypes.AT_SIGN) {
+                        return@staticClassPath rootChildren.map {
+                            LookupElementBuilder
+                                .create(it.name)
+                                .withAutoCompletionPolicy(AutoCompletionPolicy.ALWAYS_AUTOCOMPLETE)
+                        }
+                    } else {
+                        val prevPackageNames =
+                            PsiPatternUtil.getBindSearchWord(file, element, "@").split(".")
+                        val topPackage =
+                            rootChildren.firstOrNull { it.name == prevPackageNames.firstOrNull() }
+                                ?: return@staticClassPath null
+                        var nextPackage: VirtualFile? =
+                            topPackage
+                        if (prevPackageNames.size > 2) {
+                            for (packageName in prevPackageNames.drop(1).dropLast(1)) {
+                                if (nextPackage == null) break
+                                nextPackage =
+                                    nextPackage.children.firstOrNull {
+                                        it.name == cleanString(packageName)
+                                    }
+                            }
+                        }
+                        return@staticClassPath nextPackage
+                            ?.children
+                            ?.filter {
+                                it.name.contains(cleanString(prevPackageNames.lastOrNull() ?: ""))
+                            }?.map {
+                                val packageName = prevPackageNames.joinToString(".").plus(it.nameWithoutExtension)
+                                val suggestName =
+                                    it.nameWithoutExtension
+                                if (!isJavaOrKotlinFileType(it)) {
+                                    suggestName.plus(".")
+                                }
+                                LookupElementBuilder
+                                    .create(packageName)
+                                    .withPresentableText(suggestName)
+                                    .withTailText("($packageName)", true)
+                                    .withAutoCompletionPolicy(AutoCompletionPolicy.ALWAYS_AUTOCOMPLETE)
+                            }
+                    }
+                }
+        }
+        if (handleResult) return true
+
+        if (element.prevSibling?.elementType == SqlTypes.AT_SIGN) {
             // Built-in function completion
             handleResult =
                 builtInDirectiveHandler(element, result) { bind ->
@@ -208,13 +272,31 @@ class StaticDirectiveHandler(
         return true
     }
 
+    private fun staticClassPath(
+        result: CompletionResultSet,
+        processor: (PsiFile, VirtualFile) -> List<LookupElement>?,
+    ): Boolean {
+        val file = originalFile.containingFile ?: return false
+        val virtualFile = file.virtualFile ?: return false
+        val root =
+            project
+                .getContentRoot(virtualFile)
+                ?.children
+                ?.firstOrNull()
+                ?.getSourceRoot(project)
+                ?: return false
+        val candidates = processor(file, root) ?: return false
+        result.addAllElements(candidates)
+        return true
+    }
+
     private fun builtInDirectiveHandler(
         element: PsiElement,
         result: CompletionResultSet,
         processor: (String) -> List<LookupElement>?,
     ): Boolean {
         if (BindDirectiveUtil.getDirectiveType(element) == DirectiveType.BUILT_IN) {
-            val prefix = getBindSearchWord(element, "@")
+            val prefix = getBindSearchWord(element, bindText)
             val candidates = processor(prefix)
             candidates?.let { it1 -> result.addAllElements(it1) }
             return true
