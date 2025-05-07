@@ -30,11 +30,13 @@ import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.isFirstElement
+import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
@@ -178,12 +180,23 @@ class SqlInspectionVisitor(
         val psiStaticClass = PsiStaticElement(staticAccuser.elClass.elIdExprList, staticAccuser.containingFile)
         val referenceClass = psiStaticClass.getRefClazz() ?: return
         val topParentClass = ForDirectiveUtil.getStaticFieldAccessTopElementClassType(staticAccuser, referenceClass)
+        if (topParentClass == null) {
+            blockElements.firstOrNull()?.let {
+                ValidationPropertyResult(
+                    it,
+                    PsiParentClass(referenceClass.psiClassType),
+                    this.shortName,
+                ).highlightElement(holder)
+            }
+            return
+        }
         val result =
-            topParentClass?.let {
+            topParentClass.let {
                 ForDirectiveUtil.getFieldAccessLastPropertyClassType(
                     blockElements,
                     staticAccuser.project,
                     it,
+                    shortName = this.shortName,
                 )
             }
         result?.highlightElement(holder)
