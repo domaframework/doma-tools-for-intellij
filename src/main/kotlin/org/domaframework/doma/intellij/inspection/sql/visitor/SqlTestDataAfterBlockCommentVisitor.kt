@@ -20,7 +20,9 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteralExpression
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.nextLeafs
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationTestDataResult
@@ -54,6 +56,7 @@ class SqlTestDataAfterBlockCommentVisitor(
 
         val nextElement = element.nextSibling ?: return
         if (isSqlLiteral(nextElement)) return
+        if (isMatchListTestData(element)) return
 
         val result = ValidationTestDataResult(element, shortName)
         result.highlightElement(holder)
@@ -67,15 +70,16 @@ class SqlTestDataAfterBlockCommentVisitor(
             PsiTreeUtil.getChildOfType(element, SqlElForDirective::class.java)
                 ?: PsiTreeUtil.getChildOfType(element, SqlElIfDirective::class.java)
                 ?: PsiTreeUtil.getChildOfType(element, SqlElElseifDirective::class.java)
-        val endDirective =
+        val otherDirective =
             PsiTreeUtil
                 .getChildrenOfType(element, PsiElement::class.java)
                 ?.find {
                     it.elementType == SqlTypes.EL_END ||
                         it.elementType == SqlTypes.HASH ||
-                        it.elementType == SqlTypes.EL_POPULATE
+                        it.elementType == SqlTypes.EL_POPULATE ||
+                        it.elementType == SqlTypes.EL_ELSE
                 }
-        if (directive != null || endDirective != null) return true
+        if (directive != null || otherDirective != null) return true
 
         val content = PsiTreeUtil.getChildOfType(element, PsiComment::class.java)
         return content != null
@@ -83,9 +87,30 @@ class SqlTestDataAfterBlockCommentVisitor(
 
     private fun isSqlLiteral(element: PsiElement): Boolean =
         element.elementType == SqlTypes.STRING ||
-            element.elementType == SqlTypes.BOOLEAN ||
-            element.elementType == SqlTypes.NUMBER ||
-            element.elementType == SqlTypes.NULL ||
             listOf("true", "false", "null").contains(element.text) ||
             element.text.matches(Regex("^\\d+$"))
+
+    /**
+     * Determines if the given element matches the pattern for "List type test data."
+     *
+     * The function checks if the text of the element and its subsequent non-whitespace siblings
+     * form a valid list enclosed in parentheses. The list can contain:
+     * - Strings (double-quoted or single-quoted)
+     * - Numbers (integers)
+     * - Boolean values ("true" or "false")
+     * - The "null" literal
+     * These values can be separated by commas, and the entire list must be enclosed in parentheses.
+     */
+    private fun isMatchListTestData(element: PsiElement): Boolean {
+        val parenthesesListPattern =
+            Regex(
+                """^\(\s*(?:(?:"[^"]*"|'[^']*'|\d+|true|false|null)\s*(?:,\s*(?:"[^"]*"|'[^']*'|\d+|true|false|null)\s*)*)?\)$""",
+            )
+        val testDataText =
+            element.nextLeafs
+                .takeWhile { it !is PsiWhiteSpace }
+                .toList()
+                .joinToString("") { it.text }
+        return testDataText.matches(parenthesesListPattern)
+    }
 }

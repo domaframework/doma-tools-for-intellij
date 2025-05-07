@@ -22,7 +22,7 @@ interface TestDataCheckDao {
   List<Employee> conditionAndLoopDirective(List<Project> projects,LocalDate referenceDate);
 
   @Select
-  Employee commentBlock(Integer id);
+  Employee commentBlock(Integer id, List<Integer> subIds);
 
   @Update(sqlFile=true)
   int populateDirective(Employee employee);
