@@ -19,8 +19,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.refactoring.listeners.RefactoringElementListener
 import com.intellij.refactoring.rename.RenameJavaClassProcessor
 import com.intellij.usageView.UsageInfo
-import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.getDaoClass
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.getContentRoot
 import org.domaframework.doma.intellij.extension.getPackagePathFromDaoPath
 import org.jetbrains.kotlin.idea.base.util.module

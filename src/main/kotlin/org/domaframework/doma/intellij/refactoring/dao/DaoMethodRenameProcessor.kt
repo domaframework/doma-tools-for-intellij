@@ -20,8 +20,8 @@ import com.intellij.psi.PsiMethod
 import com.intellij.refactoring.listeners.RefactoringElementListener
 import com.intellij.refactoring.rename.RenameJavaMethodProcessor
 import com.intellij.usageView.UsageInfo
-import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
 /**
  * Rename DAO method

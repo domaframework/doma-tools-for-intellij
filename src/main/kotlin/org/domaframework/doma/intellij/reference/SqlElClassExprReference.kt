@@ -17,8 +17,8 @@ package org.domaframework.doma.intellij.reference
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.psi.PsiStaticElement
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
 class SqlElClassExprReference(
     element: PsiElement,

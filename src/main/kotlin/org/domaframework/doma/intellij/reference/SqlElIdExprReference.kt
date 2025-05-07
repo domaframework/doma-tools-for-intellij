@@ -18,17 +18,18 @@ package org.domaframework.doma.intellij.reference
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
-import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
+import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.sql.cleanString
-import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
+import org.domaframework.doma.intellij.common.sql.foritem.ForItem
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
+import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.psi.findParameter
-import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
-import org.domaframework.doma.intellij.extension.psi.getIterableClazz
-import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
+import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
@@ -41,13 +42,13 @@ class SqlElIdExprReference(
     ): PsiElement? {
         val targetElements = getBlockCommentElements(element, SqlElFieldAccessExpr::class.java)
         if (targetElements.isEmpty()) return null
-
         val topElm = targetElements.firstOrNull() as? PsiElement ?: return null
-
         if (topElm.prevSibling.elementType == SqlTypes.AT_SIGN) return null
-        val daoMethod = findDaoMethod(file) ?: return null
-        val forDirectiveInspection = ForDirectiveInspection(daoMethod)
-        val forItem = forDirectiveInspection.getForItem(topElm)
+
+        // Refers to an element defined in the for directive
+        val isSelfSkip = isSelfSkip(topElm)
+        val forDirectiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(element, isSelfSkip)
+        val forItem = ForDirectiveUtil.findForItem(element, forDirectives = forDirectiveBlocks)
         if (forItem != null && element.textOffset == topElm.textOffset) {
             PluginLoggerUtil.countLogging(
                 this::class.java.simpleName,
@@ -55,51 +56,53 @@ class SqlElIdExprReference(
                 "Reference",
                 startTime,
             )
-            return forItem.element
+            return forItem
         }
 
-        val validateResult = forDirectiveInspection.validateFieldAccessByForItem(targetElements)
-        var parentClass = (validateResult as? ValidationCompleteResult)?.parentClass
-        if (validateResult is ValidationCompleteResult && parentClass != null) {
-            val validator =
-                SqlElForItemFieldAccessorChildElementValidator(
-                    targetElements,
-                    parentClass,
-                )
-            val targetReferenceClass = validator.validateChildren(1)
-            if (targetReferenceClass is ValidationCompleteResult) {
-                val searchText = targetElements.lastOrNull()?.let { cleanString(it.text) } ?: ""
-                val targetParent = targetReferenceClass.parentClass
-                val reference =
-                    targetParent.findField(searchText) ?: targetParent.findMethod(searchText)
-                if (reference != null) {
-                    PluginLoggerUtil.countLogging(
-                        this::class.java.simpleName,
-                        "ReferenceEntityProperty",
-                        "Reference",
-                        startTime,
-                    )
-                }
-                return reference
-            }
+        val fieldAccessExpr = PsiTreeUtil.getParentOfType(element, SqlElFieldAccessExpr::class.java)
+        if (fieldAccessExpr == null || element.textOffset == topElm.textOffset) {
+            val daoMethod = findDaoMethod(file) ?: return null
+            return getReferenceDaoMethodParameter(
+                daoMethod,
+                element,
+                startTime,
+            )
         }
 
-        val topParam = daoMethod.findParameter(topElm.text) ?: return null
-        parentClass = topParam.getIterableClazz(daoMethod.getDomaAnnotationType())
-
-        val symbolElement =
-            when (element.textOffset) {
-                targetElements.first().textOffset ->
-                    getReferenceDaoMethodParameter(
-                        daoMethod,
-                        element,
-                        startTime,
-                    )
-
-                else -> getReferenceEntity(parentClass, targetElements, startTime)
+        val tolElementForItem =
+            ForDirectiveUtil.getForDirectiveItemClassType(topElm.project, forDirectiveBlocks)
+        var isBatchAnnotation = false
+        var parentClass =
+            if (tolElementForItem != null) {
+                tolElementForItem
+            } else {
+                val daoMethod = findDaoMethod(file) ?: return null
+                val param = daoMethod.findParameter(topElm.text) ?: return null
+                isBatchAnnotation = PsiDaoMethod(topElm.project, daoMethod).daoType.isBatchAnnotation()
+                PsiParentClass(param.type)
             }
+        val result =
+            ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+                targetElements,
+                topElm.project,
+                parentClass,
+                isBatchAnnotation = isBatchAnnotation,
+                shortName = "",
+                dropLastIndex = 1,
+            )
 
-        return symbolElement
+        if (result is ValidationCompleteResult) {
+            val lastType = result.parentClass
+            return getReferenceEntity(lastType, element, startTime)
+        }
+
+        return null
+    }
+
+    private fun isSelfSkip(targetElement: PsiElement): Boolean {
+        val forItem = ForItem(targetElement)
+        val forDirectiveExpr = forItem.getParentForDirectiveExpr()
+        return !(forDirectiveExpr != null && forDirectiveExpr.getForItem()?.textOffset == targetElement.textOffset)
     }
 
     private fun getReferenceDaoMethodParameter(
@@ -121,43 +124,20 @@ class SqlElIdExprReference(
 
     private fun getReferenceEntity(
         topParentClass: PsiParentClass,
-        targetElement: List<PsiElement>,
+        targetElement: PsiElement,
         startTime: Long,
     ): PsiElement? {
-        val searchText = cleanString(targetElement.lastOrNull()?.text ?: "")
-        if (targetElement.size <= 2) {
-            val reference =
-                topParentClass.findField(searchText) ?: topParentClass.findMethod(searchText)
-            if (reference != null) {
-                PluginLoggerUtil.countLogging(
-                    this::class.java.simpleName,
-                    "ReferenceEntityProperty",
-                    "Reference",
-                    startTime,
-                )
-            }
-            return reference
-        }
-
-        val validator =
-            SqlElForItemFieldAccessorChildElementValidator(
-                targetElement.dropLast(1),
-                topParentClass,
+        val searchText = cleanString(targetElement.text)
+        val reference =
+            topParentClass.findField(searchText) ?: topParentClass.findMethod(searchText)
+        if (reference != null) {
+            PluginLoggerUtil.countLogging(
+                this::class.java.simpleName,
+                "ReferenceEntityProperty",
+                "Reference",
+                startTime,
             )
-        val validateResult = validator.validateChildren()
-        if (validateResult != null) {
-            val targetClass = validateResult.parentClass ?: return null
-            val reference = targetClass.findField(searchText) ?: targetClass.findMethod(searchText)
-            if (reference != null) {
-                PluginLoggerUtil.countLogging(
-                    this::class.java.simpleName,
-                    "ReferenceEntityProperty",
-                    "Reference",
-                    startTime,
-                )
-            }
-            return reference
         }
-        return null
+        return reference
     }
 }

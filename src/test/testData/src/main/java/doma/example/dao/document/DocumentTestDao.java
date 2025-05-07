@@ -26,4 +26,10 @@ public interface DocumentTestDao {
   @Select
   List<Employee> documentForItemElementByFieldAccess(List<List<Employee>> employeesList);
 
+  @Select
+  int documentForItemFirstElement(Principal principal);
+
+  @Select
+  int documentForItemStaticProperty();
+
 }

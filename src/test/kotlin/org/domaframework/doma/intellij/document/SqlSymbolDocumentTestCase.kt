@@ -33,6 +33,8 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
         addSqlFile("$testPackage/$testDaoName/documentForItemElementInBindVariable.sql")
         addSqlFile("$testPackage/$testDaoName/documentForItemElementInIfDirective.sql")
         addSqlFile("$testPackage/$testDaoName/documentForItemElementByFieldAccess.sql")
+        addSqlFile("$testPackage/$testDaoName/documentForItemFirstElement.sql")
+        addSqlFile("$testPackage/$testDaoName/documentForItemStaticProperty.sql")
     }
 
     fun testDocumentForItemDaoParam() {
@@ -84,6 +86,22 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
             "<a href=\"psi_element://doma.example.entity.Project\">Project</a> project"
 
         documentationTest(sqlName, result)
+    }
+
+    fun testDocumentForItemFirstElement() {
+        val sqlName = "documentForItemFirstElement"
+        val result =
+            "<a href=\"psi_element://doma.example.entity.Principal.Permission\">Permission</a> item"
+
+        documentationFindTextTest(sqlName, "item", result)
+    }
+
+    fun testDocumentForItemStaticProperty() {
+        val sqlName = "documentForItemStaticProperty"
+        val result =
+            "<a href=\"psi_element://doma.example.entity.Project\">Project</a> project"
+
+        documentationFindTextTest(sqlName, "project", result)
     }
 
     private fun documentationTest(

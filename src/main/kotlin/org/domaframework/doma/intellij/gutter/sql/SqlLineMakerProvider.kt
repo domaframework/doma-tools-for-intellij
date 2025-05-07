@@ -25,12 +25,12 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import org.domaframework.doma.intellij.bundle.MessageBundle
-import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoFile
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.dao.jumpToDaoMethod
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isSupportFileType
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import java.awt.event.MouseEvent
 import javax.swing.Icon

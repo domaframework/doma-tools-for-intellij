@@ -32,15 +32,14 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeafs
 import com.intellij.util.ProcessingContext
-import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.directive.DirectiveCompletion
-import org.domaframework.doma.intellij.common.sql.validator.SqlElForItemFieldAccessorChildElementValidator
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
+import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.findNodeParent
 import org.domaframework.doma.intellij.extension.psi.findSelfBlocks
@@ -52,7 +51,6 @@ import org.domaframework.doma.intellij.extension.psi.isNotWhiteSpace
 import org.domaframework.doma.intellij.extension.psi.searchParameter
 import org.domaframework.doma.intellij.extension.psi.searchStaticField
 import org.domaframework.doma.intellij.extension.psi.searchStaticMethod
-import org.domaframework.doma.intellij.inspection.ForDirectiveInspection
 import org.domaframework.doma.intellij.psi.SqlElAndExpr
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
@@ -300,39 +298,23 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 getElementTypeByFieldAccess(originalFile, elements, result) ?: return
         }
 
-        val fieldAccessorChildElementValidator =
-            SqlElForItemFieldAccessorChildElementValidator(
-                elements,
-                PsiParentClass(topElementType),
-            )
-
         var psiParentClass = PsiParentClass(topElementType)
-        var parentProperties: Array<PsiField> = psiParentClass.clazz?.allFields ?: emptyArray()
-        var parentMethods: Array<PsiMethod> = psiParentClass.clazz?.allMethods ?: emptyArray()
-
-        val validateResult =
-            fieldAccessorChildElementValidator.validateChildren(
-                complete = { parent ->
-                    parentProperties =
-                        parent.searchField(searchText)?.toTypedArray() ?: emptyArray()
-                    parentMethods = parent.searchMethod(searchText)?.toTypedArray() ?: emptyArray()
-                    setFieldsAndMethodsCompletionResultSet(
-                        parentProperties,
-                        parentMethods,
-                        result,
-                    )
-                },
-            )
-
-        if (validateResult is ValidationPropertyResult) {
-            val parent = validateResult.parentClass ?: return
-            parent.searchField(searchText)?.let {
-                parentProperties = it.toTypedArray()
-            } ?: { parentProperties = emptyArray() }
-            val methods = parent.searchMethod(searchText)
-            parentMethods = methods?.toTypedArray() ?: emptyArray()
-            setFieldsAndMethodsCompletionResultSet(parentProperties, parentMethods, result)
-        }
+        // FieldAccess Completion
+        ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+            elements,
+            top.project,
+            psiParentClass,
+            shortName = "",
+            dropLastIndex = 1,
+            complete = { lastType ->
+                val searchWord = cleanString(getSearchElementText(position))
+                setFieldsAndMethodsCompletionResultSet(
+                    lastType.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
+                    lastType.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
+                    result,
+                )
+            },
+        )
     }
 
     private fun setStaticFieldAccess(
@@ -394,6 +376,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val matchParams = daoMethod.searchParameter(topText)
         val findParam = matchParams.find { it.name == topText }
         if (elements.size <= 1 && findParam == null) {
+            // TODO Add For Directive Items
             matchParams.map { match ->
                 result.addElement(LookupElementBuilder.create(match.name))
             }
@@ -428,36 +411,36 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         }
     }
 
+    /**
+     * When accessing a field starting from a for item, refer to the defined type and call the property.
+     */
     private fun isFieldAccessByForItem(
         top: PsiElement,
         elements: List<PsiElement>,
         positionText: String,
         result: CompletionResultSet,
     ): Boolean {
-        val file = top.containingFile ?: return false
-        val daoMethod = findDaoMethod(file) ?: return false
-        val forDeclaration = ForDirectiveInspection(daoMethod)
-        val forItem = forDeclaration.getForItem(top)
-        if (forItem != null) {
-            val validateResult = forDeclaration.validateFieldAccessByForItem(elements)
-            if (validateResult is ValidationCompleteResult) {
-                val validator =
-                    SqlElForItemFieldAccessorChildElementValidator(
-                        elements,
-                        validateResult.parentClass,
-                    )
-                val forValidationResult = validator.validateChildren(1)?.parentClass ?: return false
+        val project = top.project
+        val forDirectiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(top)
+        ForDirectiveUtil.findForItem(top, forDirectives = forDirectiveBlocks) ?: return false
 
-                val parentClass = forValidationResult
-                val searchWord = cleanString(positionText)
-                setFieldsAndMethodsCompletionResultSet(
-                    parentClass.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
-                    parentClass.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
-                    result,
-                )
-                return true
-            }
-        }
-        return false
+        val forItemClassType = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks) ?: return false
+        val result =
+            ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+                elements,
+                project,
+                forItemClassType,
+                shortName = "",
+                dropLastIndex = 1,
+                complete = { lastType ->
+                    val searchWord = cleanString(positionText)
+                    setFieldsAndMethodsCompletionResultSet(
+                        lastType.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
+                        lastType.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
+                        result,
+                    )
+                },
+            )
+        return result is ValidationCompleteResult
     }
 }

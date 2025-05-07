@@ -19,8 +19,8 @@ import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.openapi.project.Project
 import org.domaframework.doma.intellij.bundle.MessageBundle
-import org.domaframework.doma.intellij.common.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
 /**
  * Quick fix to generate SQL files with Dao methods that require SQL templates
