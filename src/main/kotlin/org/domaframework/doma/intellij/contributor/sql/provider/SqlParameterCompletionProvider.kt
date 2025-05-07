@@ -67,7 +67,6 @@ import org.domaframework.doma.intellij.psi.SqlElNeExpr
 import org.domaframework.doma.intellij.psi.SqlElOrExpr
 import org.domaframework.doma.intellij.psi.SqlElParameters
 import org.domaframework.doma.intellij.psi.SqlTypes
-import org.jetbrains.kotlin.idea.base.util.module
 
 class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
@@ -392,7 +391,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
     private fun getRefClazz(
         top: PsiElement,
         fqdnGetter: () -> String,
-    ): PsiClass? = top.module?.getJavaClazz(true, fqdnGetter())
+    ): PsiClass? = top.project.getJavaClazz(fqdnGetter())
 
     private fun setFieldsAndMethodsCompletionResultSet(
         fields: Array<PsiField>,

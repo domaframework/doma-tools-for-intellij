@@ -19,8 +19,11 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
+import com.intellij.psi.search.GlobalSearchScope
 
 fun Project.getContentRoot(baseFile: VirtualFile): VirtualFile? =
     ProjectRootManager
@@ -35,3 +38,11 @@ fun Project.getModule(virtualFile: VirtualFile): Module? =
         .getModuleForFile(virtualFile)
 
 fun Project.findFile(file: VirtualFile): PsiFile? = PsiManager.getInstance(this).findFile(file)
+
+fun Project.getJavaClazz(fqdn: String): PsiClass? {
+    val scope = GlobalSearchScope.allScope(this)
+    return JavaPsiFacade
+        .getInstance(this)
+        .findClasses(fqdn, scope)
+        .firstOrNull()
+}
