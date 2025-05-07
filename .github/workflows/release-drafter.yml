@@ -95,7 +95,7 @@ jobs:
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
           git pull
-          git add src/main/kotlin/org/domaframework/doma/intellij/common/PluginUtil.kt
+          git add src/main/kotlin/org/domaframework/doma/intellij/common/util/PluginUtil.kt
           git add src/main/resources/logback.xml
           git add src/main/resources/logback-test.xml
           git add gradle.properties 
