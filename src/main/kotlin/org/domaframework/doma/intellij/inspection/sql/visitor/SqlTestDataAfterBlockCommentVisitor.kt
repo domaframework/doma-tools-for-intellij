@@ -90,6 +90,17 @@ class SqlTestDataAfterBlockCommentVisitor(
             listOf("true", "false", "null").contains(element.text) ||
             element.text.matches(Regex("^\\d+$"))
 
+    /**
+     * Determines if the given element matches the pattern for "List type test data."
+     *
+     * The function checks if the text of the element and its subsequent non-whitespace siblings
+     * form a valid list enclosed in parentheses. The list can contain:
+     * - Strings (double-quoted or single-quoted)
+     * - Numbers (integers)
+     * - Boolean values ("true" or "false")
+     * - The "null" literal
+     * These values can be separated by commas, and the entire list must be enclosed in parentheses.
+     */
     private fun isMatchListTestData(element: PsiElement): Boolean {
         val parenthesesListPattern =
             Regex(
