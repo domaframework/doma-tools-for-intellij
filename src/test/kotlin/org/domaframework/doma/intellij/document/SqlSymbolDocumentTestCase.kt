@@ -114,8 +114,6 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
 
         myFixture.configureFromExistingVirtualFile(sqlFile)
         var originalElement: PsiElement = myFixture.elementAtCaret
-        println("originalElement: ${originalElement.text}")
-
         val resultDocument = myDocumentationProvider.generateDoc(originalElement, originalElement)
         assertEquals("Documentation should contain expected text", result, resultDocument)
     }
@@ -131,8 +129,6 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
 
         myFixture.configureFromExistingVirtualFile(sqlFile)
         var originalElement: PsiElement = myFixture.findElementByText(originalElementName, SqlElIdExpr::class.java)
-        println("originalElement: ${originalElement.text}")
-
         val resultDocument = myDocumentationProvider.generateDoc(originalElement, originalElement)
         assertEquals("Documentation should contain expected text", result, resultDocument)
     }
