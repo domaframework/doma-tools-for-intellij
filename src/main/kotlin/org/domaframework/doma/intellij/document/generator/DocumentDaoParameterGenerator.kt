@@ -46,7 +46,14 @@ class DocumentDaoParameterGenerator(
 
         var isBatchAnnotation = false
         if (ForDirectiveUtil.findForItem(searchElement, forDirectives = forDirectives) != null) {
-            topParentType = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectives)
+            val forItemClassType = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectives)
+            val specifiedClassType = ForDirectiveUtil.resolveForDirectiveClassTypeIfSuffixExists(project, searchElement.text)
+            topParentType =
+                if (specifiedClassType != null) {
+                    PsiParentClass(specifiedClassType)
+                } else {
+                    forItemClassType
+                }
         } else {
             val daoMethod = findDaoMethod(originalElement.containingFile) ?: return
             val param = daoMethod.findParameter(originalElement.text) ?: return

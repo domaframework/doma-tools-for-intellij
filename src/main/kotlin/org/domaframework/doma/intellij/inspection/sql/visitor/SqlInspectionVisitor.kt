@@ -135,7 +135,13 @@ class SqlInspectionVisitor(
                     errorHighlight(topElement, daoMethod, holder)
                     return
                 }
-                result
+                val specifiedClassType =
+                    ForDirectiveUtil.resolveForDirectiveClassTypeIfSuffixExists(project, topElement.text)
+                if (specifiedClassType != null) {
+                    PsiParentClass(specifiedClassType)
+                } else {
+                    result
+                }
             } else {
                 val paramType = daoMethod.findParameter(cleanString(topElement.text))?.type
                 if (paramType == null) {
