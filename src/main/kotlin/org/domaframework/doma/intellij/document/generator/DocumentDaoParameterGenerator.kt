@@ -30,7 +30,7 @@ class DocumentDaoParameterGenerator(
     val originalElement: PsiElement,
     val project: Project,
     val result: MutableList<String?>,
-) : DocumentGenerator(originalElement, project, result) {
+) : DocumentGenerator() {
     override fun generateDocument() {
         var topParentType: PsiParentClass? = null
         val selfSkip = isSelfSkip(originalElement)

@@ -15,17 +15,12 @@
  */
 package org.domaframework.doma.intellij.document.generator
 
-import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.sql.foritem.ForItem
 import org.domaframework.doma.intellij.extension.psi.getForItem
 
-abstract class DocumentGenerator(
-    originalElement: PsiElement?,
-    project: Project,
-    result: MutableList<String?>,
-) {
+abstract class DocumentGenerator {
     abstract fun generateDocument()
 
     protected fun isSelfSkip(targetElement: PsiElement): Boolean {

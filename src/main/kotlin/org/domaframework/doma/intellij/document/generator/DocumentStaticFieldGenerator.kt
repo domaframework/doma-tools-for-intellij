@@ -33,7 +33,7 @@ class DocumentStaticFieldGenerator(
     val result: MutableList<String?>,
     val staticFieldAccessExpr: SqlElStaticFieldAccessExpr,
     val file: PsiFile,
-) : DocumentGenerator(originalElement, project, result) {
+) : DocumentGenerator() {
     override fun generateDocument() {
         val fieldAccessBlocks = staticFieldAccessExpr.accessElements
         val staticElement = PsiStaticElement(fieldAccessBlocks, file)
