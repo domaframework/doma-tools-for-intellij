@@ -86,9 +86,13 @@ class PsiClassTypeUtil {
                     )
                 if (resolved != null) {
                     when (resolved.qualifiedName) {
+                        // If the type is java.util.Optional, return its parameter type if available;
+                        // otherwise, return the original daoParamType.
                         "java.util.Optional" -> return daoParamType.parameters.firstOrNull()
                             ?: daoParamType
 
+                        // For primitive Optional types (e.g., OptionalInt, OptionalDouble),
+                        // map them to their corresponding wrapper types (e.g., Integer, Double).
                         else ->
                             optionalTypeMap[resolved.qualifiedName]?.let { optionalType ->
                                 val newType =
