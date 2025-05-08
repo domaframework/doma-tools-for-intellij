@@ -5,6 +5,7 @@ import org.seasar.doma.*;
 import org.seasar.doma.Id;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 public class Project {
@@ -14,6 +15,9 @@ public class Project {
   private String projectName;
   private static String status;
   private Integer rank;
+
+  public static Optional<List<Optional<Integer>>> optionalIds;
+  public static Optional<User> manager;
 
   // Accessible static fields
   public static Integr projectNumber;

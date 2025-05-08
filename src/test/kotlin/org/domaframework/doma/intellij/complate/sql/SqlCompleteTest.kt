@@ -53,6 +53,9 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDapName/completeCallStaticPropertyClass.sql",
             "$testDapName/completeForItemHasNext.sql",
             "$testDapName/completeForItemIndex.sql",
+            "$testDapName/completeOptionalDaoParam.sql",
+            "$testDapName/completeOptionalStaticProperty.sql",
+            "$testDapName/completeOptionalByForItem.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
@@ -326,6 +329,30 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDapName/completeParameterSecondProperty.sql",
             listOf("managerId"),
             listOf("employee", "department", "rank"),
+        )
+    }
+
+    fun testCompleteOptionalDaoParam() {
+        innerDirectiveCompleteTest(
+            "$testDapName/completeOptionalDaoParam.sql",
+            listOf("manager", "projectNumber", "getFirstEmployee()"),
+            listOf("get()", "orElseGet()", "isPresent()"),
+        )
+    }
+
+    fun testCompleteOptionalStaticProperty() {
+        innerDirectiveCompleteTest(
+            "$testDapName/completeOptionalStaticProperty.sql",
+            listOf("userId", "userName", "email", "getUserNameFormat()"),
+            listOf("get()", "orElseGet()", "isPresent()"),
+        )
+    }
+
+    fun testCompleteOptionalByForItem() {
+        innerDirectiveCompleteTest(
+            "$testDapName/completeOptionalByForItem.sql",
+            listOf("manager", "projectNumber", "getFirstEmployee()"),
+            listOf("get()", "orElseGet()", "isPresent()"),
         )
     }
 
