@@ -21,7 +21,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.psi.SqlElExpr
-import org.jetbrains.kotlin.idea.base.util.module
 
 /**
  * Directive information for static property references
@@ -31,7 +30,6 @@ class PsiStaticElement(
     private val originalFile: PsiFile,
 ) {
     private var fqdn = elExprList?.joinToString(".") { e -> e.text } ?: ""
-    private val module = originalFile.module
 
     constructor(elExprNames: String, file: PsiFile) : this(null, file) {
         fqdn =
@@ -40,10 +38,12 @@ class PsiStaticElement(
                 .substringBefore("@")
     }
 
-    fun getRefClazz(): PsiClass? =
-        module?.getJavaClazz(true, fqdn)
+    fun getRefClazz(): PsiClass? {
+        val project = originalFile.project
+        return project.getJavaClazz(fqdn)
             ?: JavaPsiFacade.getInstance(originalFile.project).findClass(
                 fqdn,
                 GlobalSearchScope.allScope(originalFile.project),
             )
+    }
 }

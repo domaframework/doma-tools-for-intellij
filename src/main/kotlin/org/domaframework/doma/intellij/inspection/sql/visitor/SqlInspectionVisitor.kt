@@ -29,6 +29,7 @@ import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.common.sql.cleanString
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationClassPathResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
@@ -178,7 +179,15 @@ class SqlInspectionVisitor(
     ) {
         val blockElements = staticAccuser.accessElements
         val psiStaticClass = PsiStaticElement(staticAccuser.elClass.elIdExprList, staticAccuser.containingFile)
-        val referenceClass = psiStaticClass.getRefClazz() ?: return
+        val referenceClass = psiStaticClass.getRefClazz()
+        if (referenceClass == null) {
+            ValidationClassPathResult(
+                staticAccuser.elClass,
+                this.shortName,
+            ).highlightElement(holder)
+            return
+        }
+
         val topParentClass = ForDirectiveUtil.getStaticFieldAccessTopElementClassType(staticAccuser, referenceClass)
         if (topParentClass == null) {
             blockElements.firstOrNull()?.let {
