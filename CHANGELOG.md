@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-05-08
+
+### New Features
+
+- Code completion and code inspection for static property call package class names ([#148])
+- Add SQL test data validation inspections ([#136])
+
+### Bug Fixes
+
+- Move PluginUtil.kt to the util package in release configuration files ([#146])
+- List type test data check and exclude else directive ([#145])
+- Fix/document first for item ([#142])
+
+### Dependency Updates
+
+- Update dependency com.google.googlejavaformat:google-java-format to v1.27.0 ([#143])
+
+[#148]:https://github.com/domaframework/doma-tools-for-intellij/pull/148
+[#136]:https://github.com/domaframework/doma-tools-for-intellij/pull/136
+[#146]:https://github.com/domaframework/doma-tools-for-intellij/pull/146
+[#145]:https://github.com/domaframework/doma-tools-for-intellij/pull/145
+[#142]:https://github.com/domaframework/doma-tools-for-intellij/pull/142
+[#143]:https://github.com/domaframework/doma-tools-for-intellij/pull/143
+
+
 ## [0.6.0] - 2025-04-30
 
 ### New Features
@@ -220,3 +245,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[0.7.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.6.0...0.7.0
