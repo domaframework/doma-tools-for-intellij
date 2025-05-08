@@ -36,6 +36,8 @@ The plugin also provides quick fixes for Dao methods where the required SQL file
   ![quickfix.png](images/quickfix.png)
 - Checking for Dao method arguments not used in bind variables
   ![inspection.png](images/inspection.png)
+- Check the class name and package name for static property calls
+  ![inspectionPackageName.png](images/inspectionPackageName.png)
 
 ## Completion
 Adds code completion functionality to support indexing of Doma directives and bind variables
@@ -44,6 +46,8 @@ Adds code completion functionality to support indexing of Doma directives and bi
   ![complete_bindVariables.png](images/complete_bindVariables.png)
 - Refer to class definition from Dao method argument type and suggest fields and methods
   ![complete_member.png](images/cpmplete_member.png)
+- Provide code completion for class and package names used in static property calls.
+  ![complete_package.png](images/complete_package.png)
 - Suggest members defined as static in static fields and method calls
 - Suggest Doma directives
 - Directives such as Condition, Loop, Population are suggested after “%”
