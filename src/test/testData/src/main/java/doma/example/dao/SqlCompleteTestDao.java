@@ -75,4 +75,10 @@ interface SqlCompleteTestDao {
   @Select
   Employee completeCallStaticPropertyClass();
 
+  @Select
+  Principal completeForItemHasNext(Principal principal);
+
+  @Select
+  Principal completeForItemIndex(Principal principal);
+
 }
