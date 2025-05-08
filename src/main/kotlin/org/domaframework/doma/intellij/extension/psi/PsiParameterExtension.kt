@@ -30,7 +30,8 @@ fun PsiParameter.getIterableClazz(useListParam: Boolean): PsiParentClass {
     val immediate = this.type as? PsiClassType
     val classType = immediate?.let { PsiClassTypeUtil.getPsiTypeByList(it, this.project, useListParam) }
     if (classType != null) {
-        return PsiParentClass(classType)
+        val convertOptional = PsiClassTypeUtil.convertOptionalType(classType, this.project)
+        return PsiParentClass(convertOptional)
     }
     return PsiParentClass(this.type)
 }

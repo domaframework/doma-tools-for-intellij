@@ -28,9 +28,9 @@ import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 
 class DocumentDaoParameterGenerator(
     val originalElement: PsiElement,
-    val project: Project,
+    override val project: Project,
     val result: MutableList<String?>,
-) : DocumentGenerator() {
+) : DocumentGenerator(project) {
     override fun generateDocument() {
         var topParentType: PsiParentClass? = null
         val selfSkip = isSelfSkip(originalElement)

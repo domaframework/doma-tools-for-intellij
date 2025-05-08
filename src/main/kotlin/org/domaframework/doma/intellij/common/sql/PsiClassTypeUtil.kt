@@ -63,9 +63,46 @@ class PsiClassTypeUtil {
                     type = type.parameters.firstOrNull()
                     count++
                 }
-                return type as? PsiClassType
+                val convertOptional = type?.let { convertOptionalType(it, project) }
+                return convertOptional as? PsiClassType
             }
             return null
+        }
+
+        /**
+         * Check if daoParamType is an instance of PsiClassType representing Optional or its primitive variants
+         */
+        fun convertOptionalType(
+            daoParamType: PsiType,
+            project: Project,
+        ): PsiType {
+            if (daoParamType is PsiClassType) {
+                val resolved = daoParamType.resolve()
+                val optionalTypeMap =
+                    mapOf(
+                        "java.util.OptionalInt" to "java.lang.Integer",
+                        "java.util.OptionalDouble" to "java.lang.Double",
+                        "java.util.OptionalLong" to "java.lang.Long",
+                    )
+                if (resolved != null) {
+                    when (resolved.qualifiedName) {
+                        "java.util.Optional" -> return daoParamType.parameters.firstOrNull()
+                            ?: daoParamType
+
+                        else ->
+                            optionalTypeMap[resolved.qualifiedName]?.let { optionalType ->
+                                val newType =
+                                    PsiType.getTypeByName(
+                                        optionalType,
+                                        project,
+                                        GlobalSearchScope.allScope(project),
+                                    )
+                                return newType
+                            }
+                    }
+                }
+            }
+            return daoParamType
         }
     }
 }

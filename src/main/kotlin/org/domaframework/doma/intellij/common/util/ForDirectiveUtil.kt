@@ -259,7 +259,7 @@ class ForDirectiveUtil {
 
                     val matchParam = daoMethod.findParameter(cleanString(topElementText))
                     val daoParamType = matchParam?.type ?: return null
-                    fieldAccessTopParentClass = PsiParentClass(daoParamType)
+                    fieldAccessTopParentClass = PsiParentClass(PsiClassTypeUtil.convertOptionalType(daoParamType, project))
                 }
                 fieldAccessTopParentClass?.let {
                     getFieldAccessLastPropertyClassType(
@@ -329,14 +329,15 @@ class ForDirectiveUtil {
         ): ValidationResult? {
             var parent =
                 if (isBatchAnnotation) {
-                    val parentType = topParent.type
+                    val parentType = PsiClassTypeUtil.convertOptionalType(topParent.type, project)
                     val nextClassType = parentType as? PsiClassType ?: return null
                     val nestType = nextClassType.parameters.firstOrNull() ?: return null
-                    PsiParentClass(nestType)
+                    PsiParentClass(PsiClassTypeUtil.convertOptionalType(nestType, project))
                 } else {
-                    topParent
+                    val convertOptional = PsiClassTypeUtil.convertOptionalType(topParent.type, project)
+                    PsiParentClass(convertOptional)
                 }
-            val parentType = parent.type
+            val parentType = PsiClassTypeUtil.convertOptionalType(parent.type, project)
             val classType = parentType as? PsiClassType ?: return null
 
             var competeResult: ValidationCompleteResult? = null
@@ -353,8 +354,8 @@ class ForDirectiveUtil {
             // When a List type element is used as the parent,
             // the original declared type is retained and the referenced type is obtained by nesting.
             var parentListBaseType: PsiType? =
-                if (PsiClassTypeUtil.Companion.isIterableType(classType, project)) {
-                    parentType
+                if (PsiClassTypeUtil.isIterableType(classType, project)) {
+                    PsiClassTypeUtil.convertOptionalType(parentType, project)
                 } else {
                     null
                 }
@@ -375,24 +376,25 @@ class ForDirectiveUtil {
                     parent
                         .findField(searchElm)
                         ?.let { match ->
+                            val convertOptional = PsiClassTypeUtil.convertOptionalType(match.type, project)
                             val type =
                                 parentListBaseType?.let {
-                                    PsiClassTypeUtil.Companion.getParameterType(
+                                    PsiClassTypeUtil.getParameterType(
                                         project,
-                                        match.type,
+                                        convertOptional,
                                         it,
                                         nestIndex,
                                     )
                                 }
-                                    ?: match.type
+                                    ?: convertOptional
                             val classType = type as? PsiClassType
                             if (classType != null &&
-                                PsiClassTypeUtil.Companion.isIterableType(
+                                PsiClassTypeUtil.isIterableType(
                                     classType,
                                     element.project,
                                 )
                             ) {
-                                parentListBaseType = type
+                                parentListBaseType = PsiClassTypeUtil.convertOptionalType(type, project)
                                 nestIndex = 0
                             }
                             findFieldMethod?.invoke(type)
@@ -402,19 +404,20 @@ class ForDirectiveUtil {
                         .findMethod(searchElm)
                         ?.let { match ->
                             val returnType = match.returnType ?: return null
+                            val convertOptionalType = PsiClassTypeUtil.convertOptionalType(returnType, project)
                             val methodReturnType =
                                 parentListBaseType?.let {
-                                    PsiClassTypeUtil.Companion.getParameterType(
+                                    PsiClassTypeUtil.getParameterType(
                                         project,
-                                        returnType,
+                                        convertOptionalType,
                                         it,
                                         nestIndex,
                                     )
                                 }
-                                    ?: returnType
+                                    ?: convertOptionalType
                             val classType = methodReturnType as? PsiClassType
                             if (classType != null &&
-                                PsiClassTypeUtil.Companion.isIterableType(
+                                PsiClassTypeUtil.isIterableType(
                                     classType,
                                     element.project,
                                 )

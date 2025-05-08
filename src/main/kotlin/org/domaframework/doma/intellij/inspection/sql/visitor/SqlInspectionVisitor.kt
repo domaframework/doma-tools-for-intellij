@@ -132,6 +132,7 @@ class SqlInspectionVisitor(
             if (forItem != null) {
                 val result = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks)
                 if (result == null) {
+                    // TODO Add an error message when the type of element used in the For directory is not a List type.
                     errorHighlight(topElement, daoMethod, holder)
                     return
                 }

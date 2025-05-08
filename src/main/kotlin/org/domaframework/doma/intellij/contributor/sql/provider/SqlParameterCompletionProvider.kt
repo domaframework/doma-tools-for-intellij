@@ -35,6 +35,7 @@ import com.intellij.util.ProcessingContext
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
+import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.directive.DirectiveCompletion
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
@@ -385,7 +386,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             return null
         }
         val immediate = findParam.getIterableClazz(daoMethod.getDomaAnnotationType())
-        return immediate.type
+        return PsiClassTypeUtil.convertOptionalType(immediate.type, originalFile.project)
     }
 
     private fun getRefClazz(
