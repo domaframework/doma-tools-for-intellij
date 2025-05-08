@@ -51,6 +51,8 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDapName/completeParameterSecondProperty.sql",
             "$testDapName/completeCallStaticPropertyClassPackage.sql",
             "$testDapName/completeCallStaticPropertyClass.sql",
+            "$testDapName/completeForItemHasNext.sql",
+            "$testDapName/completeForItemIndex.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
@@ -104,6 +106,35 @@ class SqlCompleteTest : DomaSqlTest() {
                 "isEmpty()",
             ),
             listOf("value", "hash", "isLatin1()", "isASCII()"),
+        )
+    }
+
+    fun testCompleteForItemHasNext() {
+        innerDirectiveCompleteTest(
+            "$testDapName/completeForItemHasNext.sql",
+            listOf(
+                "FALSE",
+                "TRUE",
+                "TYPE",
+                "toString()",
+                "booleanValue()",
+            ),
+            listOf("get()", "startsWith()", "permissions", "MAX_VALUE", "MIN_VALUE"),
+        )
+    }
+
+    fun testCompleteForItemIndex() {
+        innerDirectiveCompleteTest(
+            "$testDapName/completeForItemIndex.sql",
+            listOf(
+                "BYTES",
+                "MAX_VALUE",
+                "MIN_VALUE",
+                "SIZE",
+                "TYPE",
+                "Integer()",
+            ),
+            listOf("get()", "startsWith()", "permissions", "FALSE", "TRUE"),
         )
     }
 

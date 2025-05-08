@@ -20,6 +20,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
@@ -225,7 +226,8 @@ class ForDirectiveUtil {
                 var isBatchAnnotation = false
                 val forItemDeclarationBlocks =
                     if (forDirectiveDeclaration.element is SqlElStaticFieldAccessExpr) {
-                        val staticFieldAccessExpr = forDirectiveDeclaration.element as SqlElStaticFieldAccessExpr
+                        val staticFieldAccessExpr =
+                            forDirectiveDeclaration.element as SqlElStaticFieldAccessExpr
                         staticFieldAccessExpr.accessElements
                     } else {
                         forDirectiveDeclaration.getDeclarationChildren()
@@ -234,18 +236,25 @@ class ForDirectiveUtil {
                 // Defined by StaticFieldAccess
                 if (forDirectiveDeclaration.element is SqlElStaticFieldAccessExpr) {
                     val file = topForDirectiveItem.containingFile
-                    val staticFieldAccessExpr = forDirectiveDeclaration.element as SqlElStaticFieldAccessExpr
+                    val staticFieldAccessExpr =
+                        forDirectiveDeclaration.element as SqlElStaticFieldAccessExpr
                     val clazz = staticFieldAccessExpr.elClass
                     val staticElement = PsiStaticElement(clazz.elIdExprList, file)
                     val referenceClazz = staticElement.getRefClazz() ?: return null
 
                     // In the case of staticFieldAccess, the property that is called first is retrieved.
-                    fieldAccessTopParentClass = getStaticFieldAccessTopElementClassType(staticFieldAccessExpr, referenceClazz)
+                    fieldAccessTopParentClass =
+                        getStaticFieldAccessTopElementClassType(
+                            staticFieldAccessExpr,
+                            referenceClazz,
+                        )
                 } else {
                     // Defined by Dao parameter
                     val file = topForDirectiveItem.containingFile ?: return null
                     val daoMethod = findDaoMethod(file) ?: return null
-                    val topElementText = forDirectiveDeclaration.getDeclarationChildren().firstOrNull()?.text ?: return null
+                    val topElementText =
+                        forDirectiveDeclaration.getDeclarationChildren().firstOrNull()?.text
+                            ?: return null
                     isBatchAnnotation = PsiDaoMethod(project, daoMethod).daoType.isBatchAnnotation()
 
                     val matchParam = daoMethod.findParameter(cleanString(topElementText))
@@ -450,5 +459,28 @@ class ForDirectiveUtil {
             } else {
                 ""
             }
+
+        fun resolveForDirectiveClassTypeIfSuffixExists(
+            project: Project,
+            searchName: String,
+        ): PsiType? {
+            if (searchName.endsWith("_has_next")) {
+                return PsiType.getTypeByName(
+                    "java.lang.Boolean",
+                    project,
+                    GlobalSearchScope.allScope(project),
+                )
+            }
+
+            if (searchName.endsWith("_index")) {
+                return PsiType.getTypeByName(
+                    "java.lang.Integer",
+                    project,
+                    GlobalSearchScope.allScope(project),
+                )
+            }
+
+            return null
+        }
     }
 }

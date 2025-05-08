@@ -32,4 +32,7 @@ public interface DocumentTestDao {
   @Select
   int documentForItemStaticProperty();
 
+  @Select
+  int documentForItemHasNext(Principal principal);
+
 }

@@ -35,6 +35,8 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
         addSqlFile("$testPackage/$testDaoName/documentForItemElementByFieldAccess.sql")
         addSqlFile("$testPackage/$testDaoName/documentForItemFirstElement.sql")
         addSqlFile("$testPackage/$testDaoName/documentForItemStaticProperty.sql")
+        addSqlFile("$testPackage/$testDaoName/documentForItemHasNext.sql")
+        addSqlFile("$testPackage/$testDaoName/documentForItemIndex.sql")
     }
 
     fun testDocumentForItemDaoParam() {
@@ -94,6 +96,22 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
             "<a href=\"psi_element://doma.example.entity.Principal.Permission\">Permission</a> item"
 
         documentationFindTextTest(sqlName, "item", result)
+    }
+
+    fun testDocumentForItemHasNext() {
+        val sqlName = "documentForItemHasNext"
+        val result =
+            "<a href=\"psi_element://java.lang.Boolean\">Boolean</a> item_has_next"
+
+        documentationFindTextTest(sqlName, "item_has_next", result)
+    }
+
+    fun testDocumentForItemIndex() {
+        val sqlName = "documentForItemIndex"
+        val result =
+            "<a href=\"psi_element://java.lang.Integer\">Integer</a> item_index"
+
+        documentationFindTextTest(sqlName, "item_index", result)
     }
 
     fun testDocumentForItemStaticProperty() {

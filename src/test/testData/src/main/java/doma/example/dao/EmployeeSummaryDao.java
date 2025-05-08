@@ -32,4 +32,7 @@ interface EmployeeSummaryDao {
 
   @Insert(sqlFile=true)
   EmployeeSummary bindVariableInFunctionParameters(Employee employee, User user);
+
+  @Select
+  List<Employee> bindVariableForItemHasNextAndIndex(List<Employee> employees);
 }

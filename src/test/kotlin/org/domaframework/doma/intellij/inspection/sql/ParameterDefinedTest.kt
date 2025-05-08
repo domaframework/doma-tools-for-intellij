@@ -37,6 +37,7 @@ class ParameterDefinedTest : DomaSqlTest() {
             "$testDaoName/resolveDaoArgumentOfListType.sql",
             "$testDaoName/bindVariableInFunctionParameters.sql",
             "$testDaoName/callStaticPropertyPackageName.sql",
+            "$testDaoName/bindVariableForItemHasNextAndIndex.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
@@ -55,6 +56,14 @@ class ParameterDefinedTest : DomaSqlTest() {
 
     fun testBindVariableForNonEntityClass() {
         val sqlFile = findSqlFile("$testDaoName/bindVariableForNonEntityClass.sql")
+        assertNotNull("Not Found SQL File", sqlFile)
+        if (sqlFile == null) return
+
+        myFixture.testHighlighting(false, false, false, sqlFile)
+    }
+
+    fun testBindVariableForItemHasNextAndIndex() {
+        val sqlFile = findSqlFile("$testDaoName/bindVariableForItemHasNextAndIndex.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 

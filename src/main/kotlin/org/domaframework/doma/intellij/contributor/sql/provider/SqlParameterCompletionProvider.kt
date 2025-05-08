@@ -419,20 +419,28 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         positionText: String,
         result: CompletionResultSet,
     ): Boolean {
+        val searchWord = cleanString(positionText)
         val project = top.project
         val forDirectiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(top)
         ForDirectiveUtil.findForItem(top, forDirectives = forDirectiveBlocks) ?: return false
 
         val forItemClassType = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks) ?: return false
+        val specifiedClassType = ForDirectiveUtil.resolveForDirectiveClassTypeIfSuffixExists(project, top.text)
+        val topClassType =
+            if (specifiedClassType != null) {
+                PsiParentClass(specifiedClassType)
+            } else {
+                forItemClassType
+            }
+
         val result =
             ForDirectiveUtil.getFieldAccessLastPropertyClassType(
                 elements,
                 project,
-                forItemClassType,
+                topClassType,
                 shortName = "",
                 dropLastIndex = 1,
                 complete = { lastType ->
-                    val searchWord = cleanString(positionText)
                     setFieldsAndMethodsCompletionResultSet(
                         lastType.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
                         lastType.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
