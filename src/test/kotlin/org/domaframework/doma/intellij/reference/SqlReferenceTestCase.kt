@@ -167,7 +167,9 @@ class SqlReferenceTestCase : DomaSqlTest() {
             val resolveResult = reference.references.firstOrNull()?.resolve()
             val expectedResults = resolveExpects[reference.text]
 
-            println("Reference: ${reference.text}, Resolve Result: ${resolveResult?.toString()}, Expected Results: $expectedResults")
+            println(
+                "Reference: ${reference.text}, Resolve StaticClassPackageSearchResult: ${resolveResult?.toString()}, Expected Results: $expectedResults",
+            )
             assertTrue(expectedResults?.contains(resolveResult?.toString()) == true)
         }
     }

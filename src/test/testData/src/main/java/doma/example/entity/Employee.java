@@ -31,4 +31,10 @@ public class Employee extends User {
   public Integer employeeParam(Integer p1, Integer p2) {
     return p1 + p2;
   }
+
+  enum Rank {
+    MANAGER,
+    STAFF,
+    INTERN
+  }
 }

@@ -69,4 +69,10 @@ interface SqlCompleteTestDao {
   @Select
   Employee completeParameterSecondProperty(Employee employee);
 
+  @Select
+  Employee completeCallStaticPropertyClassPackage();
+
+  @Select
+  Employee completeCallStaticPropertyClass();
+
 }

@@ -22,6 +22,9 @@ interface EmployeeSummaryDao {
   int accessStaticProperty(Project project,LocalDate referenceDate);
 
   @Select
+  int callStaticPropertyPackageName();
+
+  @Select
   ProjectDetail resolveDaoArgumentOfListType(List<Employee> employees);
 
   @BatchInsert(sqlFile=true)

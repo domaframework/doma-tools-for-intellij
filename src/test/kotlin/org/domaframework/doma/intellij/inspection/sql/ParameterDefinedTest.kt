@@ -36,6 +36,7 @@ class ParameterDefinedTest : DomaSqlTest() {
             "$testDaoName/batchAnnotationResolvesClassInList.sql",
             "$testDaoName/resolveDaoArgumentOfListType.sql",
             "$testDaoName/bindVariableInFunctionParameters.sql",
+            "$testDaoName/callStaticPropertyPackageName.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
@@ -62,6 +63,14 @@ class ParameterDefinedTest : DomaSqlTest() {
 
     fun testAccessStaticProperty() {
         val sqlFile = findSqlFile("$testDaoName/accessStaticProperty.sql")
+        assertNotNull("Not Found SQL File", sqlFile)
+        if (sqlFile == null) return
+
+        myFixture.testHighlighting(false, false, false, sqlFile)
+    }
+
+    fun testCallStaticPropertyPackageName() {
+        val sqlFile = findSqlFile("$testDaoName/callStaticPropertyPackageName.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 

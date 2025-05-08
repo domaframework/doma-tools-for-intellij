@@ -22,37 +22,41 @@ import org.domaframework.doma.intellij.inspection.sql.inspector.SqlBindVariableV
  * Code completion testing in SQL
  */
 class SqlCompleteTest : DomaSqlTest() {
+    private val testDapName = "SqlCompleteTestDao"
+
     override fun setUp() {
         super.setUp()
         addDaoJavaFile(
-            "SqlCompleteTestDao.java",
+            "$testDapName.java",
         )
         addSqlFile(
-            "SqlCompleteTestDao/completeDaoArgument.sql",
-            "SqlCompleteTestDao/completeInstancePropertyFromDaoArgumentClass.sql",
-            "SqlCompleteTestDao/completeJavaPackageClass.sql",
-            "SqlCompleteTestDao/completeDirective.sql",
-            "SqlCompleteTestDao/completeStaticPropertyFromStaticPropertyCall.sql",
-            "SqlCompleteTestDao/completePropertyAfterStaticPropertyCall.sql",
-            "SqlCompleteTestDao/completeBuiltinFunction.sql",
-            "SqlCompleteTestDao/completeDirectiveInsideIf.sql",
-            "SqlCompleteTestDao/completeDirectiveInsideElseIf.sql",
-            "SqlCompleteTestDao/completeDirectiveInsideFor.sql",
-            "SqlCompleteTestDao/completeDirectiveFieldInsideIf.sql",
-            "SqlCompleteTestDao/completeDirectiveFieldInsideElseIf.sql",
-            "SqlCompleteTestDao/completeDirectiveFieldInsideFor.sql",
-            "SqlCompleteTestDao/completeConcatenationOperator.sql",
-            "SqlCompleteTestDao/completeComparisonOperator.sql",
-            "SqlCompleteTestDao/completeParameterFirst.sql",
-            "SqlCompleteTestDao/completeParameterFirstProperty.sql",
-            "SqlCompleteTestDao/completeParameterSecond.sql",
-            "SqlCompleteTestDao/completeParameterSecondProperty.sql",
+            "$testDapName/completeDaoArgument.sql",
+            "$testDapName/completeInstancePropertyFromDaoArgumentClass.sql",
+            "$testDapName/completeJavaPackageClass.sql",
+            "$testDapName/completeDirective.sql",
+            "$testDapName/completeStaticPropertyFromStaticPropertyCall.sql",
+            "$testDapName/completePropertyAfterStaticPropertyCall.sql",
+            "$testDapName/completeBuiltinFunction.sql",
+            "$testDapName/completeDirectiveInsideIf.sql",
+            "$testDapName/completeDirectiveInsideElseIf.sql",
+            "$testDapName/completeDirectiveInsideFor.sql",
+            "$testDapName/completeDirectiveFieldInsideIf.sql",
+            "$testDapName/completeDirectiveFieldInsideElseIf.sql",
+            "$testDapName/completeDirectiveFieldInsideFor.sql",
+            "$testDapName/completeConcatenationOperator.sql",
+            "$testDapName/completeComparisonOperator.sql",
+            "$testDapName/completeParameterFirst.sql",
+            "$testDapName/completeParameterFirstProperty.sql",
+            "$testDapName/completeParameterSecond.sql",
+            "$testDapName/completeParameterSecondProperty.sql",
+            "$testDapName/completeCallStaticPropertyClassPackage.sql",
+            "$testDapName/completeCallStaticPropertyClass.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
 
     fun testCompleteDaoArgument() {
-        val sqlFile = findSqlFile("SqlCompleteTestDao/completeDaoArgument.sql")
+        val sqlFile = findSqlFile("$testDapName/completeDaoArgument.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 
@@ -74,7 +78,7 @@ class SqlCompleteTest : DomaSqlTest() {
 
     fun testCompleteInstancePropertyFromDaoArgumentClass() {
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeInstancePropertyFromDaoArgumentClass.sql",
+            "$testDapName/completeInstancePropertyFromDaoArgumentClass.sql",
             listOf(
                 "employeeId",
                 "employeeName",
@@ -89,7 +93,7 @@ class SqlCompleteTest : DomaSqlTest() {
 
     fun testCompleteJavaPackageClass() {
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeJavaPackageClass.sql",
+            "$testDapName/completeJavaPackageClass.sql",
             listOf(
                 "CASE_INSENSITIVE_ORDER",
                 "toString()",
@@ -105,7 +109,7 @@ class SqlCompleteTest : DomaSqlTest() {
 
     fun testCompleteDirective() {
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeDirective.sql",
+            "$testDapName/completeDirective.sql",
             listOf(
                 "elseif",
                 "else",
@@ -124,7 +128,7 @@ class SqlCompleteTest : DomaSqlTest() {
 
     fun testCompleteStaticPropertyFromStaticPropertyCall() {
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeStaticPropertyFromStaticPropertyCall.sql",
+            "$testDapName/completeStaticPropertyFromStaticPropertyCall.sql",
             listOf(
                 "members",
                 "projectNumber",
@@ -139,9 +143,46 @@ class SqlCompleteTest : DomaSqlTest() {
         )
     }
 
+    fun testCompleteCallStaticPropertyClassPackage() {
+        innerDirectiveCompleteTest(
+            "$testDapName/completeCallStaticPropertyClassPackage.sql",
+            listOf(
+                "doma",
+                "com",
+                "org",
+            ),
+            listOf(
+                "resources",
+            ),
+        )
+
+        innerDirectiveCompleteTest(
+            "$testDapName/completeCallStaticPropertyClass.sql",
+            listOf(
+                "doma.example.entity.Employee",
+                "doma.example.entity.EmployeeSummary",
+                "doma.example.entity.Principal.Permission",
+                "doma.example.entity.Principal",
+                "doma.example.entity.Project",
+                "doma.example.entity.ProjectDetail",
+                "doma.example.entity.Employee.Rank",
+                "doma.example.entity.User",
+                "doma.example.entity.UserSummary",
+            ),
+            listOf(
+                "resources",
+                "com",
+                "document",
+                "org",
+                "doma.example.dao.BatchDeleteTestDao",
+                "doma.example.dao.DeleteTestDao",
+            ),
+        )
+    }
+
     fun testCompletePropertyAfterStaticPropertyCall() {
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completePropertyAfterStaticPropertyCall.sql",
+            "$testDapName/completePropertyAfterStaticPropertyCall.sql",
             listOf(
                 "managerId",
             ),
@@ -154,7 +195,7 @@ class SqlCompleteTest : DomaSqlTest() {
 
     fun testCompleteBuiltinFunction() {
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeBuiltinFunction.sql",
+            "$testDapName/completeBuiltinFunction.sql",
             listOf(
                 "isEmpty()",
                 "isNotEmpty()",
@@ -174,17 +215,17 @@ class SqlCompleteTest : DomaSqlTest() {
 
     fun testCompleteDirectiveInside() {
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeDirectiveInsideIf.sql",
+            "$testDapName/completeDirectiveInsideIf.sql",
             listOf("employee"),
             listOf("project"),
         )
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeDirectiveInsideElseIf.sql",
+            "$testDapName/completeDirectiveInsideElseIf.sql",
             listOf("employee", "project"),
             emptyList(),
         )
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeDirectiveInsideFor.sql",
+            "$testDapName/completeDirectiveInsideFor.sql",
             listOf("project"),
             listOf("employee"),
         )
@@ -192,17 +233,17 @@ class SqlCompleteTest : DomaSqlTest() {
 
     fun testCompleteDirectiveFieldInside() {
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeDirectiveFieldInsideIf.sql",
+            "$testDapName/completeDirectiveFieldInsideIf.sql",
             listOf("startsWith()"),
             listOf("employee", "project", "toLowCase"),
         )
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeDirectiveFieldInsideElseIf.sql",
+            "$testDapName/completeDirectiveFieldInsideElseIf.sql",
             listOf("department"),
             listOf("employee", "project"),
         )
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeDirectiveFieldInsideFor.sql",
+            "$testDapName/completeDirectiveFieldInsideFor.sql",
             listOf(
                 "projectId",
                 "projectName",
@@ -219,13 +260,13 @@ class SqlCompleteTest : DomaSqlTest() {
 
     fun testCompleteConcatenationOperator() {
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeConcatenationOperator.sql",
+            "$testDapName/completeConcatenationOperator.sql",
             listOf("rank"),
             listOf("employee", "employeeId", "department"),
         )
 
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeComparisonOperator.sql",
+            "$testDapName/completeComparisonOperator.sql",
             listOf("rank"),
             listOf("employee", "employeeId", "department"),
         )
@@ -233,25 +274,25 @@ class SqlCompleteTest : DomaSqlTest() {
 
     fun testCompleteParameter() {
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeParameterFirst.sql",
+            "$testDapName/completeParameterFirst.sql",
             listOf("employee"),
             listOf("employeeId", "department", "rank", "startWith"),
         )
 
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeParameterFirstProperty.sql",
+            "$testDapName/completeParameterFirstProperty.sql",
             listOf("employeeId", "department", "rank"),
             listOf("employee"),
         )
 
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeParameterSecond.sql",
+            "$testDapName/completeParameterSecond.sql",
             listOf("employee"),
             listOf("employeeId", "department", "rank", "startWith"),
         )
 
         innerDirectiveCompleteTest(
-            "SqlCompleteTestDao/completeParameterSecondProperty.sql",
+            "$testDapName/completeParameterSecondProperty.sql",
             listOf("managerId"),
             listOf("employee", "department", "rank"),
         )
