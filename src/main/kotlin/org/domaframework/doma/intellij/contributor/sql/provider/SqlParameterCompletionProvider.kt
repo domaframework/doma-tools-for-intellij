@@ -20,6 +20,7 @@ import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.lookup.VariableLookupItem
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
@@ -33,6 +34,7 @@ import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeafs
 import com.intellij.util.ProcessingContext
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
+import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
@@ -271,20 +273,22 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         originalFile: PsiFile,
         result: CompletionResultSet,
     ) {
+        val daoMethod = findDaoMethod(originalFile)
         val searchText = cleanString(getSearchElementText(position))
         var topElementType: PsiType? = null
-        if (elements.isEmpty()) {
-            getElementTypeByFieldAccess(originalFile, elements, result)
+        if (elements.isEmpty() && daoMethod != null) {
+            getElementTypeByFieldAccess(originalFile, elements, daoMethod, result)
             return
         }
         val top = elements.first()
-
         val topText = cleanString(getSearchElementText(top))
         val prevWord = PsiPatternUtil.getBindSearchWord(originalFile, elements.last(), " ")
         if (prevWord.startsWith("@") && prevWord.endsWith("@")) {
-            setStaticFieldAccess(top, prevWord, topText, result)
+            setCompletionStaticFieldAccess(top, prevWord, topText, result)
             return
         }
+
+        var isBatchAnnotation = false
         if (top.parent !is PsiFile && top.parent?.parent !is PsiDirectory) {
             val staticDirective = top.findNodeParent(SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR)
             staticDirective?.let {
@@ -292,43 +296,24 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             }
         }
 
+        if (daoMethod == null) return
+        val project = originalFile.project
+        val psiDaoMethod = PsiDaoMethod(project, daoMethod)
         if (topElementType == null) {
-            if (isFieldAccessByForItem(top, elements, searchText, result)) return
+            isBatchAnnotation = psiDaoMethod.daoType.isBatchAnnotation()
+            if (isFieldAccessByForItem(top, elements, searchText, isBatchAnnotation, result)) return
             topElementType =
-                getElementTypeByFieldAccess(originalFile, elements, result) ?: return
+                getElementTypeByFieldAccess(originalFile, elements, daoMethod, result) ?: return
         }
 
-        var psiParentClass = PsiParentClass(topElementType)
-        // FieldAccess Completion
-        ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+        setCompletionFieldAccess(
+            topElementType,
+            originalFile.project,
+            isBatchAnnotation,
             elements,
-            top.project,
-            psiParentClass,
-            shortName = "",
-            dropLastIndex = 1,
-            complete = { lastType ->
-                val searchWord = cleanString(getSearchElementText(position))
-                setFieldsAndMethodsCompletionResultSet(
-                    lastType.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
-                    lastType.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
-                    result,
-                )
-            },
+            searchText,
+            result,
         )
-    }
-
-    private fun setStaticFieldAccess(
-        top: PsiElement,
-        prevWord: String,
-        topText: String,
-        result: CompletionResultSet,
-    ) {
-        val clazz = getRefClazz(top) { prevWord.replace("@", "") } ?: return
-        val matchFields = clazz.searchStaticField(topText)
-        val matchMethod = clazz.searchStaticMethod(topText)
-
-        // When you enter here, it is the top element, so return static fields and methods.
-        setFieldsAndMethodsCompletionResultSet(matchFields, matchMethod, result)
     }
 
     private fun getSearchElementText(elm: PsiElement?): String =
@@ -369,9 +354,9 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
     private fun getElementTypeByFieldAccess(
         originalFile: PsiFile,
         elements: List<PsiElement>,
+        daoMethod: PsiMethod,
         result: CompletionResultSet,
     ): PsiType? {
-        val daoMethod = findDaoMethod(originalFile) ?: return null
         val topText = cleanString(getSearchElementText(elements.firstOrNull()))
         val matchParams = daoMethod.searchParameter(topText)
         val findParam = matchParams.find { it.name == topText }
@@ -417,10 +402,10 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
     private fun isFieldAccessByForItem(
         top: PsiElement,
         elements: List<PsiElement>,
-        positionText: String,
+        searchWord: String,
+        isBatchAnnotation: Boolean = false,
         result: CompletionResultSet,
     ): Boolean {
-        val searchWord = cleanString(positionText)
         val project = top.project
         val forDirectiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(top)
         ForDirectiveUtil.findForItem(top, forDirectives = forDirectiveBlocks) ?: return false
@@ -439,6 +424,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 elements,
                 project,
                 topClassType,
+                isBatchAnnotation = isBatchAnnotation,
                 shortName = "",
                 dropLastIndex = 1,
                 complete = { lastType ->
@@ -450,5 +436,47 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 },
             )
         return result is ValidationCompleteResult
+    }
+
+    private fun setCompletionFieldAccess(
+        topElementType: PsiType,
+        project: Project,
+        isBatchAnnotation: Boolean,
+        elements: List<PsiElement>,
+        searchWord: String,
+        result: CompletionResultSet,
+    ) {
+        var psiParentClass = PsiParentClass(topElementType)
+
+        // FieldAccess Completion
+        ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+            elements,
+            project,
+            psiParentClass,
+            isBatchAnnotation = isBatchAnnotation,
+            shortName = "",
+            dropLastIndex = 1,
+            complete = { lastType ->
+                setFieldsAndMethodsCompletionResultSet(
+                    lastType.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
+                    lastType.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
+                    result,
+                )
+            },
+        )
+    }
+
+    private fun setCompletionStaticFieldAccess(
+        top: PsiElement,
+        prevWord: String,
+        topText: String,
+        result: CompletionResultSet,
+    ) {
+        val clazz = getRefClazz(top) { prevWord.replace("@", "") } ?: return
+        val matchFields = clazz.searchStaticField(topText)
+        val matchMethod = clazz.searchStaticMethod(topText)
+
+        // When you enter here, it is the top element, so return static fields and methods.
+        setFieldsAndMethodsCompletionResultSet(matchFields, matchMethod, result)
     }
 }
