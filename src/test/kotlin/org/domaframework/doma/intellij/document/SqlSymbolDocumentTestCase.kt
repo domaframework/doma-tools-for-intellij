@@ -101,7 +101,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     fun testDocumentForItemHasNext() {
         val sqlName = "documentForItemHasNext"
         val result =
-            "<a href=\"psi_element://java.lang.Boolean\">Boolean</a> item_has_next"
+            "<a href=\"psi_element://boolean\">boolean</a> item_has_next"
 
         documentationFindTextTest(sqlName, "item_has_next", result)
     }
@@ -109,7 +109,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     fun testDocumentForItemIndex() {
         val sqlName = "documentForItemIndex"
         val result =
-            "<a href=\"psi_element://java.lang.Integer\">Integer</a> item_index"
+            "<a href=\"psi_element://int\">int</a> item_index"
 
         documentationFindTextTest(sqlName, "item_index", result)
     }

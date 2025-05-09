@@ -3,7 +3,7 @@ SELECT id
  WHERE category = 'category'
  -- employeesList -> List<List<Employee>>
 /*%for employees : employeesList */
-   -- employees_has_next -> -> List<Employee>
+   -- employees_has_next -> boolean
   /*%if employees_has_next */
       /*# "OR" */
   /*%end */

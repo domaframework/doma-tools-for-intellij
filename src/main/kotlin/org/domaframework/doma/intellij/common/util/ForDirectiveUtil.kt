@@ -20,7 +20,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
-import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.PsiTypes
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
@@ -337,6 +337,7 @@ class ForDirectiveUtil {
                     topParent
                 }
             val parentType = parent.type
+            // TODO: Display an error message that the property cannot be called.
             val classType = parentType as? PsiClassType ?: return null
 
             var competeResult: ValidationCompleteResult? = null
@@ -460,27 +461,13 @@ class ForDirectiveUtil {
                 ""
             }
 
-        fun resolveForDirectiveClassTypeIfSuffixExists(
-            project: Project,
-            searchName: String,
-        ): PsiType? {
+        fun resolveForDirectiveItemClassTypeBySuffixElement(searchName: String): PsiType? =
             if (searchName.endsWith("_has_next")) {
-                return PsiType.getTypeByName(
-                    "java.lang.Boolean",
-                    project,
-                    GlobalSearchScope.allScope(project),
-                )
+                PsiTypes.booleanType()
+            } else if (searchName.endsWith("_index")) {
+                PsiTypes.intType()
+            } else {
+                null
             }
-
-            if (searchName.endsWith("_index")) {
-                return PsiType.getTypeByName(
-                    "java.lang.Integer",
-                    project,
-                    GlobalSearchScope.allScope(project),
-                )
-            }
-
-            return null
-        }
     }
 }
