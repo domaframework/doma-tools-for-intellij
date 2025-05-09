@@ -5,6 +5,7 @@ import org.seasar.doma.*;
 import org.seasar.doma.jdbc.Config;
 import org.seasar.doma.jdbc.PreparedSql;
 import org.seasar.doma.jdbc.SelectOptions;
+import java.util.*;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -35,4 +36,7 @@ interface EmployeeSummaryDao {
 
   @Select
   List<Employee> bindVariableForItemHasNextAndIndex(List<Employee> employees);
+
+  @Select
+  Project optionalDaoParameterFieldAccess(Optional<Project> project, OptionalInt id, OptionalLong longId, OptionalDouble doubleId);
 }
