@@ -38,6 +38,7 @@ The plugin also provides quick fixes for Dao methods where the required SQL file
   ![inspection.png](images/inspection.png)
 - Check the class name and package name for static property calls
   ![inspectionPackageName.png](images/inspectionPackageName.png)
+- Optional types are recognized as their element type (e.g. Optional<String> is treated as String).
 
 ## Completion
 Adds code completion functionality to support indexing of Doma directives and bind variables
@@ -52,6 +53,7 @@ Adds code completion functionality to support indexing of Doma directives and bi
 - Suggest Doma directives
 - Directives such as Condition, Loop, Population are suggested after “%”
 - Suggest built-in functions after “@”
+- Optional types are recognized as their element type (e.g. Optional<String> is treated as String).
 
 ## Refactoring
 Along with the Dao name change, we will refactor the SQL file directory and file name.
