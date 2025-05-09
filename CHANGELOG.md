@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-05-09
+
+### New Features
+
+- for directive specific word element handling ([#150])
+- Code completion and code inspection for static property call package class names ([#148])
+- Add SQL test data validation inspections ([#136])
+
+### Bug Fixes
+
+- Fixed specific element types to be treated as primitive types ([#152])
+- Fix: optional dao param type conversion ([#151])
+- Move PluginUtil.kt to the util package in release configuration files ([#146])
+- List type test data check and exclude else directive ([#145])
+- Fix/document first for item ([#142])
+
+### Dependency Updates
+
+- Update dependency com.google.googlejavaformat:google-java-format to v1.27.0 ([#143])
+
+[#150]:https://github.com/domaframework/doma-tools-for-intellij/pull/150
+[#148]:https://github.com/domaframework/doma-tools-for-intellij/pull/148
+[#136]:https://github.com/domaframework/doma-tools-for-intellij/pull/136
+[#152]:https://github.com/domaframework/doma-tools-for-intellij/pull/152
+[#151]:https://github.com/domaframework/doma-tools-for-intellij/pull/151
+[#146]:https://github.com/domaframework/doma-tools-for-intellij/pull/146
+[#145]:https://github.com/domaframework/doma-tools-for-intellij/pull/145
+[#142]:https://github.com/domaframework/doma-tools-for-intellij/pull/142
+[#143]:https://github.com/domaframework/doma-tools-for-intellij/pull/143
+
+
 ## [0.6.0] - 2025-04-30
 
 ### New Features
@@ -220,3 +251,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[0.7.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.6.0...0.7.0
