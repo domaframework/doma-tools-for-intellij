@@ -25,6 +25,9 @@ interface SqlCompleteTestDao {
   @Update(sqlFile = true)
   int completeDirective(Employee employee);
 
+  @BatchInsert(sqlFile = true)
+  int completeBatchInsert(List<Employee> employees);
+
   @Select
   Project completeStaticPropertyFromStaticPropertyCall(ProjectDetail detail);
 

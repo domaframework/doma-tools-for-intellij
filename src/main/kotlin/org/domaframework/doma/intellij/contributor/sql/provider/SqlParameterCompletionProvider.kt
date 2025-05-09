@@ -48,8 +48,6 @@ import org.domaframework.doma.intellij.extension.psi.findNodeParent
 import org.domaframework.doma.intellij.extension.psi.findSelfBlocks
 import org.domaframework.doma.intellij.extension.psi.findStaticField
 import org.domaframework.doma.intellij.extension.psi.findStaticMethod
-import org.domaframework.doma.intellij.extension.psi.getDomaAnnotationType
-import org.domaframework.doma.intellij.extension.psi.getIterableClazz
 import org.domaframework.doma.intellij.extension.psi.isNotWhiteSpace
 import org.domaframework.doma.intellij.extension.psi.searchParameter
 import org.domaframework.doma.intellij.extension.psi.searchStaticField
@@ -370,8 +368,8 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         if (findParam == null) {
             return null
         }
-        val immediate = findParam.getIterableClazz(daoMethod.getDomaAnnotationType())
-        return PsiClassTypeUtil.convertOptionalType(immediate.type, originalFile.project)
+        val immediate = findParam.type
+        return PsiClassTypeUtil.convertOptionalType(immediate, originalFile.project)
     }
 
     private fun getRefClazz(

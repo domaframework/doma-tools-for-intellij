@@ -34,6 +34,7 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDapName/completeInstancePropertyFromDaoArgumentClass.sql",
             "$testDapName/completeJavaPackageClass.sql",
             "$testDapName/completeDirective.sql",
+            "$testDapName/completeBatchInsert.sql",
             "$testDapName/completeStaticPropertyFromStaticPropertyCall.sql",
             "$testDapName/completePropertyAfterStaticPropertyCall.sql",
             "$testDapName/completeBuiltinFunction.sql",
@@ -157,6 +158,21 @@ class SqlCompleteTest : DomaSqlTest() {
                 "populate",
                 "for",
                 "!",
+            ),
+        )
+    }
+
+    fun testCompleteBatchInsert() {
+        innerDirectiveCompleteTest(
+            "$testDapName/completeBatchInsert.sql",
+            listOf(
+                "employeeId",
+                "employeeName",
+            ),
+            listOf(
+                "userId",
+                "get()",
+                "size()",
             ),
         )
     }

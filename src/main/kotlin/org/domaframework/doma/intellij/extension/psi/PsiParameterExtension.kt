@@ -17,24 +17,6 @@ package org.domaframework.doma.intellij.extension.psi
 
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiParameter
-import org.domaframework.doma.intellij.common.psi.PsiParentClass
-import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
-
-/**
- * For List type, if the annotation type is Batch type,
- * return the content type.
- */
-fun PsiParameter.getIterableClazz(annotationType: DomaAnnotationType): PsiParentClass = getIterableClazz(annotationType.isBatchAnnotation())
-
-fun PsiParameter.getIterableClazz(useListParam: Boolean): PsiParentClass {
-    val immediate = this.type as? PsiClassType
-    val classType = immediate?.let { PsiClassTypeUtil.getPsiTypeByList(it, this.project, useListParam) }
-    if (classType != null) {
-        val convertOptional = PsiClassTypeUtil.convertOptionalType(classType, this.project)
-        return PsiParentClass(convertOptional)
-    }
-    return PsiParentClass(this.type)
-}
 
 val PsiParameter.isFunctionClazz: Boolean
     get() =
