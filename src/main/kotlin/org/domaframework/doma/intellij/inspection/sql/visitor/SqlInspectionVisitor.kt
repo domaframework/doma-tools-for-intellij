@@ -137,7 +137,7 @@ class SqlInspectionVisitor(
                     return
                 }
                 val specifiedClassType =
-                    ForDirectiveUtil.resolveForDirectiveClassTypeIfSuffixExists(project, topElement.text)
+                    ForDirectiveUtil.resolveForDirectiveItemClassTypeBySuffixElement(topElement.text)
                 if (specifiedClassType != null) {
                     PsiParentClass(specifiedClassType)
                 } else {

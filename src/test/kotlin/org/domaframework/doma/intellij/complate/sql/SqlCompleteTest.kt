@@ -117,21 +117,32 @@ class SqlCompleteTest : DomaSqlTest() {
     fun testCompleteForItemHasNext() {
         innerDirectiveCompleteTest(
             "$testDapName/completeForItemHasNext.sql",
+            emptyList(),
             listOf(
+                "get()",
+                "startsWith()",
+                "permissions",
+                "MAX_VALUE",
+                "MIN_VALUE",
                 "FALSE",
                 "TRUE",
                 "TYPE",
                 "toString()",
                 "booleanValue()",
             ),
-            listOf("get()", "startsWith()", "permissions", "MAX_VALUE", "MIN_VALUE"),
         )
     }
 
     fun testCompleteForItemIndex() {
         innerDirectiveCompleteTest(
             "$testDapName/completeForItemIndex.sql",
+            emptyList(),
             listOf(
+                "get()",
+                "startsWith()",
+                "permissions",
+                "FALSE",
+                "TRUE",
                 "BYTES",
                 "MAX_VALUE",
                 "MIN_VALUE",
@@ -139,7 +150,6 @@ class SqlCompleteTest : DomaSqlTest() {
                 "TYPE",
                 "Integer()",
             ),
-            listOf("get()", "startsWith()", "permissions", "FALSE", "TRUE"),
         )
     }
 

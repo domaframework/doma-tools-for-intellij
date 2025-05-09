@@ -409,7 +409,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         ForDirectiveUtil.findForItem(top, forDirectives = forDirectiveBlocks) ?: return false
 
         val forItemClassType = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks) ?: return false
-        val specifiedClassType = ForDirectiveUtil.resolveForDirectiveClassTypeIfSuffixExists(project, top.text)
+        val specifiedClassType = ForDirectiveUtil.resolveForDirectiveItemClassTypeBySuffixElement(top.text)
         val topClassType =
             if (specifiedClassType != null) {
                 PsiParentClass(specifiedClassType)
