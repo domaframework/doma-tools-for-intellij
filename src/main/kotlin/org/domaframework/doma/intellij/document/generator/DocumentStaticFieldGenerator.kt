@@ -29,11 +29,11 @@ import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 
 class DocumentStaticFieldGenerator(
     val originalElement: PsiElement,
-    val project: Project,
+    override val project: Project,
     val result: MutableList<String?>,
     val staticFieldAccessExpr: SqlElStaticFieldAccessExpr,
     val file: PsiFile,
-) : DocumentGenerator() {
+) : DocumentGenerator(project) {
     override fun generateDocument() {
         val fieldAccessBlocks = staticFieldAccessExpr.accessElements
         val staticElement = PsiStaticElement(fieldAccessBlocks, file)

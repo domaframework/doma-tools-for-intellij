@@ -8,6 +8,7 @@ import org.seasar.doma.jdbc.SelectOptions;
 
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.Optional;
 
 @Dao
 interface SqlCompleteTestDao {
@@ -23,6 +24,9 @@ interface SqlCompleteTestDao {
 
   @Update(sqlFile = true)
   int completeDirective(Employee employee);
+
+  @BatchInsert(sqlFile = true)
+  int completeBatchInsert(List<Employee> employees);
 
   @Select
   Project completeStaticPropertyFromStaticPropertyCall(ProjectDetail detail);
@@ -80,5 +84,17 @@ interface SqlCompleteTestDao {
 
   @Select
   Principal completeForItemIndex(Principal principal);
+
+  @Select
+  Project completeOptionalDaoParam(Optional<Project> project);
+
+  @Select
+  Project completeOptionalStaticProperty();
+
+  @Select
+  Project completeOptionalByForItem(List<Project> projects);
+
+  @BatchDelete(sqlFile = true)
+  int completeOptionalBatchAnnotation(Optional<List<Optional<Project>>> projects);
 
 }
