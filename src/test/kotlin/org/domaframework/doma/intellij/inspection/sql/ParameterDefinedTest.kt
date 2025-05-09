@@ -38,6 +38,7 @@ class ParameterDefinedTest : DomaSqlTest() {
             "$testDaoName/bindVariableInFunctionParameters.sql",
             "$testDaoName/callStaticPropertyPackageName.sql",
             "$testDaoName/bindVariableForItemHasNextAndIndex.sql",
+            "$testDaoName/optionalDaoParameterFieldAccess.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
@@ -64,6 +65,15 @@ class ParameterDefinedTest : DomaSqlTest() {
 
     fun testBindVariableForItemHasNextAndIndex() {
         val sqlFile = findSqlFile("$testDaoName/bindVariableForItemHasNextAndIndex.sql")
+        assertNotNull("Not Found SQL File", sqlFile)
+        if (sqlFile == null) return
+
+        myFixture.testHighlighting(false, false, false, sqlFile)
+    }
+
+    fun testOptionalDaoParameterFieldAccess() {
+        val sqlFile =
+            findSqlFile("$testDaoName/optionalDaoParameterFieldAccess.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 

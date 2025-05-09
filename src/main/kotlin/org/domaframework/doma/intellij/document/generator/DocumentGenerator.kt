@@ -15,12 +15,16 @@
  */
 package org.domaframework.doma.intellij.document.generator
 
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.sql.foritem.ForItem
 import org.domaframework.doma.intellij.extension.psi.getForItem
 
-abstract class DocumentGenerator {
+abstract class DocumentGenerator(
+    open val project: Project,
+) {
     abstract fun generateDocument()
 
     protected fun isSelfSkip(targetElement: PsiElement): Boolean {
@@ -30,8 +34,10 @@ abstract class DocumentGenerator {
     }
 
     protected fun generateTypeLink(parentClass: PsiParentClass?): String {
-        if (parentClass?.type != null) {
-            return generateTypeLinkFromCanonicalText(parentClass.type.canonicalText)
+        val parentClassType = parentClass?.type
+        if (parentClassType != null) {
+            val convertOptionalType = PsiClassTypeUtil.convertOptionalType(parentClassType, project)
+            return generateTypeLinkFromCanonicalText(convertOptionalType.canonicalText)
         }
         return ""
     }
@@ -40,22 +46,34 @@ abstract class DocumentGenerator {
         val regex = Regex("([a-zA-Z0-9_]+\\.)*([a-zA-Z0-9_]+)")
         val result = StringBuilder()
         var lastIndex = 0
+        val optionalPackage = "java.util.Optional"
+        val optionalTypeMap =
+            listOf(
+                optionalPackage,
+                "${optionalPackage}Int",
+                "${optionalPackage}Double",
+                "${optionalPackage}Long",
+            )
+        var skipCount = 0
 
         for (match in regex.findAll(canonicalText)) {
             val fullMatch = match.value
+            val optionalSkip = optionalTypeMap.contains(fullMatch)
+            if (optionalSkip) skipCount++
+
             val typeName = match.groups[2]?.value ?: fullMatch
             val startIndex = match.range.first
             val endIndex = match.range.last + 1
 
-            if (lastIndex < startIndex) {
+            if (lastIndex < startIndex && !optionalSkip) {
                 result.append(canonicalText.substring(lastIndex, startIndex))
             }
-            result.append("<a href=\"psi_element://$fullMatch\">$typeName</a>")
+            if (!optionalSkip) result.append("<a href=\"psi_element://$fullMatch\">$typeName</a>")
             lastIndex = endIndex
         }
 
-        if (lastIndex < canonicalText.length) {
-            result.append(canonicalText.substring(lastIndex))
+        if (lastIndex + skipCount < canonicalText.length) {
+            result.append(canonicalText.substring(lastIndex + skipCount))
         }
 
         return result.toString()

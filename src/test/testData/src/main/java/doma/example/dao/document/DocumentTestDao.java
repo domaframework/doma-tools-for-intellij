@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.HashSet;
 import doma.example.entity.*;
 import org.seasar.doma.*;
+import java.util.Optional;
 
 @Dao
 public interface DocumentTestDao {
@@ -34,5 +35,11 @@ public interface DocumentTestDao {
 
   @Select
   int documentForItemHasNext(Principal principal);
+
+  @Select
+  Project documentForItemOptionalForItem(Optional<List<Optional<Project>>> optionalProjects);
+
+  @Select
+  Project documentForItemOptionalProperty(Optional<List<Optional<Project>>> optionalProjects);
 
 }
