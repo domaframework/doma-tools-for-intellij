@@ -55,7 +55,7 @@ open class SqlLineCommentBlock(
                     return it.indent.groupIndentLen.minus(2)
                 }
             }
-            return 1
+            return it.indent.indentLen
         }
         return 1
     }
