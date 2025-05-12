@@ -20,7 +20,6 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteralExpression
-import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.nextLeafs
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
@@ -102,13 +101,16 @@ class SqlTestDataAfterBlockCommentVisitor(
      * These values can be separated by commas, and the entire list must be enclosed in parentheses.
      */
     private fun isMatchListTestData(element: PsiElement): Boolean {
+        // Ensure the list starts with an opening parenthesis, as this is required
+        // for the structure to match the expected "list type test data" pattern.
+        if (element.nextSibling?.elementType != SqlTypes.LEFT_PAREN) return false
         val parenthesesListPattern =
             Regex(
                 """^\(\s*(?:(?:"[^"]*"|'[^']*'|\d+|true|false|null)\s*(?:,\s*(?:"[^"]*"|'[^']*'|\d+|true|false|null)\s*)*)?\)$""",
             )
         val testDataText =
             element.nextLeafs
-                .takeWhile { it !is PsiWhiteSpace }
+                .takeWhile { it.prevSibling is PsiElement && it.prevSibling?.elementType != SqlTypes.RIGHT_PAREN }
                 .toList()
                 .joinToString("") { it.text }
         return testDataText.matches(parenthesesListPattern)
