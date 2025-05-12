@@ -15,7 +15,9 @@ SELECT COUNT(DISTINCT (x))
               , ISNULL(s.fiberid
                        , 0) AS fiberid
            FROM phototag p
+                -- Line1
                 JOIN usno u
+                  -- Line2
                   ON p.objid = u.objid
                 /** Join */
                 LEFT OUTER JOIN specobj s
@@ -24,9 +26,11 @@ SELECT COUNT(DISTINCT (x))
                             AND p.plate = s.plate
           /** Where */
           WHERE p.TYPE = DBO.FPHOTOTYPE('Star')
+             -- Line3
              OR (p.flags & DBO.FPHOTOFLAGS('EDGE') = 0
                  AND (p.psfmag_g - p.extinction_g) BETWEEN 15 AND 20)
                 /*%if status == 2 */
+                -- Line4
                 AND u.propermotion > 2.
                 /** And  Group */
                 AND (p.psfmag_g - p.extinction_g + 5 * LOG(u.propermotion / 100.) + 5 > 16.136 + 2.727 * (p.psfmag_g - p.extinction_g - (p.psfmag_i - p.extinction_i))
