@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.document
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.DomaSqlTest
+import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.psi.SqlBlockComment
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
@@ -196,6 +197,6 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
             return forDirective.elExprList.firstOrNull { it.text == searchElementName }
         }
 
-        return fieldAccessExpr.elExprList.firstOrNull { it.text == searchElementName }
+        return fieldAccessExpr.accessElements.firstOrNull { it?.text == searchElementName }
     }
 }

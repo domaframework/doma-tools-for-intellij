@@ -34,7 +34,8 @@ val SqlElStaticFieldAccessExpr.accessElements: List<SqlElIdExpr>
 
 val SqlElFieldAccessExpr.accessElements: List<SqlElIdExpr?>
     get() =
-        this.elExprList
+        this
+            .getElPrimaryExprList()
             .mapNotNull { it as SqlElIdExpr }
             .sortedBy { it.textOffset }
             .toList()
