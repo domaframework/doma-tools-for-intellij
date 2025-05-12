@@ -136,7 +136,7 @@ el_and_expr ::= el_expr "&&" el_expr
 el_or_expr ::= el_expr "||" el_expr
 
 // term
-el_term_expr ::= el_comparison_expr_group | el_arithmetic_expr_group | el_factor_expr
+el_term_expr ::= el_comparison_expr_group | el_arithmetic_expr_group | el_factor_expr | el_paren_expr
 private el_comparison_expr_group ::= el_eq_expr | el_ne_expr | el_lt_expr | el_le_expr | el_gt_expr | el_ge_expr
 private el_arithmetic_expr_group ::= el_add_expr | el_subtract_expr | el_multiply_expr | el_divide_expr | el_mod_expr
 el_eq_expr ::= el_factor_expr "==" el_factor_expr
@@ -165,7 +165,7 @@ el_class ::= el_id_expr ("." el_id_expr)*
 el_parameters ::= "(" (el_expr ("," el_expr)*)? ")" {pin=1}
 
 // primary
-el_primary_expr ::= el_literal_expr | el_id_expr | el_paren_expr
+el_primary_expr ::= el_literal_expr | el_id_expr //| el_paren_expr
 private el_literal_expr ::= EL_NULL | BOOLEAN | (EL_PLUS | EL_MINUS)? EL_NUMBER | EL_STRING | EL_CHAR
 el_id_expr ::= EL_IDENTIFIER
 {

@@ -14,10 +14,10 @@ SELECT e.employee_id
  WHERE e.user_id = /* user.userId */0
    AND e.employee_id = /* employee.employeeId */0
    AND e.join_date <= /* referenceDate + 1 */'2099/12/31'
-   /*%if @isNotBlank(employee.departmentId) */
+   /*%if @isNotBlank(employee.departmentId) && (employee.departmentId > 100) */
    /*%if employee.departmentId.startsWith("200") */　
    AND e.department_id = /* employee.departmentId +  1 */'dept'
-   /*%elseif employee.numberOfProjects >= 3 */
+   /*%elseif (employee.numberOfProjects >= 3) */
    AND pe.start_date <= CURRENT_DATE
    AND pe.end_date >= CURRENT_DATE
    /*%end*/

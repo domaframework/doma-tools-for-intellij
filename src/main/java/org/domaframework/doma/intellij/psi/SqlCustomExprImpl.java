@@ -19,9 +19,12 @@ import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class SqlCustomExprImpl extends ASTWrapperPsiElement implements SqlCustomElExpr {
+public class SqlCustomExprImpl extends ASTWrapperPsiElement
+    implements SqlCustomElExpr, SqlElTermExpr {
 
   public SqlCustomExprImpl(@NotNull ASTNode node) {
     super(node);
@@ -30,5 +33,10 @@ public class SqlCustomExprImpl extends ASTWrapperPsiElement implements SqlCustom
   @Override
   public PsiReference @NotNull [] getReferences() {
     return ReferenceProvidersRegistry.getReferencesFromProviders(this);
+  }
+
+  @Override
+  public @Nullable SqlElExpr getElExpr() {
+    return PsiTreeUtil.getChildOfAnyType(this, SqlElExpr.class);
   }
 }
