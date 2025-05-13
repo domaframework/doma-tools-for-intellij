@@ -58,6 +58,7 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDapName/completeOptionalStaticProperty.sql",
             "$testDapName/completeOptionalByForItem.sql",
             "$testDapName/completeOptionalBatchAnnotation.sql",
+            "$testDapName/completeForDirectiveItem.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
@@ -388,6 +389,14 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDapName/completeOptionalBatchAnnotation.sql",
             listOf("optionalIds"),
             listOf("get()", "orElseGet()", "isPresent()", "projectId"),
+        )
+    }
+
+    fun testCompleteForDirectiveItem() {
+        innerDirectiveCompleteTest(
+            "$testDapName/completeForDirectiveItem.sql",
+            listOf("projects", "project", "project_has_next", "project_index"),
+            listOf("get()", "size()", "toString()", "projectId"),
         )
     }
 
