@@ -97,4 +97,7 @@ interface SqlCompleteTestDao {
   @BatchDelete(sqlFile = true)
   int completeOptionalBatchAnnotation(Optional<List<Optional<Project>>> projects);
 
+  @Select
+  Employee completeForDirectiveItem(List<Project> projects);
+
 }
