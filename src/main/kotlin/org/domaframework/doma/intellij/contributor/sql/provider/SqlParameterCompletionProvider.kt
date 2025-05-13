@@ -366,11 +366,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             }
             // Add ForDirective Items
             val forDirectives = ForDirectiveUtil.getForDirectiveBlocks(position)
-            forDirectives.forEach {
-                result.addElement(LookupElementBuilder.create(it.item.text))
-                result.addElement(LookupElementBuilder.create("${it.item.text}_has_next"))
-                result.addElement(LookupElementBuilder.create("${it.item.text}_index"))
-            }
+            addForDirectiveSuggestions(forDirectives, result)
             return null
         }
         if (findParam == null) {
@@ -378,6 +374,17 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         }
         val immediate = findParam.type
         return PsiClassTypeUtil.convertOptionalType(immediate, originalFile.project)
+    }
+
+    private fun addForDirectiveSuggestions(
+        forDirectives: List<ForDirectiveUtil.BlockToken>,
+        result: CompletionResultSet,
+    ) {
+        forDirectives.forEach {
+            result.addElement(LookupElementBuilder.create(it.item.text))
+            result.addElement(LookupElementBuilder.create("${it.item.text}_has_next"))
+            result.addElement(LookupElementBuilder.create("${it.item.text}_index"))
+        }
     }
 
     private fun getRefClazz(
