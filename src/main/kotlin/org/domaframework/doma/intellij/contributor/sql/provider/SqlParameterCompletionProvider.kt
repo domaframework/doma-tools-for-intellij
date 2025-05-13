@@ -275,7 +275,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val searchText = cleanString(getSearchElementText(position))
         var topElementType: PsiType? = null
         if (elements.isEmpty() && daoMethod != null) {
-            getElementTypeByFieldAccess(originalFile, elements, daoMethod, result)
+            getElementTypeByFieldAccess(originalFile, position, elements, daoMethod, result)
             return
         }
         val top = elements.first()
@@ -301,7 +301,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             isBatchAnnotation = psiDaoMethod.daoType.isBatchAnnotation()
             if (isFieldAccessByForItem(top, elements, searchText, isBatchAnnotation, result)) return
             topElementType =
-                getElementTypeByFieldAccess(originalFile, elements, daoMethod, result) ?: return
+                getElementTypeByFieldAccess(originalFile, position, elements, daoMethod, result) ?: return
         }
 
         setCompletionFieldAccess(
@@ -351,17 +351,25 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
      */
     private fun getElementTypeByFieldAccess(
         originalFile: PsiFile,
+        position: PsiElement,
         elements: List<PsiElement>,
         daoMethod: PsiMethod,
         result: CompletionResultSet,
     ): PsiType? {
-        val topText = cleanString(getSearchElementText(elements.firstOrNull()))
+        val topElement = elements.firstOrNull()
+        val topText = cleanString(getSearchElementText(topElement))
         val matchParams = daoMethod.searchParameter(topText)
         val findParam = matchParams.find { it.name == topText }
         if (elements.size <= 1 && findParam == null) {
-            // TODO Add For Directive Items
             matchParams.map { match ->
                 result.addElement(LookupElementBuilder.create(match.name))
+            }
+            // Add ForDirective Items
+            val forDirectives = ForDirectiveUtil.getForDirectiveBlocks(position)
+            forDirectives.forEach {
+                result.addElement(LookupElementBuilder.create(it.item.text))
+                result.addElement(LookupElementBuilder.create("${it.item.text}_has_next"))
+                result.addElement(LookupElementBuilder.create("${it.item.text}_index"))
             }
             return null
         }
