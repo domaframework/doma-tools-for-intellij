@@ -31,6 +31,7 @@ import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationClassPathResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationForDirectiveItemTypeResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.extension.expr.accessElements
@@ -92,10 +93,25 @@ class SqlInspectionVisitor(
         PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java)?.let { return }
 
         val forDirectiveExp = PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java)
-        if (forDirectiveExp != null && forDirectiveExp.getForItem() == element) return
+        val isSkip = forDirectiveExp != null && forDirectiveExp.getForItem() != element
 
-        val forItem = ForDirectiveUtil.findForItem(element)
-        if (forItem != null) return
+        var forDirectiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(element, skipSelf = isSkip)
+        val forItem = ForDirectiveUtil.findForItem(element, skipSelf = isSkip, forDirectives = forDirectiveBlocks)
+        if (forItem != null) {
+            val forDeclarationType =
+                ForDirectiveUtil.getForDirectiveItemClassType(
+                    element.project,
+                    forDirectiveBlocks,
+                    forItem,
+                )
+            if (forDeclarationType == null) {
+                ValidationForDirectiveItemTypeResult(
+                    element,
+                    this.shortName,
+                ).highlightElement(holder)
+            }
+            return
+        }
 
         val daoMethod = findDaoMethod(visitFile) ?: return
         val param = daoMethod.findParameter(cleanString(element.text))
@@ -130,10 +146,12 @@ class SqlInspectionVisitor(
         var isBatchAnnotation = false
         val topElementParentClass =
             if (forItem != null) {
-                val result = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks)
+                val result = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks, forItem)
                 if (result == null) {
-                    // TODO Add an error message when the type of element used in the For directory is not a List type.
-                    errorHighlight(topElement, daoMethod, holder)
+                    ValidationForDirectiveItemTypeResult(
+                        topElement,
+                        this.shortName,
+                    ).highlightElement(holder)
                     return
                 }
                 val specifiedClassType =

@@ -173,6 +173,7 @@ class ForDirectiveUtil {
         fun getForDirectiveItemClassType(
             project: Project,
             forDirectiveBlocks: List<BlockToken>,
+            targetForItem: PsiElement? = null,
         ): PsiParentClass? {
             // Get the type of the top for directive definition element
             // Defined in Dao parameters or static property calls
@@ -185,6 +186,9 @@ class ForDirectiveUtil {
             forDirectiveBlocks.drop(1).forEach { directive ->
                 // Get the definition type of the target directive
                 val formItem = ForItem(directive.item)
+                if (targetForItem != null && formItem.element.textOffset > targetForItem.textOffset) {
+                    return parentClassType
+                }
                 val forDirectiveExpr = formItem.getParentForDirectiveExpr()
                 val forDirectiveDeclaration = forDirectiveExpr?.getForItemDeclaration()
                 if (forDirectiveDeclaration != null) {
