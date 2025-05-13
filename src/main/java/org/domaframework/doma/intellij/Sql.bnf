@@ -165,7 +165,7 @@ el_class ::= el_id_expr ("." el_id_expr)*
 el_parameters ::= "(" (el_expr ("," el_expr)*)? ")" {pin=1}
 
 // primary
-el_primary_expr ::= el_literal_expr | el_id_expr //| el_paren_expr
+el_primary_expr ::= el_literal_expr | el_id_expr
 private el_literal_expr ::= EL_NULL | BOOLEAN | (EL_PLUS | EL_MINUS)? EL_NUMBER | EL_STRING | EL_CHAR
 el_id_expr ::= EL_IDENTIFIER
 {
