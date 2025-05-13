@@ -45,8 +45,9 @@ class DocumentDaoParameterGenerator(
         val searchElement = fieldAccessBlocks?.firstOrNull() ?: originalElement
 
         var isBatchAnnotation = false
-        if (ForDirectiveUtil.findForItem(searchElement, forDirectives = forDirectives) != null) {
-            val forItemClassType = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectives)
+        val forItem = ForDirectiveUtil.findForItem(searchElement, forDirectives = forDirectives)
+        if (forItem != null) {
+            val forItemClassType = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectives, forItem)
             val specifiedClassType =
                 ForDirectiveUtil.resolveForDirectiveItemClassTypeBySuffixElement(
                     searchElement.text,

@@ -421,9 +421,9 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
     ): Boolean {
         val project = top.project
         val forDirectiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(top)
-        ForDirectiveUtil.findForItem(top, forDirectives = forDirectiveBlocks) ?: return false
+        val forItem = ForDirectiveUtil.findForItem(top, forDirectives = forDirectiveBlocks) ?: return false
 
-        val forItemClassType = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks) ?: return false
+        val forItemClassType = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks, forItem) ?: return false
         val specifiedClassType = ForDirectiveUtil.resolveForDirectiveItemClassTypeBySuffixElement(top.text)
         val topClassType =
             if (specifiedClassType != null) {

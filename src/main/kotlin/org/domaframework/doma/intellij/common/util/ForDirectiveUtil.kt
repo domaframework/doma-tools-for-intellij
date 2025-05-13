@@ -186,7 +186,9 @@ class ForDirectiveUtil {
             forDirectiveBlocks.drop(1).forEach { directive ->
                 // Get the definition type of the target directive
                 val formItem = ForItem(directive.item)
-                if (targetForItem != null && formItem.element.textOffset > targetForItem.textOffset) {
+                if (targetForItem != null &&
+                    formItem.element.textOffset > targetForItem.textOffset
+                ) {
                     return parentClassType
                 }
                 val forDirectiveExpr = formItem.getParentForDirectiveExpr()
