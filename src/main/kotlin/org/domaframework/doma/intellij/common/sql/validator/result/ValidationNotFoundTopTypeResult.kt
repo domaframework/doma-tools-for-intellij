@@ -18,19 +18,14 @@ package org.domaframework.doma.intellij.common.sql.validator.result
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-/**
- * This class indicates that there is no field or method defined in the class that matches the target name.
- */
-class ValidationPropertyResult(
-    override val identify: PsiElement,
-    override val parentClass: PsiParentClass?,
-    override val shortName: String,
-) : ValidationResult(identify, parentClass, shortName) {
+class ValidationNotFoundTopTypeResult(
+    override val identify: PsiElement?,
+    override val shortName: String = "",
+) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
         identify: PsiElement,
@@ -39,17 +34,9 @@ class ValidationPropertyResult(
         project: Project,
     ) {
         val project = identify.project
-        val parentName =
-            parentClass?.clazz?.name
-                ?: (parentClass?.type as? PsiClassType)?.name
-                ?: ""
         holder.registerProblem(
             identify,
-            MessageBundle.message(
-                "inspection.invalid.sql.property",
-                parentName,
-                identify.text ?: "",
-            ),
+            MessageBundle.message("inspection.invalid.sql.topType"),
             problemHighlightType(project, shortName),
             highlightRange,
         )

@@ -19,28 +19,16 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteralExpression
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
-import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
-import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
-import org.domaframework.doma.intellij.common.psi.PsiParentClass
-import org.domaframework.doma.intellij.common.psi.PsiStaticElement
-import org.domaframework.doma.intellij.common.sql.cleanString
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationClassPathResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
-import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
-import org.domaframework.doma.intellij.extension.expr.accessElements
-import org.domaframework.doma.intellij.extension.psi.findParameter
-import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.isFirstElement
-import org.domaframework.doma.intellij.extension.psi.psiClassType
+import org.domaframework.doma.intellij.inspection.sql.processor.InspectionFieldAccessVisitorProcessor
+import org.domaframework.doma.intellij.inspection.sql.processor.InspectionForDirectiveVisitorProcessor
+import org.domaframework.doma.intellij.inspection.sql.processor.InspectionPrimaryVisitorProcessor
+import org.domaframework.doma.intellij.inspection.sql.processor.InspectionStaticFieldAccessVisitorProcessor
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
-import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -64,7 +52,8 @@ class SqlInspectionVisitor(
 
     override fun visitElStaticFieldAccessExpr(element: SqlElStaticFieldAccessExpr) {
         super.visitElStaticFieldAccessExpr(element)
-        checkStaticFieldAndMethodAccess(element, holder)
+        val processor = InspectionStaticFieldAccessVisitorProcessor(this.shortName)
+        processor.check(element, holder)
     }
 
     override fun visitElFieldAccessExpr(element: SqlElFieldAccessExpr) {
@@ -72,14 +61,14 @@ class SqlInspectionVisitor(
         if (setFile(element)) return
         val visitFile: PsiFile = file ?: return
 
-        // Get element inside block comment
-        val blockElement = getFieldAccessBlocks(element)
-        val topElm = blockElement.firstOrNull() as SqlElPrimaryExpr
+        val processor = InspectionFieldAccessVisitorProcessor(shortName, element)
+        processor.check(holder, visitFile)
+    }
 
-        // Exclude fixed Literal
-        if (isLiteralOrStatic(topElm)) return
-
-        checkAccessFieldAndMethod(holder, blockElement, visitFile)
+    override fun visitElForDirective(element: SqlElForDirective) {
+        super.visitElForDirective(element)
+        val process = InspectionForDirectiveVisitorProcessor(shortName, element)
+        process.check(holder)
     }
 
     override fun visitElPrimaryExpr(element: SqlElPrimaryExpr) {
@@ -88,133 +77,7 @@ class SqlInspectionVisitor(
         if (setFile(element)) return
         val visitFile: PsiFile = file ?: return
 
-        if (isLiteralOrStatic(element)) return
-        PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java)?.let { return }
-
-        val forDirectiveExp = PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java)
-        if (forDirectiveExp != null && forDirectiveExp.getForItem() == element) return
-
-        val forItem = ForDirectiveUtil.findForItem(element)
-        if (forItem != null) return
-
-        val daoMethod = findDaoMethod(visitFile) ?: return
-        val param = daoMethod.findParameter(cleanString(element.text))
-        if (param != null) return
-
-        ValidationDaoParamResult(
-            element,
-            daoMethod.name,
-            this.shortName,
-        ).highlightElement(holder)
-    }
-
-    private fun getFieldAccessBlocks(element: SqlElFieldAccessExpr): List<SqlElIdExpr> {
-        val blockElements = element.accessElements
-        (blockElements.firstOrNull() as? SqlElPrimaryExpr)
-            ?.let { if (isLiteralOrStatic(it)) return emptyList() }
-            ?: return emptyList()
-
-        return blockElements.mapNotNull { it as SqlElIdExpr }
-    }
-
-    private fun checkAccessFieldAndMethod(
-        holder: ProblemsHolder,
-        blockElement: List<SqlElIdExpr>,
-        file: PsiFile,
-    ) {
-        val topElement = blockElement.firstOrNull() ?: return
-        val daoMethod = findDaoMethod(file) ?: return
-        val project = topElement.project
-        val forDirectiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(topElement)
-        val forItem = ForDirectiveUtil.findForItem(topElement, forDirectives = forDirectiveBlocks)
-        var isBatchAnnotation = false
-        val topElementParentClass =
-            if (forItem != null) {
-                val result = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks)
-                if (result == null) {
-                    // TODO Add an error message when the type of element used in the For directory is not a List type.
-                    errorHighlight(topElement, daoMethod, holder)
-                    return
-                }
-                val specifiedClassType =
-                    ForDirectiveUtil.resolveForDirectiveItemClassTypeBySuffixElement(topElement.text)
-                if (specifiedClassType != null) {
-                    PsiParentClass(specifiedClassType)
-                } else {
-                    result
-                }
-            } else {
-                val paramType = daoMethod.findParameter(cleanString(topElement.text))?.type
-                if (paramType == null) {
-                    errorHighlight(topElement, daoMethod, holder)
-                    return
-                }
-                isBatchAnnotation = PsiDaoMethod(project, daoMethod).daoType.isBatchAnnotation()
-                PsiParentClass(paramType)
-            }
-
-        val result =
-            ForDirectiveUtil.getFieldAccessLastPropertyClassType(
-                blockElement,
-                project,
-                topElementParentClass,
-                shortName = this.shortName,
-                isBatchAnnotation = isBatchAnnotation,
-            )
-
-        result?.highlightElement(holder)
-    }
-
-    private fun errorHighlight(
-        topElement: SqlElIdExpr,
-        daoMethod: PsiMethod,
-        holder: ProblemsHolder,
-    ) {
-        ValidationDaoParamResult(
-            topElement,
-            daoMethod.name,
-            this.shortName,
-        ).highlightElement(holder)
-    }
-
-    /**
-     * Check for existence of static field
-     */
-    private fun checkStaticFieldAndMethodAccess(
-        staticAccuser: SqlElStaticFieldAccessExpr,
-        holder: ProblemsHolder,
-    ) {
-        val blockElements = staticAccuser.accessElements
-        val psiStaticClass = PsiStaticElement(staticAccuser.elClass.elIdExprList, staticAccuser.containingFile)
-        val referenceClass = psiStaticClass.getRefClazz()
-        if (referenceClass == null) {
-            ValidationClassPathResult(
-                staticAccuser.elClass,
-                this.shortName,
-            ).highlightElement(holder)
-            return
-        }
-
-        val topParentClass = ForDirectiveUtil.getStaticFieldAccessTopElementClassType(staticAccuser, referenceClass)
-        if (topParentClass == null) {
-            blockElements.firstOrNull()?.let {
-                ValidationPropertyResult(
-                    it,
-                    PsiParentClass(referenceClass.psiClassType),
-                    this.shortName,
-                ).highlightElement(holder)
-            }
-            return
-        }
-        val result =
-            topParentClass.let {
-                ForDirectiveUtil.getFieldAccessLastPropertyClassType(
-                    blockElements,
-                    staticAccuser.project,
-                    it,
-                    shortName = this.shortName,
-                )
-            }
-        result?.highlightElement(holder)
+        val processor = InspectionPrimaryVisitorProcessor(this.shortName, element)
+        processor.check(holder, visitFile)
     }
 }

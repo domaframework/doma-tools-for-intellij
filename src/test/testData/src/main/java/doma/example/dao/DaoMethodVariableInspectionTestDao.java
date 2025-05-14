@@ -50,4 +50,10 @@ interface DaoMethodVariableInspectionTestDao {
   @Select
   Project noErrorWhenUsedInFunctionParameters(Employee employee, Integer count);
 
+  @Select
+  Employee duplicateForDirectiveDefinitionNames(Employee <error descr="An element name that is a duplicate of an element name defined in SQL is used">member</error>, Integer <error descr="There are unused parameters in the SQL [count]">count</error>,
+      List<Employee> users,
+      String searchName,
+      Boolean inForm);
+
 }

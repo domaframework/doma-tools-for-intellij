@@ -20,10 +20,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteralExpression
-import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
-import org.domaframework.doma.intellij.psi.SqlElNewExpr
-import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.psi.SqlVisitor
 
 open class SqlVisitorBase : SqlVisitor() {
@@ -56,15 +53,4 @@ open class SqlVisitorBase : SqlVisitor() {
 
             false -> null
         }
-
-    protected fun isLiteralOrStatic(targetElement: PsiElement): Boolean =
-        (
-            targetElement.firstChild?.elementType == SqlTypes.EL_STRING ||
-                targetElement.firstChild?.elementType == SqlTypes.EL_CHAR ||
-                targetElement.firstChild?.elementType == SqlTypes.EL_NUMBER ||
-                targetElement.firstChild?.elementType == SqlTypes.EL_NULL ||
-                targetElement.firstChild?.elementType == SqlTypes.BOOLEAN ||
-                targetElement.firstChild is SqlElNewExpr ||
-                targetElement.text.startsWith("@")
-        )
 }
