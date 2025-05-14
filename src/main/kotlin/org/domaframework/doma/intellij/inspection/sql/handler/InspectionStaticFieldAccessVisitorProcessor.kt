@@ -16,13 +16,11 @@
 package org.domaframework.doma.intellij.inspection.sql.handler
 
 import com.intellij.codeInspection.ProblemsHolder
-import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationClassPathResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationNotFoundStaticPropertyResult
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.extension.expr.accessElements
-import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 
 class InspectionStaticFieldAccessVisitorProcessor(
@@ -49,9 +47,9 @@ class InspectionStaticFieldAccessVisitorProcessor(
         val topParentClass = ForDirectiveUtil.getStaticFieldAccessTopElementClassType(staticAccuser, referenceClass)
         if (topParentClass == null) {
             blockElements.firstOrNull()?.let {
-                ValidationPropertyResult(
+                ValidationNotFoundStaticPropertyResult(
                     it,
-                    PsiParentClass(referenceClass.psiClassType),
+                    staticAccuser.elClass,
                     shortName,
                 ).highlightElement(holder)
             }

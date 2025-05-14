@@ -21,9 +21,11 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.psi.SqlElClass
 
 class ValidationNotFoundStaticPropertyResult(
     override val identify: PsiElement?,
+    val clazz: SqlElClass,
     override val shortName: String = "",
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
@@ -39,6 +41,7 @@ class ValidationNotFoundStaticPropertyResult(
             MessageBundle.message(
                 "inspection.invalid.sql.staticProperty",
                 identify.text,
+                clazz.text,
             ),
             problemHighlightType(project, shortName),
             highlightRange,
