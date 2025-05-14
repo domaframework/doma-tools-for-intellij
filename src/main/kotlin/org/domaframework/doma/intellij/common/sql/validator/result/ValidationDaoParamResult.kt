@@ -41,7 +41,7 @@ open class ValidationDaoParamResult(
         holder.registerProblem(
             identify,
             MessageBundle.message(
-                "inspector.invalid.dao.parameter",
+                "inspection.invalid.dao.parameter",
                 daoName,
                 identify.text ?: "",
             ),

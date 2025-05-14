@@ -93,7 +93,7 @@ class DaoMethodVariableInspector : AbstractBaseJavaLocalInspectionTool() {
                                 MessageBundle.message("inspection.invalid.dao.duplicate")
                             } else {
                                 MessageBundle.message(
-                                    "inspection.dao.method.variable.error",
+                                    "inspection.invalid.dao.paramUse",
                                     param.name,
                                 )
                             }

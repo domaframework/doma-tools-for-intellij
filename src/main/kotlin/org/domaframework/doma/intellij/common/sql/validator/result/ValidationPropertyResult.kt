@@ -46,7 +46,7 @@ class ValidationPropertyResult(
         holder.registerProblem(
             identify,
             MessageBundle.message(
-                "inspector.invalid.class.property",
+                "inspection.invalid.sql.property",
                 parentName,
                 identify.text ?: "",
             ),
