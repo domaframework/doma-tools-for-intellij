@@ -33,18 +33,26 @@ import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.extension.findFile
+import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.isCollector
 import org.domaframework.doma.intellij.extension.psi.isFunctionClazz
 import org.domaframework.doma.intellij.extension.psi.isSelectOption
 import org.domaframework.doma.intellij.extension.psi.methodParameters
-import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 /**
  * Check if Dao method arguments are used in the corresponding SQL file
  */
 class DaoMethodVariableInspector : AbstractBaseJavaLocalInspectionTool() {
+    private data class DaoMethodVariableVisitorResult(
+        val elements: List<PsiParameter>,
+        val deplicateForItemElements: List<PsiParameter>,
+    )
+
     override fun getDisplayName(): String = "Method argument usage check"
 
     override fun getShortName(): String = "org.domaframework.doma.intellij.variablechecker"
@@ -76,38 +84,65 @@ class DaoMethodVariableInspector : AbstractBaseJavaLocalInspectionTool() {
                         method.project.findFile(it)
                     } ?: return
 
-                findElementsInSqlFile(sqlFileManager, methodParameters.toList()).forEach { arg ->
-                    holder.registerProblem(
-                        (arg.originalElement as PsiParameterImpl).nameIdentifier,
-                        MessageBundle.message("inspection.dao.method.variable.error", arg.name),
-                        ProblemHighlightType.ERROR,
-                    )
+                val params = methodParameters.toList()
+                val result = findElementsInSqlFile(sqlFileManager, params)
+                params.forEach { param ->
+                    if (!result.elements.contains(param)) {
+                        val message =
+                            if (result.deplicateForItemElements.contains(param)) {
+                                MessageBundle.message("inspection.invalid.dao.duplicate")
+                            } else {
+                                MessageBundle.message(
+                                    "inspection.dao.method.variable.error",
+                                    param.name,
+                                )
+                            }
+                        holder.registerProblem(
+                            (param.originalElement as PsiParameterImpl).nameIdentifier,
+                            message,
+                            ProblemHighlightType.ERROR,
+                        )
+                    }
                 }
             }
         }
     }
 
-    fun findElementsInSqlFile(
+    private fun findElementsInSqlFile(
         sqlFile: PsiFile,
         args: List<PsiParameter>,
-    ): List<PsiParameter> {
+    ): DaoMethodVariableVisitorResult {
         val elements = mutableListOf<PsiParameter>()
+        val deplicateForItemElements = mutableListOf<PsiParameter>()
         var iterator: Iterator<PsiParameter>
         sqlFile.accept(
             object : PsiRecursiveElementVisitor() {
                 // Recursively explore child elements in a file with PsiRecursiveElementVisitor.
                 override fun visitElement(element: PsiElement) {
-                    if (element.elementType == SqlTypes.EL_IDENTIFIER && element.prevSibling?.elementType != SqlTypes.DOT) {
+                    if ((
+                            element.elementType == SqlTypes.EL_IDENTIFIER ||
+                                element is SqlElPrimaryExpr
+                        ) &&
+                        element.prevSibling?.elementType != SqlTypes.DOT
+                    ) {
                         iterator = args.minus(elements.toSet()).iterator()
                         while (iterator.hasNext()) {
                             val arg = iterator.next()
-                            val fieldAccessExpr =
-                                PsiTreeUtil.getParentOfType(
-                                    element,
-                                    SqlElStaticFieldAccessExpr::class.java,
-                                )
-                            if (fieldAccessExpr == null && element.text == arg.name) {
-                                elements.add(arg)
+                            if (element.text == arg.name) {
+                                // Check if you are in a For directive
+                                val elementParent = PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java)
+                                val isForItemSide = elementParent?.getForItem()?.textOffset == element.textOffset
+
+                                // Check if the element name definition source is in the for directive
+                                val forDirectiveBlocks =
+                                    ForDirectiveUtil.getForDirectiveBlocks(element)
+                                val forItem = ForDirectiveUtil.findForItem(element, forDirectives = forDirectiveBlocks)
+
+                                if (forItem != null || isForItemSide) {
+                                    deplicateForItemElements.add(arg)
+                                } else {
+                                    elements.add(arg)
+                                }
                                 break
                             }
                         }
@@ -116,6 +151,7 @@ class DaoMethodVariableInspector : AbstractBaseJavaLocalInspectionTool() {
                 }
             },
         )
-        return args.minus(elements.toSet())
+        val result = DaoMethodVariableVisitorResult(elements, deplicateForItemElements)
+        return result
     }
 }
