@@ -23,10 +23,12 @@ import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.extension.psi.isFirstElement
-import org.domaframework.doma.intellij.inspection.sql.handler.InspectionFieldAccessVisitorProcessor
-import org.domaframework.doma.intellij.inspection.sql.handler.InspectionPrimaryVisitorProcessor
-import org.domaframework.doma.intellij.inspection.sql.handler.InspectionStaticFieldAccessVisitorProcessor
+import org.domaframework.doma.intellij.inspection.sql.processor.InspectionFieldAccessVisitorProcessor
+import org.domaframework.doma.intellij.inspection.sql.processor.InspectionForDirectiveVisitorProcessor
+import org.domaframework.doma.intellij.inspection.sql.processor.InspectionPrimaryVisitorProcessor
+import org.domaframework.doma.intellij.inspection.sql.processor.InspectionStaticFieldAccessVisitorProcessor
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -50,8 +52,8 @@ class SqlInspectionVisitor(
 
     override fun visitElStaticFieldAccessExpr(element: SqlElStaticFieldAccessExpr) {
         super.visitElStaticFieldAccessExpr(element)
-        val handler = InspectionStaticFieldAccessVisitorProcessor(this.shortName)
-        handler.check(element, holder)
+        val processor = InspectionStaticFieldAccessVisitorProcessor(this.shortName)
+        processor.check(element, holder)
     }
 
     override fun visitElFieldAccessExpr(element: SqlElFieldAccessExpr) {
@@ -59,8 +61,14 @@ class SqlInspectionVisitor(
         if (setFile(element)) return
         val visitFile: PsiFile = file ?: return
 
-        val handler = InspectionFieldAccessVisitorProcessor(shortName, element)
-        handler.check(holder, visitFile)
+        val processor = InspectionFieldAccessVisitorProcessor(shortName, element)
+        processor.check(holder, visitFile)
+    }
+
+    override fun visitElForDirective(element: SqlElForDirective) {
+        super.visitElForDirective(element)
+        val process = InspectionForDirectiveVisitorProcessor(shortName, element)
+        process.check(holder)
     }
 
     override fun visitElPrimaryExpr(element: SqlElPrimaryExpr) {
@@ -69,7 +77,7 @@ class SqlInspectionVisitor(
         if (setFile(element)) return
         val visitFile: PsiFile = file ?: return
 
-        val handler = InspectionPrimaryVisitorProcessor(this.shortName, element)
-        handler.check(holder, visitFile)
+        val processor = InspectionPrimaryVisitorProcessor(this.shortName, element)
+        processor.check(holder, visitFile)
     }
 }

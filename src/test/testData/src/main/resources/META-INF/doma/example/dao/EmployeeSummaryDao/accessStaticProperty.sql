@@ -33,7 +33,7 @@ where
      /*%end */
     )
     -- Static field call that does not exist
-    /*%if @doma.example.entity.ProjectDetail@<error descr="The field or method [priority] does not exist in the class [ProjectDetail]">priority</error> >= 3 */
+    /*%if @doma.example.entity.ProjectDetail@<error descr="[priority] is not a public or static property in the class [doma.example.entity.ProjectDetail]">priority</error> >= 3 */
     -- Static method call that does not exist
-    AND pd.limit_date = /* @doma.example.entity.ProjectDetail@<error descr="The field or method [getLimit] does not exist in the class [ProjectDetail]">getLimit</error>() */0
+    AND pd.limit_date = /* @doma.example.entity.ProjectDetail@<error descr="[getLimit] is not a public or static property in the class [doma.example.entity.ProjectDetail]">getLimit</error>() */0
     /*%end */

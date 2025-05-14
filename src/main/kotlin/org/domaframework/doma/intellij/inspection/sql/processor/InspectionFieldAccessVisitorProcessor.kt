@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.sql.handler
+package org.domaframework.doma.intellij.inspection.sql.processor
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiFile
@@ -21,7 +21,6 @@ import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.sql.cleanString
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationForDirectiveItemTypeResult
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.extension.psi.findParameter
@@ -54,10 +53,8 @@ class InspectionFieldAccessVisitorProcessor(
             if (forItem != null) {
                 val result = ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks, forItem)
                 if (result == null) {
-                    ValidationForDirectiveItemTypeResult(
-                        topElement,
-                        this.shortName,
-                    ).highlightElement(holder)
+                    // If the for directive definition element of the top element is invalid,
+                    // an error is displayed by InspectionPrimaryVisitorProcessor.
                     return
                 }
                 val specifiedClassType =

@@ -19,6 +19,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypes
 import com.intellij.psi.util.CachedValue
@@ -34,6 +35,7 @@ import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.foritem.ForItem
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationNotFoundTopTypeResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
 import org.domaframework.doma.intellij.extension.expr.accessElements
@@ -178,40 +180,72 @@ class ForDirectiveUtil {
             // Get the type of the top for directive definition element
             // Defined in Dao parameters or static property calls
             if (forDirectiveBlocks.isEmpty()) return null
+            val topDirectiveItem = forDirectiveBlocks.first().item
+            val file = topDirectiveItem.containingFile ?: return null
+            val daoMethod = findDaoMethod(file)
+
             var parentClassType =
                 getTopForDirectiveDeclarationClassType(
                     forDirectiveBlocks.first().item,
                     project,
-                ) ?: return null
+                    daoMethod,
+                )
             forDirectiveBlocks.drop(1).forEach { directive ->
                 // Get the definition type of the target directive
                 val formItem = ForItem(directive.item)
-                if (targetForItem != null &&
-                    formItem.element.textOffset > targetForItem.textOffset
-                ) {
+                if (targetForItem != null && formItem.element.textOffset > targetForItem.textOffset) {
                     return parentClassType
                 }
                 val forDirectiveExpr = formItem.getParentForDirectiveExpr()
                 val forDirectiveDeclaration = forDirectiveExpr?.getForItemDeclaration()
                 if (forDirectiveDeclaration != null) {
-                    val forItemDeclarationBlocks = forDirectiveDeclaration.getDeclarationChildren()
-                    getFieldAccessLastPropertyClassType(
-                        forItemDeclarationBlocks,
-                        project,
-                        parentClassType,
-                        complete = { lastType ->
-                            val classType = lastType.type as? PsiClassType
-                            val nestClass =
-                                if (classType != null &&
-                                    PsiClassTypeUtil.Companion.isIterableType(classType, project)
-                                ) {
-                                    classType.parameters.firstOrNull()
-                                } else {
-                                    null
-                                }
-                            nestClass?.let { parentClassType = PsiParentClass(it) }
-                        },
-                    )
+                    val declarationTopElement =
+                        forDirectiveDeclaration.getDeclarationChildren().first()
+                    val findDeclarationForItem =
+                        findForItem(declarationTopElement, forDirectives = forDirectiveBlocks)
+
+                    if (findDeclarationForItem == null && daoMethod != null) {
+                        val matchParam = daoMethod.findParameter(declarationTopElement.text)
+                        if (matchParam != null) {
+                            val convertOptional =
+                                PsiClassTypeUtil.convertOptionalType(matchParam.type, project)
+                            parentClassType = PsiParentClass(convertOptional)
+                        }
+                    }
+                    if (parentClassType != null) {
+                        val isBatchAnnotation = daoMethod?.let { PsiDaoMethod(project, it).daoType.isBatchAnnotation() } == true
+                        val forItemDeclarationBlocks =
+                            forDirectiveDeclaration.getDeclarationChildren()
+                        getFieldAccessLastPropertyClassType(
+                            forItemDeclarationBlocks,
+                            project,
+                            parentClassType,
+                            isBatchAnnotation = isBatchAnnotation,
+                            complete = { lastType ->
+                                val classType = lastType.type as? PsiClassType
+                                val nestClass =
+                                    if (classType != null &&
+                                        PsiClassTypeUtil.Companion.isIterableType(
+                                            classType,
+                                            project,
+                                        )
+                                    ) {
+                                        classType.parameters.firstOrNull()
+                                    } else {
+                                        null
+                                    }
+                                parentClassType =
+                                    if (nestClass != null) {
+                                        PsiParentClass(nestClass)
+                                    } else {
+                                        null
+                                    }
+                            },
+                        )
+                        if (targetForItem != null && formItem.element.text == targetForItem.text) {
+                            return parentClassType
+                        }
+                    }
                 }
             }
 
@@ -221,6 +255,7 @@ class ForDirectiveUtil {
         fun getTopForDirectiveDeclarationClassType(
             topForDirectiveItem: PsiElement,
             project: Project,
+            daoMethod: PsiMethod?,
         ): PsiParentClass? {
             var result: PsiParentClass? = null
             var fieldAccessTopParentClass: PsiParentClass? = null
@@ -256,8 +291,8 @@ class ForDirectiveUtil {
                         )
                 } else {
                     // Defined by Dao parameter
-                    val file = topForDirectiveItem.containingFile ?: return null
-                    val daoMethod = findDaoMethod(file) ?: return null
+                    if (daoMethod == null) return null
+
                     val topElementText =
                         forDirectiveDeclaration.getDeclarationChildren().firstOrNull()?.text
                             ?: return null
@@ -343,9 +378,10 @@ class ForDirectiveUtil {
                     val convertOptional = PsiClassTypeUtil.convertOptionalType(topParent.type, project)
                     PsiParentClass(convertOptional)
                 }
-            // TODO: Display an error message that the property cannot be called.
             val parentType = PsiClassTypeUtil.convertOptionalType(parent.type, project)
-            val classType = parentType as? PsiClassType ?: return null
+            val classType =
+                parentType as? PsiClassType
+                    ?: return ValidationNotFoundTopTypeResult(blocks.first(), shortName)
 
             var competeResult: ValidationCompleteResult? = null
 

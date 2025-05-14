@@ -48,7 +48,7 @@ class SqlElIdExprReference(
         // Refers to an element defined in the for directive
         val isSelfSkip = isSelfSkip(topElm)
         val forDirectiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(element, isSelfSkip)
-        val forItem = ForDirectiveUtil.findForItem(element, forDirectives = forDirectiveBlocks)
+        val forItem = ForDirectiveUtil.findForItem(topElm, forDirectives = forDirectiveBlocks)
         if (forItem != null && element.textOffset == topElm.textOffset) {
             PluginLoggerUtil.countLogging(
                 this::class.java.simpleName,
@@ -69,18 +69,29 @@ class SqlElIdExprReference(
             )
         }
 
-        val tolElementForItem =
-            ForDirectiveUtil.getForDirectiveItemClassType(topElm.project, forDirectiveBlocks)
+        // Reference to field access elements
+        var parentClass: PsiParentClass? = null
         var isBatchAnnotation = false
-        var parentClass =
-            if (tolElementForItem != null) {
-                tolElementForItem
-            } else {
-                val daoMethod = findDaoMethod(file) ?: return null
-                val param = daoMethod.findParameter(topElm.text) ?: return null
-                isBatchAnnotation = PsiDaoMethod(topElm.project, daoMethod).daoType.isBatchAnnotation()
-                PsiParentClass(param.type)
-            }
+        if (forItem != null) {
+            val project = topElm.project
+            val forItemClassType =
+                ForDirectiveUtil.getForDirectiveItemClassType(project, forDirectiveBlocks, forItem)
+                    ?: return null
+            val specifiedClassType =
+                ForDirectiveUtil.resolveForDirectiveItemClassTypeBySuffixElement(topElm.text)
+            parentClass =
+                if (specifiedClassType != null) {
+                    PsiParentClass(specifiedClassType)
+                } else {
+                    forItemClassType
+                }
+        } else {
+            val daoMethod = findDaoMethod(file) ?: return null
+            val param = daoMethod.findParameter(topElm.text) ?: return null
+            parentClass = PsiParentClass(param.type)
+            isBatchAnnotation = PsiDaoMethod(topElm.project, daoMethod).daoType.isBatchAnnotation()
+        }
+
         val result =
             ForDirectiveUtil.getFieldAccessLastPropertyClassType(
                 targetElements,

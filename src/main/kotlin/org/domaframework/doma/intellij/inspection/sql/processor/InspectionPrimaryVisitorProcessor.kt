@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.sql.handler
+package org.domaframework.doma.intellij.inspection.sql.processor
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiFile
@@ -50,6 +50,8 @@ class InspectionPrimaryVisitorProcessor(
                 skipSelf = isSkip,
                 forDirectives = forDirectiveBlocks,
             )
+        if (forDirectiveExp?.getForItem() == element) return
+
         if (forItem != null) {
             val forDeclarationType =
                 ForDirectiveUtil.getForDirectiveItemClassType(
