@@ -18,7 +18,7 @@ select p.project_id
        /*%end */
            p.employee_id = /* member.employeeId */0
        and p.not_next = /* member_has_next */false
-       and p.next = /* member_has_next */false
+       and p.next = /* <error descr="Can't get type of first element">member_has_next</error>.a */false
        and p.not_index = /* member_index */999
        and p.index = /* member_index */0
      /*%end */
