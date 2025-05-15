@@ -31,26 +31,6 @@
 - Update dependency org.jetbrains.kotlin.jvm to v2.1.21 ([#161])
 - Update dependency com.google.googlejavaformat:google-java-format to v1.27.0 ([#143])
 
-[#162]:https://github.com/domaframework/doma-tools-for-intellij/pull/162
-[#160]:https://github.com/domaframework/doma-tools-for-intellij/pull/160
-[#150]:https://github.com/domaframework/doma-tools-for-intellij/pull/150
-[#148]:https://github.com/domaframework/doma-tools-for-intellij/pull/148
-[#136]:https://github.com/domaframework/doma-tools-for-intellij/pull/136
-[#167]:https://github.com/domaframework/doma-tools-for-intellij/pull/167
-[#166]:https://github.com/domaframework/doma-tools-for-intellij/pull/166
-[#159]:https://github.com/domaframework/doma-tools-for-intellij/pull/159
-[#157]:https://github.com/domaframework/doma-tools-for-intellij/pull/157
-[#156]:https://github.com/domaframework/doma-tools-for-intellij/pull/156
-[#152]:https://github.com/domaframework/doma-tools-for-intellij/pull/152
-[#151]:https://github.com/domaframework/doma-tools-for-intellij/pull/151
-[#146]:https://github.com/domaframework/doma-tools-for-intellij/pull/146
-[#145]:https://github.com/domaframework/doma-tools-for-intellij/pull/145
-[#142]:https://github.com/domaframework/doma-tools-for-intellij/pull/142
-[#164]:https://github.com/domaframework/doma-tools-for-intellij/pull/164
-[#161]:https://github.com/domaframework/doma-tools-for-intellij/pull/161
-[#143]:https://github.com/domaframework/doma-tools-for-intellij/pull/143
-
-
 ## [0.6.0] - 2025-04-30
 
 ### New Features
@@ -203,7 +183,8 @@
   - Rename SQL file directory when renaming Dao
   - Change Dao package name or SQL file directory configuration when changing configuration
 
-[Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.6.0-beta...HEAD
+[Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.3.2...v0.4.0
@@ -226,6 +207,24 @@
 [#122]: https://github.com/domaframework/doma-tools-for-intellij/pull/122
 [#126]: https://github.com/domaframework/doma-tools-for-intellij/pull/126
 [#128]: https://github.com/domaframework/doma-tools-for-intellij/pull/128
+[#136]: https://github.com/domaframework/doma-tools-for-intellij/pull/136
+[#142]: https://github.com/domaframework/doma-tools-for-intellij/pull/142
+[#143]: https://github.com/domaframework/doma-tools-for-intellij/pull/143
+[#145]: https://github.com/domaframework/doma-tools-for-intellij/pull/145
+[#146]: https://github.com/domaframework/doma-tools-for-intellij/pull/146
+[#148]: https://github.com/domaframework/doma-tools-for-intellij/pull/148
+[#150]: https://github.com/domaframework/doma-tools-for-intellij/pull/150
+[#151]: https://github.com/domaframework/doma-tools-for-intellij/pull/151
+[#152]: https://github.com/domaframework/doma-tools-for-intellij/pull/152
+[#156]: https://github.com/domaframework/doma-tools-for-intellij/pull/156
+[#157]: https://github.com/domaframework/doma-tools-for-intellij/pull/157
+[#159]: https://github.com/domaframework/doma-tools-for-intellij/pull/159
+[#160]: https://github.com/domaframework/doma-tools-for-intellij/pull/160
+[#161]: https://github.com/domaframework/doma-tools-for-intellij/pull/161
+[#162]: https://github.com/domaframework/doma-tools-for-intellij/pull/162
+[#164]: https://github.com/domaframework/doma-tools-for-intellij/pull/164
+[#166]: https://github.com/domaframework/doma-tools-for-intellij/pull/166
+[#167]: https://github.com/domaframework/doma-tools-for-intellij/pull/167
 [#20]: https://github.com/domaframework/doma-tools-for-intellij/pull/20
 [#21]: https://github.com/domaframework/doma-tools-for-intellij/pull/21
 [#24]: https://github.com/domaframework/doma-tools-for-intellij/pull/24
@@ -269,4 +268,3 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
-[0.7.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.6.0...0.7.0
