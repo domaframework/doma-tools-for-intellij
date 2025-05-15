@@ -2,6 +2,55 @@
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-05-15
+
+### New Features
+
+- Error message details ([#162])
+- Completion for directive items ([#160])
+- for directive specific word element handling ([#150])
+- Code completion and code inspection for static property call package class names ([#148])
+- Add SQL test data validation inspections ([#136])
+
+### Bug Fixes
+
+- Fix to not display Dao parameter information in the document for elements defined with the for directive. ([#167])
+- Do not suggest element names you define in the for directive element ([#166])
+- Fix: issue where grouped conditions in block comments were recognized as bind variables ([#159])
+- Fixed check for List type test data ([#157])
+- Fix/formatter line comment indent ([#156])
+- Fixed specific element types to be treated as primitive types ([#152])
+- Fix: optional dao param type conversion ([#151])
+- Move PluginUtil.kt to the util package in release configuration files ([#146])
+- List type test data check and exclude else directive ([#145])
+- Fix/document first for item ([#142])
+
+### Dependency Updates
+
+- Update dependency org.jetbrains.intellij.platform to v2.6.0 ([#164])
+- Update dependency org.jetbrains.kotlin.jvm to v2.1.21 ([#161])
+- Update dependency com.google.googlejavaformat:google-java-format to v1.27.0 ([#143])
+
+[#162]:https://github.com/domaframework/doma-tools-for-intellij/pull/162
+[#160]:https://github.com/domaframework/doma-tools-for-intellij/pull/160
+[#150]:https://github.com/domaframework/doma-tools-for-intellij/pull/150
+[#148]:https://github.com/domaframework/doma-tools-for-intellij/pull/148
+[#136]:https://github.com/domaframework/doma-tools-for-intellij/pull/136
+[#167]:https://github.com/domaframework/doma-tools-for-intellij/pull/167
+[#166]:https://github.com/domaframework/doma-tools-for-intellij/pull/166
+[#159]:https://github.com/domaframework/doma-tools-for-intellij/pull/159
+[#157]:https://github.com/domaframework/doma-tools-for-intellij/pull/157
+[#156]:https://github.com/domaframework/doma-tools-for-intellij/pull/156
+[#152]:https://github.com/domaframework/doma-tools-for-intellij/pull/152
+[#151]:https://github.com/domaframework/doma-tools-for-intellij/pull/151
+[#146]:https://github.com/domaframework/doma-tools-for-intellij/pull/146
+[#145]:https://github.com/domaframework/doma-tools-for-intellij/pull/145
+[#142]:https://github.com/domaframework/doma-tools-for-intellij/pull/142
+[#164]:https://github.com/domaframework/doma-tools-for-intellij/pull/164
+[#161]:https://github.com/domaframework/doma-tools-for-intellij/pull/161
+[#143]:https://github.com/domaframework/doma-tools-for-intellij/pull/143
+
+
 ## [0.6.0] - 2025-04-30
 
 ### New Features
@@ -220,3 +269,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[0.7.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.6.0...0.7.0
