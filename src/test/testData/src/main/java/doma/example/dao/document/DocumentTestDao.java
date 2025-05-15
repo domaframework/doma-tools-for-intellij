@@ -42,4 +42,7 @@ public interface DocumentTestDao {
   @Select
   Project documentForItemOptionalProperty(Optional<List<Optional<Project>>> optionalProjects);
 
+  @Select
+  int documentForItemInvalidPrimary(Principal item, Principal principal);
+
 }

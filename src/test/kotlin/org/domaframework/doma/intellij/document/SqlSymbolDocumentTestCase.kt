@@ -44,6 +44,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
         addSqlFile("$testPackage/$testDaoName/documentForItemIndex.sql")
         addSqlFile("$testPackage/$testDaoName/documentForItemOptionalForItem.sql")
         addSqlFile("$testPackage/$testDaoName/documentForItemOptionalProperty.sql")
+        addSqlFile("$testPackage/$testDaoName/documentForItemInvalidPrimary.sql")
     }
 
     fun testDocumentForItemDaoParam() {
@@ -143,6 +144,13 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
             "<a href=\"psi_element://doma.example.entity.Project\">Project</a> project"
 
         documentationFindTextTest(sqlName, "project", result)
+    }
+
+    fun testDocumentForItemInvalidPrimary() {
+        val sqlName = "documentForItemInvalidPrimary"
+        val result = " item"
+
+        documentationFindTextTest(sqlName, "item", result)
     }
 
     private fun documentationTest(

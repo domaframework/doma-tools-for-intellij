@@ -24,7 +24,9 @@ import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.extension.expr.accessElementsPrevOriginalElement
 import org.domaframework.doma.intellij.extension.psi.findParameter
+import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElForDirective
 
 class DocumentDaoParameterGenerator(
     val originalElement: PsiElement,
@@ -59,6 +61,15 @@ class DocumentDaoParameterGenerator(
                     forItemClassType
                 }
         } else {
+            val forDirectiveExpr =
+                PsiTreeUtil.getParentOfType(
+                    searchElement,
+                    SqlElForDirective::class.java,
+                )
+            if (forDirectiveExpr != null && forDirectiveExpr.getForItem() == searchElement) {
+                // For elements defined with the for directive, Dao parameters are not searched.
+                return
+            }
             val daoMethod = findDaoMethod(originalElement.containingFile) ?: return
             val param = daoMethod.findParameter(originalElement.text) ?: return
             isBatchAnnotation = PsiDaoMethod(project, daoMethod).daoType.isBatchAnnotation()
