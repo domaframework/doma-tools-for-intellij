@@ -289,7 +289,7 @@ class SqlCompleteTest : DomaSqlTest() {
         innerDirectiveCompleteTest(
             "$testDapName/completeDirectiveInsideFor.sql",
             listOf("project"),
-            listOf("employee"),
+            listOf("employee", "member", "%for"),
         )
     }
 

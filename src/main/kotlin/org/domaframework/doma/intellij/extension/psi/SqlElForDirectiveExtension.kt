@@ -25,12 +25,13 @@ import org.domaframework.doma.intellij.psi.SqlBlockComment
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
+import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 fun SqlElForDirective.getForItem(): PsiElement? =
     PsiTreeUtil
-        .getChildOfType(this, SqlElIdExpr::class.java)
+        .getChildOfType(this, SqlElPrimaryExpr::class.java)
 
 fun SqlElForDirective.getForItemDeclaration(): ForDeclarationItem? {
     val parentCommentBlock =

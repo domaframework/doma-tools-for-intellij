@@ -365,7 +365,14 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 result.addElement(LookupElementBuilder.create(match.name))
             }
             // Add ForDirective Items
-            val forDirectives = ForDirectiveUtil.getForDirectiveBlocks(position)
+            val parentForDirectiveExpr =
+                PsiTreeUtil.getParentOfType(position, SqlElForDirective::class.java)
+                    ?: PsiTreeUtil.getChildOfType(position.parent, SqlElForDirective::class.java)
+            val forDirectives =
+                ForDirectiveUtil.getForDirectiveBlocks(position).filter {
+                    PsiTreeUtil.getParentOfType(it.item, SqlElForDirective::class.java) !=
+                        parentForDirectiveExpr
+                }
             addForDirectiveSuggestions(forDirectives, result)
             return null
         }
