@@ -46,14 +46,6 @@ fun isJavaOrKotlinFileType(daoFile: PsiFile): Boolean {
     }
 }
 
-fun isJavaOrKotlinFileType(file: VirtualFile): Boolean {
-    val fileType = file.fileType
-    return when (fileType.name) {
-        "JAVA", "Kotlin", "CLASS" -> true
-        else -> false
-    }
-}
-
 /*
  * Determine whether the open file is an SQL template file extension
  */
@@ -92,9 +84,18 @@ fun searchDaoFile(
         return null
     }
 
-    val subProject =
-        originFilePath.substring(projectRootPath.length, originFilePath.indexOf(SRC_MAIN_PATH))
-    return contentRoot
-        .findFileByRelativePath(subProject)
-        ?.findFileByRelativePath(relativeDaoFilePath)
+    // TODO Dynamically build the source directory path and retrieve subproject info
+    // by inspecting file metadata instead of using string manipulation.
+    val index = originFilePath.indexOf(SRC_MAIN_PATH)
+    val projectRootPathBefore = projectRootPath.substringBefore(SRC_MAIN_PATH)
+    if (index < 0 || projectRootPathBefore.length < index) return null
+    val subProjectName =
+        originFilePath.substring(projectRootPathBefore.length, index)
+
+    val daoFile =
+        contentRoot
+            .findFileByRelativePath(subProjectName)
+            ?.findFileByRelativePath(relativeDaoFilePath)
+
+    return daoFile
 }
