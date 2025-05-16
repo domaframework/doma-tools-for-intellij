@@ -95,7 +95,7 @@ class StaticDirectiveHandler(
     ): Boolean {
         if (BindDirectiveUtil.getDirectiveType(element) == DirectiveType.BUILT_IN) {
             val prefix = getBindSearchWord(element, bindText)
-            val collector = StaticBuildFunctionCollector(project, prefix)
+            val collector = StaticBuildFunctionCollector(element.project, prefix)
             val candidates = collector.collect()
             candidates?.let { it1 -> result.addAllElements(it1) }
             return true

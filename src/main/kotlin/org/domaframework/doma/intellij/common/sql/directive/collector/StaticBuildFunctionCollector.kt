@@ -18,126 +18,73 @@ package org.domaframework.doma.intellij.common.sql.directive.collector
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiType
-import com.intellij.psi.search.GlobalSearchScope
-import org.domaframework.doma.intellij.common.sql.directive.DomaFunction
+import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiModifier
+import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
+import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.extension.getJavaClazz
+import org.domaframework.doma.intellij.extension.psi.psiClassType
+import org.domaframework.doma.intellij.setting.state.DomaToolsCustomFunctionSettings
+import kotlin.collections.mutableSetOf
 
 class StaticBuildFunctionCollector(
     private val project: Project,
     private val bind: String,
 ) : StaticDirectiveHandlerCollector() {
-    public override fun collect(): List<LookupElement>? =
-        listOf(
-            DomaFunction(
-                "escape",
-                getJavaLangString(),
-                listOf(
-                    getPsiTypeByClassName("java.lang.CharSequence"),
-                    getPsiTypeByClassName("java.lang.Char"),
-                ),
-            ),
-            DomaFunction(
-                "prefix",
-                getJavaLangString(),
-                listOf(
-                    getPsiTypeByClassName("java.lang.CharSequence"),
-                    getPsiTypeByClassName("java.lang.Char"),
-                ),
-            ),
-            DomaFunction(
-                "infix",
-                getJavaLangString(),
-                listOf(
-                    getPsiTypeByClassName("java.lang.CharSequence"),
-                    getPsiTypeByClassName("java.lang.Char"),
-                ),
-            ),
-            DomaFunction(
-                "suffix",
-                getJavaLangString(),
-                listOf(
-                    getPsiTypeByClassName("java.lang.CharSequence"),
-                    getPsiTypeByClassName("java.lang.Char"),
-                ),
-            ),
-            DomaFunction(
-                "roundDownTimePart",
-                getPsiTypeByClassName("java.util.Date"),
-                listOf(getPsiTypeByClassName("java.util.Date")),
-            ),
-            DomaFunction(
-                "roundDownTimePart",
-                getPsiTypeByClassName("java.sql.Date"),
-                listOf(getPsiTypeByClassName("java.util.Date")),
-            ),
-            DomaFunction(
-                "roundDownTimePart",
-                getPsiTypeByClassName("java.sql.Timestamp"),
-                listOf(getPsiTypeByClassName("java.sql.Timestamp")),
-            ),
-            DomaFunction(
-                "roundDownTimePart",
-                getPsiTypeByClassName("java.time.LocalDateTime"),
-                listOf(getPsiTypeByClassName("java.time.LocalDateTime")),
-            ),
-            DomaFunction(
-                "roundUpTimePart",
-                getPsiTypeByClassName("java.util.Date"),
-                listOf(getPsiTypeByClassName("java.sql.Date")),
-            ),
-            DomaFunction(
-                "roundUpTimePart",
-                getPsiTypeByClassName("java.sql.Timestamp"),
-                listOf(getPsiTypeByClassName("java.sql.Timestamp")),
-            ),
-            DomaFunction(
-                "roundUpTimePart",
-                getPsiTypeByClassName("java.time.LocalDate"),
-                listOf(getPsiTypeByClassName("java.time.LocalDate")),
-            ),
-            DomaFunction(
-                "isEmpty",
-                getPsiTypeByClassName("boolean"),
-                listOf(getPsiTypeByClassName("java.lang.CharSequence")),
-            ),
-            DomaFunction(
-                "isNotEmpty",
-                getPsiTypeByClassName("boolean"),
-                listOf(getPsiTypeByClassName("java.lang.CharSequence")),
-            ),
-            DomaFunction(
-                "isBlank",
-                getPsiTypeByClassName("boolean"),
-                listOf(getPsiTypeByClassName("java.lang.CharSequence")),
-            ),
-            DomaFunction(
-                "isNotBlank",
-                getPsiTypeByClassName("boolean"),
-                listOf(getPsiTypeByClassName("java.lang.CharSequence")),
-            ),
-        ).filter {
-            it.name.startsWith(bind.substringAfter("@"))
-        }.map {
-            LookupElementBuilder
-                .create("${it.name}()")
-                .withPresentableText(it.name)
-                .withTailText(
-                    "(${
-                        it.parameters.joinToString(",") { param ->
-                            param.toString().replace("PsiType:", "")
-                        }
-                    })",
-                    true,
-                ).withTypeText(it.returnType.presentableText)
+    public override fun collect(): List<LookupElement>? {
+        var functions = mutableSetOf<PsiMethod>()
+        val setting = DomaToolsCustomFunctionSettings.getInstance(project)
+        val state = setting.state
+        val customFunctions = state.customFunctionClassNames
+
+        val expressionFunctionInterface =
+            ExpressionFunctionsHelper.setExpressionFunctionsInterface(project)
+                ?: return null
+
+        customFunctions.forEach { function ->
+            val expressionClazz = project.getJavaClazz(function)
+            if (expressionClazz != null &&
+                ExpressionFunctionsHelper.isInheritor(expressionClazz)
+            ) {
+                val psiParent = PsiParentClass(expressionClazz.psiClassType)
+                psiParent.searchMethod("")?.let { methods ->
+                    functions.addAll(
+                        methods.filter {
+                            isPublicFunction(it)
+                        },
+                    )
+                }
+            }
         }
 
-    private fun getJavaLangString(): PsiType =
-        PsiType.getJavaLangString(
-            PsiManager.getInstance(project),
-            GlobalSearchScope.allScope(project),
-        )
+        if (functions.isEmpty()) {
+            functions.addAll(
+                expressionFunctionInterface.allMethods.filter {
+                    isPublicFunction(it)
+                },
+            )
+        }
 
-    private fun getPsiTypeByClassName(className: String): PsiType =
-        PsiType.getTypeByName(className, project, GlobalSearchScope.allScope(project))
+        return functions
+            .filter {
+                it.name.startsWith(bind.substringAfter("@"))
+            }.map {
+                val parameters = it.parameterList.parameters.toList()
+                LookupElementBuilder
+                    .create("${it.name}()")
+                    .withPresentableText(it.name)
+                    .withTailText(
+                        "(${
+                            parameters.joinToString(",") { "${it.type.presentableText} ${it.name}" }
+                        })",
+                        true,
+                    ).withTypeText(it.returnType?.presentableText ?: "void")
+            }
+    }
+
+    private fun isPublicFunction(method: PsiMethod): Boolean =
+        !method.isConstructor &&
+            method.hasModifierProperty(
+                PsiModifier.PUBLIC,
+            )
 }
