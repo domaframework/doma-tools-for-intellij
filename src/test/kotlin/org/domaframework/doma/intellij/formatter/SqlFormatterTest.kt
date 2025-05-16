@@ -28,13 +28,13 @@ class SqlFormatterTest : BasePlatformTestCase() {
 
     override fun setUp() {
         super.setUp()
-        val settings = DomaToolsFormatEnableSettings.getInstance()
+        val settings = DomaToolsFormatEnableSettings.getInstance(myFixture.project)
         settings.state.isEnableSqlFormat = true
     }
 
     override fun tearDown() {
         try {
-            val settings = DomaToolsFormatEnableSettings.getInstance()
+            val settings = DomaToolsFormatEnableSettings.getInstance(myFixture.project)
             settings.state.isEnableSqlFormat = false
         } finally {
             super.tearDown()
