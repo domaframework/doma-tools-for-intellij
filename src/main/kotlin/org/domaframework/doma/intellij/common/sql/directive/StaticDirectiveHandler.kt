@@ -17,7 +17,6 @@ package org.domaframework.doma.intellij.common.sql.directive
 
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
@@ -34,7 +33,6 @@ class StaticDirectiveHandler(
     private val element: PsiElement,
     private val result: CompletionResultSet,
     private val bindText: String,
-    private val project: Project,
 ) : DirectiveHandler(originalFile) {
     override fun directiveHandle(): Boolean {
         var handleResult = false
