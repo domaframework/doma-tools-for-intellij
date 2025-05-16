@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.7.1] - 2025-05-16
+
+### Bug Fixes
+
+- Fix missing inspections for injection files ([#172])
+
+[#172]:https://github.com/domaframework/doma-tools-for-intellij/pull/172
+
+
 ## [0.7.0] - 2025-05-15
 
 ### New Features
@@ -268,3 +277,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[0.7.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.7.0...0.7.1
