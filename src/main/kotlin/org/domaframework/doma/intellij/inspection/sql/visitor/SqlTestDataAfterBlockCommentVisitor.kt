@@ -18,7 +18,6 @@ package org.domaframework.doma.intellij.inspection.sql.visitor
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.nextLeafs
@@ -37,14 +36,13 @@ class SqlTestDataAfterBlockCommentVisitor(
     private val shortName: String,
 ) : SqlVisitorBase() {
     override fun visitElement(element: PsiElement) {
-        if (setFile(element)) return
-        val visitFile: PsiFile = file ?: return
-        if (isJavaOrKotlinFileType(visitFile) && element is PsiLiteralExpression) {
-            val injectionFile = initInjectionElement(visitFile, element.project, element) ?: return
+        val file = element.containingFile ?: return
+        if (isJavaOrKotlinFileType(file) && element is PsiLiteralExpression) {
+            val injectionFile = initInjectionElement(file, element.project, element) ?: return
             injectionFile.accept(this)
             super.visitElement(element)
         }
-        if (isInjectionSqlFile(visitFile)) {
+        if (isInjectionSqlFile(file)) {
             element.acceptChildren(this)
         }
     }
