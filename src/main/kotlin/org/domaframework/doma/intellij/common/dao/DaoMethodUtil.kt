@@ -27,8 +27,8 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.RESOURCES_META_INF_PATH
-import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.RESOURCES_PATH
+import org.domaframework.doma.intellij.common.CommonPathParameterHelper.RESOURCES_META_INF_PATH
+import org.domaframework.doma.intellij.common.CommonPathParameterHelper.RESOURCES_PATH
 import org.domaframework.doma.intellij.common.getExtension
 import org.domaframework.doma.intellij.common.getJarRoot
 import org.domaframework.doma.intellij.common.getMethodDaoFilePath

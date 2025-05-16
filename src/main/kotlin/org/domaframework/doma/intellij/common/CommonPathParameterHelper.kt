@@ -15,15 +15,15 @@
  */
 package org.domaframework.doma.intellij.common
 
-open class CommonPathParameter {
-    companion object {
-        val SRC_MAIN_PATH: String
-            get() = "/src/main"
+// TODO Dynamically build the source directory path and retrieve subproject info
+// by inspecting file metadata instead of using string manipulation.
+object CommonPathParameterHelper {
+    val SRC_MAIN_PATH: String
+        get() = "/src/main"
 
-        val RESOURCES_PATH: String
-            get() = "resources"
+    val RESOURCES_PATH: String
+        get() = "resources"
 
-        val RESOURCES_META_INF_PATH: String
-            get() = "META-INF"
-    }
+    val RESOURCES_META_INF_PATH: String
+        get() = "META-INF"
 }

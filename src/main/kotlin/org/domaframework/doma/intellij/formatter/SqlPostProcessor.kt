@@ -25,7 +25,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.impl.source.codeStyle.PostFormatProcessor
 import org.domaframework.doma.intellij.setting.SqlLanguage
-import org.domaframework.doma.intellij.state.DomaToolsFunctionEnableSettings
+import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 
 class SqlPostProcessor : PostFormatProcessor {
     override fun processElement(
@@ -38,7 +38,7 @@ class SqlPostProcessor : PostFormatProcessor {
         rangeToReformat: TextRange,
         settings: CodeStyleSettings,
     ): TextRange {
-        if (!isEnableFormat()) return rangeToReformat
+        if (!isEnableFormat(source.project)) return rangeToReformat
         if (source.language != SqlLanguage.INSTANCE) return rangeToReformat
 
         val project: Project = source.project
@@ -61,8 +61,8 @@ class SqlPostProcessor : PostFormatProcessor {
         return TextRange(0, finalText.length)
     }
 
-    private fun isEnableFormat(): Boolean {
-        val setting = DomaToolsFunctionEnableSettings.getInstance()
+    private fun isEnableFormat(project: Project): Boolean {
+        val setting = DomaToolsFormatEnableSettings.getInstance(project)
         val isEnableFormat = setting.state.isEnableSqlFormat
         return isEnableFormat
     }

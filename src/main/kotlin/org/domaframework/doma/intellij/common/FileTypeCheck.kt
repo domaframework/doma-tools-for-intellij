@@ -18,7 +18,7 @@ package org.domaframework.doma.intellij.common
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiFile
-import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.SRC_MAIN_PATH
+import org.domaframework.doma.intellij.common.CommonPathParameterHelper.SRC_MAIN_PATH
 
 /**
  * Get extension by file type identifier
@@ -40,14 +40,6 @@ fun getExtension(type: String): String =
 fun isJavaOrKotlinFileType(daoFile: PsiFile): Boolean {
     if (daoFile.virtualFile == null) return false
     val fileType = FileTypeManager.getInstance().getFileTypeByFile(daoFile.virtualFile)
-    return when (fileType.name) {
-        "JAVA", "Kotlin", "CLASS" -> true
-        else -> false
-    }
-}
-
-fun isJavaOrKotlinFileType(file: VirtualFile): Boolean {
-    val fileType = file.fileType
     return when (fileType.name) {
         "JAVA", "Kotlin", "CLASS" -> true
         else -> false

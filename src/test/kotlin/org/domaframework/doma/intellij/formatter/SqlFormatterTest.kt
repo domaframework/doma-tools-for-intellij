@@ -19,7 +19,7 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.util.ThrowableRunnable
-import org.domaframework.doma.intellij.state.DomaToolsFunctionEnableSettings
+import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 
 class SqlFormatterTest : BasePlatformTestCase() {
     override fun getBasePath(): String? = "src/test/testData/sql/formatter"
@@ -28,13 +28,13 @@ class SqlFormatterTest : BasePlatformTestCase() {
 
     override fun setUp() {
         super.setUp()
-        val settings = DomaToolsFunctionEnableSettings.getInstance()
+        val settings = DomaToolsFormatEnableSettings.getInstance()
         settings.state.isEnableSqlFormat = true
     }
 
     override fun tearDown() {
         try {
-            val settings = DomaToolsFunctionEnableSettings.getInstance()
+            val settings = DomaToolsFormatEnableSettings.getInstance()
             settings.state.isEnableSqlFormat = false
         } finally {
             super.tearDown()

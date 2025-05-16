@@ -45,4 +45,8 @@ fun Project.getJavaClazz(fqdn: String): PsiClass? {
         .getInstance(this)
         .findClasses(fqdn, scope)
         .firstOrNull()
+        ?: JavaPsiFacade.getInstance(this).findClass(
+            fqdn,
+            GlobalSearchScope.allScope(this),
+        )
 }
