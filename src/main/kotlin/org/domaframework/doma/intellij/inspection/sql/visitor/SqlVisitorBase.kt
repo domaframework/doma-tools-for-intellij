@@ -17,22 +17,12 @@ package org.domaframework.doma.intellij.inspection.sql.visitor
 
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteralExpression
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.psi.SqlVisitor
 
 open class SqlVisitorBase : SqlVisitor() {
-    var file: PsiFile? = null
-
-    protected fun setFile(element: PsiElement): Boolean {
-        if (file == null) {
-            file = element.containingFile
-        }
-        return false
-    }
-
     /**
      * For processing inside Sql annotations, get it as an injected custom language
      */

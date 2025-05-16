@@ -17,7 +17,6 @@ package org.domaframework.doma.intellij.inspection.sql.visitor
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
@@ -38,14 +37,13 @@ class SqlInspectionVisitor(
     private val shortName: String,
 ) : SqlVisitorBase() {
     override fun visitElement(element: PsiElement) {
-        if (setFile(element)) return
-        val visitFile: PsiFile = file ?: return
-        if (isJavaOrKotlinFileType(visitFile) && element is PsiLiteralExpression) {
-            val injectionFile = initInjectionElement(visitFile, element.project, element) ?: return
+        val file = element.containingFile ?: return
+        if (isJavaOrKotlinFileType(file) && element is PsiLiteralExpression) {
+            val injectionFile = initInjectionElement(file, element.project, element) ?: return
             injectionFile.accept(this)
             super.visitElement(element)
         }
-        if (isInjectionSqlFile(visitFile)) {
+        if (isInjectionSqlFile(file)) {
             element.acceptChildren(this)
         }
     }
@@ -58,11 +56,9 @@ class SqlInspectionVisitor(
 
     override fun visitElFieldAccessExpr(element: SqlElFieldAccessExpr) {
         super.visitElFieldAccessExpr(element)
-        if (setFile(element)) return
-        val visitFile: PsiFile = file ?: return
-
+        val file = element.containingFile ?: return
         val processor = InspectionFieldAccessVisitorProcessor(shortName, element)
-        processor.check(holder, visitFile)
+        processor.check(holder, file)
     }
 
     override fun visitElForDirective(element: SqlElForDirective) {
@@ -72,12 +68,10 @@ class SqlInspectionVisitor(
     }
 
     override fun visitElPrimaryExpr(element: SqlElPrimaryExpr) {
-        super.visitElPrimaryExpr(element)
+        val file = element.containingFile ?: return
         if (!element.isFirstElement() || element.prevSibling?.elementType == SqlTypes.AT_SIGN) return
-        if (setFile(element)) return
-        val visitFile: PsiFile = file ?: return
 
         val processor = InspectionPrimaryVisitorProcessor(this.shortName, element)
-        processor.check(holder, visitFile)
+        processor.check(holder, file)
     }
 }

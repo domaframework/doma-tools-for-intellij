@@ -1,6 +1,6 @@
 package doma.example.dao.inspection;
 
-import doma.example.entity.*:
+import doma.example.entity.*;
 import org.seasar.doma.*;
 import org.seasar.doma.jdbc.Config;
 import org.seasar.doma.jdbc.PreparedSql;
