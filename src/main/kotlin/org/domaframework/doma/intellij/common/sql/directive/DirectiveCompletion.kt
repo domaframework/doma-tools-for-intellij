@@ -16,7 +16,6 @@
 package org.domaframework.doma.intellij.common.sql.directive
 
 import com.intellij.codeInsight.completion.CompletionResultSet
-import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 
@@ -24,7 +23,6 @@ class DirectiveCompletion(
     private val originalFile: PsiFile,
     private val bindText: String,
     private val element: PsiElement,
-    private val project: Project,
     private val result: CompletionResultSet,
 ) {
     fun directiveHandle(symbol: String): Boolean {
@@ -56,7 +54,6 @@ class DirectiveCompletion(
                     element = element,
                     result = result,
                     bindText = bindText,
-                    project = project,
                 ).directiveHandle()
 
             else -> return false

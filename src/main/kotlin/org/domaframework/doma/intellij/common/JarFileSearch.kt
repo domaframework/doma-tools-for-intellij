@@ -18,7 +18,7 @@ package org.domaframework.doma.intellij.common
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiFile
-import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.RESOURCES_META_INF_PATH
+import org.domaframework.doma.intellij.common.CommonPathParameterHelper.RESOURCES_META_INF_PATH
 
 fun getJarRoot(
     virtualFile: VirtualFile,

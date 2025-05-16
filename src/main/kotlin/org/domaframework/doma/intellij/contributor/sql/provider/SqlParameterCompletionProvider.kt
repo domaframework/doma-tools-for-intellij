@@ -80,14 +80,13 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         var isDirective = false
         try {
             val originalFile = parameters.originalFile
-            val project = originalFile.project
             val pos = parameters.originalPosition ?: return
             val bindText =
                 cleanString(pos.text)
                     .substringAfter("/*")
                     .substringBefore("*/")
 
-            val handler = DirectiveCompletion(originalFile, bindText, pos, project, result)
+            val handler = DirectiveCompletion(originalFile, bindText, pos, result)
             val directiveSymbols = listOf("%", "#", "^", "@")
             directiveSymbols.forEach {
                 if (!isDirective) {

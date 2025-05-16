@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter
 
 import com.intellij.lang.ASTNode
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
@@ -34,7 +35,7 @@ import org.domaframework.doma.intellij.psi.SqlBlockComment
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
-import org.domaframework.doma.intellij.state.DomaToolsFunctionEnableSettings
+import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 
 class SqlFormatPreProcessor : PreFormatProcessor {
@@ -47,7 +48,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         source: PsiFile,
         rangeToReformat: TextRange,
     ): TextRange {
-        if (!isEnableFormat()) return rangeToReformat
+        if (!isEnableFormat(source.project)) return rangeToReformat
         if (source.language != SqlLanguage.INSTANCE) return rangeToReformat
 
         logging()
@@ -157,8 +158,8 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         return rangeToReformat.grown(visitor.replaces.size)
     }
 
-    private fun isEnableFormat(): Boolean {
-        val setting = DomaToolsFunctionEnableSettings.getInstance()
+    private fun isEnableFormat(project: Project): Boolean {
+        val setting = DomaToolsFormatEnableSettings.getInstance(project)
         val isEnableFormat = setting.state.isEnableSqlFormat
         return isEnableFormat
     }

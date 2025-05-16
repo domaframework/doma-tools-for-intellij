@@ -24,10 +24,12 @@ import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.extension.psi.isFirstElement
 import org.domaframework.doma.intellij.inspection.sql.processor.InspectionFieldAccessVisitorProcessor
 import org.domaframework.doma.intellij.inspection.sql.processor.InspectionForDirectiveVisitorProcessor
+import org.domaframework.doma.intellij.inspection.sql.processor.InspectionFunctionCallVisitorProcessor
 import org.domaframework.doma.intellij.inspection.sql.processor.InspectionPrimaryVisitorProcessor
 import org.domaframework.doma.intellij.inspection.sql.processor.InspectionStaticFieldAccessVisitorProcessor
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
 import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -46,6 +48,12 @@ class SqlInspectionVisitor(
         if (isInjectionSqlFile(file)) {
             element.acceptChildren(this)
         }
+    }
+
+    override fun visitElFunctionCallExpr(element: SqlElFunctionCallExpr) {
+        super.visitElFunctionCallExpr(element)
+        val processor = InspectionFunctionCallVisitorProcessor(this.shortName, element)
+        processor.check(holder)
     }
 
     override fun visitElStaticFieldAccessExpr(element: SqlElStaticFieldAccessExpr) {

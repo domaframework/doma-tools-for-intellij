@@ -18,7 +18,7 @@ package org.domaframework.doma.intellij.common
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiFile
-import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.SRC_MAIN_PATH
+import org.domaframework.doma.intellij.common.CommonPathParameterHelper.SRC_MAIN_PATH
 
 /**
  * Get extension by file type identifier
