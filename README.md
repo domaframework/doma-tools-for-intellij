@@ -39,6 +39,7 @@ The plugin also provides quick fixes for Dao methods where the required SQL file
 - Check the class name and package name for static property calls
   ![inspectionPackageName.png](images/inspectionPackageName.png)
 - Optional types are recognized as their element type (e.g. Optional<String> is treated as String).
+- Checks calls to custom functions and error-highlights any methods that aren’t defined in the classes registered via the settings.
 
 ## Completion
 Adds code completion functionality to support indexing of Doma directives and bind variables
@@ -54,6 +55,7 @@ Adds code completion functionality to support indexing of Doma directives and bi
 - Directives such as Condition, Loop, Population are suggested after “%”
 - Suggest built-in functions after “@”
 - Optional types are recognized as their element type (e.g. Optional<String> is treated as String).
+- Suggest functions during code completion from the ExpressionFunctions implementation classes registered in the settings.
 
 ## Refactoring
 Along with the Dao name change, we will refactor the SQL file directory and file name.
@@ -81,6 +83,7 @@ This feature works in source JARs as well, but in binary JARs, if the DAO method
 - The DAO method’s argument parameter definition
 - The field and method definitions on that parameter’s type
 - The class definition referenced by @ClassName@
+- Resolve references for custom functions using the ExpressionFunctions implementation class in which they are defined.
 - You can also jump using the **Go To > Declaration Usage** menu.
 
 ![reference.png](images/reference.png)
@@ -92,3 +95,6 @@ Some functions of "Doma Tools" can be customized from the settings screen.
 - Highlight color settings for SQL elements
 ![setting_highlight.png](images/setting_highlight.png)
 - Customize action shortcut keys
+- Toggle the SQL formatting feature on or off
+- Specify the class names that define custom functions.
+ ![setting.png](images/setting.png)
