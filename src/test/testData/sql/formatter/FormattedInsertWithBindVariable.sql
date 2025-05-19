@@ -7,7 +7,7 @@ INSERT INTO /*# tableName */
              , x3
              , x4)
      VALUES ( /* reportId */1
-             , /* @tenantId() */1
+             , /* reportId */1
              /*%for entity : entities */
              , /* entity.value */'abc'
              /*%end*/

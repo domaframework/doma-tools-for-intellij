@@ -45,6 +45,7 @@ class SqlReferenceTestCase : DomaSqlTest() {
         addSqlFile("$testPackage/$testDaoName/referenceStaticField.sql")
         addSqlFile("$testPackage/$testDaoName/referenceListFieldMethod.sql")
         addSqlFile("$testPackage/$testDaoName/referenceForItem.sql")
+        addSqlFile("$testPackage/$testDaoName/referenceCustomFunction.sql")
     }
 
     fun testReferenceDaoMethodParameter() {
@@ -122,6 +123,20 @@ class SqlReferenceTestCase : DomaSqlTest() {
                 "0" to listOf(null),
                 "\"OR\"" to listOf(null),
                 "\"AND\"" to listOf(null),
+            ),
+        )
+    }
+
+    fun testReferenceCustomFunction() {
+        settingCustomFunctions(
+            mutableListOf("doma.example.expression.TestExpressionFunctions", "doma.example.expression.TestNotExpressionFunctions"),
+        )
+        referenceTest(
+            "referenceCustomFunction",
+            mapOf(
+                "detail" to listOf("$daoParameterResolve:detail"),
+                "projectDetailId" to listOf("$fieldResolve:projectDetailId"),
+                "userId" to listOf("$methodResolve:userId"),
             ),
         )
     }

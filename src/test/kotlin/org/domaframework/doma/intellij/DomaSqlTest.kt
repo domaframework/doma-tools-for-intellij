@@ -57,6 +57,9 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         addEntityJavaFile("Project.java")
         addEntityJavaFile("ProjectDetail.java")
         addEntityJavaFile("Principal.java")
+
+        addExpressionJavaFile("TestExpressionFunctions.java")
+        addExpressionJavaFile("TestNotExpressionFunctions.java")
     }
 
     @Throws(Exception::class)
@@ -188,7 +191,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
     protected fun addExpressionJavaFile(fileName: String) {
         val file = File("$testDataPath/java/$packagePath/expression/$fileName")
         myFixture.addFileToProject(
-            "main/java/$packagePath/entity/$fileName",
+            "main/java/$packagePath/expression/$fileName",
             file.readText(),
         )
     }

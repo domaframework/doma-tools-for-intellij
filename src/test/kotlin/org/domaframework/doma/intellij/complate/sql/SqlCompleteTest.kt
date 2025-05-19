@@ -59,6 +59,7 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDapName/completeOptionalByForItem.sql",
             "$testDapName/completeOptionalBatchAnnotation.sql",
             "$testDapName/completeForDirectiveItem.sql",
+            "$testDapName/completeImplementCustomFunction.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
@@ -397,6 +398,36 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDapName/completeForDirectiveItem.sql",
             listOf("projects", "project", "project_has_next", "project_index"),
             listOf("get()", "size()", "toString()", "projectId"),
+        )
+    }
+
+    fun testCompleteImplementCustomFunction() {
+        settingCustomFunctions(
+            mutableListOf("doma.example.expression.TestExpressionFunctions", "doma.example.expression.TestNotExpressionFunctions"),
+        )
+        innerDirectiveCompleteTest(
+            "$testDapName/completeImplementCustomFunction.sql",
+            listOf("userId()", "userName()", "userAge()", "langCode()", "isGest()", "isBlank()", "isNotBlank()"),
+            listOf("getId()", "getName()", "getAge()", "getLangCode()", "isManager()"),
+        )
+    }
+
+    fun testCompleteNotImplementCustomFunction() {
+        innerDirectiveCompleteTest(
+            "$testDapName/completeImplementCustomFunction.sql",
+            listOf("isEmpty()", "roundDownTimePart()", "isBlank()", "isNotBlank()"),
+            listOf(
+                "userId()",
+                "userName()",
+                "userAge()",
+                "langCode()",
+                "isGest()",
+                "getId()",
+                "getName()",
+                "getAge()",
+                "getLangCode()",
+                "isManager()",
+            ),
         )
     }
 
