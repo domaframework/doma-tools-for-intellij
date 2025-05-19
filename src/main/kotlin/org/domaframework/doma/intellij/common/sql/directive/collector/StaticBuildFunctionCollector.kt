@@ -21,11 +21,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
-import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.extension.getJavaClazz
-import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.setting.state.DomaToolsCustomFunctionSettings
-import kotlin.collections.mutableSetOf
 
 class StaticBuildFunctionCollector(
     private val project: Project,
@@ -46,14 +43,12 @@ class StaticBuildFunctionCollector(
             if (expressionClazz != null &&
                 ExpressionFunctionsHelper.isInheritor(expressionClazz)
             ) {
-                val psiParent = PsiParentClass(expressionClazz.psiClassType)
-                psiParent.searchMethod("")?.let { methods ->
-                    functions.addAll(
-                        methods.filter {
-                            isPublicFunction(it)
-                        },
-                    )
-                }
+                val methods = expressionClazz.allMethods
+                functions.addAll(
+                    methods.filter {
+                        isPublicFunction(it)
+                    },
+                )
             }
         }
 

@@ -37,12 +37,14 @@ class InspectionFunctionCallVisitorProcessor(
         val customFunctionClassNames = expressionFunctionSetting.state.customFunctionClassNames
 
         var methods: Array<out PsiMethod?> = emptyArray()
-        customFunctionClassNames.takeWhile { clazz ->
+        for (clazz in customFunctionClassNames) {
             val expressionClazz = project.getJavaClazz(clazz)
             if (expressionClazz != null && expressionHelper.isInheritor(expressionClazz)) {
                 methods = expressionClazz.findMethodsByName(functionName.text, true)
+                if (methods.isNotEmpty()) {
+                    break
+                }
             }
-            methods.isEmpty()
         }
 
         if (methods.isEmpty()) {

@@ -35,7 +35,6 @@ abstract class ValidationResult(
         val element = identify ?: return
         if (identify is PsiErrorElement) return
 
-        val project = element.project
         val highlightElm = element.originalElement
         val highlightRange =
             TextRange(0, element.textRange.length)
@@ -45,7 +44,6 @@ abstract class ValidationResult(
             highlightElm,
             holder,
             parentClass,
-            project,
         )
     }
 
@@ -54,7 +52,6 @@ abstract class ValidationResult(
         identify: PsiElement,
         holder: ProblemsHolder,
         parent: PsiParentClass?,
-        project: Project,
     )
 
     /**
