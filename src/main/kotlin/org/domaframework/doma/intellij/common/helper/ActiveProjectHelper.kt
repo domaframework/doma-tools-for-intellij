@@ -20,18 +20,29 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.wm.IdeFocusManager
 
 object ActiveProjectHelper {
-    val activeProject: Project?
-        get() {
-            val openProjects: Array<out Project> = ProjectManager.getInstance().openProjects
-            var activeProject: Project? = null
+    private var activeProject: Project? = null
 
-            for (project in openProjects) {
-                if (IdeFocusManager.getInstance(project).focusOwner != null) {
-                    activeProject = project
-                    break
-                }
+    fun setCurrentActiveProject(value: Project?) {
+        activeProject = value
+    }
+
+    fun getCurrentActiveProject(): Project? {
+        val initProject = activeProject
+        val active = getActiveUIProject()
+        return active ?: initProject
+    }
+
+    private fun getActiveUIProject(): Project? {
+        val openProjects: Array<out Project> = ProjectManager.getInstance().openProjects
+        var active: Project? = null
+
+        for (project in openProjects) {
+            if (IdeFocusManager.getInstance(project).focusOwner != null) {
+                active = project
+                break
             }
-
-            return activeProject
         }
+
+        return active
+    }
 }

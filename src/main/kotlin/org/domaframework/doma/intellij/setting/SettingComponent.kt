@@ -44,7 +44,7 @@ class SettingComponent {
             ToolbarDecorator
                 .createDecorator(customFunctionClassList)
                 .setAddAction { actionButton ->
-                    val project = ActiveProjectHelper.activeProject
+                    val project = ActiveProjectHelper.getCurrentActiveProject()
                     if (project != null) {
                         val expressionFunction = ExpressionFunctionsHelper
                         val expressionFunctionInterface =
@@ -87,7 +87,7 @@ class SettingComponent {
                 .createPanel()
 
         // Disable customFunctionPanel if no active project is available
-        if (ActiveProjectHelper.activeProject == null) {
+        if (ActiveProjectHelper.getCurrentActiveProject() == null) {
             setEnabledRecursively(customFunctionPanel, false)
         }
 

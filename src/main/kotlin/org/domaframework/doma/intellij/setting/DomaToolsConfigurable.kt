@@ -24,7 +24,7 @@ import javax.swing.JComponent
 
 class DomaToolsConfigurable : Configurable {
     private var mySettingsComponent: SettingComponent? = SettingComponent()
-    private val project = ActiveProjectHelper.activeProject
+    private val project = ActiveProjectHelper.getCurrentActiveProject()
 
     private var formatSettings: DomaToolsFormatEnableSettings? = null
     private var customFunctionsSettings: DomaToolsCustomFunctionSettings? = null

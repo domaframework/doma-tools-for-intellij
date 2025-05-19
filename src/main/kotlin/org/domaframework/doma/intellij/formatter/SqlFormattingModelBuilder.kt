@@ -34,10 +34,9 @@ import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettin
 class SqlFormattingModelBuilder : FormattingModelBuilder {
     override fun createModel(formattingContext: FormattingContext): FormattingModel {
         val codeStyleSettings = formattingContext.codeStyleSettings
-        val project = ActiveProjectHelper.activeProject
+        val project = ActiveProjectHelper.getCurrentActiveProject()
         val setting = project?.let { DomaToolsFormatEnableSettings.getInstance(it) }
         val isEnableFormat = setting?.state?.isEnableSqlFormat == true
-
         val spacingBuilder =
             if (!isEnableFormat) {
                 SpacingBuilder(codeStyleSettings, SqlLanguage.INSTANCE)
