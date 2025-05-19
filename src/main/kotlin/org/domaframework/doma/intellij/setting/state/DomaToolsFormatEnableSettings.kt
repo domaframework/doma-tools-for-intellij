@@ -13,22 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.state
+package org.domaframework.doma.intellij.setting.state
 
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
+import com.intellij.openapi.project.Project
+import org.domaframework.doma.intellij.setting.SettingComponent
 
-@Service(Service.Level.APP)
+@Service(Service.Level.PROJECT)
 @State(
-    name = "org.domaframework.doma",
+    name = "DomaToolsFormatEnableSettings",
     reloadable = true,
-    storages = [Storage("DomaTools.xml")],
+    storages = [Storage("doma_tools_settings.xml")],
 )
-class DomaToolsFunctionEnableSettings : PersistentStateComponent<DomaToolsFunctionEnableSettings.State> {
+class DomaToolsFormatEnableSettings :
+    PersistentStateComponent<DomaToolsFormatEnableSettings.State>,
+    DomaToolsSettings {
     class State : BaseState() {
         var isEnableSqlFormat = false
     }
@@ -37,12 +40,24 @@ class DomaToolsFunctionEnableSettings : PersistentStateComponent<DomaToolsFuncti
 
     override fun getState(): State = myState
 
-    override fun loadState(state: DomaToolsFunctionEnableSettings.State) {
+    override fun loadState(state: DomaToolsFormatEnableSettings.State) {
         myState = state
     }
 
+    override fun isModified(component: SettingComponent?): Boolean = myState.isEnableSqlFormat != component?.enableFormat
+
+    override fun apply(component: SettingComponent?) {
+        state.isEnableSqlFormat = component?.enableFormat == true
+    }
+
+    override fun reset(component: SettingComponent?) {
+        component?.enableFormat = state.isEnableSqlFormat
+    }
+
     companion object {
-        fun getInstance(): DomaToolsFunctionEnableSettings =
-            ApplicationManager.getApplication().getService(DomaToolsFunctionEnableSettings::class.java)
+        fun getInstance(project: Project): DomaToolsFormatEnableSettings =
+            project.getService(
+                DomaToolsFormatEnableSettings::class.java,
+            )
     }
 }

@@ -28,13 +28,13 @@ import com.intellij.psi.impl.source.codeStyle.PreFormatProcessor
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeafs
+import org.domaframework.doma.intellij.common.util.DomaToolsSettingUtil
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.psi.SqlBlockComment
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
-import org.domaframework.doma.intellij.state.DomaToolsFunctionEnableSettings
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 
 class SqlFormatPreProcessor : PreFormatProcessor {
@@ -47,7 +47,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         source: PsiFile,
         rangeToReformat: TextRange,
     ): TextRange {
-        if (!isEnableFormat()) return rangeToReformat
+        if (!DomaToolsSettingUtil.isEnableFormat(source.project)) return rangeToReformat
         if (source.language != SqlLanguage.INSTANCE) return rangeToReformat
 
         logging()
@@ -155,12 +155,6 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         docManager.commitDocument(document)
 
         return rangeToReformat.grown(visitor.replaces.size)
-    }
-
-    private fun isEnableFormat(): Boolean {
-        val setting = DomaToolsFunctionEnableSettings.getInstance()
-        val isEnableFormat = setting.state.isEnableSqlFormat
-        return isEnableFormat
     }
 
     private fun removeSpacesAroundNewline(

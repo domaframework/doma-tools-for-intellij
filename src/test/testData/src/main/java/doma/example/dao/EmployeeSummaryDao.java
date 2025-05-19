@@ -39,4 +39,7 @@ interface EmployeeSummaryDao {
 
   @Select
   Project optionalDaoParameterFieldAccess(Optional<Project> project, OptionalInt id, OptionalLong longId, OptionalDouble doubleId);
+
+  @Select
+  EmployeeSummary implementCustomFunctions(EmployeeSummary employee);
 }

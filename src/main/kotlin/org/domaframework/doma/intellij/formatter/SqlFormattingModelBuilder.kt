@@ -25,17 +25,18 @@ import com.intellij.formatting.Wrap
 import com.intellij.formatting.WrapType
 import com.intellij.psi.TokenType
 import com.intellij.psi.codeStyle.CodeStyleSettings
+import org.domaframework.doma.intellij.common.helper.ActiveProjectHelper
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
-import org.domaframework.doma.intellij.state.DomaToolsFunctionEnableSettings
+import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 
 class SqlFormattingModelBuilder : FormattingModelBuilder {
     override fun createModel(formattingContext: FormattingContext): FormattingModel {
         val codeStyleSettings = formattingContext.codeStyleSettings
-        val setting = DomaToolsFunctionEnableSettings.getInstance()
-        val isEnableFormat = setting.state.isEnableSqlFormat
-
+        val project = ActiveProjectHelper.getCurrentActiveProject()
+        val setting = project?.let { DomaToolsFormatEnableSettings.getInstance(it) }
+        val isEnableFormat = setting?.state?.isEnableSqlFormat == true
         val spacingBuilder =
             if (!isEnableFormat) {
                 SpacingBuilder(codeStyleSettings, SqlLanguage.INSTANCE)

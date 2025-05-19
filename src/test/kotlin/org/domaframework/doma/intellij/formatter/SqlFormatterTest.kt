@@ -19,7 +19,9 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.util.ThrowableRunnable
-import org.domaframework.doma.intellij.state.DomaToolsFunctionEnableSettings
+import org.domaframework.doma.intellij.common.helper.ActiveProjectHelper
+import org.domaframework.doma.intellij.setting.SettingComponent
+import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 
 class SqlFormatterTest : BasePlatformTestCase() {
     override fun getBasePath(): String? = "src/test/testData/sql/formatter"
@@ -28,56 +30,66 @@ class SqlFormatterTest : BasePlatformTestCase() {
 
     override fun setUp() {
         super.setUp()
-        val settings = DomaToolsFunctionEnableSettings.getInstance()
-        settings.state.isEnableSqlFormat = true
+        settingSqlFormat(true)
+        if (project != null) {
+            ActiveProjectHelper.setCurrentActiveProject(project)
+        }
+    }
+
+    private fun settingSqlFormat(enabled: Boolean) {
+        val settings = DomaToolsFormatEnableSettings.getInstance(project)
+        val component = SettingComponent()
+        component.enableFormat = enabled
+        settings.apply(component)
+        assertEquals(enabled, settings.getState().isEnableSqlFormat)
     }
 
     override fun tearDown() {
         try {
-            val settings = DomaToolsFunctionEnableSettings.getInstance()
-            settings.state.isEnableSqlFormat = false
+            settingSqlFormat(false)
+            ActiveProjectHelper.setCurrentActiveProject(null)
         } finally {
             super.tearDown()
         }
     }
 
     fun testSelectFormatter() {
-        formatSqlFime("Select.sql", "FormattedSelect.sql")
+        formatSqlFile("Select.sql", "FormattedSelect.sql")
     }
 
     fun testCreateTableFormatter() {
-        formatSqlFime("CreateTable.sql", "FormattedCreateTable.sql")
+        formatSqlFile("CreateTable.sql", "FormattedCreateTable.sql")
     }
 
     fun testCreateViewFormatter() {
-        formatSqlFime("CreateView.sql", "FormattedCreateView.sql")
+        formatSqlFile("CreateView.sql", "FormattedCreateView.sql")
     }
 
     fun testInsertFormatter() {
-        formatSqlFime("Insert.sql", "FormattedInsert.sql")
+        formatSqlFile("Insert.sql", "FormattedInsert.sql")
     }
 
     fun testInsertWithBindVariableFormatter() {
-        formatSqlFime("InsertWithBindVariable.sql", "FormattedInsertWithBindVariable.sql")
+        formatSqlFile("InsertWithBindVariable.sql", "FormattedInsertWithBindVariable.sql")
     }
 
     fun testUpdateFormatter() {
-        formatSqlFime("Update.sql", "FormattedUpdate.sql")
+        formatSqlFile("Update.sql", "FormattedUpdate.sql")
     }
 
     fun testUpdateBindVariableFormatter() {
-        formatSqlFime("UpdateBindVariable.sql", "FormattedUpdateBindVariable.sql")
+        formatSqlFile("UpdateBindVariable.sql", "FormattedUpdateBindVariable.sql")
     }
 
     fun testUpdateTupleAssignmentFormatter() {
-        formatSqlFime("UpdateTupleAssignment.sql", "FormattedUpdateTupleAssignment.sql")
+        formatSqlFile("UpdateTupleAssignment.sql", "FormattedUpdateTupleAssignment.sql")
     }
 
     fun testDeleteFormatter() {
-        formatSqlFime("Delete.sql", "FormattedDelete.sql")
+        formatSqlFile("Delete.sql", "FormattedDelete.sql")
     }
 
-    private fun formatSqlFime(
+    private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,
     ) {

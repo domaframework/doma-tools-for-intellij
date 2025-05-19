@@ -100,4 +100,7 @@ interface SqlCompleteTestDao {
   @Select
   Employee completeForDirectiveItem(List<Project> projects);
 
+  @Select
+  Employee completeImplementCustomFunction(Project project);
+
 }

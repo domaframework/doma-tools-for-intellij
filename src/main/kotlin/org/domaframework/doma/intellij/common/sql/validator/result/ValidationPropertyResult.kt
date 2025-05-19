@@ -16,7 +16,6 @@
 package org.domaframework.doma.intellij.common.sql.validator.result
 
 import com.intellij.codeInspection.ProblemsHolder
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
@@ -36,7 +35,6 @@ class ValidationPropertyResult(
         identify: PsiElement,
         holder: ProblemsHolder,
         parent: PsiParentClass?,
-        project: Project,
     ) {
         val project = identify.project
         val parentName =

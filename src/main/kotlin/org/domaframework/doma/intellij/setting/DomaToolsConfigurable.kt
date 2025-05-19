@@ -17,34 +17,46 @@ package org.domaframework.doma.intellij.setting
 
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ConfigurationException
-import org.domaframework.doma.intellij.state.DomaToolsFunctionEnableSettings
-import java.util.Objects
+import org.domaframework.doma.intellij.common.helper.ActiveProjectHelper
+import org.domaframework.doma.intellij.setting.state.DomaToolsCustomFunctionSettings
+import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 import javax.swing.JComponent
 
 class DomaToolsConfigurable : Configurable {
     private var mySettingsComponent: SettingComponent? = SettingComponent()
+    private val project = ActiveProjectHelper.getCurrentActiveProject()
+
+    private var formatSettings: DomaToolsFormatEnableSettings? = null
+    private var customFunctionsSettings: DomaToolsCustomFunctionSettings? = null
+
+    init {
+        project?.let {
+            customFunctionsSettings = DomaToolsCustomFunctionSettings.getInstance(it)
+            formatSettings = DomaToolsFormatEnableSettings.getInstance(it)
+        }
+    }
 
     override fun getDisplayName(): String = "Doma Tools"
 
     override fun createComponent(): JComponent? = mySettingsComponent?.panel
 
     override fun isModified(): Boolean {
-        val state: DomaToolsFunctionEnableSettings.State =
-            Objects.requireNonNull(DomaToolsFunctionEnableSettings.getInstance().getState())
-        return mySettingsComponent?.enableFormat != state.isEnableSqlFormat
+        val enableFormatModified = formatSettings?.isModified(mySettingsComponent) != false
+        val customFunctionClassNamesModified =
+            customFunctionsSettings?.isModified(mySettingsComponent) != false
+
+        return enableFormatModified || customFunctionClassNamesModified
     }
 
     @Throws(ConfigurationException::class)
     override fun apply() {
-        val state: DomaToolsFunctionEnableSettings.State =
-            Objects.requireNonNull(DomaToolsFunctionEnableSettings.getInstance().getState())
-        state.isEnableSqlFormat = mySettingsComponent?.enableFormat == true
+        formatSettings?.apply(mySettingsComponent)
+        customFunctionsSettings?.apply(mySettingsComponent)
     }
 
     override fun reset() {
-        val state: DomaToolsFunctionEnableSettings.State =
-            Objects.requireNonNull(DomaToolsFunctionEnableSettings.getInstance().getState())
-        mySettingsComponent?.enableFormat = state.isEnableSqlFormat
+        formatSettings?.reset(mySettingsComponent)
+        customFunctionsSettings?.reset(mySettingsComponent)
     }
 
     override fun disposeUIResources() {

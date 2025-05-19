@@ -21,9 +21,12 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-class ValidationNotFoundTopTypeResult(
-    override val identify: PsiElement?,
-    override val shortName: String = "",
+/**
+ * Reports invalid function calls in SQL validation.
+ */
+open class ValidationInvalidFunctionCallResult(
+    override val identify: PsiElement,
+    override val shortName: String,
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -34,7 +37,10 @@ class ValidationNotFoundTopTypeResult(
         val project = identify.project
         holder.registerProblem(
             identify,
-            MessageBundle.message("inspection.invalid.sql.topType"),
+            MessageBundle.message(
+                "inspection.invalid.sql.customFunction",
+                identify.text ?: "",
+            ),
             problemHighlightType(project, shortName),
             highlightRange,
         )

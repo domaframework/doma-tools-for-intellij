@@ -32,7 +32,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNameValuePair
 import com.intellij.util.IncorrectOperationException
-import org.domaframework.doma.intellij.common.CommonPathParameter.Companion.RESOURCES_PATH
+import org.domaframework.doma.intellij.common.CommonPathParameterHelper.RESOURCES_PATH
 import org.domaframework.doma.intellij.common.dao.formatSqlPathFromDaoPath
 import org.domaframework.doma.intellij.common.getExtension
 import org.domaframework.doma.intellij.extension.findFile

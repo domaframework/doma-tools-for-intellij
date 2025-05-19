@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.extension.psi
+package org.domaframework.doma.intellij.setting.state
 
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiParameter
+import org.domaframework.doma.intellij.setting.SettingComponent
 
-fun PsiMethod.findParameter(searchName: String): PsiParameter? = this.methodParameters.firstOrNull { it.name == searchName }
+interface DomaToolsSettings {
+    fun isModified(component: SettingComponent?): Boolean
 
-val PsiMethod.methodParameters: List<PsiParameter>
-    get() = this.parameterList.parameters.toList()
+    fun apply(component: SettingComponent?)
 
-fun PsiMethod.searchParameter(searchName: String): List<PsiParameter> = this.methodParameters.filter { it.name.startsWith(searchName) }
+    fun reset(component: SettingComponent?)
+}

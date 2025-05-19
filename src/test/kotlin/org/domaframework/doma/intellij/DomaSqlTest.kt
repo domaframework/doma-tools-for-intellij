@@ -29,6 +29,8 @@ import com.intellij.psi.PsiClass
 import com.intellij.testFramework.PsiTestUtil
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import org.domaframework.doma.intellij.extension.getResourcesSQLFile
+import org.domaframework.doma.intellij.setting.SettingComponent
+import org.domaframework.doma.intellij.setting.state.DomaToolsCustomFunctionSettings
 import org.jetbrains.jps.model.java.JavaResourceRootType
 import org.jetbrains.jps.model.java.JavaSourceRootType
 import org.junit.Ignore
@@ -55,6 +57,9 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         addEntityJavaFile("Project.java")
         addEntityJavaFile("ProjectDetail.java")
         addEntityJavaFile("Principal.java")
+
+        addExpressionJavaFile("TestExpressionFunctions.java")
+        addExpressionJavaFile("TestNotExpressionFunctions.java")
     }
 
     @Throws(Exception::class)
@@ -97,7 +102,8 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
     }
 
     private fun setUpJdk(module: Module) {
-        val newJdk = JavaSdk.getInstance().createJdk("Doma Test JDK", System.getProperty("java.home"), false)
+        val newJdk =
+            JavaSdk.getInstance().createJdk("Doma Test JDK", System.getProperty("java.home"), false)
 
         WriteAction.runAndWait<RuntimeException> {
             ProjectJdkTable.getInstance().addJdk(newJdk)
@@ -180,5 +186,21 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         val dao = myFixture.findClass("doma.example.dao.$testDaoName")
         assertNotNull("Not Found [$testDaoName]", dao)
         return dao
+    }
+
+    protected fun addExpressionJavaFile(fileName: String) {
+        val file = File("$testDataPath/java/$packagePath/expression/$fileName")
+        myFixture.addFileToProject(
+            "main/java/$packagePath/expression/$fileName",
+            file.readText(),
+        )
+    }
+
+    protected fun settingCustomFunctions(newClassNames: MutableList<String>) {
+        val settings = DomaToolsCustomFunctionSettings.getInstance(project)
+        val component = SettingComponent()
+        component.customFunctionClassNames = newClassNames.toMutableList()
+        settings.apply(component)
+        assertEquals(newClassNames, settings.getState().customFunctionClassNames)
     }
 }

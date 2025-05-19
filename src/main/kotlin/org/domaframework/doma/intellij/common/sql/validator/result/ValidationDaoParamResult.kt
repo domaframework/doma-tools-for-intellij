@@ -16,7 +16,6 @@
 package org.domaframework.doma.intellij.common.sql.validator.result
 
 import com.intellij.codeInspection.ProblemsHolder
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
@@ -35,7 +34,6 @@ open class ValidationDaoParamResult(
         identify: PsiElement,
         holder: ProblemsHolder,
         parent: PsiParentClass?,
-        project: Project,
     ) {
         val project = identify.project
         holder.registerProblem(

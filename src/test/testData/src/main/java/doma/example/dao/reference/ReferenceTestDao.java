@@ -22,4 +22,7 @@ public interface ReferenceTestDao {
   @Select
   List<Employee> referenceForItem(List<List<Employee>> employeesList);
 
+  @Select
+  Project referenceCustomFunction(ProjectDetail detail);
+
 }
