@@ -93,8 +93,7 @@ open class SqlBlockBuilder {
     fun getConditionOrLoopBlocksLast(): SqlElConditionLoopCommentBlock? = conditionOrLoopBlocks.lastOrNull()
 
     fun addConditionOrLoopBlock(block: SqlElConditionLoopCommentBlock) {
-        if (!block.conditionType.isInvalid() && !block.conditionType.isEnd()
-        ) {
+        if (!block.conditionType.isInvalid() && !block.conditionType.isEnd()) {
             conditionOrLoopBlocks.add(block)
         }
     }
