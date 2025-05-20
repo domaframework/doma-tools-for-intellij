@@ -15,6 +15,7 @@
  */
 package org.domaframework.doma.intellij.common.helper
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.wm.IdeFocusManager
@@ -27,22 +28,27 @@ object ActiveProjectHelper {
     }
 
     fun getCurrentActiveProject(): Project? {
-        val initProject = activeProject
-        val active = getActiveUIProject()
-        return active ?: initProject
+        // If EDT, get from focus
+        if (ApplicationManager.getApplication().isDispatchThread) {
+            getActiveUIProject()?.let { return it }
+        }
+        // If not EDT, the top of openProjects
+        ProjectManager
+            .getInstance()
+            .openProjects
+            .firstOrNull()
+            ?.let { return it }
+
+        return activeProject
     }
 
     private fun getActiveUIProject(): Project? {
         val openProjects: Array<out Project> = ProjectManager.getInstance().openProjects
-        var active: Project? = null
-
         for (project in openProjects) {
             if (IdeFocusManager.getInstance(project).focusOwner != null) {
-                active = project
-                break
+                return project
             }
         }
-
-        return active
+        return null
     }
 }
