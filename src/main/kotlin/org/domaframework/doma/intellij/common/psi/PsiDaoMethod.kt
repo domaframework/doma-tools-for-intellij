@@ -32,8 +32,9 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNameValuePair
 import com.intellij.util.IncorrectOperationException
-import org.domaframework.doma.intellij.common.CommonPathParameterHelper.RESOURCES_PATH
-import org.domaframework.doma.intellij.common.dao.formatSqlPathFromDaoPath
+import org.domaframework.doma.intellij.common.CommonPathParameter
+import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
+import org.domaframework.doma.intellij.common.dao.getRelativeSqlFilePathFromDaoFilePath
 import org.domaframework.doma.intellij.common.getExtension
 import org.domaframework.doma.intellij.extension.findFile
 import org.domaframework.doma.intellij.extension.getContentRoot
@@ -41,6 +42,7 @@ import org.domaframework.doma.intellij.extension.getModule
 import org.domaframework.doma.intellij.extension.getResourcesSQLFile
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 import org.domaframework.doma.intellij.setting.SqlLanguage
+import org.jetbrains.kotlin.idea.base.util.module
 import java.io.File
 import java.io.IOException
 
@@ -51,7 +53,7 @@ class PsiDaoMethod(
     private val psiProject: Project,
     val psiMethod: PsiMethod,
 ) {
-    private val isTest = false
+    private var isTest = false
     var sqlFile: VirtualFile? = null
     private var sqlFilePath: String = ""
 
@@ -65,7 +67,13 @@ class PsiDaoMethod(
         setDaoAnnotationType()
         setSqlFileOption()
         setSqlFilePath()
+        setTest()
         setSqlFile()
+    }
+
+    private fun setTest() {
+        val pathParameter = CommonPathParameter(psiMethod.module)
+        isTest = pathParameter.isTest(daoFile)
     }
 
     private fun setSqlFileOption() {
@@ -115,12 +123,11 @@ class PsiDaoMethod(
                 psiMethod.containingFile.originalFile.virtualFile.path
                     .substringAfter(".jar!")
             sqlFilePath =
-                "META-INF${daoRelativePath.replace(".$fileType","")}/$methodName.$sqlExtension"
+                "$RESOURCES_META_INF_PATH${daoRelativePath.replace(".$fileType","")}/$methodName.$sqlExtension"
         } else {
             sqlFilePath =
                 contentRoot.let {
-                    formatSqlPathFromDaoPath(it, daoFile)
-                        .replace("main/", "")
+                    getRelativeSqlFilePathFromDaoFilePath(daoFile, psiMethod.module)
                         .plus("/$methodName.$sqlExtension")
                 }
         }
@@ -175,7 +182,9 @@ class PsiDaoMethod(
             val rootDir = psiProject.getContentRoot(daoFile) ?: return@runReadAction
             val sqlFile = File(sqlFilePath)
             val sqlFileName = sqlFile.name
-            val parentDir = "${RESOURCES_PATH}/${sqlFile.parent?.replace("\\", "/")}"
+            val pathParams = CommonPathParameter(psiMethod.module)
+            val resourceDir = pathParams.getResources(daoFile).firstOrNull() ?: return@runReadAction
+            val parentDir = "${resourceDir.nameWithoutExtension}/${sqlFile.parent?.replace("\\", "/")}"
             val parenDirPathSpirit = parentDir.split("/").toTypedArray()
 
             WriteCommandAction.runWriteCommandAction(psiProject) {

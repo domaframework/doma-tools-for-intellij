@@ -16,9 +16,9 @@
 package org.domaframework.doma.intellij.common
 
 import com.intellij.openapi.fileTypes.FileTypeManager
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiFile
-import org.domaframework.doma.intellij.common.CommonPathParameterHelper.SRC_MAIN_PATH
+
+val sourceExtensionNames: List<String> = listOf("JAVA", "Kotlin", "CLASS")
 
 /**
  * Get extension by file type identifier
@@ -65,37 +65,4 @@ fun isInjectionSqlFile(file: PsiFile): Boolean {
         else -> false
     } &&
         !(filePath.endsWith(".sql") || filePath.endsWith(".script"))
-}
-
-/**
- * Dao file search for SQL files
- */
-fun searchDaoFile(
-    contentRoot: VirtualFile?,
-    originFilePath: String,
-    relativeDaoFilePath: String,
-): VirtualFile? {
-    val projectRootPath = contentRoot?.path ?: return null
-    if (projectRootPath.endsWith(SRC_MAIN_PATH)) {
-        return contentRoot.findFileByRelativePath(relativeDaoFilePath)
-    }
-
-    if (projectRootPath.length > originFilePath.length) {
-        return null
-    }
-
-    // TODO Dynamically build the source directory path and retrieve subproject info
-    // by inspecting file metadata instead of using string manipulation.
-    val index = originFilePath.indexOf(SRC_MAIN_PATH)
-    val projectRootPathBefore = projectRootPath.substringBefore(SRC_MAIN_PATH)
-    if (index < 0 || projectRootPathBefore.length < index) return null
-    val subProjectName =
-        originFilePath.substring(projectRootPathBefore.length, index)
-
-    val daoFile =
-        contentRoot
-            .findFileByRelativePath(subProjectName)
-            ?.findFileByRelativePath(relativeDaoFilePath)
-
-    return daoFile
 }

@@ -56,8 +56,8 @@ class JumpToDaoFromSQLAction : AnAction() {
         val project = e.project ?: return
         val daoFile = findDaoFile(project, file) ?: return
 
-        val nameWithoutExtension = file.virtualFile?.nameWithoutExtension ?: return
-        jumpToDaoMethod(project, nameWithoutExtension, daoFile)
+        val sqlFileName = file.virtualFile?.nameWithoutExtension ?: return
+        jumpToDaoMethod(project, sqlFileName, daoFile)
         PluginLoggerUtil.countLoggingByAction(
             this::class.java.simpleName,
             "JumpToDao",

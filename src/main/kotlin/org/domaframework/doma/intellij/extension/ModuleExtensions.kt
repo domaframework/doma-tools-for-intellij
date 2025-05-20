@@ -21,8 +21,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
-import org.domaframework.doma.intellij.common.CommonPathParameterHelper.RESOURCES_META_INF_PATH
-import org.domaframework.doma.intellij.common.dao.formatSqlPathFromDaoPath
+import org.domaframework.doma.intellij.common.dao.getRelativeSqlFilePathFromDaoFilePath
 import org.jetbrains.kotlin.idea.util.sourceRoots
 
 /**
@@ -32,7 +31,7 @@ fun Module.getPackagePathFromDaoPath(daoFile: VirtualFile): VirtualFile? {
     val contentRoot = this.project.getContentRoot(daoFile)?.path
     val packagePath =
         contentRoot?.let {
-            formatSqlPathFromDaoPath(it, daoFile)
+            getRelativeSqlFilePathFromDaoFilePath(daoFile, this)
         } ?: ""
 
     return this.getResourcesSQLFile(
@@ -59,7 +58,7 @@ fun Module.getResourcesSQLFile(
     includeTest: Boolean,
 ): VirtualFile? =
     ResourceFileUtil.findResourceFileInScope(
-        "$RESOURCES_META_INF_PATH/${relativePath.replace(RESOURCES_META_INF_PATH,"")}".replace("//", "/"),
+        relativePath.replace("//", "/"),
         this.project,
         this.getModuleScope(includeTest),
     )
