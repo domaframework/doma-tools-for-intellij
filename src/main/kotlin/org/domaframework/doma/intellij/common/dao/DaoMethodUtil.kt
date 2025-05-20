@@ -27,7 +27,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.common.CommonPathParameter
+import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.common.getExtension
 import org.domaframework.doma.intellij.common.getJarRoot
@@ -76,8 +76,8 @@ fun findDaoMethod(
                     .trim('.')
 
             val daoJavaFile = project.findFile(daoFile)
-            val paramParameter = CommonPathParameter(module)
-            findDaoClass(module, paramParameter.isTest(originalFile.virtualFile), daoClassName)
+            val isTest = CommonPathParameterUtil.isTest(module, originalFile.virtualFile)
+            findDaoClass(module, isTest, daoClassName)
                 ?.let { daoClass ->
                     val daoMethod =
                         // TODO Support Kotlin Project
@@ -144,12 +144,12 @@ private fun searchDaoFile(
     sqlFile: PsiFile,
 ): VirtualFile? {
     val contentRootPath = contentRoot?.path ?: return null
-    val pathParams = CommonPathParameter(module)
+    val pathParams = module?.let { CommonPathParameterUtil.getModulePaths(it) } ?: return null
     val moduleBaseName = pathParams.moduleBasePath?.nameWithoutExtension ?: ""
     // TODO: Add Support Kotlin
     val relativeDaoFilePaths =
         getDaoPathFromSqlFilePath(sqlFile, contentRoot.path)
-    val sources = pathParams.getSources(sqlFile.virtualFile)
+    val sources = CommonPathParameterUtil.getSources(module, sqlFile.virtualFile)
 
     if (contentRootPath.endsWith(moduleBaseName) == true) {
         sources.forEach { source ->
@@ -189,8 +189,9 @@ private fun getDaoPathFromSqlFilePath(
     if (!relativeFilePath.startsWith("/")) {
         relativeFilePath = "/$relativeFilePath"
     }
-    val pathParams = CommonPathParameter(module)
-    val resources = pathParams.getResources(sqlFile.virtualFile)
+    val resources =
+        module?.let { CommonPathParameterUtil.getResources(it, sqlFile.virtualFile) }
+            ?: emptyList()
 
     return resources
         .firstOrNull { resource ->
@@ -214,28 +215,18 @@ fun getRelativeSqlFilePathFromDaoFilePath(
 ): String {
     if (module == null) return ""
     val extension = daoFile.fileType.defaultExtension
-    val pathParams = CommonPathParameter(module)
+    val pathParams = CommonPathParameterUtil.getModulePaths(module)
     var relativeSqlFilePath =
         daoFile.path
             .replace(pathParams.moduleBasePath?.path ?: "", "")
             .replace(".$extension", "")
-    val isTest = pathParams.moduleTestSourceDirectories.firstOrNull { dir -> daoFile.path.contains(dir.path) } != null
-    if (isTest) {
-        pathParams.moduleTestSourceDirectories.forEach { source ->
-            relativeSqlFilePath =
-                relativeSqlFilePath.replace(
-                    "/" + source.nameWithoutExtension,
-                    RESOURCES_META_INF_PATH,
-                )
-        }
-    } else {
-        pathParams.moduleSourceDirectories.forEach { source ->
-            relativeSqlFilePath =
-                relativeSqlFilePath.replace(
-                    "/" + source.nameWithoutExtension,
-                    RESOURCES_META_INF_PATH,
-                )
-        }
+    val sources = CommonPathParameterUtil.getSources(module, daoFile)
+    sources.forEach { source ->
+        relativeSqlFilePath =
+            relativeSqlFilePath.replace(
+                "/" + source.nameWithoutExtension,
+                RESOURCES_META_INF_PATH,
+            )
     }
     return relativeSqlFilePath
 }

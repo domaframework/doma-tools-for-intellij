@@ -32,7 +32,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNameValuePair
 import com.intellij.util.IncorrectOperationException
-import org.domaframework.doma.intellij.common.CommonPathParameter
+import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.common.dao.getRelativeSqlFilePathFromDaoFilePath
 import org.domaframework.doma.intellij.common.getExtension
@@ -72,8 +72,7 @@ class PsiDaoMethod(
     }
 
     private fun setTest() {
-        val pathParameter = CommonPathParameter(psiMethod.module)
-        isTest = pathParameter.isTest(daoFile)
+        psiMethod.module?.let { isTest = CommonPathParameterUtil.isTest(it, daoFile) }
     }
 
     private fun setSqlFileOption() {
@@ -182,8 +181,10 @@ class PsiDaoMethod(
             val rootDir = psiProject.getContentRoot(daoFile) ?: return@runReadAction
             val sqlFile = File(sqlFilePath)
             val sqlFileName = sqlFile.name
-            val pathParams = CommonPathParameter(psiMethod.module)
-            val resourceDir = pathParams.getResources(daoFile).firstOrNull() ?: return@runReadAction
+            val resourceDir =
+                psiMethod.module
+                    ?.let { CommonPathParameterUtil.getResources(it, daoFile).firstOrNull() }
+                    ?: return@runReadAction
             val parentDir = "${resourceDir.nameWithoutExtension}/${sqlFile.parent?.replace("\\", "/")}"
             val parenDirPathSpirit = parentDir.split("/").toTypedArray()
 

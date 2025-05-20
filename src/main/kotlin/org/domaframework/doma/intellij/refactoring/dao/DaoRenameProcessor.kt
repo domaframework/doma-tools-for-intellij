@@ -19,6 +19,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.refactoring.listeners.RefactoringElementListener
 import com.intellij.refactoring.rename.RenameJavaClassProcessor
 import com.intellij.usageView.UsageInfo
+import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.getContentRoot
@@ -57,5 +58,7 @@ class DaoRenameProcessor : RenameJavaClassProcessor() {
             "Rename",
             startTime,
         )
+        // Clear module directory cache on refactoring
+        CommonPathParameterUtil.clearCache()
     }
 }

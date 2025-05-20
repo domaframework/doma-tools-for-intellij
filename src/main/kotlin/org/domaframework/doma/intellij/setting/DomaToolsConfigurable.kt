@@ -18,7 +18,6 @@ package org.domaframework.doma.intellij.setting
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ConfigurationException
 import org.domaframework.doma.intellij.common.helper.ActiveProjectHelper
-import org.domaframework.doma.intellij.setting.state.DomaToolsCustomFunctionSettings
 import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 import javax.swing.JComponent
 
@@ -27,11 +26,9 @@ class DomaToolsConfigurable : Configurable {
     private val project = ActiveProjectHelper.getCurrentActiveProject()
 
     private var formatSettings: DomaToolsFormatEnableSettings? = null
-    private var customFunctionsSettings: DomaToolsCustomFunctionSettings? = null
 
     init {
         project?.let {
-            customFunctionsSettings = DomaToolsCustomFunctionSettings.getInstance(it)
             formatSettings = DomaToolsFormatEnableSettings.getInstance(it)
         }
     }
@@ -42,21 +39,16 @@ class DomaToolsConfigurable : Configurable {
 
     override fun isModified(): Boolean {
         val enableFormatModified = formatSettings?.isModified(mySettingsComponent) != false
-        val customFunctionClassNamesModified =
-            customFunctionsSettings?.isModified(mySettingsComponent) != false
-
-        return enableFormatModified || customFunctionClassNamesModified
+        return enableFormatModified
     }
 
     @Throws(ConfigurationException::class)
     override fun apply() {
         formatSettings?.apply(mySettingsComponent)
-        customFunctionsSettings?.apply(mySettingsComponent)
     }
 
     override fun reset() {
         formatSettings?.reset(mySettingsComponent)
-        customFunctionsSettings?.reset(mySettingsComponent)
     }
 
     override fun disposeUIResources() {

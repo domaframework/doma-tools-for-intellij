@@ -53,7 +53,7 @@ class StaticDirectiveHandler(
         }
         if (handleResult) return true
 
-        if (element.prevSibling?.elementType == SqlTypes.AT_SIGN) {
+        if (PsiTreeUtil.prevLeaf(element)?.elementType == SqlTypes.AT_SIGN) {
             // Built-in function completion
             handleResult = builtInDirectiveHandler(element, result)
         }
@@ -93,7 +93,7 @@ class StaticDirectiveHandler(
     ): Boolean {
         if (BindDirectiveUtil.getDirectiveType(element) == DirectiveType.BUILT_IN) {
             val prefix = getBindSearchWord(element, bindText)
-            val collector = StaticBuildFunctionCollector(element.project, prefix)
+            val collector = StaticBuildFunctionCollector(element.containingFile, prefix)
             val candidates = collector.collect()
             candidates?.let { it1 -> result.addAllElements(it1) }
             return true

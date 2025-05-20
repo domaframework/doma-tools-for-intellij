@@ -29,7 +29,7 @@ import com.intellij.psi.PsiPackage
 import com.intellij.refactoring.listeners.RefactoringElementListener
 import com.intellij.refactoring.listeners.RefactoringElementListenerProvider
 import com.intellij.util.IncorrectOperationException
-import org.domaframework.doma.intellij.common.CommonPathParameter
+import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
@@ -53,6 +53,8 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
 
         return object : RefactoringElementListener {
             override fun elementMoved(newelement: PsiElement) {
+                // Clear module directory cache on refactoring
+                CommonPathParameterUtil.clearCache()
                 if (newelement is PsiClass) {
                     if (getDaoClass(newelement.containingFile) == null) return
                     refactoringMoveClassFile(module, newelement)
@@ -62,6 +64,8 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
             }
 
             override fun elementRenamed(newelement: PsiElement) {
+                // Clear module directory cache on refactoring
+                CommonPathParameterUtil.clearCache()
                 if (newelement is PsiClass) return
                 refactoringPackageRenameOrMove(module, newelement)
             }
@@ -135,9 +139,8 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
                 file: VirtualFile,
                 moveFileName: String? = null,
             ) {
-                val pathParameter = CommonPathParameter(module)
-                val resources = pathParameter.getResources(file)
-                val isTest = pathParameter.isTest(file)
+                val resources = CommonPathParameterUtil.getResources(module, file)
+                val isTest = CommonPathParameterUtil.isTest(module, file)
                 val baseDirs: List<String> = resources.map { resource -> "${resource.path}/$RESOURCES_META_INF_PATH/" }
                 val newPaths = baseDirs.map { baseDir -> "$baseDir/${newQualifiedName.replace(".", "/")}" }
 

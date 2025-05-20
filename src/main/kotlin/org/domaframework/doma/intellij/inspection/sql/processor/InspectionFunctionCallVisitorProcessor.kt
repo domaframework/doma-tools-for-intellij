@@ -17,11 +17,15 @@ package org.domaframework.doma.intellij.inspection.sql.processor
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiMethod
+import org.domaframework.doma.intellij.common.CommonPathParameterUtil
+import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil
 import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationInvalidExpressionFunctionsResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationInvalidFunctionCallResult
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
-import org.domaframework.doma.intellij.setting.state.DomaToolsCustomFunctionSettings
+import org.jetbrains.kotlin.idea.util.projectStructure.module
 
 class InspectionFunctionCallVisitorProcessor(
     val shortName: String,
@@ -31,19 +35,30 @@ class InspectionFunctionCallVisitorProcessor(
         val project = element.project
         val expressionHelper = ExpressionFunctionsHelper
         val expressionFunctionalInterface = expressionHelper.setExpressionFunctionsInterface(project)
-
         val functionName = element.elIdExpr
-        val expressionFunctionSetting = DomaToolsCustomFunctionSettings.getInstance(project)
-        val customFunctionClassNames = expressionFunctionSetting.state.customFunctionClassNames
 
+        val resources =
+            element.module
+                ?.let { CommonPathParameterUtil.getResources(it, element.containingFile.virtualFile) }
+                ?: emptyList()
+        val customFunctionClassName = DomaCompileConfigUtil.getConfigValue(project, resources, "doma.expr.functions")
+
+        var result: ValidationResult =
+            ValidationInvalidFunctionCallResult(
+                functionName,
+                shortName,
+            )
         var methods: Array<out PsiMethod?> = emptyArray()
-        for (clazz in customFunctionClassNames) {
-            val expressionClazz = project.getJavaClazz(clazz)
-            if (expressionClazz != null && expressionHelper.isInheritor(expressionClazz)) {
+        val expressionClazz = customFunctionClassName?.let { project.getJavaClazz(it) }
+        if (expressionClazz != null) {
+            if (expressionHelper.isInheritor(expressionClazz)) {
                 methods = expressionClazz.findMethodsByName(functionName.text, true)
-                if (methods.isNotEmpty()) {
-                    break
-                }
+            } else {
+                result =
+                    ValidationInvalidExpressionFunctionsResult(
+                        functionName,
+                        shortName,
+                    )
             }
         }
 
@@ -52,10 +67,7 @@ class InspectionFunctionCallVisitorProcessor(
         }
 
         if (methods.isEmpty()) {
-            ValidationInvalidFunctionCallResult(
-                functionName,
-                shortName,
-            ).highlightElement(holder)
+            result.highlightElement(holder)
         }
     }
 }
