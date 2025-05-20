@@ -22,18 +22,6 @@ import com.intellij.psi.search.GlobalSearchScope
 
 class PsiClassTypeUtil {
     companion object {
-        fun getPsiTypeByList(
-            classType: PsiClassType,
-            project: Project,
-            useListParam: Boolean,
-        ): PsiType? {
-            val isIterableType = isIterableType(classType, project)
-            if (isIterableType && useListParam) {
-                return classType.parameters.firstOrNull()
-            }
-            return classType
-        }
-
         fun isIterableType(
             type: PsiClassType,
             project: Project,

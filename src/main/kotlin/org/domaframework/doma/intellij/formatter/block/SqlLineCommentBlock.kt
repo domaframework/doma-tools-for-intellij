@@ -16,7 +16,6 @@
 package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.formatting.Alignment
-import com.intellij.formatting.Indent
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
@@ -40,8 +39,6 @@ open class SqlLineCommentBlock(
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun getIndent(): Indent? = super.getIndent()
 
     override fun isLeaf(): Boolean = true
 

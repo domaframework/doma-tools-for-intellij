@@ -60,26 +60,21 @@ class CommonPathParameter(
             entry.sourceFolders.map { folder ->
                 val file = folder.file
                 if (file != null) {
-                    println("file:${file.name}")
                     when (folder.rootType) {
                         JavaSourceRootType.SOURCE -> {
                             moduleSourceDirectories.add(file)
-                            println("moduleSourceDirectory:$file")
                         }
 
                         JavaSourceRootType.TEST_SOURCE -> {
                             moduleTestSourceDirectories.add(file)
-                            println("moduleTestSourceDirectory:$file")
                         }
 
                         JavaResourceRootType.RESOURCE -> {
                             moduleResourceDirectories.add(file)
-                            println("moduleResourceDirectory:$file")
                         }
 
                         JavaResourceRootType.TEST_RESOURCE -> {
                             moduleTestResourceDirectories.add(file)
-                            println("moduleTestResourceDirectory:$file")
                         }
                     }
                 }

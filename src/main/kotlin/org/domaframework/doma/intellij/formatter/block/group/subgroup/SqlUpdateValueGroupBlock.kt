@@ -23,7 +23,6 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlUpdateKeywordGroupBlock
-import org.domaframework.doma.intellij.psi.SqlTypes
 
 /**
  * In an UPDATE statement using the row value constructor,
@@ -53,10 +52,6 @@ class SqlUpdateValueGroupBlock(
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             if (parent is SqlUpdateKeywordGroupBlock) {
-                val keywords =
-                    parent.childBlocks
-                        .dropLast(1)
-                        .takeWhile { parent.node.elementType == SqlTypes.KEYWORD }
                 return parent.indent.indentLen
                     .plus(parent.getNodeText().length)
                     .plus(3)
