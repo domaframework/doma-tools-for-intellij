@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-05-20
+
+### New Features
+
+- Support custom functions ([#175])
+
+### Bug Fixes
+
+- Fix StringIndexOutOfBoundsException during file path retrieval ([#173])
+- Fix missing inspections for injection files ([#172])
+
+### Dependency Updates
+
+- Update dependency com.pinterest.ktlint:ktlint-cli to v1.6.0 ([#177])
+- Update plugin org.gradle.toolchains.foojay-resolver-convention to v1 ([#178])
+
+[#175]:https://github.com/domaframework/doma-tools-for-intellij/pull/175
+[#173]:https://github.com/domaframework/doma-tools-for-intellij/pull/173
+[#172]:https://github.com/domaframework/doma-tools-for-intellij/pull/172
+[#177]:https://github.com/domaframework/doma-tools-for-intellij/pull/177
+[#178]:https://github.com/domaframework/doma-tools-for-intellij/pull/178
+
+
 ## [0.7.0] - 2025-05-15
 
 ### New Features
@@ -268,3 +291,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[0.8.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.7.0...0.8.0
