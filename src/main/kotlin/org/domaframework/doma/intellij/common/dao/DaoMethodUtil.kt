@@ -76,15 +76,17 @@ fun findDaoMethod(
                     .trim('.')
 
             val daoJavaFile = project.findFile(daoFile)
-            findDaoClass(module, daoClassName)?.let { daoClass ->
-                val daoMethod =
-                    // TODO Support Kotlin Project
-                    when (daoJavaFile) {
-                        is PsiJavaFile -> findUseSqlDaoMethod(daoJavaFile, methodName)
-                        else -> null
-                    }
-                return daoMethod
-            }
+            val paramParameter = CommonPathParameter(module)
+            findDaoClass(module, paramParameter.isTest(originalFile.virtualFile), daoClassName)
+                ?.let { daoClass ->
+                    val daoMethod =
+                        // TODO Support Kotlin Project
+                        when (daoJavaFile) {
+                            is PsiJavaFile -> findUseSqlDaoMethod(daoJavaFile, methodName)
+                            else -> null
+                        }
+                    return daoMethod
+                }
         } else {
             val fileType = getExtension(daoFile.fileType.name)
             val jarRootPath = virtualFile.path.substringBefore("jar!").plus("jar!")
@@ -164,8 +166,9 @@ private fun searchDaoFile(
 
 private fun findDaoClass(
     module: Module,
+    includeTest: Boolean,
     daoClassName: String,
-): PsiClass? = module.getJavaClazz(true, daoClassName)
+): PsiClass? = module.getJavaClazz(includeTest, daoClassName)
 
 /**
  * Generate Dao deployment path from SQL file path
