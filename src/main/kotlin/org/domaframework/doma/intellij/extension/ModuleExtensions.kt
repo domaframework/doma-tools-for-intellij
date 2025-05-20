@@ -22,7 +22,6 @@ import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
 import org.domaframework.doma.intellij.common.dao.getRelativeSqlFilePathFromDaoFilePath
-import org.jetbrains.kotlin.idea.util.sourceRoots
 
 /**
  * Get SQL directory corresponding to Dao file
@@ -40,8 +39,6 @@ fun Module.getPackagePathFromDaoPath(daoFile: VirtualFile): VirtualFile? {
     )
 }
 
-fun Module.getResourceRoot(): VirtualFile? = this.sourceRoots.firstOrNull { it.path.contains("/resources") }
-
 fun Module.getJavaClazz(
     includeTest: Boolean,
     fqdn: String,
@@ -53,6 +50,12 @@ fun Module.getJavaClazz(
         .firstOrNull()
 }
 
+/***
+ * Get SQL file corresponding to Dao file
+ * @param relativePath SQL file relativePath path ex) META-INF/packageName/dao/DaoClassName/sqlFileName.sql
+ * @param includeTest true: test source, false: main source
+ * @return SQL file
+ */
 fun Module.getResourcesSQLFile(
     relativePath: String,
     includeTest: Boolean,
