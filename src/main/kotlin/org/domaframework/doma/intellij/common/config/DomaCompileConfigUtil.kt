@@ -41,7 +41,7 @@ object DomaCompileConfigUtil {
         resourcePaths.forEach { resourcePath ->
             if (resourcePath.isValid) {
                 val configVFile = resourcePath.findChild("doma.compile.config")
-                val cacheKey = "${project.basePath}/$resourcePath/doma.compile.config"
+                val cacheKey = "${project.basePath}/${resourcePath.path}/doma.compile.config"
                 val lastModified = configVFile?.timeStamp ?: 0L
                 val cached = configCache[cacheKey]
 
