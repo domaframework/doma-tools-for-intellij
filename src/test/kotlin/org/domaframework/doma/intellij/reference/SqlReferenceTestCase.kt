@@ -128,9 +128,7 @@ class SqlReferenceTestCase : DomaSqlTest() {
     }
 
     fun testReferenceCustomFunction() {
-        settingCustomFunctions(
-            mutableListOf("doma.example.expression.TestExpressionFunctions", "doma.example.expression.TestNotExpressionFunctions"),
-        )
+        addResourceCompileFile("doma.compile.config")
         referenceTest(
             "referenceCustomFunction",
             mapOf(

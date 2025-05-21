@@ -6,5 +6,5 @@ SELECT
  WHERE p.employee_id = /* employee.employeeId */0
    AND p.user_id = /* employee.userId */0
     OR is_gest = /* @isGest() */false
-    OR flag = /* @<error descr="The function [authUser] is not defined in the registered custom function classes">authUser</error>() */false
-   AND lang = /* @<error descr="The function [getLangCode] is not defined in the registered custom function classes">getLangCode</error>() */'en'
+    OR flag = /* @<error descr="An undefined built-in or custom function [authUser] is being called">authUser</error>() */false
+   AND lang = /* @<error descr="An undefined built-in or custom function [getLangCode] is being called">getLangCode</error>() */'en'

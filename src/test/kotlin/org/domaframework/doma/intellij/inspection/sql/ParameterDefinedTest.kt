@@ -16,7 +16,6 @@
 package org.domaframework.doma.intellij.inspection.sql
 
 import org.domaframework.doma.intellij.DomaSqlTest
-import org.domaframework.doma.intellij.common.helper.ActiveProjectHelper
 import org.domaframework.doma.intellij.inspection.sql.inspector.SqlBindVariableValidInspector
 
 /**
@@ -41,6 +40,7 @@ class ParameterDefinedTest : DomaSqlTest() {
             "$testDaoName/bindVariableForItemHasNextAndIndex.sql",
             "$testDaoName/optionalDaoParameterFieldAccess.sql",
             "$testDaoName/implementCustomFunctions.sql",
+            "$testDaoName/invalidImplementCustomFunctions.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
@@ -126,15 +126,19 @@ class ParameterDefinedTest : DomaSqlTest() {
     }
 
     fun testImplementCustomFunctions() {
-        if (project != null) {
-            ActiveProjectHelper.setCurrentActiveProject(project)
-        }
-        settingCustomFunctions(
-            mutableListOf("doma.example.expression.TestExpressionFunctions", "doma.example.expression.TestNotExpressionFunctions"),
-        )
-
+        addResourceCompileFile("doma.compile.config")
         val sqlFile =
             findSqlFile("$testDaoName/implementCustomFunctions.sql")
+        assertNotNull("Not Found SQL File", sqlFile)
+        if (sqlFile == null) return
+
+        myFixture.testHighlighting(false, false, false, sqlFile)
+    }
+
+    fun testInvalidImplementCustomFunctions() {
+        addResourceCompileFile("invalid.doma.compile.config")
+        val sqlFile =
+            findSqlFile("$testDaoName/invalidImplementCustomFunctions.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 

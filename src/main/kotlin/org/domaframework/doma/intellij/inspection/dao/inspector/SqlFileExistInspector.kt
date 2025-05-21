@@ -46,6 +46,7 @@ class SqlFileExistInspector : AbstractBaseJavaLocalInspectionTool() {
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
     ): PsiElementVisitor {
+        // TODO Support Kotlin Project
         return object : JavaElementVisitor() {
             override fun visitMethod(method: PsiMethod) {
                 super.visitMethod(method)

@@ -22,9 +22,10 @@ import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
 /**
- * Reports invalid function calls in SQL validation.
+ * Reports that the class configured in doma.compile.config
+ * is not an implementation of ExpressionFunctions.
  */
-open class ValidationInvalidFunctionCallResult(
+open class ValidationInvalidExpressionFunctionsResult(
     override val identify: PsiElement,
     override val shortName: String,
 ) : ValidationResult(identify, null, shortName) {
@@ -38,8 +39,7 @@ open class ValidationInvalidFunctionCallResult(
         holder.registerProblem(
             identify,
             MessageBundle.message(
-                "inspection.invalid.sql.notFound.customFunction",
-                identify.text ?: "",
+                "inspection.invalid.sql.notFound.expressionClass",
             ),
             problemHighlightType(project, shortName),
             highlightRange,

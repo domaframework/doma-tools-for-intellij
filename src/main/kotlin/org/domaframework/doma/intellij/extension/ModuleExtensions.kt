@@ -21,6 +21,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
+import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.dao.getRelativeSqlFilePathFromDaoFilePath
 
 /**
@@ -32,10 +33,10 @@ fun Module.getPackagePathFromDaoPath(daoFile: VirtualFile): VirtualFile? {
         contentRoot?.let {
             getRelativeSqlFilePathFromDaoFilePath(daoFile, this)
         } ?: ""
-
+    val isTest = CommonPathParameterUtil.isTest(this, daoFile)
     return this.getResourcesSQLFile(
         packagePath,
-        false,
+        isTest,
     )
 }
 

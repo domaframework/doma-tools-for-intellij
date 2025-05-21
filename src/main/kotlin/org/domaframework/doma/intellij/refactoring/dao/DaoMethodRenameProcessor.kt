@@ -20,6 +20,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.refactoring.listeners.RefactoringElementListener
 import com.intellij.refactoring.rename.RenameJavaMethodProcessor
 import com.intellij.usageView.UsageInfo
+import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
@@ -42,6 +43,8 @@ class DaoMethodRenameProcessor : RenameJavaMethodProcessor() {
         usages: Array<out UsageInfo>,
         listener: RefactoringElementListener?,
     ) {
+        // Clear module directory cache on refactoring
+        CommonPathParameterUtil.clearCache()
         val startTime = System.nanoTime()
         if (element is PsiMethod) {
             val psiDaoMethod = PsiDaoMethod(element.project, element)

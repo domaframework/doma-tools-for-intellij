@@ -15,15 +15,16 @@
  */
 package org.domaframework.doma.intellij.reference
 
-import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
+import org.domaframework.doma.intellij.common.CommonPathParameterUtil
+import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil
 import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
-import org.domaframework.doma.intellij.setting.state.DomaToolsCustomFunctionSettings
+import org.jetbrains.kotlin.idea.base.util.module
 
 class SqlElFunctionCallExprReference(
     element: PsiElement,
@@ -36,33 +37,35 @@ class SqlElFunctionCallExprReference(
         val variableName = functionCallExpr.elIdExpr.text ?: ""
 
         val project = element.project
+        val module = file.module
         val expressionFunctionsInterface =
             ExpressionFunctionsHelper.setExpressionFunctionsInterface(project)
                 ?: return null
 
-        val setting = DomaToolsCustomFunctionSettings.getInstance(element.project)
-        val customFunctionClassNames = setting.state.customFunctionClassNames
-        val implementsClasses: MutableList<PsiClass> =
-            customFunctionClassNames.mapNotNull { className ->
-                val expressionFunction = project.getJavaClazz(className)
+        val resourcePaths =
+            module?.let {
+                CommonPathParameterUtil
+                    .getResources(it, file.virtualFile)
+            } ?: emptyList()
+
+        val customFunctionClassName = DomaCompileConfigUtil.getConfigValue(project, resourcePaths, "doma.expr.functions")
+
+        val implementsClass =
+            if (customFunctionClassName != null) {
+                val expressionFunction = project.getJavaClazz(customFunctionClassName)
                 if (ExpressionFunctionsHelper.isInheritor(expressionFunction)) {
                     expressionFunction
                 } else {
-                    null
+                    expressionFunctionsInterface
                 }
-            } as MutableList<PsiClass>
-
-        if (implementsClasses.isEmpty()) {
-            implementsClasses.add(expressionFunctionsInterface)
-        }
+            } else {
+                expressionFunctionsInterface
+            }
 
         var reference: PsiMethod? = null
-        implementsClasses.forEach { clazz ->
-            // TODO Type checking in parameters
-            val methods = clazz.findMethodsByName(variableName, true).firstOrNull()
-            if (methods != null) {
-                reference = methods
-            }
+        val methods = implementsClass?.findMethodsByName(variableName, true)?.firstOrNull()
+        if (methods != null) {
+            reference = methods
         }
 
         if (reference == null) {

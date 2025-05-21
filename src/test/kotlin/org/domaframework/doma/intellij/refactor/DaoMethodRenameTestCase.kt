@@ -29,7 +29,7 @@ class DaoMethodRenameTestCase : DomaSqlTest() {
             "RenameDaoMethodWithoutSql.java",
             "RenameDaoMethodNotExistSql.java",
         )
-        addResourceEmptyFile(
+        addResourceEmptySqlFile(
             "RenameDaoMethod/renameDaoMethodName.sql",
             "RenameDao/renameDaoClassName.sql",
         )
