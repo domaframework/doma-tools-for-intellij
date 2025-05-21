@@ -28,6 +28,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiClass
 import com.intellij.testFramework.PsiTestUtil
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
+import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.extension.getResourcesSQLFile
 import org.domaframework.doma.intellij.setting.SettingComponent
 import org.domaframework.doma.intellij.setting.state.DomaToolsCustomFunctionSettings
@@ -39,7 +40,8 @@ import java.io.File
 @Ignore
 open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
     protected val packagePath = "doma/example"
-    private val resourceRoot = "main/resources"
+    private val sourceRoot = "java"
+    private val resourceRoot = "resources"
 
     override fun getTestDataPath(): String = "src/test/testData/src/main/"
 
@@ -125,9 +127,21 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
     }
 
     private fun setDirectoryRoot() {
+        WriteAction.runAndWait<RuntimeException> {
+            ModuleRootModificationUtil.updateModel(myFixture.module) { model ->
+                val iterator = model.contentEntries.iterator()
+                while (iterator.hasNext()) {
+                    val entry = iterator.next()
+                    if (entry.file == null || entry.file?.name == "src") {
+                        model.removeContentEntry(entry)
+                    }
+                }
+            }
+        }
+
         val mainDir = myFixture.tempDirFixture.findOrCreateDir("main")
-        val javaDir = myFixture.tempDirFixture.findOrCreateDir("main/java")
-        val resourcesDir = myFixture.tempDirFixture.findOrCreateDir(resourceRoot)
+        val javaDir = myFixture.tempDirFixture.findOrCreateDir("main/$sourceRoot")
+        val resourcesDir = myFixture.tempDirFixture.findOrCreateDir("main/$resourceRoot")
         WriteAction.runAndWait<RuntimeException> {
             ModuleRootModificationUtil.updateModel(myFixture.module) { model ->
                 val contentEntry = model.addContentEntry(mainDir)
@@ -139,18 +153,18 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
 
     fun addDaoJavaFile(vararg fileNames: String) {
         for (fileName in fileNames) {
-            val file = File("$testDataPath/java/$packagePath/dao/$fileName")
+            val file = File("$testDataPath/$sourceRoot/$packagePath/dao/$fileName")
             myFixture.addFileToProject(
-                "main/java/$packagePath/dao/$fileName",
+                "main/$sourceRoot/$packagePath/dao/$fileName",
                 file.readText(),
             )
         }
     }
 
     private fun addEntityJavaFile(fileName: String) {
-        val file = File("$testDataPath/java/$packagePath/entity/$fileName")
+        val file = File("$testDataPath/$sourceRoot/$packagePath/entity/$fileName")
         myFixture.addFileToProject(
-            "main/java/$packagePath/entity/$fileName",
+            "main/$sourceRoot/$packagePath/entity/$fileName",
             file.readText(),
         )
     }
@@ -158,7 +172,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
     fun addResourceEmptyFile(vararg sqlFileNames: String) {
         for (sqlFileName in sqlFileNames) {
             myFixture.addFileToProject(
-                "$resourceRoot/META-INF/$packagePath/dao/$sqlFileName",
+                "main/$resourceRoot/$RESOURCES_META_INF_PATH/$packagePath/dao/$sqlFileName",
                 "",
             )
         }
@@ -166,9 +180,9 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
 
     fun addSqlFile(vararg sqlNames: String) {
         for (sqlName in sqlNames) {
-            val file = File("$testDataPath/resources/META-INF/$packagePath/dao/$sqlName")
+            val file = File("$testDataPath/$resourceRoot/$RESOURCES_META_INF_PATH/$packagePath/dao/$sqlName")
             myFixture.addFileToProject(
-                "$resourceRoot/META-INF/$packagePath/dao/$sqlName",
+                "main/$resourceRoot/$RESOURCES_META_INF_PATH/$packagePath/dao/$sqlName",
                 file.readText(),
             )
         }
@@ -177,7 +191,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
     fun findSqlFile(sqlName: String): VirtualFile? {
         val module = myFixture.module
         return module?.getResourcesSQLFile(
-            "$packagePath/dao/$sqlName",
+            "$RESOURCES_META_INF_PATH/$packagePath/dao/$sqlName",
             false,
         )
     }

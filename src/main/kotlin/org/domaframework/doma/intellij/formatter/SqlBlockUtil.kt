@@ -51,7 +51,7 @@ import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlBlockUtil(
-    private val sqlBlock: SqlBlock,
+    sqlBlock: SqlBlock,
 ) {
     val wrap = sqlBlock.wrap
     val alignment = sqlBlock.alignment

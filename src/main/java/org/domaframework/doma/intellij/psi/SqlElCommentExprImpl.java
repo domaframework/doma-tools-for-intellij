@@ -42,11 +42,6 @@ public class SqlElCommentExprImpl extends ASTWrapperPsiElement implements SqlCus
   }
 
   @Override
-  public @NotNull ASTNode getNode() {
-    return super.getNode();
-  }
-
-  @Override
   public @NotNull IElementType getTokenType() {
     return getNode().getElementType();
   }

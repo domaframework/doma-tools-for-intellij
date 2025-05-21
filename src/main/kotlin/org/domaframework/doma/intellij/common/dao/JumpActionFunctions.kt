@@ -45,6 +45,7 @@ fun jumpToDaoMethod(
     }
 }
 
+// TODO Support Kotlin Project
 private fun getKotlinFunctions(
     file: KtFile,
     targetMethodName: String,

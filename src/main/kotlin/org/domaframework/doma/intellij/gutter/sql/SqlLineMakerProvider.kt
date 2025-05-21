@@ -30,6 +30,7 @@ import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.dao.jumpToDaoMethod
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isSupportFileType
+import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import java.awt.event.MouseEvent
@@ -54,12 +55,12 @@ class SqlLineMakerProvider : RelatedItemLineMarkerProvider() {
         }
 
         val identifier = e.firstChild ?: e
-        val daoFile =
-            findDaoFile(project, file)?.let {
-                if (findDaoMethod(e.containingFile, it) == null) return
-                it
-            } ?: return
-
+        val daoFile = findDaoFile(project, file) ?: return
+        val daoMethod = findDaoMethod(e.containingFile, daoFile) ?: return
+        val psiDaoMethod = PsiDaoMethod(file.project, daoMethod)
+        if (!psiDaoMethod.isUseSqlFileMethod()) {
+            return
+        }
         val marker =
             RelatedItemLineMarkerInfo(
                 identifier,

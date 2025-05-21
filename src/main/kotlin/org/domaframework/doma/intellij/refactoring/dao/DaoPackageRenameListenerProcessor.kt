@@ -19,6 +19,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.JavaDirectoryService
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDirectory
@@ -28,10 +29,10 @@ import com.intellij.psi.PsiPackage
 import com.intellij.refactoring.listeners.RefactoringElementListener
 import com.intellij.refactoring.listeners.RefactoringElementListenerProvider
 import com.intellij.util.IncorrectOperationException
-import org.domaframework.doma.intellij.common.CommonPathParameterHelper.RESOURCES_META_INF_PATH
+import org.domaframework.doma.intellij.common.CommonPathParameter
+import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
-import org.domaframework.doma.intellij.extension.getResourceRoot
 import org.domaframework.doma.intellij.extension.getResourcesSQLFile
 import org.jetbrains.kotlin.idea.base.util.module
 import java.io.IOException
@@ -74,7 +75,9 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
                     psiPackage.directories
                         .filter { !it.name.contains("build") }
                 directories.forEach { dir ->
-                    handlePackageMove(psiPackage, oldQualifiedName, module)
+                    newElement.containingFile
+                        ?.virtualFile
+                        ?.let { handlePackageMove(psiPackage, oldQualifiedName, module, it) }
                 }
 
                 PluginLoggerUtil.countLogging(
@@ -95,7 +98,9 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
                     psiPackage.directories
                         .filter { !it.name.contains("build") }
                 directories.forEach { dir ->
-                    handlePackageMove(psiPackage, oldQualifiedName, module, moveFileName)
+                    element.containingFile
+                        ?.virtualFile
+                        ?.let { handlePackageMove(psiPackage, oldQualifiedName, module, it, moveFileName) }
                 }
 
                 PluginLoggerUtil.countLogging(
@@ -110,6 +115,7 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
                 packageElement: PsiPackage,
                 oldQualifiedName: String,
                 module: Module,
+                file: VirtualFile,
                 moveFileName: String? = null,
             ) {
                 val newQualifiedName = packageElement.qualifiedName
@@ -117,6 +123,7 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
                     module,
                     oldQualifiedName,
                     newQualifiedName,
+                    file,
                     moveFileName,
                 )
             }
@@ -125,29 +132,42 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
                 module: Module,
                 oldQualifiedName: String,
                 newQualifiedName: String,
+                file: VirtualFile,
                 moveFileName: String? = null,
             ) {
-                val baseDir = "${module.getResourceRoot()?.path}/$RESOURCES_META_INF_PATH/"
-                val newPath = "$baseDir/${newQualifiedName.replace(".", "/")}"
+                val pathParameter = CommonPathParameter(module)
+                val resources = pathParameter.getResources(file)
+                val isTest = pathParameter.isTest(file)
+                val baseDirs: List<String> = resources.map { resource -> "${resource.path}/$RESOURCES_META_INF_PATH/" }
+                val newPaths = baseDirs.map { baseDir -> "$baseDir/${newQualifiedName.replace(".", "/")}" }
 
                 ApplicationManager.getApplication().runWriteAction {
-                    try {
-                        val newDir = VfsUtil.createDirectories(newPath)
-                        val oldResourcePath = module.getResourcesSQLFile(oldQualifiedName.replace(".", "/"), false)
-                        oldResourcePath?.children?.forEach { old ->
-                            if (moveFileName != null && old.name == moveFileName) {
-                                old?.move(this, newDir)
-                            } else if (moveFileName == null) {
-                                old?.move(this, newDir)
+                    newPaths.forEach { newPath ->
+                        try {
+                            val newDir = VfsUtil.createDirectories(newPath)
+                            val oldResourcePath =
+                                module.getResourcesSQLFile(
+                                    RESOURCES_META_INF_PATH + "/" + oldQualifiedName.replace(".", "/"),
+                                    isTest,
+                                )
+                            if (oldResourcePath != null) {
+                                oldResourcePath.children?.forEach { old ->
+                                    if (moveFileName != null && old.name == moveFileName) {
+                                        old?.move(this, newDir)
+                                    } else if (moveFileName == null) {
+                                        old?.move(this, newDir)
+                                    }
+                                }
+                                return@forEach
                             }
-                        }
-                    } catch (e: IOException) {
-                        when (e) {
-                            is FileSystemException -> {
-                                e.printStackTrace()
-                            }
+                        } catch (e: IOException) {
+                            when (e) {
+                                is FileSystemException -> {
+                                    e.printStackTrace()
+                                }
 
-                            else -> throw IncorrectOperationException(e)
+                                else -> throw IncorrectOperationException(e)
+                            }
                         }
                     }
                 }

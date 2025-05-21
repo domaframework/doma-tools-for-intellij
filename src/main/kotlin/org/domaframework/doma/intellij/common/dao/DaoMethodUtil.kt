@@ -27,18 +27,19 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.common.CommonPathParameterHelper.RESOURCES_META_INF_PATH
-import org.domaframework.doma.intellij.common.CommonPathParameterHelper.RESOURCES_PATH
+import org.domaframework.doma.intellij.common.CommonPathParameter
+import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.common.getExtension
 import org.domaframework.doma.intellij.common.getJarRoot
 import org.domaframework.doma.intellij.common.getMethodDaoFilePath
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isSupportFileType
-import org.domaframework.doma.intellij.common.searchDaoFile
+import org.domaframework.doma.intellij.common.sourceExtensionNames
 import org.domaframework.doma.intellij.extension.findFile
 import org.domaframework.doma.intellij.extension.getContentRoot
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.getModule
+import org.jetbrains.kotlin.idea.base.util.module
 
 /**
  * Get Dao method corresponding to SQL file
@@ -57,15 +58,13 @@ fun findDaoMethod(
         }
     } else if (isSupportFileType(originalFile)) {
         // TODO: Add Support Kotlin
-        val fileTypeName = "JAVA"
         val methodName = virtualFile.nameWithoutExtension
         val daoFile = daoFile ?: findDaoFile(project, originalFile) ?: return null
         if (module != null) {
             val relativePath =
-                formatDaoPathFromSqlFilePath(
+                getDaoPathFromSqlFilePath(
                     originalFile,
                     project.getContentRoot(virtualFile)?.path ?: "",
-                    fileTypeName,
                 )
             // get ClassPath with package name
             val daoClassName: String =
@@ -73,18 +72,21 @@ fun findDaoMethod(
                     .substringBefore(".")
                     .replace("/", ".")
                     .replace("\\", ".")
-                    .substringAfter(".${getExtension(fileTypeName)}")
                     .replace("..", ".")
                     .trim('.')
+
             val daoJavaFile = project.findFile(daoFile)
-            findDaoClass(module, daoClassName)?.let { daoClass ->
-                val daoMethod =
-                    when (daoJavaFile) {
-                        is PsiJavaFile -> findUseSqlDaoMethod(daoJavaFile, methodName)
-                        else -> null
-                    }
-                return daoMethod
-            }
+            val paramParameter = CommonPathParameter(module)
+            findDaoClass(module, paramParameter.isTest(originalFile.virtualFile), daoClassName)
+                ?.let { daoClass ->
+                    val daoMethod =
+                        // TODO Support Kotlin Project
+                        when (daoJavaFile) {
+                            is PsiJavaFile -> findUseSqlDaoMethod(daoJavaFile, methodName)
+                            else -> null
+                        }
+                    return daoMethod
+                }
         } else {
             val fileType = getExtension(daoFile.fileType.name)
             val jarRootPath = virtualFile.path.substringBefore("jar!").plus("jar!")
@@ -130,53 +132,110 @@ fun findDaoFile(
     if (contentRoot == null) {
         return getJarRoot(virtualFile, sqlFile)
     }
+    return searchDaoFile(sqlFile.module, contentRoot, sqlFile)
+}
+
+/**
+ * Dao file search for SQL file
+ */
+private fun searchDaoFile(
+    module: Module?,
+    contentRoot: VirtualFile?,
+    sqlFile: PsiFile,
+): VirtualFile? {
+    val contentRootPath = contentRoot?.path ?: return null
+    val pathParams = CommonPathParameter(module)
+    val moduleBaseName = pathParams.moduleBasePath?.nameWithoutExtension ?: ""
     // TODO: Add Support Kotlin
-    val relativeFilePath =
-        formatDaoPathFromSqlFilePath(sqlFile, contentRoot.path, "JAVA")
-    return searchDaoFile(contentRoot, virtualFile.path, relativeFilePath)
+    val relativeDaoFilePaths =
+        getDaoPathFromSqlFilePath(sqlFile, contentRoot.path)
+    val sources = pathParams.getSources(sqlFile.virtualFile)
+
+    if (contentRootPath.endsWith(moduleBaseName) == true) {
+        sources.forEach { source ->
+            sourceExtensionNames.forEach { extension ->
+                val fileExtension = getExtension(extension)
+                val findDaoFile =
+                    contentRoot.findFileByRelativePath("${source.nameWithoutExtension}$relativeDaoFilePaths.$fileExtension")
+                if (findDaoFile != null) return findDaoFile
+            }
+        }
+    }
+    return null
 }
 
 private fun findDaoClass(
     module: Module,
+    includeTest: Boolean,
     daoClassName: String,
-): PsiClass? = module.getJavaClazz(true, daoClassName)
+): PsiClass? = module.getJavaClazz(includeTest, daoClassName)
 
 /**
  * Generate Dao deployment path from SQL file path
+ * @param sqlFile SQL File
+ * @param projectRootPath project content Root Path
+ * @return
  */
-fun formatDaoPathFromSqlFilePath(
-    relativeBaseSqlFile: PsiFile,
+private fun getDaoPathFromSqlFilePath(
+    sqlFile: PsiFile,
     projectRootPath: String,
-    extension: String,
 ): String {
-    if (isInjectionSqlFile(relativeBaseSqlFile)) {
+    if (isInjectionSqlFile(sqlFile)) {
         return ""
     }
-    val sqlPath = relativeBaseSqlFile.virtualFile?.path ?: return ""
+    val module = sqlFile.module
+    val sqlPath = sqlFile.virtualFile?.path ?: return ""
     var relativeFilePath = sqlPath.substring(projectRootPath.length)
     if (!relativeFilePath.startsWith("/")) {
         relativeFilePath = "/$relativeFilePath"
     }
-    val extensionType = getExtension(extension.uppercase())
-    return relativeFilePath
-        .replace("/$RESOURCES_PATH", "")
-        .replace(RESOURCES_META_INF_PATH, extension.lowercase())
-        .replace("/${relativeBaseSqlFile.name}", "")
-        .plus(".$extensionType")
+    val pathParams = CommonPathParameter(module)
+    val resources = pathParams.getResources(sqlFile.virtualFile)
+
+    return resources
+        .firstOrNull { resource ->
+            relativeFilePath.startsWith("/" + resource.nameWithoutExtension)
+        }?.let { resource ->
+            relativeFilePath
+                .replace("${resource.nameWithoutExtension}/$RESOURCES_META_INF_PATH/", "")
+                .replace("/${sqlFile.name}", "")
+        } ?: ""
 }
 
 /**
  * Generate SqlFile path from Dao file path
+ * @param daoFile Dao File
+ * @param module The module to which the Dao file belongs
+ * @return SqlFile path ex) META-INF/package/dao/DaoClassName/
  */
-fun formatSqlPathFromDaoPath(
-    contentRootPath: String,
+fun getRelativeSqlFilePathFromDaoFilePath(
     daoFile: VirtualFile,
+    module: Module?,
 ): String {
-    val fileType = daoFile.fileType.name
+    if (module == null) return ""
     val extension = daoFile.fileType.defaultExtension
-    val daoFilePath = daoFile.path
-    return daoFilePath
-        .replace(contentRootPath, RESOURCES_META_INF_PATH)
-        .replace("/${fileType.lowercase()}/", "/")
-        .replace(".$extension", "")
+    val pathParams = CommonPathParameter(module)
+    var relativeSqlFilePath =
+        daoFile.path
+            .replace(pathParams.moduleBasePath?.path ?: "", "")
+            .replace(".$extension", "")
+    val isTest = pathParams.moduleTestSourceDirectories.firstOrNull { dir -> daoFile.path.contains(dir.path) } != null
+    if (isTest) {
+        pathParams.moduleTestSourceDirectories.forEach { source ->
+            relativeSqlFilePath =
+                relativeSqlFilePath.replace(
+                    "/" + source.nameWithoutExtension,
+                    RESOURCES_META_INF_PATH,
+                )
+        }
+    } else {
+        pathParams.moduleSourceDirectories.forEach { source ->
+            relativeSqlFilePath =
+                relativeSqlFilePath.replace(
+                    "/" + source.nameWithoutExtension,
+                    RESOURCES_META_INF_PATH,
+                )
+        }
+    }
+    return relativeSqlFilePath
 }

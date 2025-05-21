@@ -21,9 +21,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
-import org.domaframework.doma.intellij.common.CommonPathParameterHelper.RESOURCES_META_INF_PATH
-import org.domaframework.doma.intellij.common.dao.formatSqlPathFromDaoPath
-import org.jetbrains.kotlin.idea.util.sourceRoots
+import org.domaframework.doma.intellij.common.dao.getRelativeSqlFilePathFromDaoFilePath
 
 /**
  * Get SQL directory corresponding to Dao file
@@ -32,7 +30,7 @@ fun Module.getPackagePathFromDaoPath(daoFile: VirtualFile): VirtualFile? {
     val contentRoot = this.project.getContentRoot(daoFile)?.path
     val packagePath =
         contentRoot?.let {
-            formatSqlPathFromDaoPath(it, daoFile)
+            getRelativeSqlFilePathFromDaoFilePath(daoFile, this)
         } ?: ""
 
     return this.getResourcesSQLFile(
@@ -40,8 +38,6 @@ fun Module.getPackagePathFromDaoPath(daoFile: VirtualFile): VirtualFile? {
         false,
     )
 }
-
-fun Module.getResourceRoot(): VirtualFile? = this.sourceRoots.firstOrNull { it.path.contains("/resources") }
 
 fun Module.getJavaClazz(
     includeTest: Boolean,
@@ -54,12 +50,18 @@ fun Module.getJavaClazz(
         .firstOrNull()
 }
 
+/***
+ * Get SQL file corresponding to Dao file
+ * @param relativePath SQL file relativePath path ex) META-INF/packageName/dao/DaoClassName/sqlFileName.sql
+ * @param includeTest true: test source, false: main source
+ * @return SQL file
+ */
 fun Module.getResourcesSQLFile(
     relativePath: String,
     includeTest: Boolean,
 ): VirtualFile? =
     ResourceFileUtil.findResourceFileInScope(
-        "$RESOURCES_META_INF_PATH/${relativePath.replace(RESOURCES_META_INF_PATH,"")}".replace("//", "/"),
+        relativePath.replace("//", "/"),
         this.project,
         this.getModuleScope(includeTest),
     )

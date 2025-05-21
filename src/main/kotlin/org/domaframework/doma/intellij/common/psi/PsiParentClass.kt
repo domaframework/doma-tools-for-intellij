@@ -67,30 +67,12 @@ class PsiParentClass(
                 m.hasModifierProperty(PsiModifier.PUBLIC)
         }
 
-    fun findStaticField(fieldName: String): PsiField? =
-        fields
-            ?.filter { f ->
-                f.hasModifierProperty(PsiModifier.STATIC) &&
-                    PropertyModifyUtil.filterPrivateField(f, type)
-            }?.firstOrNull { f ->
-                f.name == fieldName
-            }
-
     fun searchStaticField(fieldName: String): List<PsiField>? =
         fields
             ?.filter { f ->
                 f.hasModifierProperty(PsiModifier.STATIC) &&
                     f.name.startsWith(fieldName) &&
                     PropertyModifyUtil.filterPrivateField(f, type)
-            }
-
-    fun findStaticMethod(methodName: String): PsiMethod? =
-        methods
-            ?.filter { m ->
-                m.hasModifierProperty(PsiModifier.STATIC) &&
-                    m.hasModifierProperty(PsiModifier.PUBLIC)
-            }?.firstOrNull { m ->
-                m.name == methodName
             }
 
     fun searchStaticMethod(methodName: String): List<PsiMethod>? =
