@@ -4,11 +4,12 @@ on:
   push:
     branches:
       - main
+    pull_request:
+      types: [opened, synchronize]
   workflow_dispatch:
 
 jobs:
   update_release_draft:
-    if: ${{ !contains(github.head_ref, 'doc/changelog-update-') && startsWith(github.event.head_commit.message, 'Merge pull request') }}
     permissions:
       contents: write
       pull-requests: write
@@ -28,6 +29,8 @@ jobs:
             echo "This commit is not target. Skip the workflow."
             echo "SKIP_JOB=true" >> $GITHUB_OUTPUT
           else
+            echo "This commit is target."
+            echo ${{ github.event.head_commit.message }}
             echo "SKIP_JOB=false" >> $GITHUB_OUTPUT
           fi
       - uses: release-drafter/release-drafter@v6
