@@ -37,7 +37,7 @@ class DomaSqlQuickFixTest : DomaSqlTest() {
             "quickfix/SqlProcessorQuickFixTestDao.java",
         )
 
-        addResourceEmptyFile(
+        addResourceEmptySqlFile(
             "quickfix/SelectQuickFixTestDao/existsSQLFile.sql",
             "quickfix/InsertQuickFixTestDao/existsSQLFile.sql",
             "quickfix/UpdateQuickFixTestDao/existsSQLFile.sql",

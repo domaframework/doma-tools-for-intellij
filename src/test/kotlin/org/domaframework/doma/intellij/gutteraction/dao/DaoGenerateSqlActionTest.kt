@@ -60,7 +60,7 @@ class DaoGenerateSqlActionTest : DomaSqlTest() {
             "gutteraction/SqlProcessorGutterTestDao.java",
         )
 
-        addResourceEmptyFile(
+        addResourceEmptySqlFile(
             "quickfix/SelectQuickFixTestDao/existsSQLFile.sql",
             "quickfix/InsertQuickFixTestDao/existsSQLFile.sql",
             "quickfix/UpdateQuickFixTestDao/existsSQLFile.sql",
@@ -71,7 +71,7 @@ class DaoGenerateSqlActionTest : DomaSqlTest() {
             "quickfix/ScriptQuickFixTestDao/existsSQLFile.script",
             "quickfix/SqlProcessorQuickFixTestDao/existsSQLFile.sql",
         )
-        addResourceEmptyFile(
+        addResourceEmptySqlFile(
             "gutteraction/SelectGutterTestDao/existsSQLFile1.sql",
             "gutteraction/InsertGutterTestDao/existsSQLFile2.sql",
             "gutteraction/UpdateGutterTestDao/existsSQLFile1.sql",

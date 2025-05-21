@@ -16,7 +16,6 @@
 package org.domaframework.doma.intellij.complate.sql
 
 import org.domaframework.doma.intellij.DomaSqlTest
-import org.domaframework.doma.intellij.inspection.sql.inspector.SqlBindVariableValidInspector
 
 /**
  * Code completion testing in SQL
@@ -60,8 +59,8 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDapName/completeOptionalBatchAnnotation.sql",
             "$testDapName/completeForDirectiveItem.sql",
             "$testDapName/completeImplementCustomFunction.sql",
+            "$testDapName/completeNotImplementCustomFunction.sql",
         )
-        myFixture.enableInspections(SqlBindVariableValidInspector())
     }
 
     fun testCompleteDaoArgument() {
@@ -266,12 +265,16 @@ class SqlCompleteTest : DomaSqlTest() {
                 "isNotBlank()",
             ),
             listOf(
-                "escape()",
-                "prefix()",
-                "infix()",
-                "suffix()",
-                "roundDownTimePart()",
-                "roundUpTimePart()",
+                "userId()",
+                "userName()",
+                "userAge()",
+                "langCode()",
+                "isGest()",
+                "getId()",
+                "getName()",
+                "getAge()",
+                "getLangCode()",
+                "isManager()",
             ),
         )
     }
@@ -402,9 +405,7 @@ class SqlCompleteTest : DomaSqlTest() {
     }
 
     fun testCompleteImplementCustomFunction() {
-        settingCustomFunctions(
-            mutableListOf("doma.example.expression.TestExpressionFunctions", "doma.example.expression.TestNotExpressionFunctions"),
-        )
+        addResourceCompileFile("doma.compile.config")
         innerDirectiveCompleteTest(
             "$testDapName/completeImplementCustomFunction.sql",
             listOf("userId()", "userName()", "userAge()", "langCode()", "isGest()", "isBlank()", "isNotBlank()"),
@@ -413,9 +414,15 @@ class SqlCompleteTest : DomaSqlTest() {
     }
 
     fun testCompleteNotImplementCustomFunction() {
+        addResourceCompileFile("invalid.doma.compile.config")
         innerDirectiveCompleteTest(
-            "$testDapName/completeImplementCustomFunction.sql",
-            listOf("isEmpty()", "roundDownTimePart()", "isBlank()", "isNotBlank()"),
+            "$testDapName/completeNotImplementCustomFunction.sql",
+            listOf(
+                "isEmpty()",
+                "isNotEmpty()",
+                "isBlank()",
+                "isNotBlank()",
+            ),
             listOf(
                 "userId()",
                 "userName()",

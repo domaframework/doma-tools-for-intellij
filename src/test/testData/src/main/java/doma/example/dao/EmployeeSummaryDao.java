@@ -42,4 +42,7 @@ interface EmployeeSummaryDao {
 
   @Select
   EmployeeSummary implementCustomFunctions(EmployeeSummary employee);
+
+  @Select
+  EmployeeSummary invalidImplementCustomFunctions(EmployeeSummary employee);
 }

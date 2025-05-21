@@ -28,10 +28,9 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiClass
 import com.intellij.testFramework.PsiTestUtil
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
+import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.extension.getResourcesSQLFile
-import org.domaframework.doma.intellij.setting.SettingComponent
-import org.domaframework.doma.intellij.setting.state.DomaToolsCustomFunctionSettings
 import org.jetbrains.jps.model.java.JavaResourceRootType
 import org.jetbrains.jps.model.java.JavaSourceRootType
 import org.junit.Ignore
@@ -68,6 +67,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
     override fun tearDown() {
         try {
             deleteSdk()
+            CommonPathParameterUtil.clearCache()
         } finally {
             super.tearDown()
         }
@@ -169,13 +169,21 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         )
     }
 
-    fun addResourceEmptyFile(vararg sqlFileNames: String) {
+    fun addResourceEmptySqlFile(vararg sqlFileNames: String) {
         for (sqlFileName in sqlFileNames) {
             myFixture.addFileToProject(
                 "main/$resourceRoot/$RESOURCES_META_INF_PATH/$packagePath/dao/$sqlFileName",
                 "",
             )
         }
+    }
+
+    fun addResourceCompileFile(readFileName: String) {
+        val file = File("$testDataPath/$resourceRoot/$readFileName")
+        myFixture.addFileToProject(
+            "main/$resourceRoot/doma.compile.config",
+            file.readText(),
+        )
     }
 
     fun addSqlFile(vararg sqlNames: String) {
@@ -208,13 +216,5 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
             "main/java/$packagePath/expression/$fileName",
             file.readText(),
         )
-    }
-
-    protected fun settingCustomFunctions(newClassNames: MutableList<String>) {
-        val settings = DomaToolsCustomFunctionSettings.getInstance(project)
-        val component = SettingComponent()
-        component.customFunctionClassNames = newClassNames.toMutableList()
-        settings.apply(component)
-        assertEquals(newClassNames, settings.getState().customFunctionClassNames)
     }
 }
