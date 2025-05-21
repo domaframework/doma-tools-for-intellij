@@ -103,4 +103,6 @@ interface SqlCompleteTestDao {
   @Select
   Employee completeImplementCustomFunction(Project project);
 
+  @Select
+  Employee completeNotImplementCustomFunction(Project project);
 }
