@@ -29,6 +29,15 @@ class DomaToolsConfigurable : Configurable {
 
     override fun getDisplayName(): String = "Doma Tools"
 
+    /**
+     * Creates and returns the settings panel component.
+     *
+     * Gets the current active project and initializes the settings panel.
+     * If no project is active, the panel will be disabled.
+     * Loads both format settings and custom function settings for the active project.
+     *
+     * @return The settings panel component, or null if creation fails
+     */
     override fun createComponent(): JComponent? {
         val project = ActiveProjectHelper.getCurrentActiveProject()
         val panel = mySettingsComponent?.panel ?: return null

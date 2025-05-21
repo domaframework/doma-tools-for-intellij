@@ -23,10 +23,23 @@ import com.intellij.openapi.wm.IdeFocusManager
 object ActiveProjectHelper {
     private var activeProject: Project? = null
 
+    /**
+     * Sets the current active project.
+     *
+     * @param value the project to set as active, or null to clear
+     */
     fun setCurrentActiveProject(value: Project?) {
         activeProject = value
     }
 
+    /**
+     * Returns the current active project.
+     *
+     * If called from the EDT, tries to get the project with UI focus.
+     * Otherwise, returns the first open project or the last set active project.
+     *
+     * @return the current active [Project], or null if none is available
+     */
     fun getCurrentActiveProject(): Project? {
         // If EDT, get from focus
         if (ApplicationManager.getApplication().isDispatchThread) {
@@ -42,6 +55,11 @@ object ActiveProjectHelper {
         return activeProject
     }
 
+    /**
+     * Returns the project that currently has UI focus, if any.
+     *
+     * @return the [Project] with UI focus, or null if none
+     */
     private fun getActiveUIProject(): Project? {
         val openProjects: Array<out Project> = ProjectManager.getInstance().openProjects
         for (project in openProjects) {
