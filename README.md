@@ -98,9 +98,9 @@ Some functions of "Doma Tools" can be customized from the settings screen.
 - Toggle the SQL formatting feature on or off
 - Specify the class names that define custom functions.
 
-**If you want to use custom functions defined in your own ExpressionFunctions implementation class, 
+**If you want to use custom functions defined in your own ExpressionFunctions implementation class,
 place a `doma.compile.config` file directly under the resources directory and describe the `doma.expr.functions` entry.**
-  
+
 ex) doma.compile.config
 ```properties
 doma.expr.functions=example.expression.MyExpressionFunctions

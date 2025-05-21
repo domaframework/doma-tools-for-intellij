@@ -18,39 +18,48 @@ package org.domaframework.doma.intellij.common.sql.directive.collector
 import com.intellij.codeInsight.lookup.AutoCompletionPolicy
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
-import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
+import org.domaframework.doma.intellij.common.CommonPathParameterUtil
+import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil
 import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
 import org.domaframework.doma.intellij.extension.getJavaClazz
-import org.domaframework.doma.intellij.setting.state.DomaToolsCustomFunctionSettings
+import org.jetbrains.kotlin.idea.base.util.module
 
 class StaticBuildFunctionCollector(
-    private val project: Project,
+    private val file: PsiFile?,
     private val bind: String,
 ) : StaticDirectiveHandlerCollector() {
     public override fun collect(): List<LookupElement>? {
         var functions = mutableSetOf<PsiMethod>()
-        val setting = DomaToolsCustomFunctionSettings.getInstance(project)
-        val state = setting.state
-        val customFunctions = state.customFunctionClassNames
+        val project = file?.project
+        val module = file?.module
+        val resourcePaths =
+            if (file?.virtualFile != null && module != null) {
+                CommonPathParameterUtil
+                    .getResources(module, file.virtualFile)
+            } else {
+                emptyList()
+            }
+
+        val customFunctionClassName =
+            project?.let { DomaCompileConfigUtil.getConfigValue(it, resourcePaths, "doma.expr.functions") }
 
         val expressionFunctionInterface =
-            ExpressionFunctionsHelper.setExpressionFunctionsInterface(project)
+            project?.let { ExpressionFunctionsHelper.setExpressionFunctionsInterface(it) }
                 ?: return null
 
-        customFunctions.forEach { function ->
-            val expressionClazz = project.getJavaClazz(function)
-            if (expressionClazz != null &&
-                ExpressionFunctionsHelper.isInheritor(expressionClazz)
-            ) {
-                val methods = expressionClazz.allMethods
-                functions.addAll(
-                    methods.filter {
-                        isPublicFunction(it)
-                    },
-                )
-            }
+        val expressionClazz = customFunctionClassName?.let { project.getJavaClazz(it) }
+        if (expressionClazz != null &&
+            ExpressionFunctionsHelper.isInheritor(expressionClazz)
+        ) {
+            val methods = expressionClazz.allMethods
+            functions.addAll(
+                methods.filter {
+                    isPublicFunction(it)
+                },
+            )
         }
 
         if (functions.isEmpty()) {
