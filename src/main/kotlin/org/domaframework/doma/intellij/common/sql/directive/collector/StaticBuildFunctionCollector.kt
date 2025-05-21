@@ -15,6 +15,7 @@
  */
 package org.domaframework.doma.intellij.common.sql.directive.collector
 
+import com.intellij.codeInsight.lookup.AutoCompletionPolicy
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.project.Project
@@ -74,6 +75,7 @@ class StaticBuildFunctionCollector(
                         })",
                         true,
                     ).withTypeText(it.returnType?.presentableText ?: "void")
+                    .withAutoCompletionPolicy(AutoCompletionPolicy.ALWAYS_AUTOCOMPLETE)
             }
     }
 

@@ -53,7 +53,7 @@ class StaticDirectiveHandler(
         }
         if (handleResult) return true
 
-        if (element.prevSibling?.elementType == SqlTypes.AT_SIGN) {
+        if (PsiTreeUtil.prevLeaf(element)?.elementType == SqlTypes.AT_SIGN) {
             // Built-in function completion
             handleResult = builtInDirectiveHandler(element, result)
         }
