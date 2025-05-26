@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
@@ -30,11 +31,15 @@ class SqlDataTypeParamBlock(
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    formatMode: FormattingMode,
 ) : SqlSubGroupBlock(
         node,
         wrap,
         alignment,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     override val indent =
         ElementIndent(

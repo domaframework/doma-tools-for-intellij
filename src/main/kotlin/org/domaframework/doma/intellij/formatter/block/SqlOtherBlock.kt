@@ -16,7 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.formatting.Alignment
-import com.intellij.formatting.Indent
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
@@ -30,12 +30,16 @@ open class SqlOtherBlock(
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
     lastGroup: SqlBlock? = null,
+    enableFormat: Boolean,
+    formatMode: FormattingMode,
 ) : SqlBlock(
         node,
         wrap,
         alignment,
         null,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     var isUpdateColumnSubstitutions = isBeforeUpdateValuesBlock(lastGroup)
 
@@ -54,8 +58,6 @@ open class SqlOtherBlock(
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
     private fun createIndentLen(): Int {
         if (isUpdateColumnSubstitutions) {

@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.block.expr
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Block
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
@@ -39,11 +40,15 @@ open class SqlElBlockCommentBlock(
     alignment: Alignment?,
     open val customSpacingBuilder: SqlCustomSpacingBuilder?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    private val formatMode: FormattingMode,
 ) : SqlCommentBlock(
         node,
         wrap,
         alignment,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     override val indent =
         ElementIndent(
@@ -77,7 +82,7 @@ open class SqlElBlockCommentBlock(
             SqlTypes.GE, SqlTypes.LE, SqlTypes.GT, SqlTypes.LT, SqlTypes.EL_EQ, SqlTypes.EL_NE,
             SqlTypes.PLUS, SqlTypes.MINUS, SqlTypes.ASTERISK, SqlTypes.SLASH, SqlTypes.AT_SIGN,
             ->
-                SqlOperationBlock(child, wrap, alignment, spacingBuilder)
+                SqlOperationBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.EL_FIELD_ACCESS_EXPR ->
                 SqlElFieldAccessBlock(
@@ -86,6 +91,8 @@ open class SqlElBlockCommentBlock(
                     alignment,
                     createFieldAccessSpacingBuilder(),
                     spacingBuilder,
+                    isEnableFormat(),
+                    formatMode,
                 )
 
             SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR ->
@@ -95,6 +102,8 @@ open class SqlElBlockCommentBlock(
                     alignment,
                     createStaticFieldSpacingBuilder(),
                     spacingBuilder,
+                    isEnableFormat(),
+                    formatMode,
                 )
 
             SqlTypes.EL_FUNCTION_CALL_EXPR ->
@@ -104,12 +113,14 @@ open class SqlElBlockCommentBlock(
                     alignment,
                     createSpacingBuilder(),
                     spacingBuilder,
+                    isEnableFormat(),
+                    formatMode,
                 )
 
             SqlTypes.BLOCK_COMMENT_CONTENT ->
-                SqlBlockCommentBlock(child, wrap, alignment, spacingBuilder)
+                SqlBlockCommentBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
-            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
+            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
         }
 
     private fun createFieldAccessSpacingBuilder(): SqlCustomSpacingBuilder =

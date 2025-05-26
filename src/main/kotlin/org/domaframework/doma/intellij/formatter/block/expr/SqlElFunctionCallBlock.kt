@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block.expr
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
@@ -31,12 +32,16 @@ class SqlElFunctionCallBlock(
     alignment: Alignment?,
     customSpacingBuilder: SqlCustomSpacingBuilder?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    private val formatMode: FormattingMode,
 ) : SqlBlock(
         node,
         wrap,
         alignment,
         customSpacingBuilder,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     override fun buildChildren(): MutableList<AbstractBlock> {
         val blocks = mutableListOf<AbstractBlock>()
@@ -54,15 +59,15 @@ class SqlElFunctionCallBlock(
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
             SqlTypes.AT_SIGN ->
-                SqlElAtSignBlock(child, wrap, alignment, createSpacingBuilder(), spacingBuilder)
+                SqlElAtSignBlock(child, wrap, alignment, createSpacingBuilder(), spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.EL_IDENTIFIER ->
-                SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder)
+                SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.EL_PARAMETERS ->
-                SqlElParametersBlock(child, wrap, alignment, createSpacingBuilder(), spacingBuilder)
+                SqlElParametersBlock(child, wrap, alignment, createSpacingBuilder(), spacingBuilder, isEnableFormat(), formatMode)
 
-            else -> SqlBlock(child, wrap, alignment, createSpacingBuilder(), spacingBuilder)
+            else -> SqlBlock(child, wrap, alignment, createSpacingBuilder(), spacingBuilder, isEnableFormat(), formatMode)
         }
 
     override fun isLeaf(): Boolean = false

@@ -15,15 +15,15 @@
  */
 package org.domaframework.doma.intellij.setting.state
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
-import com.intellij.openapi.project.Project
 import org.domaframework.doma.intellij.setting.SettingComponent
 
-@Service(Service.Level.PROJECT)
+@Service(Service.Level.APP)
 @State(
     name = "DomaToolsFormatEnableSettings",
     reloadable = true,
@@ -55,9 +55,9 @@ class DomaToolsFormatEnableSettings :
     }
 
     companion object {
-        fun getInstance(project: Project): DomaToolsFormatEnableSettings =
-            project.getService(
-                DomaToolsFormatEnableSettings::class.java,
-            )
+        fun getInstance(): DomaToolsFormatEnableSettings =
+            ApplicationManager
+                .getApplication()
+                .getService(DomaToolsFormatEnableSettings::class.java)
     }
 }

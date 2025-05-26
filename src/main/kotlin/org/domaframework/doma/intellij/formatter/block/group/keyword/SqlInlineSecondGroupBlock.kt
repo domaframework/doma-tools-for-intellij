@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Indent
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
@@ -30,11 +31,15 @@ open class SqlInlineSecondGroupBlock(
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    formatMode: FormattingMode,
 ) : SqlNewGroupBlock(
         node,
         wrap,
         alignment,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     val isEndCase = getNodeText().lowercase() == "end"
 
@@ -54,7 +59,12 @@ open class SqlInlineSecondGroupBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
+    override fun getIndent(): Indent? =
+        if (isAdjustIndentOnEnter()) {
+            null
+        } else {
+            Indent.getSpaceIndent(indent.indentLen)
+        }
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let {

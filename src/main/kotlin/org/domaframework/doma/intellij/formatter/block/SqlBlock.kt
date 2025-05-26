@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Block
 import com.intellij.formatting.ChildAttributes
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Indent
 import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
@@ -55,7 +56,8 @@ open class SqlBlock(
     alignment: Alignment?,
     private val customSpacingBuilder: SqlCustomSpacingBuilder?,
     internal val spacingBuilder: SpacingBuilder,
-    private val enableFormat: Boolean = false,
+    private val enableFormat: Boolean,
+    private val formatMode: FormattingMode,
 ) : AbstractBlock(
         node,
         wrap,
@@ -78,11 +80,11 @@ open class SqlBlock(
         )
 
     private val blockBuilder = SqlBlockBuilder()
-    protected val blockUtil = SqlBlockUtil(this)
+    protected val blockUtil = SqlBlockUtil(this, isEnableFormat(), formatMode)
 
     protected open val pendingCommentBlocks = mutableListOf<SqlBlock>()
 
-    protected fun isEnableFormat(): Boolean = enableFormat
+    fun isEnableFormat(): Boolean = enableFormat
 
     open fun setParentGroupBlock(block: SqlBlock?) {
         parentBlock = block
@@ -96,7 +98,7 @@ open class SqlBlock(
     fun getNodeText() = node.text.lowercase()
 
     public override fun buildChildren(): MutableList<AbstractBlock> {
-        if (isLeaf || !isEnableFormat()) return mutableListOf()
+        if (isLeaf) return mutableListOf()
 
         var child = node.firstChildNode
         var prevNonWhiteSpaceNode: ASTNode? = null
@@ -548,7 +550,7 @@ open class SqlBlock(
                 )
             }
 
-            SqlTypes.DATATYPE -> SqlDataTypeBlock(child, wrap, alignment, spacingBuilder)
+            SqlTypes.DATATYPE -> SqlDataTypeBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.LEFT_PAREN -> {
                 return blockUtil.getSubGroupBlock(lastGroup, child)
@@ -560,6 +562,8 @@ open class SqlBlock(
                 alignment,
                 spacingBuilder,
                 blockBuilder.getLastGroup(),
+                isEnableFormat(),
+                formatMode,
             )
 
             SqlTypes.RIGHT_PAREN -> return SqlRightPatternBlock(
@@ -567,6 +571,8 @@ open class SqlBlock(
                 wrap,
                 alignment,
                 spacingBuilder,
+                isEnableFormat(),
+                formatMode,
             )
 
             SqlTypes.COMMA -> {
@@ -580,18 +586,18 @@ open class SqlBlock(
             }
 
             SqlTypes.LINE_COMMENT ->
-                return SqlLineCommentBlock(child, wrap, alignment, spacingBuilder)
+                return SqlLineCommentBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.PLUS, SqlTypes.MINUS, SqlTypes.ASTERISK, SqlTypes.SLASH ->
-                return SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
+                return SqlElSymbolBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.LE, SqlTypes.LT, SqlTypes.EL_EQ, SqlTypes.EL_NE, SqlTypes.GE, SqlTypes.GT ->
-                return SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
+                return SqlElSymbolBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.STRING, SqlTypes.NUMBER, SqlTypes.BOOLEAN ->
-                return SqlLiteralBlock(child, wrap, alignment, spacingBuilder)
+                return SqlLiteralBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
-            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
+            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
         }
     }
 
@@ -625,11 +631,20 @@ open class SqlBlock(
                 Spacing.createSpacing(0, 0, 0, true, 0),
             )
 
+    override fun getIndent(): Indent? =
+        if (isAdjustIndentOnEnter()) {
+            null
+        } else {
+            Indent.getSpaceIndent(indent.indentLen)
+        }
+
+    protected fun isAdjustIndentOnEnter(): Boolean = formatMode == FormattingMode.ADJUST_INDENT_ON_ENTER && !isEnableFormat()
+
     override fun getSpacing(
         child1: Block?,
         child2: Block,
     ): Spacing? {
-        if (!isEnableFormat()) return null
+        if (isAdjustIndentOnEnter()) return null
 
         // The end of a line comment element is a newline, so just add a space for the indent.
         if (child1 is SqlLineCommentBlock && child2 is SqlBlock) {

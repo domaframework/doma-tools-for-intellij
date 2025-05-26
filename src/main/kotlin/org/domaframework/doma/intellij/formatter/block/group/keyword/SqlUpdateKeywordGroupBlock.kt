@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Indent
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
@@ -29,12 +30,16 @@ open class SqlUpdateKeywordGroupBlock(
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    formatMode: FormattingMode,
 ) : SqlKeywordGroupBlock(
         node,
         IndentType.SECOND,
         wrap,
         alignment,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     override fun setParentGroupBlock(block: SqlBlock?) {
         super.setParentGroupBlock(block)
@@ -48,13 +53,17 @@ open class SqlUpdateKeywordGroupBlock(
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
     override fun createBlockIndentLen(): Int =
-        parentBlock?.let {
-            if (it.indent.indentLevel == IndentType.SUB) {
-                it.indent.groupIndentLen.plus(1)
-            } else {
-                val parentTextLen = it.getNodeText().length
-                val diffTextLen = parentTextLen.minus(getNodeText().length)
-                it.indent.indentLen.plus(diffTextLen)
-            }
-        } ?: 0
+        if (!isAdjustIndentOnEnter()) {
+            parentBlock?.let {
+                if (it.indent.indentLevel == IndentType.SUB) {
+                    it.indent.groupIndentLen.plus(1)
+                } else {
+                    val parentTextLen = it.getNodeText().length
+                    val diffTextLen = parentTextLen.minus(getNodeText().length)
+                    it.indent.indentLen.plus(diffTextLen)
+                }
+            } ?: 0
+        } else {
+            0
+        }
 }

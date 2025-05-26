@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Indent
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
@@ -30,12 +31,16 @@ open class SqlCreateKeywordGroupBlock(
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    formatMode: FormattingMode,
 ) : SqlKeywordGroupBlock(
         node,
         IndentType.TOP,
         wrap,
         alignment,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     var createType: CreateQueryType = CreateQueryType.NONE
 
@@ -49,7 +54,7 @@ open class SqlCreateKeywordGroupBlock(
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? {
-        if (parentBlock?.indent?.indentLevel == IndentType.SUB) {
+        if (!isAdjustIndentOnEnter() && parentBlock?.indent?.indentLevel == IndentType.SUB) {
             return Indent.getSpaceIndent(0)
         }
         return Indent.getNoneIndent()
