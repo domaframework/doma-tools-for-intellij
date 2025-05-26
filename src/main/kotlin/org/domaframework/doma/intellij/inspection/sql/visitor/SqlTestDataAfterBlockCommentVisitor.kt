@@ -84,7 +84,7 @@ class SqlTestDataAfterBlockCommentVisitor(
 
     private fun isSqlLiteral(element: PsiElement): Boolean =
         element.elementType == SqlTypes.STRING ||
-            listOf("true", "false", "null").contains(element.text) ||
+            listOf("true", "false", "null").contains(element.text.lowercase()) ||
             element.text.matches(Regex("^\\d+$"))
 
     /**

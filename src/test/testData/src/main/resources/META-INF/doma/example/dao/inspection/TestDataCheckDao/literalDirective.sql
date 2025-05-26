@@ -5,3 +5,6 @@ SELECT e.employee_id AS employeeId
  WHERE e.employee_id = <error descr="Bind variables must be followed by test data">/*^ literalId */</error>
    AND e.employee_name = <error descr="Bind variables must be followed by test data">/*^ literalName */</error>
    AND e.age >= /*^ literalAge */99
+   AND e.use = /* literalTrue */TRUE
+   AND e.use = /* literalFalse */false
+   AND e.use = /* literalNull */Null

@@ -13,7 +13,7 @@ import java.util.function.BiFunction;
 interface TestDataCheckDao {
 
   @Select
-  EmployeeSummary literalDirective(String literalName, Integer literalId, Integer literalAge);
+  EmployeeSummary literalDirective(String literalName, Integer literalId, Integer literalAge, Boolean literalTrue, Boolean literalFalse, Employee literalNull);
 
   @Insert(sqlFile=true)
   int bindVariableDirective(Employee employee);
