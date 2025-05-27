@@ -2,6 +2,47 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-05-27
+
+### New Features
+
+- Reference custom function definition class from config file ([#185])
+- Support custom functions ([#175])
+- Dynamic retrieval of source directory names ([#181])
+
+### Bug Fixes
+
+- Enhance SQL test data validation to support case-insensitive boolean values ([#200])
+- Update custom function invocation message to include class name ([#199])
+- Replace Trailing Characters During Code Completion ([#196])
+- Change the scope of the SQL formatting settings ([#195])
+- Fix Test-Data Validation ([#193])
+- Fix: Assert: must be called on EDT ([#180])
+- Fix Custom Function Code Completion ([#184])
+- Fix StringIndexOutOfBoundsException during file path retrieval ([#173])
+- Fix missing inspections for injection files ([#172])
+
+### Dependency Updates
+
+- Update dependency com.pinterest.ktlint:ktlint-cli to v1.6.0 ([#177])
+- Update plugin org.gradle.toolchains.foojay-resolver-convention to v1 ([#178])
+
+[#185]:https://github.com/domaframework/doma-tools-for-intellij/pull/185
+[#175]:https://github.com/domaframework/doma-tools-for-intellij/pull/175
+[#181]:https://github.com/domaframework/doma-tools-for-intellij/pull/181
+[#200]:https://github.com/domaframework/doma-tools-for-intellij/pull/200
+[#199]:https://github.com/domaframework/doma-tools-for-intellij/pull/199
+[#196]:https://github.com/domaframework/doma-tools-for-intellij/pull/196
+[#195]:https://github.com/domaframework/doma-tools-for-intellij/pull/195
+[#193]:https://github.com/domaframework/doma-tools-for-intellij/pull/193
+[#180]:https://github.com/domaframework/doma-tools-for-intellij/pull/180
+[#184]:https://github.com/domaframework/doma-tools-for-intellij/pull/184
+[#173]:https://github.com/domaframework/doma-tools-for-intellij/pull/173
+[#172]:https://github.com/domaframework/doma-tools-for-intellij/pull/172
+[#177]:https://github.com/domaframework/doma-tools-for-intellij/pull/177
+[#178]:https://github.com/domaframework/doma-tools-for-intellij/pull/178
+
+
 ## [0.7.0] - 2025-05-15
 
 ### New Features
@@ -268,3 +309,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[0.8.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.7.0...0.8.0
