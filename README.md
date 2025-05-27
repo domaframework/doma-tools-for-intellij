@@ -4,7 +4,7 @@
 [![Release](https://github.com/domaframework/doma-tools-for-intellij/actions/workflows/release.yml/badge.svg?event=release)](https://github.com/domaframework/doma-tools-for-intellij/actions/workflows/release.yml)
 
 <!-- Plugin description -->
-“Doma Tools” is a plugin that supports the development of [Doma](https://github.com/domaframework/doma) based projects in IntelliJ.
+"Doma Tools" is a plugin that supports the development of [Doma](https://github.com/domaframework/doma) based projects in IntelliJ.
 
 It checks associations between Dao and SQL, and offers coding support features for Doma syntax,
 such as generating SQL template files, navigating between files, and inspections to ensure the validity of bind variables.
