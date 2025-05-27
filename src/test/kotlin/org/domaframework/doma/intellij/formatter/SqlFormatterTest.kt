@@ -19,7 +19,6 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.util.ThrowableRunnable
-import org.domaframework.doma.intellij.common.helper.ActiveProjectHelper
 import org.domaframework.doma.intellij.setting.SettingComponent
 import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 
@@ -31,13 +30,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
     override fun setUp() {
         super.setUp()
         settingSqlFormat(true)
-        if (project != null) {
-            ActiveProjectHelper.setCurrentActiveProject(project)
-        }
     }
 
     private fun settingSqlFormat(enabled: Boolean) {
-        val settings = DomaToolsFormatEnableSettings.getInstance(project)
+        val settings = DomaToolsFormatEnableSettings.getInstance()
         val component = SettingComponent()
         component.enableFormat = enabled
         settings.apply(component)
@@ -47,7 +43,6 @@ class SqlFormatterTest : BasePlatformTestCase() {
     override fun tearDown() {
         try {
             settingSqlFormat(false)
-            ActiveProjectHelper.setCurrentActiveProject(null)
         } finally {
             super.tearDown()
         }

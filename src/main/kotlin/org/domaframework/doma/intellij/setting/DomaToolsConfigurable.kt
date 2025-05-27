@@ -17,50 +17,30 @@ package org.domaframework.doma.intellij.setting
 
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ConfigurationException
-import com.intellij.util.ui.UIUtil.setEnabledRecursively
-import org.domaframework.doma.intellij.common.helper.ActiveProjectHelper
 import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 import javax.swing.JComponent
 
 class DomaToolsConfigurable : Configurable {
     private var mySettingsComponent: SettingComponent? = SettingComponent()
 
-    private var formatSettings: DomaToolsFormatEnableSettings? = null
+    private var formatSettings: DomaToolsFormatEnableSettings = DomaToolsFormatEnableSettings.getInstance()
 
     override fun getDisplayName(): String = "Doma Tools"
 
-    /**
-     * Creates and returns the settings panel component.
-     *
-     * Gets the current active project and initializes the settings panel.
-     * If no project is active, the panel will be disabled.
-     * Loads both format settings and custom function settings for the active project.
-     *
-     * @return The settings panel component, or null if creation fails
-     */
-    override fun createComponent(): JComponent? {
-        val project = ActiveProjectHelper.getCurrentActiveProject()
-        val panel = mySettingsComponent?.panel ?: return null
-        if (project == null) {
-            setEnabledRecursively(panel, false)
-            return null
-        }
-        formatSettings = DomaToolsFormatEnableSettings.getInstance(project)
-        return panel
-    }
+    override fun createComponent(): JComponent? = mySettingsComponent?.panel
 
     override fun isModified(): Boolean {
-        val enableFormatModified = formatSettings?.isModified(mySettingsComponent) != false
+        val enableFormatModified = formatSettings.isModified(mySettingsComponent) != false
         return enableFormatModified
     }
 
     @Throws(ConfigurationException::class)
     override fun apply() {
-        formatSettings?.apply(mySettingsComponent)
+        formatSettings.apply(mySettingsComponent)
     }
 
     override fun reset() {
-        formatSettings?.reset(mySettingsComponent)
+        formatSettings.reset(mySettingsComponent)
     }
 
     override fun disposeUIResources() {

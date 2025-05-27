@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Block
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Indent
 import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
@@ -36,6 +37,8 @@ class SqlWhitespaceBlock(
         alignment,
         null,
         spacingBuilder,
+        false,
+        FormattingMode.ADJUST_INDENT_ON_ENTER,
     ) {
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 

@@ -28,7 +28,6 @@ import com.intellij.psi.impl.source.codeStyle.PreFormatProcessor
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeafs
-import org.domaframework.doma.intellij.common.util.DomaToolsSettingUtil
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.psi.SqlBlockComment
@@ -47,7 +46,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         source: PsiFile,
         rangeToReformat: TextRange,
     ): TextRange {
-        if (!DomaToolsSettingUtil.isEnableFormat(source.project)) return rangeToReformat
+        // Turn on by default the code formatter that only runs when explicitly invoked by the user.
         if (source.language != SqlLanguage.INSTANCE) return rangeToReformat
 
         logging()

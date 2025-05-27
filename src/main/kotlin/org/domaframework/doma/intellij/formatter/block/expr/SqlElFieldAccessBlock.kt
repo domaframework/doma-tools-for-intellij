@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.block.expr
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Block
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
@@ -33,12 +34,16 @@ class SqlElFieldAccessBlock(
     alignment: Alignment?,
     private val customSpacingBuilder: SqlCustomSpacingBuilder?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    private val formatMode: FormattingMode,
 ) : SqlBlock(
         node,
         wrap,
         alignment,
         customSpacingBuilder,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     override fun buildChildren(): MutableList<AbstractBlock> {
         val blocks = mutableListOf<AbstractBlock>()
@@ -56,19 +61,19 @@ class SqlElFieldAccessBlock(
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
             SqlTypes.EL_PRIMARY_EXPR -> {
-                SqlElPrimaryBlock(child, wrap, alignment, spacingBuilder)
+                SqlElPrimaryBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
             }
 
             SqlTypes.DOT ->
-                SqlElDotBlock(child, wrap, alignment, spacingBuilder)
+                SqlElDotBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.EL_IDENTIFIER ->
-                SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder)
+                SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.EL_PARAMETERS ->
-                SqlElParametersBlock(child, wrap, alignment, customSpacingBuilder, spacingBuilder)
+                SqlElParametersBlock(child, wrap, alignment, customSpacingBuilder, spacingBuilder, isEnableFormat(), formatMode)
 
-            else -> SqlBlock(child, wrap, alignment, customSpacingBuilder, spacingBuilder)
+            else -> SqlBlock(child, wrap, alignment, customSpacingBuilder, spacingBuilder, isEnableFormat(), formatMode)
         }
 
     override fun getSpacing(

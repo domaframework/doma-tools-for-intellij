@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Indent
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
@@ -30,11 +31,15 @@ open class SqlKeywordBlock(
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    formatMode: FormattingMode,
 ) : SqlNewGroupBlock(
         node,
         wrap,
         alignment,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     override val indent =
         ElementIndent(
@@ -49,13 +54,12 @@ open class SqlKeywordBlock(
         indent.indentLevel = indentLevel
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
-        // updateParentIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getIndent(): Indent? {
-        if (parentBlock?.indent?.indentLevel == IndentType.SUB) {
+        if (!isAdjustIndentOnEnter() && parentBlock?.indent?.indentLevel == IndentType.SUB) {
             return Indent.getIndent(Indent.Type.SPACES, 0, false, true)
         }
         return Indent.getNoneIndent()

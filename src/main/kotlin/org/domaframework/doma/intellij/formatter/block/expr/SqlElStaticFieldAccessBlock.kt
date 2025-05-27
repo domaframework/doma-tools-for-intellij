@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block.expr
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
@@ -34,12 +35,16 @@ class SqlElStaticFieldAccessBlock(
     alignment: Alignment?,
     customSpacingBuilder: SqlCustomSpacingBuilder?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    private val formatMode: FormattingMode,
 ) : SqlBlock(
         node,
         wrap,
         alignment,
         customSpacingBuilder,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
@@ -49,19 +54,19 @@ class SqlElStaticFieldAccessBlock(
                         PsiWhiteSpace::class.java,
                     ) is SqlElClass
                 ) {
-                    SqlElClassRightBlock(child, wrap, alignment, spacingBuilder)
+                    SqlElClassRightBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
                 } else {
-                    SqlElAtSignBlock(child, wrap, alignment, null, spacingBuilder)
+                    SqlElAtSignBlock(child, wrap, alignment, null, spacingBuilder, isEnableFormat(), formatMode)
                 }
             }
 
             SqlTypes.EL_CLASS ->
-                SqlElClassBlock(child, wrap, alignment, null, spacingBuilder)
+                SqlElClassBlock(child, wrap, alignment, null, spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.EL_IDENTIFIER ->
-                SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder)
+                SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
-            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
+            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
         }
 
     override fun createSpacingBuilder(): SqlCustomSpacingBuilder =

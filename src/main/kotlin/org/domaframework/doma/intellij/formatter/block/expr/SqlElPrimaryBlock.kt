@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.block.expr
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.Block
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
@@ -28,12 +29,16 @@ class SqlElPrimaryBlock(
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    formatMode: FormattingMode,
 ) : SqlBlock(
         node,
         wrap,
         alignment,
         null,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     override fun getSpacing(
         child1: Block?,

@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
@@ -25,9 +26,13 @@ open class SqlBlockCommentBlock(
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    formatMode: FormattingMode,
 ) : SqlCommentBlock(
         node,
         wrap,
         alignment,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     )

@@ -25,26 +25,24 @@ import com.intellij.formatting.Wrap
 import com.intellij.formatting.WrapType
 import com.intellij.psi.TokenType
 import com.intellij.psi.codeStyle.CodeStyleSettings
-import org.domaframework.doma.intellij.common.helper.ActiveProjectHelper
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
 import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 
+/***
+ * Because the code formatter (which runs only when explicitly invoked by the user) is enabled by default,
+ * the block-generation routine for formatting should always run.
+ * Automatic indentation on line breaks, however, is executed only when the corresponding configuration flag is set.
+ */
 class SqlFormattingModelBuilder : FormattingModelBuilder {
     override fun createModel(formattingContext: FormattingContext): FormattingModel {
         val codeStyleSettings = formattingContext.codeStyleSettings
-        val project = ActiveProjectHelper.getCurrentActiveProject()
-        val setting = project?.let { DomaToolsFormatEnableSettings.getInstance(it) }
-        val isEnableFormat = setting?.state?.isEnableSqlFormat == true
-        val spacingBuilder =
-            if (!isEnableFormat) {
-                SpacingBuilder(codeStyleSettings, SqlLanguage.INSTANCE)
-            } else {
-                createSpaceBuilder(codeStyleSettings)
-            }
-        val customSpacingBuilder =
-            if (!isEnableFormat) null else createCustomSpacingBuilder()
+        val setting = DomaToolsFormatEnableSettings.getInstance()
+        val isEnableFormat = setting.state.isEnableSqlFormat == true
+        val formatMode = formattingContext.formattingMode
+        val spacingBuilder = createSpaceBuilder(codeStyleSettings)
+        val customSpacingBuilder = createCustomSpacingBuilder()
 
         return FormattingModelProvider
             .createFormattingModelForPsiFile(
@@ -56,6 +54,7 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
                     customSpacingBuilder,
                     spacingBuilder,
                     isEnableFormat,
+                    formatMode,
                 ),
                 codeStyleSettings,
             )

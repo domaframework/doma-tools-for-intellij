@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block.expr
 
 import com.intellij.formatting.Alignment
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
@@ -30,25 +31,29 @@ class SqlElParametersBlock(
     alignment: Alignment?,
     customSpacingBuilder: SqlCustomSpacingBuilder?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    private val formatMode: FormattingMode,
 ) : SqlBlock(
         node,
         wrap,
         alignment,
         customSpacingBuilder,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
             SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN ->
-                SqlElSymbolBlock(child, wrap, alignment, spacingBuilder)
+                SqlElSymbolBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.EL_PRIMARY_EXPR ->
-                SqlElPrimaryBlock(child, wrap, alignment, spacingBuilder)
+                SqlElPrimaryBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
             SqlTypes.COMMA ->
-                SqlElCommaBlock(child, wrap, alignment, spacingBuilder)
+                SqlElCommaBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
 
-            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder)
+            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
         }
 
     override fun isLeaf(): Boolean = false

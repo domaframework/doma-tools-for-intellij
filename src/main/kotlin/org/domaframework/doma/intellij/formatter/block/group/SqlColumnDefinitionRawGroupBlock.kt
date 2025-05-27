@@ -16,7 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block.group
 
 import com.intellij.formatting.Alignment
-import com.intellij.formatting.Indent
+import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
@@ -34,12 +34,16 @@ class SqlColumnDefinitionRawGroupBlock(
     wrap: Wrap?,
     alignment: Alignment?,
     spacingBuilder: SpacingBuilder,
+    enableFormat: Boolean,
+    formatMode: FormattingMode,
 ) : SqlBlock(
         node,
         wrap,
         alignment,
         null,
         spacingBuilder,
+        enableFormat,
+        formatMode,
     ) {
     // TODO:Customize indentation within an inline group
     val defaultOffset = 5
@@ -54,8 +58,6 @@ class SqlColumnDefinitionRawGroupBlock(
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
     /**
      * Right-justify the longest column name in the column definition.
