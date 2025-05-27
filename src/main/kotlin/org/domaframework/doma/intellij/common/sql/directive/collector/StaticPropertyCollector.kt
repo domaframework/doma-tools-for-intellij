@@ -22,10 +22,12 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.common.sql.directive.CompletionSuggest
+import org.domaframework.doma.intellij.common.util.SqlCompletionUtil.createMethodLookupElement
 import org.domaframework.doma.intellij.extension.psi.psiClassType
 
 class StaticPropertyCollector(
     private val element: PsiElement,
+    private val caretNextText: String,
     private val bind: String,
 ) : StaticDirectiveHandlerCollector() {
     public override fun collectCompletionSuggest(fqdn: String): CompletionSuggest? {
@@ -39,7 +41,7 @@ class StaticPropertyCollector(
             val methods =
                 clazz.searchStaticMethod(bind)?.map { m ->
                     LookupElementBuilder
-                        .create("${m.name}()")
+                        .create(createMethodLookupElement(caretNextText, m))
                         .withPresentableText(m.name)
                         .withTailText(m.parameterList.text, true)
                         .withIcon(AllIcons.Nodes.Method)

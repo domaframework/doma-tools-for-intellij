@@ -23,6 +23,7 @@ class DirectiveCompletion(
     private val originalFile: PsiFile,
     private val bindText: String,
     private val element: PsiElement,
+    private val caretNextText: String,
     private val result: CompletionResultSet,
 ) {
     fun directiveHandle(symbol: String): Boolean {
@@ -52,6 +53,7 @@ class DirectiveCompletion(
                 StaticDirectiveHandler(
                     originalFile = originalFile,
                     element = element,
+                    caretNextText = caretNextText,
                     result = result,
                     bindText = bindText,
                 ).directiveHandle()

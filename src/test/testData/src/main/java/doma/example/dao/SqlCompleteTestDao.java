@@ -35,6 +35,9 @@ interface SqlCompleteTestDao {
   Project completePropertyAfterStaticPropertyCall();
 
   @Select
+  Project completePropertyAfterStaticMethodCall();
+
+  @Select
   Project completeBuiltinFunction(ProjectDetail detail);
 
   @Update(sqlFile = true)

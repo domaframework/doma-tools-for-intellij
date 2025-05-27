@@ -36,6 +36,7 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDaoName/completeBatchInsert.sql",
             "$testDaoName/completeStaticPropertyFromStaticPropertyCall.sql",
             "$testDaoName/completePropertyAfterStaticPropertyCall.sql",
+            "$testDaoName/completePropertyAfterStaticMethodCall.sql",
             "$testDaoName/completeBuiltinFunction.sql",
             "$testDaoName/completeDirectiveInsideIf.sql",
             "$testDaoName/completeDirectiveInsideElseIf.sql",
@@ -177,10 +178,10 @@ class SqlCompleteTest : DomaSqlTest() {
         innerDirectiveCompleteTest(
             "$testDaoName/completeBatchInsert.sql",
             listOf(
-                "employeeId",
-                "employeeName",
+                "getFirstProject()",
             ),
             listOf(
+                "employeeName",
                 "userId",
                 "get()",
                 "size()",
@@ -249,6 +250,20 @@ class SqlCompleteTest : DomaSqlTest() {
                 "managerId",
             ),
             listOf(
+                "userId",
+                "employeeName",
+            ),
+        )
+    }
+
+    fun testCompletePropertyAfterStaticMethodCall() {
+        innerDirectiveCompleteTest(
+            "$testDaoName/completePropertyAfterStaticMethodCall.sql",
+            listOf(
+                "getTermNumber()",
+            ),
+            listOf(
+                "managerId",
                 "userId",
                 "employeeName",
             ),
@@ -408,7 +423,7 @@ class SqlCompleteTest : DomaSqlTest() {
         addResourceCompileFile("doma.compile.config")
         innerDirectiveCompleteTest(
             "$testDaoName/completeImplementCustomFunction.sql",
-            listOf("userId()", "userName()", "userAge()"),
+            listOf("userId", "userName", "userAge"),
             listOf(
                 "getId()",
                 "getName()",
