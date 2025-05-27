@@ -18,16 +18,6 @@ package org.domaframework.doma.intellij.common.sql.directive
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.VariableLookupItem
 import com.intellij.icons.AllIcons
-import com.intellij.psi.PsiType
-
-/**
- * Function information displayed with code completion for built-in functions
- */
-data class DomaFunction(
-    val name: String,
-    val returnType: PsiType,
-    val parameters: List<PsiType>,
-)
 
 /**
  * Show parameters in code completion for fields and methods

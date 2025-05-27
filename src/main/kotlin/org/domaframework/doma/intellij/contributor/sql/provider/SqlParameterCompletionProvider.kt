@@ -43,6 +43,7 @@ import org.domaframework.doma.intellij.common.sql.directive.DirectiveCompletion
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
+import org.domaframework.doma.intellij.common.util.SqlCompletionUtil.createMethodLookupElement
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.findNodeParent
 import org.domaframework.doma.intellij.extension.psi.findSelfBlocks
@@ -78,6 +79,11 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val startTime = System.nanoTime()
 
         var isDirective = false
+        val offset = parameters.editor.caretModel.currentCaret.offset
+        val range =
+            com.intellij.openapi.util
+                .TextRange(offset, offset + 1)
+        val caretNextText = parameters.editor.document.getText(range)
         try {
             val originalFile = parameters.originalFile
             val pos = parameters.originalPosition ?: return
@@ -86,7 +92,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                     .substringAfter("/*")
                     .substringBefore("*/")
 
-            val handler = DirectiveCompletion(originalFile, bindText, pos, result)
+            val handler = DirectiveCompletion(originalFile, bindText, pos, caretNextText, result)
             val directiveSymbols = listOf("%", "#", "^", "@")
             directiveSymbols.forEach {
                 if (!isDirective) {
@@ -118,6 +124,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                     blockElements,
                     pos,
                     originalFile,
+                    caretNextText,
                     result,
                 )
                 PluginLoggerUtil.countLogging(
@@ -268,6 +275,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         elements: List<PsiElement>,
         position: PsiElement,
         originalFile: PsiFile,
+        caretNextText: String,
         result: CompletionResultSet,
     ) {
         val daoMethod = findDaoMethod(originalFile)
@@ -281,7 +289,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val topText = cleanString(getSearchElementText(top))
         val prevWord = PsiPatternUtil.getBindSearchWord(originalFile, elements.last(), " ")
         if (prevWord.startsWith("@") && prevWord.endsWith("@")) {
-            setCompletionStaticFieldAccess(top, prevWord, topText, result)
+            setCompletionStaticFieldAccess(top, prevWord, caretNextText, topText, result)
             return
         }
 
@@ -298,7 +306,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val psiDaoMethod = PsiDaoMethod(project, daoMethod)
         if (topElementType == null) {
             isBatchAnnotation = psiDaoMethod.daoType.isBatchAnnotation()
-            if (isFieldAccessByForItem(top, elements, searchText, isBatchAnnotation, result)) return
+            if (isFieldAccessByForItem(top, elements, searchText, caretNextText, isBatchAnnotation, result)) return
             topElementType =
                 getElementTypeByFieldAccess(originalFile, position, elements, daoMethod, result) ?: return
         }
@@ -309,6 +317,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             isBatchAnnotation,
             elements,
             searchText,
+            caretNextText,
             result,
         )
     }
@@ -399,6 +408,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
     ): PsiClass? = top.project.getJavaClazz(fqdnGetter())
 
     private fun setFieldsAndMethodsCompletionResultSet(
+        caretNextText: String,
         fields: Array<PsiField>,
         methods: Array<PsiMethod>,
         result: CompletionResultSet,
@@ -407,7 +417,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         methods.forEach { method ->
             val lookupElm =
                 LookupElementBuilder
-                    .create("${method.name}()")
+                    .create(createMethodLookupElement(caretNextText, method))
                     .withPresentableText(method.name)
                     .withTailText(method.parameterList.text, true)
                     .withTypeText(method.returnType?.presentableText ?: "")
@@ -422,6 +432,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         top: PsiElement,
         elements: List<PsiElement>,
         searchWord: String,
+        caretNextText: String,
         isBatchAnnotation: Boolean = false,
         result: CompletionResultSet,
     ): Boolean {
@@ -448,6 +459,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 dropLastIndex = 1,
                 complete = { lastType ->
                     setFieldsAndMethodsCompletionResultSet(
+                        caretNextText,
                         lastType.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
                         lastType.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
                         result,
@@ -463,6 +475,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         isBatchAnnotation: Boolean,
         elements: List<PsiElement>,
         searchWord: String,
+        caretNextText: String,
         result: CompletionResultSet,
     ) {
         var psiParentClass = PsiParentClass(topElementType)
@@ -477,6 +490,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             dropLastIndex = 1,
             complete = { lastType ->
                 setFieldsAndMethodsCompletionResultSet(
+                    caretNextText,
                     lastType.searchField(searchWord)?.toTypedArray() ?: emptyArray(),
                     lastType.searchMethod(searchWord)?.toTypedArray() ?: emptyArray(),
                     result,
@@ -488,6 +502,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
     private fun setCompletionStaticFieldAccess(
         top: PsiElement,
         prevWord: String,
+        caretNextText: String,
         topText: String,
         result: CompletionResultSet,
     ) {
@@ -496,6 +511,6 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val matchMethod = clazz.searchStaticMethod(topText)
 
         // When you enter here, it is the top element, so return static fields and methods.
-        setFieldsAndMethodsCompletionResultSet(matchFields, matchMethod, result)
+        setFieldsAndMethodsCompletionResultSet(caretNextText, matchFields, matchMethod, result)
     }
 }

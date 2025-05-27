@@ -225,7 +225,7 @@ class ForDirectiveUtil {
                                 val classType = lastType.type as? PsiClassType
                                 val nestClass =
                                     if (classType != null &&
-                                        PsiClassTypeUtil.Companion.isIterableType(
+                                        PsiClassTypeUtil.isIterableType(
                                             classType,
                                             project,
                                         )
