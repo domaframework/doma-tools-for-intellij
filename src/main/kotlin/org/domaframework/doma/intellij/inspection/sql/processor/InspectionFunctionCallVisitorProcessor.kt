@@ -46,7 +46,7 @@ class InspectionFunctionCallVisitorProcessor(
         var result: ValidationResult =
             ValidationInvalidFunctionCallResult(
                 functionName,
-                customFunctionClassName ?: "",
+                customFunctionClassName ?: "<unknown>",
                 shortName,
             )
         var methods: Array<out PsiMethod?> = emptyArray()
