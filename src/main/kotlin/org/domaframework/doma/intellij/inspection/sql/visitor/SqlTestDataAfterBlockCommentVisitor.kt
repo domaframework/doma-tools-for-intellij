@@ -105,6 +105,7 @@ class SqlTestDataAfterBlockCommentVisitor(
         val parenthesesListPattern =
             Regex(
                 """^\(\s*(?:(?:"[^"]*"|'[^']*'|\d+|true|false|null)\s*(?:,\s*(?:"[^"]*"|'[^']*'|\d+|true|false|null)\s*)*)?\)$""",
+                RegexOption.IGNORE_CASE,
             )
         val testDataText =
             element.nextLeafs
