@@ -20,7 +20,7 @@ import com.intellij.openapi.module.Module
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
-import org.domaframework.doma.intellij.common.sql.directive.collector.StaticBuildFunctionCollector
+import org.domaframework.doma.intellij.common.sql.directive.collector.FunctionCallCollector
 import org.domaframework.doma.intellij.common.sql.directive.collector.StaticClassPackageCollector
 import org.domaframework.doma.intellij.common.sql.directive.collector.StaticPropertyCollector
 import org.domaframework.doma.intellij.psi.SqlElClass
@@ -31,12 +31,14 @@ import org.jetbrains.kotlin.idea.base.util.module
 class StaticDirectiveHandler(
     originalFile: PsiElement,
     private val element: PsiElement,
+    private val caretNextText: String,
     private val result: CompletionResultSet,
     private val bindText: String,
 ) : DirectiveHandler(originalFile) {
     override fun directiveHandle(): Boolean {
         var handleResult = false
-        if (element.prevSibling is SqlElStaticFieldAccessExpr) {
+
+        if (isNextStaticFieldAccess(element)) {
             handleResult = staticDirectiveHandler(element, result)
         }
         if (handleResult) return true
@@ -60,6 +62,15 @@ class StaticDirectiveHandler(
         return handleResult
     }
 
+    private fun isNextStaticFieldAccess(element: PsiElement): Boolean {
+        val prev = PsiTreeUtil.prevLeaf(element)
+        return element.prevSibling is SqlElStaticFieldAccessExpr ||
+            (
+                prev?.elementType == SqlTypes.AT_SIGN &&
+                    prev.parent is SqlElStaticFieldAccessExpr
+            )
+    }
+
     private fun staticDirectiveHandler(
         element: PsiElement,
         result: CompletionResultSet,
@@ -67,13 +78,14 @@ class StaticDirectiveHandler(
         val clazzRef =
             PsiTreeUtil
                 .getChildOfType(element.prevSibling, SqlElClass::class.java)
+                ?: PsiTreeUtil.getChildOfType(PsiTreeUtil.prevLeaf(element)?.parent, SqlElClass::class.java)
         val fqdn =
             PsiTreeUtil.getChildrenOfTypeAsList(clazzRef, PsiElement::class.java).joinToString("") { it.text }
 
-        val collector = StaticPropertyCollector(element, bindText)
+        val collector = StaticPropertyCollector(element, caretNextText, bindText)
         val candidates = collector.collectCompletionSuggest(fqdn) ?: return false
         result.addAllElements(candidates.field)
-        candidates.methods.map { m -> result.addElement(m) }
+        candidates.methods.forEach { m -> result.addElement(m) }
         return true
     }
 
@@ -93,7 +105,8 @@ class StaticDirectiveHandler(
     ): Boolean {
         if (BindDirectiveUtil.getDirectiveType(element) == DirectiveType.BUILT_IN) {
             val prefix = getBindSearchWord(element, bindText)
-            val collector = StaticBuildFunctionCollector(element.containingFile, prefix)
+            val collector =
+                FunctionCallCollector(element.containingFile, caretNextText, prefix)
             val candidates = collector.collect()
             candidates?.let { it1 -> result.addAllElements(it1) }
             return true

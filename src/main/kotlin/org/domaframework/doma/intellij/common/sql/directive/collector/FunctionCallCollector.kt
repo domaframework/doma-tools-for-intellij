@@ -24,11 +24,13 @@ import com.intellij.psi.PsiModifier
 import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil
 import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
+import org.domaframework.doma.intellij.common.util.SqlCompletionUtil.createMethodLookupElement
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.jetbrains.kotlin.idea.base.util.module
 
-class StaticBuildFunctionCollector(
+class FunctionCallCollector(
     private val file: PsiFile?,
+    private val caretNextText: String,
     private val bind: String,
 ) : StaticDirectiveHandlerCollector() {
     public override fun collect(): List<LookupElement>? {
@@ -44,7 +46,13 @@ class StaticBuildFunctionCollector(
             }
 
         val customFunctionClassName =
-            project?.let { DomaCompileConfigUtil.getConfigValue(it, resourcePaths, "doma.expr.functions") }
+            project?.let {
+                DomaCompileConfigUtil.getConfigValue(
+                    it,
+                    resourcePaths,
+                    "doma.expr.functions",
+                )
+            }
 
         val expressionFunctionInterface =
             project?.let { ExpressionFunctionsHelper.setExpressionFunctionsInterface(it) }
@@ -62,13 +70,11 @@ class StaticBuildFunctionCollector(
             )
         }
 
-        if (functions.isEmpty()) {
-            functions.addAll(
-                expressionFunctionInterface.allMethods.filter {
-                    isPublicFunction(it)
-                },
-            )
-        }
+        functions.addAll(
+            expressionFunctionInterface.allMethods.filter {
+                isPublicFunction(it) && !functions.contains(it)
+            },
+        )
 
         return functions
             .filter {
@@ -76,7 +82,7 @@ class StaticBuildFunctionCollector(
             }.map {
                 val parameters = it.parameterList.parameters.toList()
                 LookupElementBuilder
-                    .create("${it.name}()")
+                    .create(createMethodLookupElement(caretNextText, it))
                     .withPresentableText(it.name)
                     .withTailText(
                         "(${
