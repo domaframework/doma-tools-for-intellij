@@ -26,6 +26,7 @@ import org.domaframework.doma.intellij.common.psi.PsiParentClass
  */
 open class ValidationInvalidFunctionCallResult(
     override val identify: PsiElement,
+    private val expressionClassName: String,
     override val shortName: String,
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
@@ -40,6 +41,7 @@ open class ValidationInvalidFunctionCallResult(
             MessageBundle.message(
                 "inspection.invalid.sql.notFound.customFunction",
                 identify.text ?: "",
+                expressionClassName,
             ),
             problemHighlightType(project, shortName),
             highlightRange,

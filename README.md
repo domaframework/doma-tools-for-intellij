@@ -105,3 +105,6 @@ ex) doma.compile.config
 ```properties
 doma.expr.functions=example.expression.MyExpressionFunctions
 ```
+
+The contents of `doma.compile.config` are cached.
+The cache is updated based on the file's last modified timestamp, so please make sure to save the file after making any changes.
