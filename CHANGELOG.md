@@ -27,22 +27,6 @@
 - Update dependency com.pinterest.ktlint:ktlint-cli to v1.6.0 ([#177])
 - Update plugin org.gradle.toolchains.foojay-resolver-convention to v1 ([#178])
 
-[#185]:https://github.com/domaframework/doma-tools-for-intellij/pull/185
-[#175]:https://github.com/domaframework/doma-tools-for-intellij/pull/175
-[#181]:https://github.com/domaframework/doma-tools-for-intellij/pull/181
-[#200]:https://github.com/domaframework/doma-tools-for-intellij/pull/200
-[#199]:https://github.com/domaframework/doma-tools-for-intellij/pull/199
-[#196]:https://github.com/domaframework/doma-tools-for-intellij/pull/196
-[#195]:https://github.com/domaframework/doma-tools-for-intellij/pull/195
-[#193]:https://github.com/domaframework/doma-tools-for-intellij/pull/193
-[#180]:https://github.com/domaframework/doma-tools-for-intellij/pull/180
-[#184]:https://github.com/domaframework/doma-tools-for-intellij/pull/184
-[#173]:https://github.com/domaframework/doma-tools-for-intellij/pull/173
-[#172]:https://github.com/domaframework/doma-tools-for-intellij/pull/172
-[#177]:https://github.com/domaframework/doma-tools-for-intellij/pull/177
-[#178]:https://github.com/domaframework/doma-tools-for-intellij/pull/178
-
-
 ## [0.7.0] - 2025-05-15
 
 ### New Features
@@ -224,7 +208,8 @@
   - Rename SQL file directory when renaming Dao
   - Change Dao package name or SQL file directory configuration when changing configuration
 
-[Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.4.0...v0.5.0
@@ -266,7 +251,21 @@
 [#164]: https://github.com/domaframework/doma-tools-for-intellij/pull/164
 [#166]: https://github.com/domaframework/doma-tools-for-intellij/pull/166
 [#167]: https://github.com/domaframework/doma-tools-for-intellij/pull/167
+[#172]: https://github.com/domaframework/doma-tools-for-intellij/pull/172
+[#173]: https://github.com/domaframework/doma-tools-for-intellij/pull/173
+[#175]: https://github.com/domaframework/doma-tools-for-intellij/pull/175
+[#177]: https://github.com/domaframework/doma-tools-for-intellij/pull/177
+[#178]: https://github.com/domaframework/doma-tools-for-intellij/pull/178
+[#180]: https://github.com/domaframework/doma-tools-for-intellij/pull/180
+[#181]: https://github.com/domaframework/doma-tools-for-intellij/pull/181
+[#184]: https://github.com/domaframework/doma-tools-for-intellij/pull/184
+[#185]: https://github.com/domaframework/doma-tools-for-intellij/pull/185
+[#193]: https://github.com/domaframework/doma-tools-for-intellij/pull/193
+[#195]: https://github.com/domaframework/doma-tools-for-intellij/pull/195
+[#196]: https://github.com/domaframework/doma-tools-for-intellij/pull/196
+[#199]: https://github.com/domaframework/doma-tools-for-intellij/pull/199
 [#20]: https://github.com/domaframework/doma-tools-for-intellij/pull/20
+[#200]: https://github.com/domaframework/doma-tools-for-intellij/pull/200
 [#21]: https://github.com/domaframework/doma-tools-for-intellij/pull/21
 [#24]: https://github.com/domaframework/doma-tools-for-intellij/pull/24
 [#25]: https://github.com/domaframework/doma-tools-for-intellij/pull/25
@@ -309,4 +308,3 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
-[0.8.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.7.0...0.8.0
