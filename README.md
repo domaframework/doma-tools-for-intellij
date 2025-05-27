@@ -16,8 +16,7 @@ such as generating SQL template files, navigating between files, and inspections
 ## Actions
 The plugin adds some actions, gutter icons.
 Shortcut keys can be used for actions
-
-![action.png](images/action.png)
+![FileJump.gif](images/gif/FileJump.gif)
 
 - **Jump to SQL**
   - Jump to action from Dao to SQL
@@ -45,11 +44,10 @@ The plugin also provides quick fixes for Dao methods where the required SQL file
 Adds code completion functionality to support indexing of Doma directives and bind variables
 
 - Suggest Dao method arguments in bind variable directives
-  ![complete_bindVariables.png](images/complete_bindVariables.png)
+  ![Completion.gif](images/gif/Completion.gif)
 - Refer to class definition from Dao method argument type and suggest fields and methods
-  ![complete_member.png](images/cpmplete_member.png)
 - Provide code completion for class and package names used in static property calls.
-  ![complete_package.png](images/complete_package.png)
+  ![CompletionStatic.gif](images/gif/CompletionStatic.gif)
 - Suggest members defined as static in static fields and method calls
 - Suggest Doma directives
 - Directives such as Condition, Loop, Population are suggested after “%”
@@ -63,6 +61,7 @@ Along with the Dao name change, we will refactor the SQL file directory and file
 - After refactoring the Dao name, change the SQL deployment directory name as well.
 - After refactoring the Dao method name, we will also change the SQL file name.
 - After refactoring the Dao package, we will also change the SQL directory.
+![RenameDao.gif](images/gif/RenameDao.gif)
 
 ## Formatter(Preview)
 Provides code formatting for SQL syntax.
@@ -72,6 +71,10 @@ Automatic indentation on newlines provided by the SQL formatting feature is disa
 To enable auto-indentation, toggle the corresponding flag in the settings screen below.
 
 `Settings > Other Settings > Doma Tools > Enable auto-indent for SQL`
+To enable auto-indentation, toggle the corresponding flag in the settings screen below.
+
+![Format.gif](images/gif/Format.gif)
+
 ## Reference resolution
 Ctrl+Click on a bind variable in an SQL file to jump to its source symbol:
 
@@ -83,7 +86,7 @@ This feature works in source JARs as well, but in binary JARs, if the DAO method
 - Resolve references for custom functions using the ExpressionFunctions implementation class in which they are defined.
 - You can also jump using the **Go To > Declaration Usage** menu.
 
-![reference.png](images/reference.png)
+![Reference.gif](images/gif/Reference.gif)
 
 ## Settings
 Some functions of "Doma Tools" can be customized from the settings screen.
