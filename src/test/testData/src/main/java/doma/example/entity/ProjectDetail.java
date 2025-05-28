@@ -17,6 +17,7 @@ public class ProjectDetail {
 
   // Accessible static fields
   public static Integr projectNumber;
+  private static String projectName;
   private static String projectCategory;
 
   private static Employee manager = new Employee();
@@ -37,6 +38,10 @@ public class ProjectDetail {
 
   public void addTermNumber(){
     projectNumber++;
+  }
+
+  public static String getCustomNumber(String prefix) {
+    return prefix + projectName;
   }
 
 }

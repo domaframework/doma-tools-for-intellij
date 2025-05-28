@@ -14,7 +14,7 @@ public interface ReferenceTestDao {
   Project referenceEntityProperty(List<Project> projects, ProjectDetail detail);
 
   @Select
-  ProjectDetail referenceStaticField();
+  ProjectDetail referenceStaticField(ProjectDetail detail);
 
   @Select
   List<Employee> referenceListFieldMethod(List<Employee> employeesList);

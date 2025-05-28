@@ -27,15 +27,15 @@ import org.domaframework.doma.intellij.psi.SqlTypes
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 
 class SqlReferenceTestCase : DomaSqlTest() {
-    val testPackage = "reference"
-    val testDaoName = "ReferenceTestDao"
+    private val testPackage = "reference"
+    private val testDaoName = "ReferenceTestDao"
 
-    val forItemResolve = "SqlElIdExprImpl(EL_ID_EXPR)"
-    val forItemFieldAccessResolve = "SqlElFieldAccessExprImpl(EL_FIELD_ACCESS_EXPR)"
-    val daoParameterResolve = "PsiParameter"
-    val fieldResolve = "PsiField"
-    val methodResolve = "PsiMethod"
-    val classResolve = "PsiClass"
+    private val forItemResolve = "SqlElIdExprImpl(EL_ID_EXPR)"
+    private val forItemFieldAccessResolve = "SqlElFieldAccessExprImpl(EL_FIELD_ACCESS_EXPR)"
+    private val daoParameterResolve = "PsiParameter"
+    private val fieldResolve = "PsiField"
+    private val methodResolve = "PsiMethod"
+    private val classResolve = "PsiClass"
 
     override fun setUp() {
         super.setUp()
@@ -67,11 +67,15 @@ class SqlReferenceTestCase : DomaSqlTest() {
             mapOf(
                 "detail" to listOf("$daoParameterResolve:detail"),
                 "getFirstEmployee" to listOf("$methodResolve:getFirstEmployee"),
+                "getCustomNumber" to listOf("$methodResolve:getCustomNumber"),
+                "projectCategory" to listOf("$fieldResolve:projectCategory"),
                 "projectNumber" to listOf("$fieldResolve:projectNumber"),
                 "projects" to listOf("$daoParameterResolve:projects"),
                 "project" to listOf(forItemResolve),
                 "id" to listOf(null),
+                "null" to listOf(null),
                 "employeeId" to listOf("$fieldResolve:employeeId"),
+                "isNotBlank" to listOf("$methodResolve:isNotBlank"),
             ),
         )
     }
@@ -85,7 +89,10 @@ class SqlReferenceTestCase : DomaSqlTest() {
                 "projectCategory" to listOf("$fieldResolve:projectCategory"),
                 "getTermNumber" to listOf("$methodResolve:getTermNumber"),
                 "getFirstEmployee" to listOf("$methodResolve:getFirstEmployee"),
+                "getCustomNumber" to listOf("$methodResolve:getCustomNumber"),
+                "detail" to listOf("$daoParameterResolve:detail"),
                 "employeeId" to listOf("$fieldResolve:employeeId"),
+                "toString" to listOf("$methodResolve:toString"),
             ),
         )
     }
