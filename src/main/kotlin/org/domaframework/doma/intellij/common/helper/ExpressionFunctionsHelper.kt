@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.common.helper
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
+import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil.EXPRESSION_FUNCTIONS_NAME
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.psiClassType
 
@@ -26,7 +27,7 @@ class ExpressionFunctionsHelper {
 
         fun setExpressionFunctionsInterface(project: Project): PsiClass? {
             val expressionFunctionsClass =
-                project.getJavaClazz("org.seasar.doma.expr.ExpressionFunctions")
+                project.getJavaClazz(EXPRESSION_FUNCTIONS_NAME)
             if (expressionFunctionsClass != null) {
                 expressionFunction = expressionFunctionsClass
             }

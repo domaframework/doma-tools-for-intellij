@@ -1,6 +1,6 @@
 SELECT *
   FROM employee
- WHERE join_at <= <error descr="Bind variables must be followed by test data">/* referenceDate */</error>
+ WHERE join_at <= <error descr="Test data is required after a bind variable directive or a literal variable directive">/* referenceDate */</error>
   /*%for project : projects */
          employee_name LIKE /* project.projectName */'hoge'
     /*%if project_has_next */

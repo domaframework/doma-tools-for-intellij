@@ -7,7 +7,7 @@ SELECT e.employee_id AS employeeId
   */
   FROM employee e
  /*%! This comment will be removed */
- WHERE e.employee_id = <error descr="Bind variables must be followed by test data">/*^ id */</error>
+ WHERE e.employee_id = <error descr="Test data is required after a bind variable directive or a literal variable directive">/*^ id */</error>
    AND e.age >= /*^ literalAge */99
    AND e.sub_id IN /* subIds */(1, 2, 3)
    AND e.sub_id IN /* subIds */(true, False, NULL)
