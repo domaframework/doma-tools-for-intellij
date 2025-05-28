@@ -27,6 +27,7 @@ import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
+import org.domaframework.doma.intellij.psi.SqlElParameters
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
@@ -41,6 +42,9 @@ class SqlPsiReferenceProvider : PsiReferenceProvider() {
             arrayOf(SqlElClassExprReference(element))
         } else if (element is SqlElIdExpr) {
             when {
+                getParentClassPsiType(element, SqlElParameters::class.java) != null ->
+                    arrayOf(SqlElIdExprReference(element))
+
                 getParentClassPsiType(element, SqlElFunctionCallExpr::class.java) != null ->
                     arrayOf(SqlElFunctionCallExprReference(element))
 
