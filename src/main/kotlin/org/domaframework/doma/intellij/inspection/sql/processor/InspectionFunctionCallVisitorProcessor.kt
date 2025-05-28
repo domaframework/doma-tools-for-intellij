@@ -19,6 +19,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiMethod
 import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil
+import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil.EXPRESSION_FUNCTIONS_NAME
 import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationInvalidExpressionFunctionsResult
 import org.domaframework.doma.intellij.common.sql.validator.result.ValidationInvalidFunctionCallResult
@@ -46,7 +47,7 @@ class InspectionFunctionCallVisitorProcessor(
         var result: ValidationResult =
             ValidationInvalidFunctionCallResult(
                 functionName,
-                customFunctionClassName ?: "",
+                customFunctionClassName ?: EXPRESSION_FUNCTIONS_NAME,
                 shortName,
             )
         var methods: Array<out PsiMethod?> = emptyArray()

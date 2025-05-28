@@ -41,6 +41,7 @@ class ParameterDefinedTest : DomaSqlTest() {
             "$testDaoName/optionalDaoParameterFieldAccess.sql",
             "$testDaoName/implementCustomFunctions.sql",
             "$testDaoName/invalidImplementCustomFunctions.sql",
+            "$testDaoName/emptyImplementCustomFunctions.sql",
         )
         myFixture.enableInspections(SqlBindVariableValidInspector())
     }
@@ -139,6 +140,16 @@ class ParameterDefinedTest : DomaSqlTest() {
         addResourceCompileFile("invalid.doma.compile.config")
         val sqlFile =
             findSqlFile("$testDaoName/invalidImplementCustomFunctions.sql")
+        assertNotNull("Not Found SQL File", sqlFile)
+        if (sqlFile == null) return
+
+        myFixture.testHighlighting(false, false, false, sqlFile)
+    }
+
+    fun testEmptyImplementCustomFunctions() {
+        addResourceCompileFile("empty.doma.compile.config")
+        val sqlFile =
+            findSqlFile("$testDaoName/emptyImplementCustomFunctions.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 

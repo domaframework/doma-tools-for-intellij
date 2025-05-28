@@ -4,4 +4,4 @@ INSERT INTO employee
              , department_name)
      VALUES ( /* employee.employeeId */0
              , /* employee.employeeName */'name'
-             , <error descr="Bind variables must be followed by test data">/* employee.department */</error>department)
+             , <error descr="Test data is required after a bind variable directive or a literal variable directive">/* employee.department */</error>department)

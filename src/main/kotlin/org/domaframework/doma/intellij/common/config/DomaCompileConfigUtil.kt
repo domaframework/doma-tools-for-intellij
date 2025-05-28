@@ -21,6 +21,8 @@ import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import java.util.concurrent.ConcurrentHashMap
 
 object DomaCompileConfigUtil {
+    const val EXPRESSION_FUNCTIONS_NAME = "org.seasar.doma.expr.ExpressionFunctions"
+
     /**
      * Cache: key=file path, value=Pair<Properties, last update time>
      */

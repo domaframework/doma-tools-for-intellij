@@ -1,3 +1,3 @@
 UPDATE employee
    SET /*%populate*/id = id
- WHERE rank < <error descr="Bind variables must be followed by test data">/* emplotee.rank */</error>
+ WHERE rank < <error descr="Test data is required after a bind variable directive or a literal variable directive">/* emplotee.rank */</error>
