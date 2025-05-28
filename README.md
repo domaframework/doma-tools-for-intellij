@@ -6,7 +6,7 @@
 <!-- Plugin description -->
 "Doma Tools" is a plugin that supports the development of [Doma](https://github.com/domaframework/doma) based projects in IntelliJ.
 
-It checks associations between Dao and SQL, and offers coding support features for Doma syntax,
+It checks associations between DAO and SQL, and offers coding support features for Doma syntax,
 such as generating SQL template files, navigating between files, and inspections to ensure the validity of bind variables.
 
 <!-- Plugin description end -->
@@ -19,21 +19,21 @@ Shortcut keys can be used for actions
 ![FileJump.gif](images/gif/FileJump.gif)
 
 - **Jump to SQL**
-  - Jump to action from Dao to SQL
+  - Jump to action from DAO to SQL
   - You can also jump to the SQL file from the gutter icon that is displayed together.
 - **Generate SQL**
   - Generate SQL file
-- **Jump to Dao**
-  - Jump to action from SQL to Dao
-  - You can also jump to the Dao Method from the gutter icon that is displayed together.
+- **Jump to DAO**
+  - Jump to action from SQL to DAO
+  - You can also jump to the DAO Method from the gutter icon that is displayed together.
 
 ## Inspection
-Check that bind variables are used appropriately for Dao and SQL associations.
-The plugin also provides quick fixes for Dao methods where the required SQL files do not exist.
+Check that bind variables are used appropriately for DAO and SQL associations.
+The plugin also provides quick fixes for DAO methods where the required SQL files do not exist.
 
 - Quick fix for missing SQL template file
   ![quickfix.png](images/quickfix.png)
-- Checking for Dao method arguments not used in bind variables
+- Checking for DAO method arguments not used in bind variables
   ![inspection.png](images/inspection.png)
 - Check the class name and package name for static property calls
   ![inspectionPackageName.png](images/inspectionPackageName.png)
@@ -43,9 +43,9 @@ The plugin also provides quick fixes for Dao methods where the required SQL file
 ## Completion
 Adds code completion functionality to support indexing of Doma directives and bind variables
 
-- Suggest Dao method arguments in bind variable directives
+- Suggest DAO method arguments in bind variable directives
   ![Completion.gif](images/gif/Completion.gif)
-- Refer to class definition from Dao method argument type and suggest fields and methods
+- Refer to class definition from DAO method argument type and suggest fields and methods
 - Provide code completion for class and package names used in static property calls.
   ![CompletionStatic.gif](images/gif/CompletionStatic.gif)
 - Suggest members defined as static in static fields and method calls
@@ -56,11 +56,11 @@ Adds code completion functionality to support indexing of Doma directives and bi
 - Suggest functions during code completion from the ExpressionFunctions implementation classes registered in the settings.
 
 ## Refactoring
-Along with the Dao name change, we will refactor the SQL file directory and file name.
+Along with the DAO name change, we will refactor the SQL file directory and file name.
 
-- After refactoring the Dao name, change the SQL deployment directory name as well.
-- After refactoring the Dao method name, we will also change the SQL file name.
-- After refactoring the Dao package, we will also change the SQL directory.
+- After refactoring the DAO name, change the SQL deployment directory name as well.
+- After refactoring the DAO method name, we will also change the SQL file name.
+- After refactoring the DAO package, we will also change the SQL directory.
 ![RenameDao.gif](images/gif/RenameDao.gif)
 
 ## Formatter(Preview)
