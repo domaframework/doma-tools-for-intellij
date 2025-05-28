@@ -65,13 +65,13 @@ Along with the Dao name change, we will refactor the SQL file directory and file
 
 ## Formatter(Preview)
 Provides code formatting for SQL syntax.
+
 This feature is in preview. You cannot customize the indentation or keywords to be broken down!
 
 Automatic indentation on newlines provided by the SQL formatting feature is disabled by default.
 To enable auto-indentation, toggle the corresponding flag in the settings screen below.
 
 `Settings > Other Settings > Doma Tools > Enable auto-indent for SQL`
-To enable auto-indentation, toggle the corresponding flag in the settings screen below.
 
 ![Format.gif](images/gif/Format.gif)
 
