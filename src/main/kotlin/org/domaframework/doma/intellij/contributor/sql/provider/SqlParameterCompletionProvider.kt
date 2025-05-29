@@ -295,9 +295,13 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
 
         var isBatchAnnotation = false
         if (top.parent !is PsiFile && top.parent?.parent !is PsiDirectory) {
-            val staticDirective = top.findNodeParent(SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR)
-            staticDirective?.let {
-                topElementType = getElementTypeByStaticFieldAccess(top, it, topText) ?: return
+            // In function-parameter elements, apply the same processing as normal field access.
+            val parameter = top.findNodeParent(SqlTypes.EL_PARAMETERS)
+            if (parameter == null) {
+                val staticDirective = top.findNodeParent(SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR)
+                staticDirective?.let {
+                    topElementType = getElementTypeByStaticFieldAccess(top, it, topText) ?: return
+                }
             }
         }
 

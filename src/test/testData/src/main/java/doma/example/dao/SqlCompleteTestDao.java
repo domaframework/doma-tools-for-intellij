@@ -77,6 +77,30 @@ interface SqlCompleteTestDao {
   Employee completeParameterSecondProperty(Employee employee);
 
   @Select
+  ProjectDetail completeParameterFirstInStaticAccess(Project project);
+
+  @Select
+  ProjectDetail completeParameterFirstPropertyInStaticAccess(Project project);
+
+  @Select
+  ProjectDetail completeParameterSecondInStaticAccess(Project project);
+
+  @Select
+  ProjectDetail completeParameterSecondPropertyInStaticAccess(Project project);
+
+  @Select
+  ProjectDetail completeParameterFirstInCustomFunctions(Project project);
+
+  @Select
+  ProjectDetail completeParameterFirstPropertyInCustomFunctions(Project project);
+
+  @Select
+  ProjectDetail completeParameterSecondInCustomFunctions(Project project);
+
+  @Select
+  ProjectDetail completeParameterSecondPropertyInCustomFunctions(Project project);
+
+  @Select
   Employee completeCallStaticPropertyClassPackage();
 
   @Select
@@ -108,4 +132,5 @@ interface SqlCompleteTestDao {
 
   @Select
   Employee completeNotImplementCustomFunction(Project project);
+
 }
