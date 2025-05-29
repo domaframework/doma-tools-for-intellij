@@ -51,11 +51,15 @@ class SqlTestDataAfterBlockCommentVisitor(
         super.visitBlockComment(element)
         if (hasOtherBindVariable(element)) return
 
-        val nextElement = element.nextSibling ?: return
+        val result = ValidationTestDataResult(element, shortName)
+        val nextElement = element.nextSibling
+        if (nextElement == null) {
+            result.highlightElement(holder)
+            return
+        }
         if (isSqlLiteral(nextElement)) return
         if (isMatchListTestData(element)) return
 
-        val result = ValidationTestDataResult(element, shortName)
         result.highlightElement(holder)
     }
 
