@@ -11,3 +11,4 @@ SELECT e.employee_id AS employeeId
    AND e.age >= /*^ literalAge */99
    AND e.sub_id IN /* subIds */(1, 2, 3)
    AND e.sub_id IN /* subIds */(true, False, NULL)
+   AND e.final IN <error descr="Test data is required after a bind variable directive or a literal variable directive">/* literalAge */</error>
