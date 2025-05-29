@@ -50,6 +50,14 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDaoName/completeParameterFirstProperty.sql",
             "$testDaoName/completeParameterSecond.sql",
             "$testDaoName/completeParameterSecondProperty.sql",
+            "$testDaoName/completeParameterFirstInStaticAccess.sql",
+            "$testDaoName/completeParameterFirstPropertyInStaticAccess.sql",
+            "$testDaoName/completeParameterSecondInStaticAccess.sql",
+            "$testDaoName/completeParameterSecondPropertyInStaticAccess.sql",
+            "$testDaoName/completeParameterFirstInCustomFunctions.sql",
+            "$testDaoName/completeParameterFirstPropertyInCustomFunctions.sql",
+            "$testDaoName/completeParameterSecondInCustomFunctions.sql",
+            "$testDaoName/completeParameterSecondPropertyInCustomFunctions.sql",
             "$testDaoName/completeCallStaticPropertyClassPackage.sql",
             "$testDaoName/completeCallStaticPropertyClass.sql",
             "$testDaoName/completeForItemHasNext.sql",
@@ -376,6 +384,130 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDaoName/completeParameterSecondProperty.sql",
             listOf("managerId"),
             listOf("employee", "department", "rank"),
+        )
+    }
+
+    fun testCompleteParameterInStaticAccess() {
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeParameterFirstInStaticAccess.sql",
+            listOf(
+                "project",
+            ),
+            listOf(
+                "projectId",
+                "projectName",
+                "rank",
+                "projectNumber",
+                "projectCategory",
+                "getFirstEmployee()",
+                "getTermNumber()",
+            ),
+        )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeParameterFirstPropertyInStaticAccess.sql",
+            listOf(
+                "projectId",
+                "projectName",
+                "rank",
+                "projectNumber",
+                "projectCategory",
+                "getFirstEmployee()",
+                "getTermNumber()",
+            ),
+            listOf(
+                "project",
+            ),
+        )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeParameterSecondInStaticAccess.sql",
+            listOf("project"),
+            listOf(
+                "projectId",
+                "projectName",
+                "rank",
+                "projectNumber",
+                "projectCategory",
+                "getFirstEmployee()",
+                "getTermNumber()",
+            ),
+        )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeParameterSecondPropertyInStaticAccess.sql",
+            listOf(
+                "projectId",
+                "projectName",
+                "rank",
+                "projectNumber",
+                "projectCategory",
+                "getFirstEmployee()",
+                "getTermNumber()",
+            ),
+            listOf("project"),
+        )
+    }
+
+    fun testCompleteParameterInCustomFunctions() {
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeParameterFirstInCustomFunctions.sql",
+            listOf(
+                "project",
+            ),
+            listOf(
+                "projectId",
+                "projectName",
+                "rank",
+                "projectNumber",
+                "projectCategory",
+                "getFirstEmployee()",
+                "getTermNumber()",
+            ),
+        )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeParameterFirstPropertyInCustomFunctions.sql",
+            listOf(
+                "projectId",
+                "projectName",
+                "rank",
+                "projectNumber",
+                "projectCategory",
+                "getFirstEmployee()",
+                "getTermNumber()",
+            ),
+            listOf(
+                "project",
+            ),
+        )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeParameterSecondInCustomFunctions.sql",
+            listOf("project"),
+            listOf(
+                "projectId",
+                "projectName",
+                "rank",
+                "projectNumber",
+                "projectCategory",
+                "getFirstEmployee()",
+                "getTermNumber()",
+            ),
+        )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeParameterSecondPropertyInCustomFunctions.sql",
+            listOf(
+                "projectId",
+                "projectName",
+                "rank",
+                "projectNumber",
+                "projectCategory",
+                "getFirstEmployee()",
+                "getTermNumber()",
+            ),
+            listOf("project"),
         )
     }
 
