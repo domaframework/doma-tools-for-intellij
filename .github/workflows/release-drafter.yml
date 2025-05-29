@@ -4,32 +4,18 @@ on:
   push:
     branches:
       - main
+  pull_request:
   workflow_dispatch:
 
 jobs:
   update_release_draft:
-    if: ${{ !contains(github.head_ref, 'doc/changelog-update-') && startsWith(github.event.head_commit.message, 'Merge pull request') }}
     permissions:
       contents: write
       pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    outputs:
-      skip_job: ${{ steps.check.outputs.SKIP_JOB }}
 
     steps:
-      - name: Check Commit Message
-        id: check
-        run: |
-          # Define a regex pattern to match commit messages for changelog updates
-          CHANGELOG_UPDATE_PATTERN="^Merge pull request #[0-9]+ from ${{ github.repository_owner }}/doc/changelog-update-.*$"
-          
-          if [[ "${{ github.event.head_commit.message }}" =~ $CHANGELOG_UPDATE_PATTERN ]]; then
-            echo "This commit is not target. Skip the workflow."
-            echo "SKIP_JOB=true" >> $GITHUB_OUTPUT
-          else
-            echo "SKIP_JOB=false" >> $GITHUB_OUTPUT
-          fi
       - uses: release-drafter/release-drafter@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -38,7 +24,7 @@ jobs:
 
   update_version:
     needs: update_release_draft
-    if: ${{ needs.update_release_draft.outputs.skip_job != 'true' }}
+    if: ${{ !contains(github.head_ref, 'doc/changelog-update-') && startsWith(github.event.head_commit.message, 'Merge pull request') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -103,6 +89,7 @@ jobs:
             echo "No changes to commit."
             exit 0
           fi
-          git commit -am "Update Version With Release Draft - $REPLACE_VERSION"
-          git push origin main
+          git commit -am "Update Version With Release Draft - $RELEASE_VERSION"
+          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+          git push origin $BRANCH_NAME
 
