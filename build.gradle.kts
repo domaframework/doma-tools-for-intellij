@@ -89,7 +89,7 @@ dependencies {
 
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
 
-        pluginVerifier(version = "1.383")
+        pluginVerifier(version = "1.386")
         zipSigner()
         testFramework(TestFrameworkType.Platform)
         testFramework(TestFrameworkType.Plugin.Java)
