@@ -3,6 +3,7 @@
 junit = "4.13.2"
 doma = "3.2.0"
 logback = "1.5.18"
+pluginVerifier = "1.386"
 
 # plugins
 changelog = "2.2.1"
@@ -21,6 +22,7 @@ domacore = { module = "org.seasar.doma:doma-core", version.ref = "doma" }
 google-java-format = { module = "com.google.googlejavaformat:google-java-format", version = "1.27.0" }
 ktlint = { module = "com.pinterest.ktlint:ktlint-cli", version = "1.6.0" }
 jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.19.0" }
+pluginVerifier = { group = "org.jetbrains.intellij.plugins", name = "verifier-cli", version.ref = "pluginVerifier" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
