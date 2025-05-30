@@ -6,63 +6,63 @@
 <!-- Plugin description -->
 "Doma Tools" is a plugin that supports the development of [Doma](https://github.com/domaframework/doma) based projects in IntelliJ.
 
-It checks associations between DAO and SQL, and offers coding support features for Doma syntax,
-such as generating SQL template files, navigating between files, and inspections to ensure the validity of bind variables.
+It checks associations between DAO and SQL and offers coding support features for Doma syntax,
+such as generating SQL template files, navigating between files, and inspecting the validity of bind variables.
 
 <!-- Plugin description end -->
 
 # Features
 
 ## Actions
-The plugin adds some actions, gutter icons.
-Shortcut keys can be used for actions
+The plugin adds several actions and gutter icons.
+Shortcut keys can be used for these actions.
 ![FileJump.gif](images/gif/FileJump.gif)
 
 - **Jump to SQL**
-  - Jump to from DAO to SQL
-  - You can also jump to the SQL file from the gutter icon that is displayed together.
+  - Jump from DAO to SQL.
+  - You can also jump to the SQL file using the gutter icon displayed alongside.
 - **Generate SQL**
-  - Generate SQL file
+  - Generate an SQL file.
 - **Jump to DAO**
-  - Jump to from SQL to DAO
-  - You can also jump to the DAO Method from the gutter icon that is displayed together.
+  - Jump from SQL to DAO.
+  - You can also jump to the DAO method using the gutter icon displayed alongside.
 
 ## Inspection
-Check that bind variables are used appropriately for DAO and SQL associations.
+Checks that bind variables are used appropriately for DAO and SQL associations.
 The plugin also provides quick fixes for DAO methods where the required SQL files do not exist.
 
-- Quick fix for generate SQL template file.
+- Quick fix to generate SQL template file.
   ![quickfix.png](images/quickfix.png)
-- Checking for DAO method arguments not used.
+- Checks for unused DAO method arguments.
   ![inspection.png](images/inspection.png)
-- Check for undefined bind variable names.
-- Check the class name and package name for static property calls.
+- Checks for undefined bind variable names.
+- Checks the class name and package name for static property calls.
   ![inspectionPackageName.png](images/inspectionPackageName.png)
-- Optional types are recognized as their element type (e.g. a parameter of type `Optional<String>` is treated as type `String`).
+- Optional types are recognized as their element type (e.g., a parameter of type `Optional<String>` is treated as type `String`).
 - For custom functions, checks for methods that are not defined in the configured ExpressionFunctions implementation class.
 
 ## Completion
-Code completion is available to assist you in coding within the directives.
+Code completion is available to assist you in coding within directives.
 
-- Suggest DAO method arguments in bind variable directives.
+- Suggests DAO method arguments in bind variable directives.
   ![Completion.gif](images/gif/Completion.gif)
-- It looks at DAO method argument types and suggests instance fields, methods.
+- Analyzes DAO method argument types and suggests instance fields and methods.
 - Suggests package and class names for class names used in static property calls.
   ![CompletionStatic.gif](images/gif/CompletionStatic.gif)
-- Suggest members defined as static in static fields and method calls.
-- Directives such as Condition, Loop, Population are suggested after `%`.
+- Suggests members defined as static in static fields and method calls.
+- Directives such as Condition, Loop, and Population are suggested after `%`.
 - Suggests built-in and custom functions after `@`.
-- Optional types are recognized as their element type (e.g. a parameter of type `Optional<String>` is treated as type `String`).
+- Optional types are recognized as their element type (e.g., a parameter of type `Optional<String>` is treated as type `String`).
 
 ## Refactoring
-Along with the DAO change, we will refactor the SQL file directory and file name.
+Along with DAO changes, the plugin will refactor the SQL file directory and file name.
 
-- After refactoring the DAO name, change the SQL directory name as well.
-- After refactoring the DAO method name, we will also change the SQL file name.
-- After refactoring the DAO package, we will also change the SQL directory.
+- After refactoring the DAO name, the SQL directory name will also be updated.
+- After refactoring the DAO method name, the SQL file name will also be updated.
+- After refactoring the DAO package, the SQL directory will also be updated.
 ![RenameDao.gif](images/gif/RenameDao.gif)
 
-## Formatter(Preview)
+## Formatter (Preview)
 Provides code formatting for SQL syntax.
 This feature is in preview. You cannot customize the indentation or keywords to be broken down!
 
@@ -75,14 +75,14 @@ To enable auto-indentation, toggle the corresponding flag in the settings screen
 ![Format.gif](images/gif/Format.gif)
 
 ## Reference resolution
-Ctrl+Click on a bind variable in an SQL file to jump to its source symbol:
+Ctrl+Click on a bind variable in an SQL file to jump to its source symbol.
 
 This feature works in source JARs as well, but in binary JARs, if the DAO method’s argument parameter names have been changed, the references cannot be resolved and the feature will not function.
 
-- The DAO method’s argument parameter definition
-- The field and method definitions on that parameter’s type
-- The class definition referenced by @ClassName@
-- Custom functions in the configured ExpressionFunctions implementation class
+- The DAO method’s argument parameter definition.
+- The field and method definitions on that parameter’s type.
+- The class definition referenced by @ClassName@.
+- Custom functions in the configured ExpressionFunctions implementation class.
 - You can also jump using the **Go To > Declaration Usage** menu.
 
 ![Reference.gif](images/gif/Reference.gif)
@@ -90,18 +90,18 @@ This feature works in source JARs as well, but in binary JARs, if the DAO method
 ## Settings
 Some functions of "Doma Tools" can be customized from the settings screen.
 
-- Enabling/disabling inspections and customizing error levels
-- Highlight color settings for SQL elements
+- Enable/disable inspections and customize error levels.
+- Highlight color settings for SQL elements.
 ![setting_highlight.png](images/setting_highlight.png)
-- Customize action shortcut keys
-- Enable/disable automatic indentation when breaking SQL lines
+- Customize action shortcut keys.
+- Enable/disable automatic indentation when breaking SQL lines.
 
 **If you want to use custom functions defined in your own ExpressionFunctions implementation class,
-place a `doma.compile.config` file directly under the resources directory and describe the `doma.expr.functions` entry.**
+place a `doma.compile.config` file directly under the resources directory and specify the `doma.expr.functions` entry.**
 
 [Doma Setting Options with Configuration File](https://doma.readthedocs.io/en/stable/annotation-processing/#setting-options-with-configuration-file)
 
-ex) doma.compile.config
+Example: doma.compile.config
 ```properties
 doma.expr.functions=example.expression.MyExpressionFunctions
 ```
