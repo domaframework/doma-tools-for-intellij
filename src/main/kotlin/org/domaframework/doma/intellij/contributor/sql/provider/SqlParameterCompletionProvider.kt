@@ -44,6 +44,7 @@ import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCom
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.util.SqlCompletionUtil.createMethodLookupElement
+import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.findNodeParent
 import org.domaframework.doma.intellij.extension.psi.findStaticField
@@ -79,13 +80,10 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         try {
             val originalFile = parameters.originalFile
             val pos = parameters.originalPosition ?: return
-            val bindText =
-                cleanString(pos.text)
-                    .substringAfter("/*")
-                    .substringBefore("*/")
+            val bindText = StringUtil.replaceBlockCommentStartEnd(cleanString(pos.text))
 
             val handler = DirectiveCompletion(originalFile, bindText, pos, caretNextText, result)
-            val directiveSymbols = listOf("%", "#", "^", "@")
+            val directiveSymbols = DirectiveCompletion.directiveSymbols
             directiveSymbols.forEach {
                 if (!isDirective) {
                     isDirective = handler.directiveHandle(it)
@@ -232,7 +230,10 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 blocks = prevElms
             }
         }
-        return blocks.sortedBy { it.textOffset }
+        return blocks
+            .filter {
+                it is SqlElIdExpr || it.elementType == SqlTypes.EL_IDENTIFIER || it == blocks.last()
+            }.sortedBy { it.textOffset }
     }
 
     /**
@@ -246,6 +247,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         caretNextText: String,
         result: CompletionResultSet,
     ) {
+        val project = originalFile.project
         val daoMethod = findDaoMethod(originalFile)
         val searchText = cleanString(getSearchElementText(position))
         var topElementType: PsiType? = null
@@ -257,30 +259,47 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val topText = cleanString(getSearchElementText(top))
         val prevWord = PsiPatternUtil.getBindSearchWord(originalFile, elements.last(), " ")
         if (prevWord.startsWith("@") && prevWord.endsWith("@")) {
-            setCompletionStaticFieldAccess(top, prevWord, caretNextText, topText, result)
+            setCompletionStaticFieldAccess(project, prevWord, caretNextText, topText, result)
             return
         }
 
         var isBatchAnnotation = false
-        if (top.parent !is PsiFile && top.parent?.parent !is PsiDirectory) {
-            // In function-parameter elements, apply the same processing as normal field access.
-            val parameter = top.findNodeParent(SqlTypes.EL_PARAMETERS)
-            if (parameter == null) {
-                val staticDirective = top.findNodeParent(SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR)
-                staticDirective?.let {
-                    topElementType = getElementTypeByStaticFieldAccess(top, it, topText) ?: return
-                }
+        // In function-parameter elements, apply the same processing as normal field access.
+        val parameter = top.findNodeParent(SqlTypes.EL_PARAMETERS)
+        if (parameter == null) {
+            val staticDirective = top.findNodeParent(SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR)
+            staticDirective?.let {
+                topElementType = getElementTypeByStaticFieldAccess(project, it, topText)
+            }
+            if (topElementType == null) {
+                val fqdn =
+                    StringUtil.getSqlElClassText(
+                        PsiPatternUtil
+                            .getBindSearchWord(originalFile, top, " "),
+                    )
+                topElementType = getElementTypeByPrevSqlElClassWords(project, fqdn, topText)
             }
         }
 
         if (daoMethod == null) return
-        val project = originalFile.project
+
         val psiDaoMethod = PsiDaoMethod(project, daoMethod)
         if (topElementType == null) {
             isBatchAnnotation = psiDaoMethod.daoType.isBatchAnnotation()
-            if (isFieldAccessByForItem(top, elements, searchText, caretNextText, isBatchAnnotation, result)) return
+            if (isFieldAccessByForItem(
+                    top,
+                    elements,
+                    searchText,
+                    caretNextText,
+                    isBatchAnnotation,
+                    result,
+                )
+            ) {
+                return
+            }
             topElementType =
-                getElementTypeByFieldAccess(originalFile, position, elements, daoMethod, result) ?: return
+                getElementTypeByFieldAccess(originalFile, position, elements, daoMethod, result)
+                    ?: return
         }
 
         setCompletionFieldAccess(
@@ -307,18 +326,28 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
      * If no match is found, returns null.
      */
     private fun getElementTypeByStaticFieldAccess(
-        top: PsiElement,
+        project: Project,
         staticDirective: PsiElement,
         topText: String,
     ): PsiType? {
         val clazz =
-            getRefClazz(top) {
+            getRefClazz(project) {
                 staticDirective.children
                     .firstOrNull { it is SqlElClass }
                     ?.text
                     ?: ""
             } ?: return null
 
+        return clazz.findStaticField(topText)?.type
+            ?: clazz.findStaticMethod(topText)?.returnType
+    }
+
+    private fun getElementTypeByPrevSqlElClassWords(
+        project: Project,
+        fqdn: String,
+        topText: String,
+    ): PsiType? {
+        val clazz = getRefClazz(project) { fqdn } ?: return null
         return clazz.findStaticField(topText)?.type
             ?: clazz.findStaticMethod(topText)?.returnType
     }
@@ -369,15 +398,15 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
     ) {
         forDirectives.forEach {
             result.addElement(LookupElementBuilder.create(it.item.text))
-            result.addElement(LookupElementBuilder.create("${it.item.text}_has_next"))
-            result.addElement(LookupElementBuilder.create("${it.item.text}_index"))
+            result.addElement(LookupElementBuilder.create("${it.item.text}${ForDirectiveUtil.HAS_NEXT_PREFIX}"))
+            result.addElement(LookupElementBuilder.create("${it.item.text}${ForDirectiveUtil.INDEX_PREFIX}"))
         }
     }
 
     private fun getRefClazz(
-        top: PsiElement,
+        project: Project,
         fqdnGetter: () -> String,
-    ): PsiClass? = top.project.getJavaClazz(fqdnGetter())
+    ): PsiClass? = project.getJavaClazz(fqdnGetter())
 
     private fun setFieldsAndMethodsCompletionResultSet(
         caretNextText: String,
@@ -472,13 +501,13 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
     }
 
     private fun setCompletionStaticFieldAccess(
-        top: PsiElement,
+        project: Project,
         prevWord: String,
         caretNextText: String,
         topText: String,
         result: CompletionResultSet,
     ) {
-        val clazz = getRefClazz(top) { prevWord.replace("@", "") } ?: return
+        val clazz = getRefClazz(project) { prevWord.replace("@", "") } ?: return
         val matchFields = clazz.searchStaticField(topText)
         val matchMethod = clazz.searchStaticMethod(topText)
 
@@ -493,13 +522,8 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 .takeWhile {
                     it.elementType != SqlTypes.BLOCK_COMMENT_START &&
                         !isSqlElSymbol(it) &&
-                        it.elementType != SqlTypes.AT_SIGN &&
-                        (
-                            it.elementType != SqlTypes.LEFT_PAREN ||
-                                it.parent.elementType == SqlTypes.EL_PARAMETERS
-                        )
+                        it.elementType != SqlTypes.AT_SIGN
                 }.toList()
-                .plus(targetElement)
                 .filter {
                     it is PsiErrorElement ||
                         it is SqlElIdExpr ||
@@ -507,7 +531,8 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 }.filter {
                     it.isNotWhiteSpace() &&
                         PsiTreeUtil.getParentOfType(it, SqlElParameters::class.java) == null
-                }.sortedBy { it.textOffset }
+                }.plus(targetElement)
+                .sortedBy { it.textOffset }
 
         return if (elms.isNotEmpty()) elms else emptyList()
     }

@@ -25,6 +25,8 @@ import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeaf
 import com.intellij.psi.util.prevLeafs
 import com.intellij.util.ProcessingContext
+import org.domaframework.doma.intellij.common.sql.directive.DirectiveCompletion
+import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -43,7 +45,27 @@ object PsiPatternUtil {
                 override fun accepts(
                     element: PsiElement,
                     context: ProcessingContext?,
-                ): Boolean = PsiTreeUtil.getParentOfType(element, parentClass, true) != null
+                ): Boolean {
+                    val inComment = PsiTreeUtil.getParentOfType(element, parentClass, true) != null
+                    if (inComment) return true
+
+                    var prevElement = PsiTreeUtil.prevLeaf(element, true)
+                    while (prevElement != null &&
+                        !(
+                            prevElement.nextSibling is SqlCustomElCommentExpr &&
+                                !prevElement.nextSibling.text.endsWith("*/")
+                        )
+                    ) {
+                        prevElement = PsiTreeUtil.prevLeaf(prevElement, true)
+                    }
+
+                    var endBlock = PsiTreeUtil.nextLeaf(element, true)
+                    while (endBlock != null && endBlock.elementType != SqlTypes.BLOCK_COMMENT_END) {
+                        endBlock = PsiTreeUtil.nextLeaf(endBlock, true)
+                    }
+
+                    return prevElement != null && endBlock != null
+                }
             },
         )
 
@@ -55,7 +77,7 @@ object PsiPatternUtil {
                     context: ProcessingContext?,
                 ): Boolean {
                     val bindText = element.prevLeaf()?.text ?: ""
-                    val directiveSymbol = listOf("%", "@", "^", "#")
+                    val directiveSymbol = DirectiveCompletion.directiveSymbols
                     return directiveSymbol.any {
                         bindText.startsWith(it) ||
                             (element.elementType == SqlTypes.EL_IDENTIFIER && element.prevLeaf()?.text == it) ||
@@ -104,7 +126,7 @@ object PsiPatternUtil {
 
     /**
      * Get the string to search from the cursor position to the start of a block comment or a blank space
-     * @return search Keyword
+     * @return The string up to the specified character
      */
     fun getBindSearchWord(
         originalFile: PsiElement,

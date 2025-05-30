@@ -15,15 +15,16 @@
  */
 package org.domaframework.doma.intellij.common.sql
 
+import org.domaframework.doma.intellij.common.util.StringUtil
+
 /**
  * Exclude extra strings and block symbols added by IntelliJ operations a
  * nd format them into necessary elements
  */
 fun cleanString(str: String): String {
     val intelliKIdeaRuleZzz = "IntellijIdeaRulezzz"
-    return str
-        .substringAfter("/*")
-        .substringBefore("*/")
+    return StringUtil
+        .replaceBlockCommentStartEnd(str)
         .replace(intelliKIdeaRuleZzz, "")
         // TODO: Temporary support when using operators.
         //  Remove the "== a" element because it is attached to the end.
