@@ -9,8 +9,10 @@ INSERT INTO employee_project (employee_name, department, project)
                  JOIN user u1 ON e1.employee_id = u1.user_id
                               AND e1.user_tag = /*# 't' */'a'
                               AND e1.user_dept = /*# "development" */'dev'
-                  -- Access to parent private field
+                   -- Access to parent private field
                    WHERE u1.user_name = /* employee.userName.toLowerCase() */'name'
+                    -- Access to property on primitive type
+                    OR u1.name = /* employee.userName.isBlank().<error descr="The field or method [x] does not exist in the class [boolean]">x</error> */'boolean'
                    -- Access to non-existent parent field
                    OR u1.user_name = /* employee.<error descr="The field or method [userFirstName] does not exist in the class [Employee]">userFirstName</error>.toLowerCase() */'name'
                    -- Public parent method
