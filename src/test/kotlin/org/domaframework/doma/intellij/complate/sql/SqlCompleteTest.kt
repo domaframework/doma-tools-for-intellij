@@ -31,16 +31,20 @@ class SqlCompleteTest : DomaSqlTest() {
         addSqlFile(
             "$testDaoName/completeDaoArgument.sql",
             "$testDaoName/completeInstancePropertyFromDaoArgumentClass.sql",
+            "$testDaoName/completeInstancePropertyWithMethodParameter.sql",
             "$testDaoName/completeJavaPackageClass.sql",
             "$testDaoName/completeDirective.sql",
             "$testDaoName/completeBatchInsert.sql",
             "$testDaoName/completeStaticPropertyFromStaticPropertyCall.sql",
             "$testDaoName/completePropertyAfterStaticPropertyCall.sql",
+            "$testDaoName/completePropertyAfterStaticPropertyCallWithMethodParameter.sql",
             "$testDaoName/completePropertyAfterStaticMethodCall.sql",
             "$testDaoName/completeBuiltinFunction.sql",
             "$testDaoName/completeDirectiveInsideIf.sql",
+            "$testDaoName/completeDirectiveFieldInsideIfWithMethodParameter.sql",
             "$testDaoName/completeDirectiveInsideElseIf.sql",
             "$testDaoName/completeDirectiveInsideFor.sql",
+            "$testDaoName/completeDirectiveInsideForWithMethodParameter.sql",
             "$testDaoName/completeDirectiveFieldInsideIf.sql",
             "$testDaoName/completeDirectiveFieldInsideElseIf.sql",
             "$testDaoName/completeDirectiveFieldInsideFor.sql",
@@ -48,6 +52,7 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDaoName/completeComparisonOperator.sql",
             "$testDaoName/completeParameterFirst.sql",
             "$testDaoName/completeParameterFirstProperty.sql",
+            "$testDaoName/completeParameterFirstPropertyWithMethodParameter.sql",
             "$testDaoName/completeParameterSecond.sql",
             "$testDaoName/completeParameterSecondProperty.sql",
             "$testDaoName/completeParameterFirstInStaticAccess.sql",
@@ -105,6 +110,26 @@ class SqlCompleteTest : DomaSqlTest() {
                 "getFirstProject()",
             ),
             listOf("getEmployeeRank()"),
+        )
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeInstancePropertyWithMethodParameter.sql",
+            listOf(
+                "byteValue()",
+                "compareTo()",
+                "doubleValue()",
+                "toString()",
+            ),
+            listOf(
+                "employeeId",
+                "employeeName",
+                "department",
+                "rank",
+                "getFirstProject()",
+                "toLowerCase()",
+                "charAt()",
+                "contains()",
+                "isBlank()",
+            ),
         )
     }
 
@@ -212,6 +237,28 @@ class SqlCompleteTest : DomaSqlTest() {
                 "addTermNumber()",
             ),
         )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completePropertyAfterStaticPropertyCallWithMethodParameter.sql",
+            listOf(
+                "projectId",
+                "projectNumber",
+                "projectName",
+                "projectCategory",
+            ),
+            listOf(
+                "projectDetailId",
+                "members",
+                "manager",
+                "getFirstEmployee()",
+                "getTermNumber()",
+                "employeeId",
+                "projects",
+                "rank",
+                "contains()",
+                "isBlank()",
+            ),
+        )
     }
 
     fun testCompleteCallStaticPropertyClassPackage() {
@@ -308,15 +355,29 @@ class SqlCompleteTest : DomaSqlTest() {
             listOf("employee"),
             listOf("project"),
         )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeDirectiveFieldInsideIfWithMethodParameter.sql",
+            listOf("projectNumber", "projectCategory", "getFirstEmployee()", "getTermNumber()"),
+            listOf("project", "employee"),
+        )
+
         innerDirectiveCompleteTest(
             "$testDaoName/completeDirectiveInsideElseIf.sql",
             listOf("employee", "project"),
             emptyList(),
         )
+
         innerDirectiveCompleteTest(
             "$testDaoName/completeDirectiveInsideFor.sql",
             listOf("project"),
             listOf("employee", "member", "%for"),
+        )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeDirectiveInsideForWithMethodParameter.sql",
+            listOf("clear()", "contains()", "get()", "getFirst()"),
+            listOf("projectNumber", "projectCategory", "getFirstEmployee()", "getTermNumber()"),
         )
     }
 
@@ -372,6 +433,12 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDaoName/completeParameterFirstProperty.sql",
             listOf("employeeId", "department", "rank"),
             listOf("employee"),
+        )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeParameterFirstPropertyWithMethodParameter.sql",
+            listOf("projectNumber", "projectCategory", "getFirstEmployee()"),
+            listOf("employeeId", "employeeName", "getFirstProject()"),
         )
 
         innerDirectiveCompleteTest(
