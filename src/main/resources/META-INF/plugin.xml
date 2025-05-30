@@ -104,19 +104,19 @@
         id="org.domaframework.doma.intellij.action.JumpToSQLFromDao"
         class="org.domaframework.doma.intellij.action.dao.JumpToSQLFromDaoAction"
         text="Jump to SQL"
-        description="Jump from Dao file to SQL file">
+        description="Jump from DAO file to SQL file">
         <keyboard-shortcut keymap="$default" first-keystroke="alt D"/>
       </action>
       <action id="org.domaframework.doma.intellij.JumpToDaoFromSQL"
         class="org.domaframework.doma.intellij.action.sql.JumpToDaoFromSQLAction"
-        text="Jump to Dao"
-        description="Jump from SQL file to Dao method definition">
+        text="Jump to DAO"
+        description="Jump from SQL file to DAO method definition">
         <keyboard-shortcut keymap="$default" first-keystroke="alt D"/>
       </action>
       <action id="org.domaframework.doma.intellij.GenerateSqlAction"
         class="org.domaframework.doma.intellij.action.dao.GenerateSqlAction"
         text="Generate SQL"
-        description="Generate SQL file from Dao method">
+        description="Generate SQL file from DAO method">
         <keyboard-shortcut keymap="$default" first-keystroke="control alt G"/>
       </action>
     </group>
