@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+## [0.8.1] - 2025-05-30
+
+### Bug Fixes
+
+- Code completion fails after existing values in method arguments ([#215])
+- Test data check skipped for directives at end of file ([#214])
+- Instance member suggestions missing inside static property call arguments  ([#213])
+- Cannot resolve references from within argument-parameter elements ([#207])
+- Update error messages ([#205])
+
+### Maintenance
+
+- Add pull request trigger to release drafter workflow ([#168])
+
+### Dependency Updates
+
+- Update plugin verifier version to 1.386 ([#209])
+- Update plugin spotless to v7.0.4 ([#203])
+- Update dependency gradle to v8.14.1 ([#188])
+
+[#215]:https://github.com/domaframework/doma-tools-for-intellij/pull/215
+[#214]:https://github.com/domaframework/doma-tools-for-intellij/pull/214
+[#213]:https://github.com/domaframework/doma-tools-for-intellij/pull/213
+[#207]:https://github.com/domaframework/doma-tools-for-intellij/pull/207
+[#205]:https://github.com/domaframework/doma-tools-for-intellij/pull/205
+[#168]:https://github.com/domaframework/doma-tools-for-intellij/pull/168
+[#209]:https://github.com/domaframework/doma-tools-for-intellij/pull/209
+[#203]:https://github.com/domaframework/doma-tools-for-intellij/pull/203
+[#188]:https://github.com/domaframework/doma-tools-for-intellij/pull/188
+
+
 ## [0.8.0] - 2025-05-27
 
 ### New Features
@@ -308,3 +339,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[0.8.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.8.0...0.8.1
