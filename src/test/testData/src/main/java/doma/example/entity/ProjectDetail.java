@@ -19,6 +19,7 @@ public class ProjectDetail {
   public static Integr projectNumber;
   private static String projectName;
   private static String projectCategory;
+  private static List<Project> subProjects = new ArrayList<>();
 
   private static Employee manager = new Employee();
 
@@ -42,6 +43,10 @@ public class ProjectDetail {
 
   public static String getCustomNumber(String prefix) {
     return prefix + projectName;
+  }
+
+  public static Project getProject(String index){
+    return subProjects.get(Integer.parseInt(index));
   }
 
 }

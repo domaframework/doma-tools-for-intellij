@@ -19,6 +19,9 @@ interface SqlCompleteTestDao {
   @Select
   Employee completeInstancePropertyFromDaoArgumentClass(Employee employee, String name);
 
+  @Select
+  Employee completeInstancePropertyWithMethodParameter(Employee employee, String name);
+
   @Insert(sqlFile = true)
   int completeJavaPackageClass(Employee employee);
 
@@ -35,6 +38,9 @@ interface SqlCompleteTestDao {
   Project completePropertyAfterStaticPropertyCall();
 
   @Select
+  Project completePropertyAfterStaticPropertyCallWithMethodParameter(Employee employee);
+
+  @Select
   Project completePropertyAfterStaticMethodCall();
 
   @Select
@@ -44,10 +50,16 @@ interface SqlCompleteTestDao {
   int completeDirectiveInsideIf(Employee employee,Project project);
 
   @Update(sqlFile = true)
+  int completeDirectiveFieldInsideIfWithMethodParameter(Employee employee,Project project);
+
+  @Update(sqlFile = true)
   int completeDirectiveInsideElseIf(Employee employee,Project project);
 
   @Update(sqlFile = true)
   int completeDirectiveInsideFor(Employee employee,Project project);
+
+  @Update(sqlFile = true)
+  int completeDirectiveInsideForWithMethodParameter(Employee employee,List<List<Project>> projectsList);
 
   @Update(sqlFile = true)
   int completeDirectiveFieldInsideIf(Employee employee,Project project);
@@ -69,6 +81,9 @@ interface SqlCompleteTestDao {
 
   @Select
   Employee completeParameterFirstProperty(Employee employee);
+
+  @Select
+  Employee completeParameterFirstPropertyWithMethodParameter(Employee employee, Integer index);
 
   @Select
   Employee completeParameterSecond(Employee employee);
