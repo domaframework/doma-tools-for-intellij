@@ -37,9 +37,11 @@ class ValidationPropertyResult(
         parent: PsiParentClass?,
     ) {
         val project = identify.project
+        val parentClassType = parentClass?.type
         val parentName =
             parentClass?.clazz?.name
-                ?: (parentClass?.type as? PsiClassType)?.name
+                ?: (parentClassType as? PsiClassType)?.name
+                ?: parentClassType?.canonicalText
                 ?: ""
         holder.registerProblem(
             identify,
