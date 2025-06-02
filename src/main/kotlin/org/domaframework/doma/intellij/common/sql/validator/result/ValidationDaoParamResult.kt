@@ -22,7 +22,7 @@ import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
 /**
- * no Dao parameter matching the name of the field access top was found
+ * no DAO parameter matching the name of the field access top was found
  */
 open class ValidationDaoParamResult(
     override val identify: PsiElement,

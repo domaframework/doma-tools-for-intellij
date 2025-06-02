@@ -27,8 +27,8 @@ import org.domaframework.doma.intellij.setting.SqlLanguage
 import org.jetbrains.kotlin.idea.completion.or
 
 /**
- * Code completion of SQL bind variables with Dao method arguments
- * Valid only for SQL files or @Sql in Dao
+ * Code completion of SQL bind variables with DAO method arguments
+ * Valid only for SQL files or @Sql in DAO
  */
 open class SqlCompletionContributor : CompletionContributor() {
     init {

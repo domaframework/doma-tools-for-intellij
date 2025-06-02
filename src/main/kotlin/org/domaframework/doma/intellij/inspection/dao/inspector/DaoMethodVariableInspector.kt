@@ -45,7 +45,7 @@ import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 /**
- * Check if Dao method arguments are used in the corresponding SQL file
+ * Check if DAO method arguments are used in the corresponding SQL file
  */
 class DaoMethodVariableInspector : AbstractBaseJavaLocalInspectionTool() {
     private data class DaoMethodVariableVisitorResult(

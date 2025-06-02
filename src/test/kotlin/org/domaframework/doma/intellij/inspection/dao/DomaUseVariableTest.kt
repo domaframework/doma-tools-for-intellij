@@ -19,7 +19,7 @@ import org.domaframework.doma.intellij.DomaSqlTest
 import org.domaframework.doma.intellij.inspection.dao.inspector.DaoMethodVariableInspector
 
 /**
- * Test class to verify whether Dao method arguments are used
+ * Test class to verify whether DAO method arguments are used
  */
 class DomaUseVariableTest : DomaSqlTest() {
     private val testDaoName = "DaoMethodVariableInspectionTestDao"
@@ -41,7 +41,7 @@ class DomaUseVariableTest : DomaSqlTest() {
     }
 
     /**
-     * Test to verify if Dao method arguments are used
+     * Test to verify if DAO method arguments are used
      */
     fun testDaoMethodArgumentsUsed() {
         val dao = findDaoClass(testDaoName)

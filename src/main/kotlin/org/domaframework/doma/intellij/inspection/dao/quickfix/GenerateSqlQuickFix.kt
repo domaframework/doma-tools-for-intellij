@@ -23,7 +23,7 @@ import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
 /**
- * Quick fix to generate SQL files with Dao methods that require SQL templates
+ * Quick fix to generate SQL files with DAO methods that require SQL templates
  */
 class GenerateSqlQuickFix(
     @Suppress("ActionIsNotPreviewFriendly") private val psiDaoMethod: PsiDaoMethod,

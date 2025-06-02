@@ -35,11 +35,11 @@ package org.domaframework.doma.intellij.inspection.dao.quickfix
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 
 /**
- * Inspect Dao and display quick fixes for problem areas
+ * Inspect DAO and display quick fixes for problem areas
  */
 object GenerateSQLFileQuickFixFactory {
     /**
-     * Generate quick fix to generate SQL file corresponding to Dao method
+     * Generate quick fix to generate SQL file corresponding to DAO method
      */
     fun createSql(psiDaoMethod: PsiDaoMethod): GenerateSqlQuickFix = GenerateSqlQuickFix(psiDaoMethod)
 }
