@@ -51,6 +51,7 @@ object PsiPatternUtil {
                     val inComment = PsiTreeUtil.getParentOfType(element, parentClass, true) != null
                     if (inComment) return true
 
+                    // Even incomplete elements during input are analyzed as strings and included in the code completion process within block comments.
                     var prevElement = PsiTreeUtil.prevLeaf(element, true)
                     while (prevElement != null &&
                         !(
