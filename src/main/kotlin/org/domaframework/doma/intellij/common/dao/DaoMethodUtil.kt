@@ -42,7 +42,7 @@ import org.domaframework.doma.intellij.extension.getModule
 import org.jetbrains.kotlin.idea.base.util.module
 
 /**
- * Get Dao method corresponding to SQL file
+ * Get DAO method corresponding to SQL file
  */
 fun findDaoMethod(
     originalFile: PsiFile,
@@ -120,7 +120,7 @@ private fun getDaoClassName(
 ): String = methodDaoFilePath.substringBefore(".$extensionName").substringAfter("dao/")
 
 /**
- * Get jump destination Dao method file from SQL file
+ * Get jump destination DAO method file from SQL file
  */
 fun findDaoFile(
     project: Project,
@@ -136,7 +136,7 @@ fun findDaoFile(
 }
 
 /**
- * Dao file search for SQL file
+ * DAO file search for SQL file
  */
 private fun searchDaoFile(
     module: Module?,
@@ -171,7 +171,7 @@ private fun findDaoClass(
 ): PsiClass? = module.getJavaClazz(includeTest, daoClassName)
 
 /**
- * Generate Dao deployment path from SQL file path
+ * Generate DAO deployment path from SQL file path
  * @param sqlFile SQL File
  * @param projectRootPath project content Root Path
  * @return
@@ -204,9 +204,9 @@ private fun getDaoPathFromSqlFilePath(
 }
 
 /**
- * Generate SqlFile path from Dao file path
- * @param daoFile Dao File
- * @param module The module to which the Dao file belongs
+ * Generate SqlFile path from DAO file path
+ * @param daoFile DAO File
+ * @param module The module to which the DAO file belongs
  * @return SqlFile path ex) META-INF/package/dao/DaoClassName/
  */
 fun getRelativeSqlFilePathFromDaoFilePath(

@@ -25,7 +25,7 @@ import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.dao.getRelativeSqlFilePathFromDaoFilePath
 
 /**
- * Get SQL directory corresponding to Dao file
+ * Get SQL directory corresponding to DAO file
  */
 fun Module.getPackagePathFromDaoPath(daoFile: VirtualFile): VirtualFile? {
     val contentRoot = this.project.getContentRoot(daoFile)?.path
@@ -52,7 +52,7 @@ fun Module.getJavaClazz(
 }
 
 /***
- * Get SQL file corresponding to Dao file
+ * Get SQL file corresponding to DAO file
  * @param relativePath SQL file relativePath path ex) META-INF/packageName/dao/DaoClassName/sqlFileName.sql
  * @param includeTest true: test source, false: main source
  * @return SQL file

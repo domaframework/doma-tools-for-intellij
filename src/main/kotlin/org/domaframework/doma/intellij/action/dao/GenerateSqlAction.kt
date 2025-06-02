@@ -28,7 +28,7 @@ import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
 /**
- * Action class that generates SQL from Dao method
+ * Action class that generates SQL from DAO method
  */
 class GenerateSqlAction : AnAction() {
     private var currentFile: PsiFile? = null

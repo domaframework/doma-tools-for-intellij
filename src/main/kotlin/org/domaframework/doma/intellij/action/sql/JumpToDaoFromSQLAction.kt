@@ -27,7 +27,7 @@ import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
 /***
- * Action to jump from SQL file to corresponding Dao function
+ * Action to jump from SQL file to corresponding DAO function
  */
 class JumpToDaoFromSQLAction : AnAction() {
     private var currentFile: PsiFile? = null

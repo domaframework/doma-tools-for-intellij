@@ -29,7 +29,7 @@ import java.awt.event.InputEvent
 import java.awt.event.MouseEvent
 
 /**
- * Action test for jumping from Dao method to SQL file
+ * Action test for jumping from DAO method to SQL file
  */
 class DaoJumpActionTest : DomaSqlTest() {
     private val packageName = "gutteraction"

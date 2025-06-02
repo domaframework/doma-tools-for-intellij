@@ -67,7 +67,7 @@ class DocumentDaoParameterGenerator(
                     SqlElForDirective::class.java,
                 )
             if (forDirectiveExpr != null && forDirectiveExpr.getForItem() == searchElement) {
-                // For elements defined with the for directive, Dao parameters are not searched.
+                // For elements defined with the for directive, DAO parameters are not searched.
                 return
             }
             val daoMethod = findDaoMethod(originalElement.containingFile) ?: return

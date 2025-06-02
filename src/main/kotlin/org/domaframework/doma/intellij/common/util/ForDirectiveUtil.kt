@@ -178,7 +178,7 @@ class ForDirectiveUtil {
             targetForItem: PsiElement? = null,
         ): PsiParentClass? {
             // Get the type of the top for directive definition element
-            // Defined in Dao parameters or static property calls
+            // Defined in DAO parameters or static property calls
             if (forDirectiveBlocks.isEmpty()) return null
             val topDirectiveItem = forDirectiveBlocks.first().item
             val file = topDirectiveItem.containingFile ?: return null
@@ -290,7 +290,7 @@ class ForDirectiveUtil {
                             referenceClazz,
                         )
                 } else {
-                    // Defined by Dao parameter
+                    // Defined by DAO parameter
                     if (daoMethod == null) return null
 
                     val topElementText =

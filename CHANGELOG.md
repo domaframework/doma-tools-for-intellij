@@ -39,7 +39,7 @@
 
 ### Bug Fixes
 
-- Fix to not display Dao parameter information in the document for elements defined with the for directive. ([#167])
+- Fix to not display DAO parameter information in the document for elements defined with the for directive. ([#167])
 - Do not suggest element names you define in the for directive element ([#166])
 - Fix: issue where grouped conditions in block comments were recognized as bind variables ([#159])
 - Fixed check for List type test data ([#157])
@@ -178,35 +178,35 @@
 
 ## [0.3.0] - 2025-03-07
 
-### Dao Support Features
+### DAO Support Features
 
 - **Actions**
-  - **Jump to SQL:** Added an action (with a gutter icon) that jumps to the SQL file from the Dao method.
+  - **Jump to SQL:** Added an action (with a gutter icon) that jumps to the SQL file from the DAO method.
     - Shortcut key: Alt+D
   - **Generate SQL:** Added an action to generate SQL files.
     - Shortcut key: Ctrl+Alt+G
 - **Code Inspection**
-  - Displays a quick fix when the corresponding SQL template file for a Dao method requiring one is not found.
+  - Displays a quick fix when the corresponding SQL template file for a DAO method requiring one is not found.
   - Shows an error if there are parameter arguments not used as SQL bind variables.
 
 ### SQL Support Features
 
 - **Actions**
-  - **Jump to Dao:** Added an action to jump from the SQL file to the Dao method.
+  - **Jump to DAO:** Added an action to jump from the SQL file to the DAO method.
     - Shortcut key: Alt+D
-  - **Jump to Declaration:** Added an action to jump from SQL bind variables to Dao parameters or class definitions.
+  - **Jump to Declaration:** Added an action to jump from SQL bind variables to DAO parameters or class definitions.
     - Shortcut key: Alt+E
 - **Code Inspection**
-  - Displays an error when fields or methods that do not exist in the Dao parameters or class definition are used.
+  - Displays an error when fields or methods that do not exist in the DAO parameters or class definition are used.
 - **Code Completion**
-  - Provides code completion for Dao method parameters, instance fields, and methods when used as bind variables.
+  - Provides code completion for DAO method parameters, instance fields, and methods when used as bind variables.
   - Provides code completion for static fields and methods during static property calls.
   - Offers code completion for directive names.
   - Provides code completion for Doma built-in functions.
 - **Refactoring**
-  - Rename SQL file when renaming Dao method
-  - Rename SQL file directory when renaming Dao
-  - Change Dao package name or SQL file directory configuration when changing configuration
+  - Rename SQL file when renaming DAO method
+  - Rename SQL file directory when renaming DAO
+  - Change DAO package name or SQL file directory configuration when changing configuration
 
 [Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.8.0...HEAD
 [0.8.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v0.7.0...v0.8.0

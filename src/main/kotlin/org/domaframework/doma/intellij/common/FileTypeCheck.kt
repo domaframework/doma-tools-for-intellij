@@ -35,7 +35,7 @@ fun getExtension(type: String): String =
     }
 
 /**
- * Does it match the Dao file type condition?
+ * Does it match the DAO file type condition?
  */
 fun isJavaOrKotlinFileType(daoFile: PsiFile): Boolean {
     if (daoFile.virtualFile == null) return false

@@ -29,7 +29,7 @@ import java.awt.event.InputEvent
 import java.awt.event.MouseEvent
 
 /**
- * Action test to generate SQL file from Dao method
+ * Action test to generate SQL file from DAO method
  */
 class DaoGenerateSqlActionTest : DomaSqlTest() {
     private val packageName = "quickfix"

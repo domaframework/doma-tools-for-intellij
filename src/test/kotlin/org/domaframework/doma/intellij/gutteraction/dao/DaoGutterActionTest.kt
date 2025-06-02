@@ -26,7 +26,7 @@ import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.setting.SqlIcon
 
 /**
- * Dao gutter icon display, action execution test
+ * DAO gutter icon display, action execution test
  */
 class DaoGutterActionTest : DomaSqlTest() {
     private val packageName = "gutteraction"

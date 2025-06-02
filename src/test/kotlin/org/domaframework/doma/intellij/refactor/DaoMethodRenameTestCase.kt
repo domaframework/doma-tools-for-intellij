@@ -18,7 +18,7 @@ package org.domaframework.doma.intellij.refactor
 import org.domaframework.doma.intellij.DomaSqlTest
 
 /**
- * Refactoring test when changing Dao class name and method name
+ * Refactoring test when changing DAO class name and method name
  */
 class DaoMethodRenameTestCase : DomaSqlTest() {
     override fun setUp() {

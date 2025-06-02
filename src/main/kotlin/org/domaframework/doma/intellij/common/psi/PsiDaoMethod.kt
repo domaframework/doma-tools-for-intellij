@@ -47,7 +47,7 @@ import java.io.File
 import java.io.IOException
 
 /**
- * Class that handles Dao method information
+ * Class that handles DAO method information
  */
 class PsiDaoMethod(
     private val psiProject: Project,
