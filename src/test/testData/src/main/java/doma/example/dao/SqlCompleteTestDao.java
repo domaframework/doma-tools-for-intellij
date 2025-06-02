@@ -22,6 +22,9 @@ interface SqlCompleteTestDao {
   @Select
   Employee completeInstancePropertyWithMethodParameter(Employee employee, String name);
 
+  @Select
+  Employee completeTopElementBeforeAtsign(Employee employee, Integer id, List<Integer> userIds);
+
   @Insert(sqlFile = true)
   int completeJavaPackageClass(Employee employee);
 
@@ -42,6 +45,9 @@ interface SqlCompleteTestDao {
 
   @Select
   Project completePropertyAfterStaticMethodCall();
+
+  @Select
+  Employee completeStaticPropertyAfterOtherElement(Employee employee);
 
   @Select
   Project completeBuiltinFunction(ProjectDetail detail);

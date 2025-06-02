@@ -80,7 +80,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         try {
             val originalFile = parameters.originalFile
             val pos = parameters.originalPosition ?: return
-            val bindText = StringUtil.replaceBlockCommentStartEnd(cleanString(pos.text))
+            val bindText = cleanString(pos.text)
 
             val handler = DirectiveCompletion(originalFile, bindText, pos, caretNextText, result)
             val directiveSymbols = DirectiveCompletion.directiveSymbols
@@ -342,6 +342,14 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             ?: clazz.findStaticMethod(topText)?.returnType
     }
 
+    /**
+     * Retrieves the class type from the previous element class words.
+     * If the class is not found, returns null.
+     * @param project The current project.
+     * @param fqdn The fully qualified class name.
+     * @param topText The name of the static property search that is being called first.
+     * @return The class type of the static property, or null if not found.
+     */
     private fun getElementTypeByPrevSqlElClassWords(
         project: Project,
         fqdn: String,

@@ -19,7 +19,9 @@ import com.intellij.patterns.PatternCondition
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.patterns.PsiElementPattern
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.TokenType
+import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeaf
@@ -147,5 +149,22 @@ object PsiPatternUtil {
                 .replace("/*", "")
                 .substringAfter(symbol)
         return prefix
+    }
+
+    fun getBindSearchWord(
+        element: PsiElement,
+        targetType: IElementType?,
+    ): MutableList<PsiElement> {
+        var prevElement = PsiTreeUtil.prevLeaf(element, true)
+        var prevElements = mutableListOf<PsiElement>()
+        while (prevElement != null &&
+            prevElement !is PsiWhiteSpace &&
+            prevElement.elementType != targetType &&
+            prevElement.elementType != SqlTypes.BLOCK_COMMENT_START
+        ) {
+            prevElements.add(prevElement)
+            prevElement = PsiTreeUtil.prevLeaf(prevElement, true)
+        }
+        return prevElements
     }
 }

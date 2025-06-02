@@ -32,6 +32,7 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDaoName/completeDaoArgument.sql",
             "$testDaoName/completeInstancePropertyFromDaoArgumentClass.sql",
             "$testDaoName/completeInstancePropertyWithMethodParameter.sql",
+            "$testDaoName/completeTopElementBeforeAtsign.sql",
             "$testDaoName/completeJavaPackageClass.sql",
             "$testDaoName/completeDirective.sql",
             "$testDaoName/completeBatchInsert.sql",
@@ -39,6 +40,7 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDaoName/completePropertyAfterStaticPropertyCall.sql",
             "$testDaoName/completePropertyAfterStaticPropertyCallWithMethodParameter.sql",
             "$testDaoName/completePropertyAfterStaticMethodCall.sql",
+            "$testDaoName/completeStaticPropertyAfterOtherElement.sql",
             "$testDaoName/completeBuiltinFunction.sql",
             "$testDaoName/completeDirectiveInsideIf.sql",
             "$testDaoName/completeDirectiveFieldInsideIfWithMethodParameter.sql",
@@ -129,6 +131,24 @@ class SqlCompleteTest : DomaSqlTest() {
                 "charAt()",
                 "contains()",
                 "isBlank()",
+            ),
+        )
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeTopElementBeforeAtsign.sql",
+            listOf(
+                "employee",
+                "id",
+                "userIds",
+                "userId",
+                "userId_has_next",
+                "userId_index",
+            ),
+            listOf(
+                "doma",
+                "example",
+                "projectNumber",
+                "subProjects",
+                "valueOf()",
             ),
         )
     }
@@ -245,18 +265,34 @@ class SqlCompleteTest : DomaSqlTest() {
                 "projectNumber",
                 "projectName",
                 "projectCategory",
+                "status",
+                "manager",
+                "getFirstEmployee()",
+                "getTermNumber()",
             ),
             listOf(
                 "projectDetailId",
                 "members",
-                "manager",
-                "getFirstEmployee()",
-                "getTermNumber()",
                 "employeeId",
                 "projects",
-                "rank",
                 "contains()",
                 "isBlank()",
+            ),
+        )
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeStaticPropertyAfterOtherElement.sql",
+            listOf(
+                "projectNumber",
+                "projectName",
+                "projectCategory",
+                "manager",
+                "subProjects",
+                "getTermNumber()",
+                "getCustomNumber()",
+            ),
+            listOf(
+                "doma",
+                "employee",
             ),
         )
     }

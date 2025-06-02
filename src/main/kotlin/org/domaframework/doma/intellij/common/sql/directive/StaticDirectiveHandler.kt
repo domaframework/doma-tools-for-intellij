@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.common.sql.directive
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.openapi.module.Module
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
@@ -65,17 +66,48 @@ class StaticDirectiveHandler(
      * Determines whether code completion is needed for [SqlElClass] elements.
      */
     private fun isSqlElClassCompletion(): Boolean {
-        val elClassPattern = "^([a-zA-Z]*(\\.)+)*"
+        if (element.elementType == SqlTypes.AT_SIGN &&
+            PsiTreeUtil.prevLeaf(element)?.elementType == SqlTypes.AT_SIGN
+        ) {
+            return true
+        }
+
+        val elClassPattern = "^([a-zA-Z]*(\\.)+)*$"
         val regex = Regex(elClassPattern)
-        val prevWords = PsiPatternUtil.getBindSearchWord(element.containingFile, element, "@")
+        val prevElements = PsiPatternUtil.getBindSearchWord(element, SqlTypes.AT_SIGN)
+        val topAtSign = PsiTreeUtil.prevLeaf(prevElements.lastOrNull() ?: element, true)
+        val prevWords = prevElements.reversed().joinToString("") { it.text }
+
+        // If the cursor is in the middle of [SqlElClass],
+        // search for the following @ and ensure that code completion is within [SqlElClass].
+        if (element.elementType != SqlTypes.AT_SIGN) {
+            var nextElement = PsiTreeUtil.nextLeaf(element, true)
+            while (nextElement != null &&
+                nextElement !is PsiWhiteSpace &&
+                nextElement.elementType != SqlTypes.BLOCK_COMMENT_END &&
+                nextElement.elementType != SqlTypes.AT_SIGN
+            ) {
+                nextElement = PsiTreeUtil.nextLeaf(nextElement, true)
+            }
+            val lastAtSign = PsiTreeUtil.nextLeaf(nextElement ?: element, true)
+            if (regex.matches(prevWords) &&
+                (
+                    lastAtSign == null ||
+                        nextElement.elementType != SqlTypes.AT_SIGN ||
+                        lastAtSign.elementType == SqlTypes.BLOCK_COMMENT_END
+                )
+            ) {
+                return false
+            }
+        }
+
+        // Check if there is a partially entered class package name ahead and ensure that input is in [SqlElClass].
+        if (prevElements.isEmpty()) return false
         return (
-            (PsiTreeUtil.nextLeaf(element)?.elementType == SqlTypes.AT_SIGN || element.elementType == SqlTypes.AT_SIGN) &&
+            topAtSign?.elementType == SqlTypes.AT_SIGN &&
+                PsiTreeUtil.prevLeaf(topAtSign, true)?.elementType != SqlTypes.EL_IDENTIFIER &&
                 regex.matches(prevWords)
-        ) ||
-            (
-                element.elementType == SqlTypes.AT_SIGN &&
-                    PsiTreeUtil.prevLeaf(element)?.elementType == SqlTypes.AT_SIGN
-            )
+        )
     }
 
     /**
