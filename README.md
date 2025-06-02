@@ -74,7 +74,7 @@ To enable auto-indentation, toggle the corresponding flag in the settings screen
 
 ![Format.gif](images/gif/Format.gif)
 
-## Reference resolution
+## Reference Contributor
 Ctrl+Click on a bind variable in an SQL file to jump to its source symbol.
 
 This feature works in source JARs as well, but in binary JARs, if the DAO method’s argument parameter names have been changed, the references cannot be resolved and the feature will not function.
