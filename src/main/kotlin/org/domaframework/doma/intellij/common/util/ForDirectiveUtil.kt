@@ -67,6 +67,9 @@ class ForDirectiveUtil {
         private val cachedForDirectiveBlocks: MutableMap<PsiElement, CachedValue<List<BlockToken>>> =
             mutableMapOf()
 
+        const val HAS_NEXT_PREFIX = "_has_next"
+        const val INDEX_PREFIX = "_index"
+
         /**
          *  Get the parent for directive list to which this directive belongs
          * @param targetElement Element to search for definer
@@ -162,7 +165,7 @@ class ForDirectiveUtil {
             skipSelf: Boolean = true,
             forDirectives: List<BlockToken> = getForDirectiveBlocks(targetElement, skipSelf),
         ): PsiElement? {
-            val searchText = targetElement.text.replace("_has_next", "").replace("_index", "")
+            val searchText = targetElement.text.replace(HAS_NEXT_PREFIX, "").replace(INDEX_PREFIX, "")
             return forDirectives.firstOrNull { it.item.text == searchText }?.item
         }
 
@@ -507,9 +510,9 @@ class ForDirectiveUtil {
             }
 
         fun resolveForDirectiveItemClassTypeBySuffixElement(searchName: String): PsiType? =
-            if (searchName.endsWith("_has_next")) {
+            if (searchName.endsWith(HAS_NEXT_PREFIX)) {
                 PsiTypes.booleanType()
-            } else if (searchName.endsWith("_index")) {
+            } else if (searchName.endsWith(INDEX_PREFIX)) {
                 PsiTypes.intType()
             } else {
                 null

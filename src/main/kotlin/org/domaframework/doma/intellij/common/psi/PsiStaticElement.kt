@@ -19,6 +19,7 @@ import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
+import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.psi.SqlElExpr
 
@@ -32,10 +33,7 @@ class PsiStaticElement(
     private var fqdn = elExprList?.joinToString(".") { e -> e.text } ?: ""
 
     constructor(elExprNames: String, file: PsiFile) : this(null, file) {
-        fqdn =
-            elExprNames
-                .substringAfter("@")
-                .substringBefore("@")
+        fqdn = StringUtil.getSqlElClassText(elExprNames)
     }
 
     fun getRefClazz(): PsiClass? {

@@ -26,6 +26,16 @@ class DirectiveCompletion(
     private val caretNextText: String,
     private val result: CompletionResultSet,
 ) {
+    companion object {
+        val directiveSymbols =
+            listOf(
+                "%",
+                "#",
+                "^",
+                "@",
+            )
+    }
+
     fun directiveHandle(symbol: String): Boolean {
         return when (symbol) {
             "%" ->
