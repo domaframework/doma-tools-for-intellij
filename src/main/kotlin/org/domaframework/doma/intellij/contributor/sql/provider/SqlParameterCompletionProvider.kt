@@ -156,7 +156,6 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         } else {
             // Completion for subsequent arguments in SqlElParameters.
             val secondParameterParent = processor.getSecondArgsParent()
-            val nextElementType = PsiTreeUtil.nextLeaf(targetElement, true)?.elementType
             if (secondParameterParent != null) {
                 val parameterArg =
                     targetElement.prevLeafs.firstOrNull { it is PsiErrorElement } ?: targetElement
