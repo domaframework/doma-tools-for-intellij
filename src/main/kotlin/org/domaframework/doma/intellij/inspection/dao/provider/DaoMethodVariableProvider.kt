@@ -17,11 +17,11 @@ package org.domaframework.doma.intellij.inspection.dao.provider
 
 import com.intellij.codeInspection.InspectionToolProvider
 import com.intellij.codeInspection.LocalInspectionTool
-import org.domaframework.doma.intellij.inspection.dao.inspector.DaoMethodVariableInspector
+import org.domaframework.doma.intellij.inspection.dao.inspector.DaoMethodVariableInspection
 
 class DaoMethodVariableProvider : InspectionToolProvider {
     override fun getInspectionClasses(): Array<Class<out LocalInspectionTool>> =
         arrayOf(
-            DaoMethodVariableInspector::class.java,
+            DaoMethodVariableInspection::class.java,
         )
 }

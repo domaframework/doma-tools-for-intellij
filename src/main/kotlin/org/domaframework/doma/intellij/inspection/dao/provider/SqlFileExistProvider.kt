@@ -17,11 +17,11 @@ package org.domaframework.doma.intellij.inspection.dao.provider
 
 import com.intellij.codeInspection.InspectionToolProvider
 import com.intellij.codeInspection.LocalInspectionTool
-import org.domaframework.doma.intellij.inspection.dao.inspector.SqlFileExistInspector
+import org.domaframework.doma.intellij.inspection.dao.inspector.SqlFileExistInspection
 
 class SqlFileExistProvider : InspectionToolProvider {
     override fun getInspectionClasses(): Array<Class<out LocalInspectionTool>> =
         arrayOf(
-            SqlFileExistInspector::class.java,
+            SqlFileExistInspection::class.java,
         )
 }

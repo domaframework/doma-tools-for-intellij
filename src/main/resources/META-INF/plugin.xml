@@ -50,10 +50,10 @@
     <!-- Inspection -->
     <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.dao.provider.SqlFileExistProvider" />
     <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.dao.provider.DaoMethodVariableProvider" />
-    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.sql.provider.SqlBindVariableValidProvider" />
+    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.sql.provider.SqlBindVariableProvider" />
     <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.sql.provider.SqlLoopDirectiveTypeProvider" />
     <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.sql.provider.SqlFunctionCallProvider" />
-    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.sql.provider.SqlTestDataAfterBlockCommentValidProvider" />
+    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.sql.provider.SqlTestDataProvider" />
 
     <!-- Completion -->
     <completion.contributor language="DomaSql"

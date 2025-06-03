@@ -17,7 +17,7 @@ package org.domaframework.doma.intellij.inspection.dao
 
 import org.domaframework.doma.intellij.DomaSqlTest
 import org.domaframework.doma.intellij.bundle.MessageBundle
-import org.domaframework.doma.intellij.inspection.dao.inspector.SqlFileExistInspector
+import org.domaframework.doma.intellij.inspection.dao.inspector.SqlFileExistInspection
 
 /**
  * Quick fix execution test
@@ -48,7 +48,7 @@ class DomaSqlQuickFixTest : DomaSqlTest() {
             "quickfix/ScriptQuickFixTestDao/existsSQLFile.script",
             "quickfix/SqlProcessorQuickFixTestDao/existsSQLFile.sql",
         )
-        myFixture.enableInspections(SqlFileExistInspector())
+        myFixture.enableInspections(SqlFileExistInspection())
     }
 
     fun testSelectGenerateSQLFileQuickFix() {

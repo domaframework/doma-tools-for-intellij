@@ -23,7 +23,7 @@ import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.inspection.sql.processor.InspectionForDirectiveVisitorProcessor
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 
-class SqlLoopDirectiveVisitor(
+class SqlLoopDirectiveTypeInspectionVisitor(
     private val holder: ProblemsHolder,
     private val shortName: String,
 ) : SqlVisitorBase() {

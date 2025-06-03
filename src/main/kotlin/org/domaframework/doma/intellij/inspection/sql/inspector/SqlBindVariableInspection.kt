@@ -18,14 +18,16 @@ package org.domaframework.doma.intellij.inspection.sql.inspector
 import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
-import org.domaframework.doma.intellij.inspection.sql.visitor.SqlLoopDirectiveVisitor
+import org.domaframework.doma.intellij.inspection.sql.visitor.SqlBindVariableInspectionVisitor
 import org.domaframework.doma.intellij.psi.SqlVisitor
 
-class SqlLoopDirectiveTypeInspector : LocalInspectionTool() {
-    override fun getDisplayName(): String =
-        "This inspection checks whether the base type of the element defined in a loop directive is of an Iterable type."
+/**
+ * Code inspection for SQL bind variables
+ */
+class SqlBindVariableInspection : LocalInspectionTool() {
+    override fun getDisplayName(): String = "Check where SQL bind variables are defined."
 
-    override fun getShortName(): String = "org.domaframework.doma.intellij.loopDirectiveType"
+    override fun getShortName(): String = "org.domaframework.doma.intellij.validBindVariable"
 
     override fun getGroupDisplayName(): String = "DomaTools"
 
@@ -38,5 +40,5 @@ class SqlLoopDirectiveTypeInspector : LocalInspectionTool() {
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
-    ): SqlVisitor = SqlLoopDirectiveVisitor(holder, this.shortName)
+    ): SqlVisitor = SqlBindVariableInspectionVisitor(holder, this.shortName)
 }

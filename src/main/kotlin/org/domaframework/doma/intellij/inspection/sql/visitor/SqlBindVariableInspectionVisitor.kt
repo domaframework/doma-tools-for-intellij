@@ -30,7 +30,7 @@ import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-class SqlInspectionVisitor(
+class SqlBindVariableInspectionVisitor(
     private val holder: ProblemsHolder,
     private val shortName: String,
 ) : SqlVisitorBase() {

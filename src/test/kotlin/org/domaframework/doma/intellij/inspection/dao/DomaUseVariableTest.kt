@@ -16,7 +16,7 @@
 package org.domaframework.doma.intellij.inspection.dao
 
 import org.domaframework.doma.intellij.DomaSqlTest
-import org.domaframework.doma.intellij.inspection.dao.inspector.DaoMethodVariableInspector
+import org.domaframework.doma.intellij.inspection.dao.inspector.DaoMethodVariableInspection
 
 /**
  * Test class to verify whether DAO method arguments are used
@@ -37,7 +37,7 @@ class DomaUseVariableTest : DomaSqlTest() {
             "$testDaoName/noErrorWhenUsedInFunctionParameters.sql",
             "$testDaoName/duplicateForDirectiveDefinitionNames.sql",
         )
-        myFixture.enableInspections(DaoMethodVariableInspector())
+        myFixture.enableInspections(DaoMethodVariableInspection())
     }
 
     /**

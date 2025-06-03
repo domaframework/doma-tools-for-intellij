@@ -18,10 +18,10 @@ package org.domaframework.doma.intellij.inspection.sql.inspector
 import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
-import org.domaframework.doma.intellij.inspection.sql.visitor.SqlFunctionCallVisitor
+import org.domaframework.doma.intellij.inspection.sql.visitor.SqlFunctionCallInspectionVisitor
 import org.domaframework.doma.intellij.psi.SqlVisitor
 
-class SqlFunctionCallInspector : LocalInspectionTool() {
+class SqlFunctionCallInspection : LocalInspectionTool() {
     override fun getDisplayName(): String =
         "This inspection checks whether the function name called " +
             "in a function call is defined in the implementation class specified " +
@@ -41,5 +41,5 @@ class SqlFunctionCallInspector : LocalInspectionTool() {
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
-    ): SqlVisitor = SqlFunctionCallVisitor(holder, this.shortName)
+    ): SqlVisitor = SqlFunctionCallInspectionVisitor(holder, this.shortName)
 }

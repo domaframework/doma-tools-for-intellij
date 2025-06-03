@@ -17,11 +17,11 @@ package org.domaframework.doma.intellij.inspection.sql.provider
 
 import com.intellij.codeInspection.InspectionToolProvider
 import com.intellij.codeInspection.LocalInspectionTool
-import org.domaframework.doma.intellij.inspection.sql.inspector.SqlLoopDirectiveTypeInspector
+import org.domaframework.doma.intellij.inspection.sql.inspector.SqlLoopDirectiveTypeInspection
 
 class SqlLoopDirectiveTypeProvider : InspectionToolProvider {
     override fun getInspectionClasses(): Array<Class<out LocalInspectionTool>> =
         arrayOf(
-            SqlLoopDirectiveTypeInspector::class.java,
+            SqlLoopDirectiveTypeInspection::class.java,
         )
 }

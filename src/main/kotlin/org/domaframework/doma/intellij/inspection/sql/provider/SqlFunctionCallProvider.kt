@@ -17,11 +17,11 @@ package org.domaframework.doma.intellij.inspection.sql.provider
 
 import com.intellij.codeInspection.InspectionToolProvider
 import com.intellij.codeInspection.LocalInspectionTool
-import org.domaframework.doma.intellij.inspection.sql.inspector.SqlFunctionCallInspector
+import org.domaframework.doma.intellij.inspection.sql.inspector.SqlFunctionCallInspection
 
 class SqlFunctionCallProvider : InspectionToolProvider {
     override fun getInspectionClasses(): Array<Class<out LocalInspectionTool>> =
         arrayOf(
-            SqlFunctionCallInspector::class.java,
+            SqlFunctionCallInspection::class.java,
         )
 }

@@ -23,7 +23,7 @@ import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.inspection.sql.processor.InspectionFunctionCallVisitorProcessor
 import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
 
-class SqlFunctionCallVisitor(
+class SqlFunctionCallInspectionVisitor(
     private val holder: ProblemsHolder,
     private val shortName: String,
 ) : SqlVisitorBase() {

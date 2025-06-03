@@ -31,7 +31,7 @@ import org.domaframework.doma.intellij.psi.SqlElIfDirective
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.toml.lang.psi.ext.elementType
 
-class SqlTestDataAfterBlockCommentVisitor(
+class SqlTestDataInspectionVisitor(
     private val holder: ProblemsHolder,
     private val shortName: String,
 ) : SqlVisitorBase() {
