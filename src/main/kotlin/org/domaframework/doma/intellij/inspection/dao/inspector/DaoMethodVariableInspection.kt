@@ -38,5 +38,5 @@ class DaoMethodVariableInspection : AbstractBaseJavaLocalInspectionTool() {
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
-    ): PsiElementVisitor = DaoMethodVariableInspectionVisitor(holder)
+    ): PsiElementVisitor = DaoMethodVariableInspectionVisitor(holder, this.shortName)
 }

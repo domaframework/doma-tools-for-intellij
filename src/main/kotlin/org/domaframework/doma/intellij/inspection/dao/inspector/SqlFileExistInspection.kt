@@ -38,5 +38,5 @@ class SqlFileExistInspection : AbstractBaseJavaLocalInspectionTool() {
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
-    ): PsiElementVisitor = SqlFileExistInspectionVisitor(holder)
+    ): PsiElementVisitor = SqlFileExistInspectionVisitor(holder, this.shortName)
 }

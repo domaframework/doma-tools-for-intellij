@@ -15,18 +15,17 @@
  */
 package org.domaframework.doma.intellij.inspection.dao.visitor
 
-import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.JavaElementVisitor
 import com.intellij.psi.PsiMethod
-import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
-import org.domaframework.doma.intellij.inspection.dao.quickfix.GenerateSQLFileQuickFixFactory
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationSqlFileExistResult
 
 class SqlFileExistInspectionVisitor(
     private val holder: ProblemsHolder,
+    private val shortName: String,
 ) : JavaElementVisitor() {
     // TODO Support Kotlin Project
     override fun visitMethod(method: PsiMethod) {
@@ -46,11 +45,15 @@ class SqlFileExistInspectionVisitor(
     ) {
         val identifier = psiDaoMethod.psiMethod.nameIdentifier ?: return
         if (psiDaoMethod.sqlFile == null) {
-            problemHolder.registerProblem(
+            ValidationSqlFileExistResult(
+                psiDaoMethod,
                 identifier,
-                MessageBundle.message("inspection.invalid.dao.notExistSql"),
-                ProblemHighlightType.ERROR,
-                GenerateSQLFileQuickFixFactory.createSql(psiDaoMethod),
+                shortName,
+            ).setHighlight(
+                identifier.textRange,
+                identifier,
+                problemHolder,
+                null,
             )
         }
     }
