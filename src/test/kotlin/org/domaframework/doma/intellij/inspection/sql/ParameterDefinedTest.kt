@@ -16,7 +16,9 @@
 package org.domaframework.doma.intellij.inspection.sql
 
 import org.domaframework.doma.intellij.DomaSqlTest
-import org.domaframework.doma.intellij.inspection.sql.inspector.SqlBindVariableValidInspector
+import org.domaframework.doma.intellij.inspection.sql.inspector.SqlBindVariableInspection
+import org.domaframework.doma.intellij.inspection.sql.inspector.SqlFunctionCallInspection
+import org.domaframework.doma.intellij.inspection.sql.inspector.SqlLoopDirectiveTypeInspection
 
 /**
  * A test that inspects whether a bind variable's parameters are defined.
@@ -43,7 +45,11 @@ class ParameterDefinedTest : DomaSqlTest() {
             "$testDaoName/invalidImplementCustomFunctions.sql",
             "$testDaoName/emptyImplementCustomFunctions.sql",
         )
-        myFixture.enableInspections(SqlBindVariableValidInspector())
+        myFixture.enableInspections(
+            SqlBindVariableInspection(),
+            SqlLoopDirectiveTypeInspection(),
+            SqlFunctionCallInspection(),
+        )
     }
 
     /**

@@ -17,11 +17,11 @@ package org.domaframework.doma.intellij.inspection.sql.provider
 
 import com.intellij.codeInspection.InspectionToolProvider
 import com.intellij.codeInspection.LocalInspectionTool
-import org.domaframework.doma.intellij.inspection.sql.inspector.SqlBindVariableValidInspector
+import org.domaframework.doma.intellij.inspection.sql.inspector.SqlTestDataInspection
 
-class SqlBindVariableValidProvider : InspectionToolProvider {
+class SqlTestDataProvider : InspectionToolProvider {
     override fun getInspectionClasses(): Array<Class<out LocalInspectionTool>> =
         arrayOf(
-            SqlBindVariableValidInspector::class.java,
+            SqlTestDataInspection::class.java,
         )
 }

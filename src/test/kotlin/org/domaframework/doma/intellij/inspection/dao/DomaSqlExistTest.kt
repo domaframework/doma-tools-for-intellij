@@ -16,7 +16,7 @@
 package org.domaframework.doma.intellij.inspection.dao
 
 import org.domaframework.doma.intellij.DomaSqlTest
-import org.domaframework.doma.intellij.inspection.dao.inspector.SqlFileExistInspector
+import org.domaframework.doma.intellij.inspection.dao.inspector.SqlFileExistInspection
 
 class DomaSqlExistTest : DomaSqlTest() {
     override fun setUp() {
@@ -43,7 +43,7 @@ class DomaSqlExistTest : DomaSqlTest() {
             "ScriptTestDao/existsSQLFile.script",
             "SqlProcessorTestDao/existsSQLFile.sql",
         )
-        myFixture.enableInspections(SqlFileExistInspector())
+        myFixture.enableInspections(SqlFileExistInspection())
     }
 
     fun testSelectExistsSQLFile() {

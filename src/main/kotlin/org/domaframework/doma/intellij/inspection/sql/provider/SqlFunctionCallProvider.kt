@@ -17,11 +17,11 @@ package org.domaframework.doma.intellij.inspection.sql.provider
 
 import com.intellij.codeInspection.InspectionToolProvider
 import com.intellij.codeInspection.LocalInspectionTool
-import org.domaframework.doma.intellij.inspection.sql.inspector.SqlTestDataAfterBlockCommentValidValidInspector
+import org.domaframework.doma.intellij.inspection.sql.inspector.SqlFunctionCallInspection
 
-class SqlTestDataAfterBlockCommentValidProvider : InspectionToolProvider {
+class SqlFunctionCallProvider : InspectionToolProvider {
     override fun getInspectionClasses(): Array<Class<out LocalInspectionTool>> =
         arrayOf(
-            SqlTestDataAfterBlockCommentValidValidInspector::class.java,
+            SqlFunctionCallInspection::class.java,
         )
 }

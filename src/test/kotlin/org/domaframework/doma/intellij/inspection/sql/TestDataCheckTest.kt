@@ -16,7 +16,7 @@
 package org.domaframework.doma.intellij.inspection.sql
 
 import org.domaframework.doma.intellij.DomaSqlTest
-import org.domaframework.doma.intellij.inspection.sql.inspector.SqlTestDataAfterBlockCommentValidValidInspector
+import org.domaframework.doma.intellij.inspection.sql.inspector.SqlTestDataInspection
 
 class TestDataCheckTest : DomaSqlTest() {
     private val testDaoName = "TestDataCheckDao"
@@ -35,7 +35,7 @@ class TestDataCheckTest : DomaSqlTest() {
             "$packageName/$testDaoName/populateDirective.sql",
             "$packageName/$testDaoName/invalidTestData.sql",
         )
-        myFixture.enableInspections(SqlTestDataAfterBlockCommentValidValidInspector())
+        myFixture.enableInspections(SqlTestDataInspection())
     }
 
     fun testLiteralDirective() {

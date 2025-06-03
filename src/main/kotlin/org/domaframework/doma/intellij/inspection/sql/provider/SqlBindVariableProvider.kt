@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.dao.provider
+package org.domaframework.doma.intellij.inspection.sql.provider
 
 import com.intellij.codeInspection.InspectionToolProvider
 import com.intellij.codeInspection.LocalInspectionTool
-import org.domaframework.doma.intellij.inspection.dao.inspector.SqlFileExistInspection
+import org.domaframework.doma.intellij.inspection.sql.inspector.SqlBindVariableInspection
 
-class SqlFileExistProvider : InspectionToolProvider {
+class SqlBindVariableProvider : InspectionToolProvider {
     override fun getInspectionClasses(): Array<Class<out LocalInspectionTool>> =
         arrayOf(
-            SqlFileExistInspection::class.java,
+            SqlBindVariableInspection::class.java,
         )
 }
