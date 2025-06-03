@@ -32,7 +32,9 @@ class SqlCompleteTest : DomaSqlTest() {
             "$testDaoName/completeDaoArgument.sql",
             "$testDaoName/completeInstancePropertyFromDaoArgumentClass.sql",
             "$testDaoName/completeInstancePropertyWithMethodParameter.sql",
-            "$testDaoName/completeTopElementBeforeAtsign.sql",
+            "$testDaoName/completeFieldAccessBeforeOtherElement.sql",
+            "$testDaoName/completeFieldAccessAfterOtherElement.sql",
+            "$testDaoName/completeTopElementBeforeAtSign.sql",
             "$testDaoName/completeJavaPackageClass.sql",
             "$testDaoName/completeDirective.sql",
             "$testDaoName/completeBatchInsert.sql",
@@ -134,7 +136,7 @@ class SqlCompleteTest : DomaSqlTest() {
             ),
         )
         innerDirectiveCompleteTest(
-            "$testDaoName/completeTopElementBeforeAtsign.sql",
+            "$testDaoName/completeTopElementBeforeAtSign.sql",
             listOf(
                 "employee",
                 "id",
@@ -149,6 +151,41 @@ class SqlCompleteTest : DomaSqlTest() {
                 "projectNumber",
                 "subProjects",
                 "valueOf()",
+            ),
+        )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeFieldAccessBeforeOtherElement.sql",
+            listOf(
+                "employeeId",
+                "employeeName",
+                "department",
+                "rank",
+                "projects",
+                "getFirstProject()",
+            ),
+            listOf("projectNumber", "projectDetailId", "members", "getEmployeeRank()"),
+        )
+
+        innerDirectiveCompleteTest(
+            "$testDaoName/completeFieldAccessAfterOtherElement.sql",
+            listOf(
+                "projectId",
+                "projectName",
+                "projectNumber",
+                "projectCategory",
+            ),
+            listOf(
+                "status",
+                "rank",
+                "getFirstEmployee()",
+                "getTermNumber()",
+                "employeeId",
+                "employeeName",
+                "department",
+                "rank",
+                "projects",
+                "getFirstProject()",
             ),
         )
     }
@@ -394,7 +431,7 @@ class SqlCompleteTest : DomaSqlTest() {
 
         innerDirectiveCompleteTest(
             "$testDaoName/completeDirectiveFieldInsideIfWithMethodParameter.sql",
-            listOf("projectNumber", "projectCategory", "getFirstEmployee()", "getTermNumber()"),
+            listOf("projectId", "projectNumber", "projectCategory", "projectName"),
             listOf("project", "employee"),
         )
 
@@ -485,8 +522,12 @@ class SqlCompleteTest : DomaSqlTest() {
 
         innerDirectiveCompleteTest(
             "$testDaoName/completeParameterSecondProperty.sql",
-            listOf("managerId"),
-            listOf("employee", "department", "rank"),
+            listOf("employeeId", "employeeName", "department", "rank", "managerId"),
+            listOf(
+                "employee",
+                "compareTo()",
+                "doubleValue()",
+            ),
         )
     }
 
