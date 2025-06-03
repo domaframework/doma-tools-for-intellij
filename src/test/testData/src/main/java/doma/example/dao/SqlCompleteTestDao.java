@@ -23,7 +23,13 @@ interface SqlCompleteTestDao {
   Employee completeInstancePropertyWithMethodParameter(Employee employee, String name);
 
   @Select
-  Employee completeTopElementBeforeAtsign(Employee employee, Integer id, List<Integer> userIds);
+  Employee completeTopElementBeforeAtSign(Employee employee, Integer id, List<Integer> userIds);
+
+  @Select
+  Employee completeFieldAccessBeforeOtherElement(Employee employee, ProjectDetail detail, List<Integer> userIds);
+
+  @Select
+  Employee completeFieldAccessAfterOtherElement(Employee employee, ProjectDetail detail, List<Integer> userIds);
 
   @Insert(sqlFile = true)
   int completeJavaPackageClass(Employee employee);

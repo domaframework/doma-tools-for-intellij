@@ -8,7 +8,7 @@ from project p
   on p.project_id = pd.project_id
  where
   /*%for userId : userIds */
-   pd.manager_id = /* id <caret> @doma.example.entity.ProjectDetail@manager */'TODO'
+   pd.manager_id = /* id.SIZE <caret> @doma.example.entity.ProjectDetail@manager */'TODO'
    /*%if userId_has_next */
     /*# "OR" */
    /*%end */
