@@ -22,7 +22,16 @@ import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlCompletionOtherBlockProcessor : SqlCompletionBlockProcessor() {
+    /**
+     * Generate a list of related elements for suggesting regular DAO argument parameters
+     * and instance properties of field access elements.
+     *
+     * @param targetElement Element at the caret position.
+     * @return List of preceding elements related to the caret position.
+     */
     override fun generateBlock(targetElement: PsiElement): List<PsiElement> {
+        // When entering a new bind variable, an empty list is returned and element names defined as DAO argument parameters
+        // or in loop directives are suggested.
         if (targetElement is PsiWhiteSpace &&
             targetElement.text.length > 1 &&
             PsiTreeUtil.prevLeaf(targetElement, true)?.elementType != SqlTypes.DOT
@@ -30,6 +39,7 @@ class SqlCompletionOtherBlockProcessor : SqlCompletionBlockProcessor() {
             return emptyList()
         }
 
+        // For SqlElFieldAccessExpr,this is the list from the top element to the element at the caret position.
         val prevElms = findSelfBlocks(targetElement)
         if (prevElms.isNotEmpty()) {
             return filterBlocks(prevElms)
