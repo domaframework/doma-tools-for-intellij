@@ -22,7 +22,6 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.lookup.VariableLookupItem
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiField
@@ -45,23 +44,21 @@ import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.util.SqlCompletionUtil.createMethodLookupElement
 import org.domaframework.doma.intellij.common.util.StringUtil
+import org.domaframework.doma.intellij.contributor.sql.processor.SqlCompletionDirectiveBlockProcessor
+import org.domaframework.doma.intellij.contributor.sql.processor.SqlCompletionOtherBlockProcessor
+import org.domaframework.doma.intellij.contributor.sql.processor.SqlCompletionParameterArgsBlockProcessor
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.findNodeParent
 import org.domaframework.doma.intellij.extension.psi.findStaticField
 import org.domaframework.doma.intellij.extension.psi.findStaticMethod
-import org.domaframework.doma.intellij.extension.psi.isNotWhiteSpace
 import org.domaframework.doma.intellij.extension.psi.searchParameter
-import org.domaframework.doma.intellij.extension.psi.searchStaticField
-import org.domaframework.doma.intellij.extension.psi.searchStaticMethod
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
-import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElIfDirective
 import org.domaframework.doma.intellij.psi.SqlElParameters
 import org.domaframework.doma.intellij.psi.SqlTypes
-import kotlin.collections.emptyList
 
 class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>() {
     override fun addCompletions(
@@ -144,96 +141,37 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             parent is SqlElIfDirective ||
             parent is SqlElElseifDirective
         ) {
-            val prevElms = findSelfBlocks(targetElement)
-            if (prevElms.isNotEmpty()) {
-                return prevElms
-            }
+            val processor = SqlCompletionDirectiveBlockProcessor()
+            val blockElements = processor.generateBlock(targetElement)
+            if (blockElements != null) return blockElements
         }
 
         // If the parent has field access, get its child element
-        if (parent is SqlElFieldAccessExpr) {
-            blocks =
-                PsiTreeUtil
-                    .getChildrenOfTypeAsList(parent, SqlElIdExpr::class.java)
-                    .filter { it.parent !is SqlElClass }
-                    .toList()
-            if (blocks.isEmpty()) {
-                val parent =
-                    PsiTreeUtil.findFirstParent(parent) {
-                        it !is PsiDirectory &&
-                            it !is PsiFile &&
-                            it is SqlElFieldAccessExpr
-                    }
-
-                blocks =
-                    PsiTreeUtil
-                        .getChildrenOfTypeAsList(parent, SqlElIdExpr::class.java)
-                        .filter {
-                            targetElement.startOffsetInParent >= it.startOffsetInParent
-                        }.toList()
-            }
+        // Completion for the first argument in SqlElParameters.
+        var parameterParent: PsiElement? =
+            PsiTreeUtil.getParentOfType(targetElement, SqlElParameters::class.java)
+        val processor = SqlCompletionParameterArgsBlockProcessor(targetElement)
+        if (parameterParent != null && parameterParent.children.size <= 1) {
+            return processor.generateFirstArgsBlock(parameterParent)
         } else {
-            // Completion for the first argument
-            var parameterParent: PsiElement? =
-                PsiTreeUtil.getParentOfType(targetElement, SqlElParameters::class.java)
-            if (parameterParent != null) {
-                val children = mutableListOf<PsiElement>()
-                parameterParent.children.forEach { child ->
-                    if (child is SqlElFieldAccessExpr) {
-                        children.addAll(child.children)
-                    } else {
-                        children.add(child)
-                    }
-                }
-                return children
-            } else {
-                // Completion for subsequent arguments
-                parameterParent =
-                    targetElement.prevLeafs
-                        .takeWhile {
-                            it.isNotWhiteSpace() &&
-                                it.elementType != SqlTypes.LEFT_PAREN
-                        }.firstOrNull {
-                            PsiTreeUtil.getParentOfType(
-                                it,
-                                SqlElParameters::class.java,
-                            ) != null
-                        }
-                if (parameterParent != null) {
-                    val validateResult = targetElement.prevLeafs.firstOrNull { it is PsiErrorElement }
-                    if (validateResult != null) {
-                        parameterParent = (validateResult.parent as? SqlElParameters)
-                        val children = mutableListOf<PsiElement>()
-                        parameterParent
-                            ?.children
-                            ?.reversed()
-                            ?.takeWhile {
-                                it.nextSibling?.elementType != SqlTypes.COMMA
-                            }?.forEach { child ->
-                                if (child is SqlElFieldAccessExpr) {
-                                    children.addAll(child.children)
-                                } else {
-                                    children.add(child)
-                                }
-                            }
-                        blocks = children.reversed().takeWhile { it.nextSibling?.elementType != SqlTypes.COMMA }
-                    }
-                }
+            // Completion for subsequent arguments in SqlElParameters.
+            val secondParameterParent = processor.getSecondArgsParent()
+            val nextElementType = PsiTreeUtil.nextLeaf(targetElement, true)?.elementType
+            if (secondParameterParent != null) {
+                val parameterArg =
+                    targetElement.prevLeafs.firstOrNull { it is PsiErrorElement } ?: targetElement
+                blocks =
+                    processor.generateSecondArgsBlock(parameterArg)
             }
         }
 
         // If the element has no parent-child relationship,
         // create a list that also adds itself at the end.
         if (blocks.isEmpty()) {
-            val prevElms = findSelfBlocks(targetElement)
-            if (prevElms.isNotEmpty()) {
-                blocks = prevElms
-            }
+            val processor = SqlCompletionOtherBlockProcessor()
+            blocks = processor.generateBlock(targetElement)
         }
         return blocks
-            .filter {
-                it is SqlElIdExpr || it.elementType == SqlTypes.EL_IDENTIFIER || it == blocks.last()
-            }.sortedBy { it.textOffset }
     }
 
     /**
@@ -257,11 +195,6 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         }
         val top = elements.first()
         val topText = cleanString(getSearchElementText(top))
-        val prevWord = PsiPatternUtil.getBindSearchWord(originalFile, elements.last(), " ")
-        if (prevWord.startsWith("@") && prevWord.endsWith("@")) {
-            setCompletionStaticFieldAccess(project, prevWord, caretNextText, topText, result)
-            return
-        }
 
         var isBatchAnnotation = false
         // In function-parameter elements, apply the same processing as normal field access.
@@ -507,56 +440,4 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
             },
         )
     }
-
-    private fun setCompletionStaticFieldAccess(
-        project: Project,
-        prevWord: String,
-        caretNextText: String,
-        topText: String,
-        result: CompletionResultSet,
-    ) {
-        val clazz = getRefClazz(project) { prevWord.replace("@", "") } ?: return
-        val matchFields = clazz.searchStaticField(topText)
-        val matchMethod = clazz.searchStaticMethod(topText)
-
-        // When you enter here, it is the top element, so return static fields and methods.
-        setFieldsAndMethodsCompletionResultSet(caretNextText, matchFields, matchMethod, result)
-    }
-
-    // Get the list of elements before itself
-    private fun findSelfBlocks(targetElement: PsiElement): List<PsiElement> {
-        val elms =
-            targetElement.prevLeafs
-                .takeWhile {
-                    it.elementType != SqlTypes.BLOCK_COMMENT_START &&
-                        !isSqlElSymbol(it) &&
-                        it.elementType != SqlTypes.AT_SIGN
-                }.toList()
-                .filter {
-                    it is PsiErrorElement ||
-                        it is SqlElIdExpr ||
-                        it.elementType == SqlTypes.EL_IDENTIFIER
-                }.filter {
-                    it.isNotWhiteSpace() &&
-                        PsiTreeUtil.getParentOfType(it, SqlElParameters::class.java) == null
-                }.plus(targetElement)
-                .sortedBy { it.textOffset }
-
-        return if (elms.isNotEmpty()) elms else emptyList()
-    }
-
-    private fun isSqlElSymbol(element: PsiElement): Boolean =
-        element.elementType == SqlTypes.EL_PLUS ||
-            element.elementType == SqlTypes.EL_MINUS ||
-            element.elementType == SqlTypes.ASTERISK ||
-            element.elementType == SqlTypes.EL_DIVIDE_EXPR ||
-            element.elementType == SqlTypes.EL_EQ ||
-            element.elementType == SqlTypes.EL_NE ||
-            element.elementType == SqlTypes.EL_LE_EXPR ||
-            element.elementType == SqlTypes.EL_LT_EXPR ||
-            element.elementType == SqlTypes.EL_GE_EXPR ||
-            element.elementType == SqlTypes.EL_GT_EXPR ||
-            element.elementType == SqlTypes.EL_AND ||
-            element.elementType == SqlTypes.EL_NOT ||
-            element.elementType == SqlTypes.SEPARATOR
 }
