@@ -1,0 +1,25 @@
+<html lang="en">
+<body>
+<p>
+  Checks whether the configuration for the custom function's defining class is properly set.
+</p>
+<p>
+  This inspection ensures that the required Doma configuration file and properties are correctly defined, and that the specified class implements <code>org.seasar.doma.expr.ExpressionFunctions</code>.
+</p>
+<p>
+  Conditions:
+</p>
+<ul>
+  <li>The Doma configuration file <code>doma.compile.config</code> exists directly under the resource directory.</li>
+  <li>The configuration file contains the property <code>doma.expr.functions</code>.</li>
+  <li>The class specified in the property implements <code>org.seasar.doma.expr.ExpressionFunctions</code>.</li>
+</ul>
+<p>
+  Example:
+</p>
+<pre><code>
+// doma.compile.config
+doma.expr.functions=com.example.CustomExpressionFunctions
+</code></pre>
+</body>
+</html>

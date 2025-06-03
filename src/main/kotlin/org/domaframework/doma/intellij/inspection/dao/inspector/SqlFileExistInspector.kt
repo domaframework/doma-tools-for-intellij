@@ -32,7 +32,7 @@ import org.domaframework.doma.intellij.inspection.dao.quickfix.GenerateSQLFileQu
  * Check for existence of SQL file
  */
 class SqlFileExistInspector : AbstractBaseJavaLocalInspectionTool() {
-    override fun getDisplayName(): String = "Check for existence of SQL file"
+    override fun getDisplayName(): String = "Ensure the existence of SQL files for DAO methods."
 
     override fun getShortName(): String = "org.domaframework.doma.intellij.existsqlchecker"
 

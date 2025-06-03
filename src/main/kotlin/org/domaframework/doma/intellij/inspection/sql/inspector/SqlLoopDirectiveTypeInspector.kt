@@ -18,16 +18,14 @@ package org.domaframework.doma.intellij.inspection.sql.inspector
 import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
-import org.domaframework.doma.intellij.inspection.sql.visitor.SqlTestDataAfterBlockCommentVisitor
+import org.domaframework.doma.intellij.inspection.sql.visitor.SqlLoopDirectiveVisitor
 import org.domaframework.doma.intellij.psi.SqlVisitor
 
-/**
- * Code inspection for SQL bind variables
- */
-class SqlTestDataAfterBlockCommentValidValidInspector : LocalInspectionTool() {
-    override fun getDisplayName(): String = "Verify the presence of test data after SQL bind variables"
+class SqlLoopDirectiveTypeInspector : LocalInspectionTool() {
+    override fun getDisplayName(): String =
+        "This inspection checks whether the base type of the element defined in a loop directive is of an Iterable type."
 
-    override fun getShortName(): String = "org.domaframework.doma.intellij.existaftertestdata"
+    override fun getShortName(): String = "org.domaframework.doma.intellij.loopDirectiveType"
 
     override fun getGroupDisplayName(): String = "DomaTools"
 
@@ -40,5 +38,5 @@ class SqlTestDataAfterBlockCommentValidValidInspector : LocalInspectionTool() {
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
-    ): SqlVisitor = SqlTestDataAfterBlockCommentVisitor(holder, this.shortName)
+    ): SqlVisitor = SqlLoopDirectiveVisitor(holder, this.shortName)
 }

@@ -25,7 +25,7 @@ import org.domaframework.doma.intellij.psi.SqlVisitor
  * Code inspection for SQL bind variables
  */
 class SqlBindVariableValidInspector : LocalInspectionTool() {
-    override fun getDisplayName(): String = "Match checking between SQL bind variables and Declaration"
+    override fun getDisplayName(): String = "Check where SQL bind variables are defined."
 
     override fun getShortName(): String = "org.domaframework.doma.intellij.validBindVariable"
 

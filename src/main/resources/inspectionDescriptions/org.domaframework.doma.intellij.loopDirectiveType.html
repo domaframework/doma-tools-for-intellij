@@ -1,0 +1,19 @@
+<html lang="en">
+<body>
+<p>
+  Detects cases where the basic type of element defined in a loop directive is not Iterable.
+</p>
+<p>
+  This inspection ensures that elements used in loop directives are of type Iterable, which is required for proper iteration.
+</p>
+<p>
+  Example:
+</p>
+<pre><code>
+-- Checks that 'employees' is of type Iterable
+/*%for employee : employees */
+  /* employee */
+/*%end */
+</code></pre>
+</body>
+</html>

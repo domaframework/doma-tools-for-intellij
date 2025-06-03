@@ -53,7 +53,7 @@ class DaoMethodVariableInspector : AbstractBaseJavaLocalInspectionTool() {
         val deplicateForItemElements: List<PsiParameter>,
     )
 
-    override fun getDisplayName(): String = "Method argument usage check"
+    override fun getDisplayName(): String = "Check usage of DAO method arguments in corresponding SQL file."
 
     override fun getShortName(): String = "org.domaframework.doma.intellij.variablechecker"
 

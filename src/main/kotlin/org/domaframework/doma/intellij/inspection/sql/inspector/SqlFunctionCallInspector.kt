@@ -18,16 +18,17 @@ package org.domaframework.doma.intellij.inspection.sql.inspector
 import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
-import org.domaframework.doma.intellij.inspection.sql.visitor.SqlTestDataAfterBlockCommentVisitor
+import org.domaframework.doma.intellij.inspection.sql.visitor.SqlFunctionCallVisitor
 import org.domaframework.doma.intellij.psi.SqlVisitor
 
-/**
- * Code inspection for SQL bind variables
- */
-class SqlTestDataAfterBlockCommentValidValidInspector : LocalInspectionTool() {
-    override fun getDisplayName(): String = "Verify the presence of test data after SQL bind variables"
+class SqlFunctionCallInspector : LocalInspectionTool() {
+    override fun getDisplayName(): String =
+        "This inspection checks whether the function name called " +
+            "in a function call is defined in the implementation class specified " +
+            "by the `doma.expr.functions` property of doma.compile.config," +
+            " or in org.seasar.doma.expr.ExpressionFunctions."
 
-    override fun getShortName(): String = "org.domaframework.doma.intellij.existaftertestdata"
+    override fun getShortName(): String = "org.domaframework.doma.intellij.functionCall"
 
     override fun getGroupDisplayName(): String = "DomaTools"
 
@@ -40,5 +41,5 @@ class SqlTestDataAfterBlockCommentValidValidInspector : LocalInspectionTool() {
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
-    ): SqlVisitor = SqlTestDataAfterBlockCommentVisitor(holder, this.shortName)
+    ): SqlVisitor = SqlFunctionCallVisitor(holder, this.shortName)
 }
