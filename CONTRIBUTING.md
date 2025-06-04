@@ -39,6 +39,7 @@ You can install these plugins from `File > Settings > Plugins` in IntelliJ IDEA.
 - **[Plugin DevKit](https://plugins.jetbrains.com/plugin/22851-plugin-devkit)**
 - **[PsiViewer](https://plugins.jetbrains.com/plugin/227-psiviewer)**
 - **[Spotless Gradle](https://plugins.jetbrains.com/plugin/18321-spotless-gradle)**
+- **[Ktlint](https://plugins.jetbrains.com/plugin/15057-ktlint)**
 
 ## Setting Up the Development Environment
 
@@ -73,9 +74,17 @@ You can install these plugins from `File > Settings > Plugins` in IntelliJ IDEA.
      ```sh
      ./gradlew runIde
      ```
+
+## Testing and Doma Dependency Management
+
+When running tests, the plugin creates a virtual project environment with the required Doma dependencies.
+
+- The Doma jar files for each version used in tests are located in the [`src/test/lib`](src/test/lib) directory.
+- The dependencies for the virtual project are managed in the `setUp()` method of [`DomaSqlTest`](src/test/kotlin/org/domaframework/doma/intellij/DomaSqlTest.kt).
+
 ## Code Style
 
-We use [Spotless](https://github.com/diffplug/spotless) and [google-java-format](https://github.com/google/google-java-format) for code formatting and style checking.
+We use [spotless](https://github.com/diffplug/spotless) and [google-java-format](https://github.com/google/google-java-format) for code formatting and style checking.
 
 - To check or apply formatting, run the following Gradle tasks:
   ```sh
@@ -89,9 +98,21 @@ We use [Spotless](https://github.com/diffplug/spotless) and [google-java-format]
 
 Please ensure your code is formatted with Spotless before submitting a pull request.
 
+### Code Inspection
+
+For advanced code inspection and static analysis, consider using [Qodana](https://www.jetbrains.com/qodana/).
+
+- Qodana is a static analysis tool by JetBrains that can automatically check code quality in CI pipelines.
+- This repository includes a [`qodana.yml`](qodana.yml) file as an example configuration for Qodana.
+- For more details, refer to the [Qodana official documentation](https://www.jetbrains.com/help/qodana/).
+
 ## Branch Naming Rules
 
-When creating a working branch, please follow the naming rules below according to the type of change:
+When creating a working branch, please follow the naming rules below according to the type of change.
+
+These branch paths are used to categorize pull requests by label when automatically creating release drafts.
+
+The mapping between branch paths and label names is configured in [`release-drafter.yml`](.github/release-drafter.yml).
 
 - Bug fixes: `fix/`
 - Documentation changes: `document/`
@@ -110,3 +131,4 @@ For example, a bug fix branch might be named `fix/typo-in-readme`, and a new fea
    ./gradlew check
    ```
 3. Submit a pull request with a clear description of your changes.
+4. After creating a pull request, please link any related issues to the PR.
