@@ -15,17 +15,15 @@
  */
 package org.domaframework.doma.intellij.inspection.dao.visitor
 
-import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.JavaElementVisitor
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
-import com.intellij.psi.impl.source.PsiParameterImpl
-import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.sql.validator.result.ValidationUsedDaoMethodArgsResult
 import org.domaframework.doma.intellij.extension.findFile
 import org.domaframework.doma.intellij.extension.psi.isCollector
 import org.domaframework.doma.intellij.extension.psi.isFunctionClazz
@@ -34,6 +32,7 @@ import org.domaframework.doma.intellij.extension.psi.methodParameters
 
 class DaoMethodVariableInspectionVisitor(
     private val holder: ProblemsHolder,
+    private val shotName: String,
 ) : JavaElementVisitor() {
     override fun visitMethod(method: PsiMethod) {
         super.visitMethod(method)
@@ -55,25 +54,12 @@ class DaoMethodVariableInspectionVisitor(
         val result = findElementsInSqlFile(sqlFileManager, params)
         params.forEach { param ->
             if (!result.elements.contains(param)) {
-                val message =
-                    if (result.deplicateForItemElements.contains(param)) {
-                        MessageBundle.message("inspection.invalid.dao.duplicate")
-                    } else {
-                        MessageBundle.message(
-                            "inspection.invalid.dao.paramUse",
-                            param.name,
-                        )
-                    }
-                holder.registerProblem(
-                    (param.originalElement as PsiParameterImpl).nameIdentifier,
-                    message,
-                    ProblemHighlightType.ERROR,
-                )
+                ValidationUsedDaoMethodArgsResult(result, param, shotName).highlightElement(holder)
             }
         }
     }
 
-    private data class DaoMethodVariableVisitorResult(
+    data class DaoMethodVariableVisitorResult(
         val elements: List<PsiParameter>,
         val deplicateForItemElements: List<PsiParameter>,
     )
