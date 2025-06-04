@@ -16,19 +16,19 @@ For other basic project information and best practices, please refer to the temp
 
 ## Reporting Issues
 
-- Use the [GitHub Issues page](https://github.com/domaframework/doma-tools-for-intellij/issues) to report bugs or request features.
+  Use the [GitHub Issues page](https://github.com/domaframework/doma-tools-for-intellij/issues) to report bugs or request features.
+  Write the issue in English to share it with many people.
 
 ## Contact
 
-Let's work together to make this project better! 
+Let's work together to make this project better!
 
 If you have any questions or suggestions, feel free to open an issue or contact the maintainers via GitHub.
-Write the issue in English to share it with many people.
 
 ## Prerequisites
 
-- **JDK 17**
-- **Git** (Install Git and configure your GitHub access)
+- Install **Git** and configure your GitHub access
+- Install **JDK 17**
 
 ## Recommended IntelliJ IDEA Plugins
 
@@ -67,11 +67,6 @@ You can install these plugins from `File > Settings > Plugins` in IntelliJ IDEA.
      ```sh
      ./gradlew build
      ```
-   - To generate a plugin zip file for local installation, run:
-     ```sh
-     ./gradlew buildPlugin
-     ```
-     The zip file will be created in the `build/distributions` directory and can be installed locally in IntelliJ IDEA.
 
 5. **Run/Debug the Plugin**
    - Use the Gradle task `runIde` to launch a sandboxed IntelliJ instance:
