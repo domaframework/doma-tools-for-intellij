@@ -27,6 +27,8 @@ If you have any questions or suggestions, feel free to open an issue or contact 
 
 ## Prerequisites
 
+- Install **IntelliJ IDEA** (2024.3 or later)
+  - We recommend using the latest stable version of IntelliJ IDEA.
 - Install **Git** and configure your GitHub access
 - Install **JDK 17**
 
@@ -125,7 +127,7 @@ For example, a bug fix branch might be named `fix/typo-in-readme`, and a new fea
 
 ## Submitting a Pull Request
 
-1. Fork the repository and create your branch from `main`.
+1. Create your branch from `main`.
 2. Make your changes and ensure all tests pass:
    ```sh
    ./gradlew check
