@@ -32,8 +32,8 @@ interface DaoMethodVariableInspectionTestDao {
   List<Employee> nonExistSQLFile(String name);
 
   @Select
-  @Sql("select * from employee where name = /* name */'test'")
-  Employee noArgumentsUsedInSQLAnnotations(String name,Integer <error descr="There are unused parameters in the SQL [id]">id</error>);
+  @Sql("select * from employee where name = /* employee.employeeName */'test'")
+  Employee noArgumentsUsedInSQLAnnotations(Employee employee,String <error descr="There are unused parameters in the SQL [employeeName]">employeeName</error>);
 
   @SqlProcessor
   <R> R biFunctionDoesNotCauseError(Integer id, BiFunction<Config, PreparedSql, R> handler);

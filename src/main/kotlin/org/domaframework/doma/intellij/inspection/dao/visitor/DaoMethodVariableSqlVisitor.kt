@@ -43,7 +43,7 @@ class DaoMethodVariableSqlVisitor(
                 element.elementType == SqlTypes.EL_IDENTIFIER ||
                     element is SqlElPrimaryExpr
             ) &&
-            element.prevSibling?.elementType != SqlTypes.DOT
+            PsiTreeUtil.prevLeaf(element)?.elementType != SqlTypes.DOT
         ) {
             iterator = args.minus(elements.toSet()).iterator()
             while (iterator.hasNext()) {

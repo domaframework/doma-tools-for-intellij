@@ -16,8 +16,8 @@
 package org.domaframework.doma.intellij.common.sql.directive
 
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
-import org.jetbrains.kotlin.psi.psiUtil.prevLeaf
 
 /**
  * Determine directive elements and perform code completion
@@ -31,7 +31,7 @@ open class DirectiveHandler(
         it: PsiElement,
         symbol: String,
     ): Boolean {
-        val prev = it.prevLeaf()
+        val prev = PsiTreeUtil.prevLeaf(it)
         return (
             prev?.text == symbol ||
                 it.text.startsWith(symbol)
