@@ -24,7 +24,6 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
-import com.intellij.psi.util.prevLeaf
 import com.intellij.psi.util.prevLeafs
 import com.intellij.util.ProcessingContext
 import org.domaframework.doma.intellij.common.sql.directive.DirectiveCompletion
@@ -79,11 +78,11 @@ object PsiPatternUtil {
                     element: PsiElement,
                     context: ProcessingContext?,
                 ): Boolean {
-                    val bindText = element.prevLeaf()?.text ?: ""
+                    val bindText = PsiTreeUtil.prevLeaf(element)?.text ?: ""
                     val directiveSymbol = DirectiveCompletion.directiveSymbols
                     return directiveSymbol.any {
                         bindText.startsWith(it) ||
-                            (element.elementType == SqlTypes.EL_IDENTIFIER && element.prevLeaf()?.text == it) ||
+                            (element.elementType == SqlTypes.EL_IDENTIFIER && PsiTreeUtil.prevLeaf(element)?.text == it) ||
                             (
                                 element.elementType == TokenType.BAD_CHARACTER &&
                                     element.parent
