@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.8.1] - 2025-06-06
+## [1.0.0] - 2025-06-09
 
 ### Bug Fixes
 
@@ -25,12 +25,14 @@
 
 ### Dependency Updates
 
+- Update dependency gradle to v8.14.2 ([#242])
 - Update plugin verifier version to 1.386 ([#209])
 - Update pluginVerifier version in dependencies and build configuration ([#218])
 - Update plugin spotless to v7.0.4 ([#203])
 - Update dependency gradle to v8.14.1 ([#188])
 
 [#243]:https://github.com/domaframework/doma-tools-for-intellij/pull/243
+[#242]:https://github.com/domaframework/doma-tools-for-intellij/pull/242
 [#241]:https://github.com/domaframework/doma-tools-for-intellij/pull/241
 [#214]:https://github.com/domaframework/doma-tools-for-intellij/pull/214
 [#216]:https://github.com/domaframework/doma-tools-for-intellij/pull/216
@@ -355,4 +357,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
-[0.8.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.8.0...0.8.1
+[1.0.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.8.0...1.0.0
