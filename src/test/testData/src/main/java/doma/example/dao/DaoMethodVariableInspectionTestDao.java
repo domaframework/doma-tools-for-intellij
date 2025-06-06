@@ -32,8 +32,11 @@ interface DaoMethodVariableInspectionTestDao {
   List<Employee> nonExistSQLFile(String name);
 
   @Select
-  @Sql("select * from employee where name = /* employee.employeeName */'test'")
-  Employee noArgumentsUsedInSQLAnnotations(Employee employee,String <error descr="There are unused parameters in the SQL [employeeName]">employeeName</error>);
+  @Sql("select * from employee where name = /* employee.employeeName */'test' and status = /* @doma.example.entity.Project@status */'status'")
+  Employee noArgumentsUsedInSQLAnnotations(Employee employee,
+      String <error descr="There are unused parameters in the SQL [employeeName]">employeeName</error>,
+      String <error descr="There are unused parameters in the SQL [status]">status</error>,
+      String <error descr="There are unused parameters in the SQL [doma]">doma</error>);
 
   @SqlProcessor
   <R> R biFunctionDoesNotCauseError(Integer id, BiFunction<Config, PreparedSql, R> handler);
@@ -42,10 +45,12 @@ interface DaoMethodVariableInspectionTestDao {
   Project selectOptionDoesNotCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,String searchName,SelectOptions options);
 
   @Select(strategy = SelectType.COLLECT)
-  Project collectDoesNotCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,Integer id,Collector<Project, ?, Project> collector);
+  Project collectDoesNotCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,Integer id,
+      Collector<Project, ?, Project> collector);
 
   @Select
-  Project collectDoesCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,String searchName,Collector<Project, ?, Project> <error descr="There are unused parameters in the SQL [collector]">collector</error>);
+  Project collectDoesCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,String searchName,
+      Collector<Project, ?, Project> <error descr="There are unused parameters in the SQL [collector]">collector</error>);
 
   @Select
   Project noErrorWhenUsedInFunctionParameters(Employee employee, Integer count);
