@@ -2,6 +2,55 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2025-06-09
+
+### Bug Fixes
+
+- No error when static field-access element shares the same name as a parameter ([#243])
+- No error when a field-access element shares the same name as a parameter ([#241])
+- Test data check skipped for directives at end of file ([#214])
+- Add fallback for parent class name retrieval in validation property result ([#216])
+- Code completion fails after existing values in method arguments ([#215])
+- Instance member suggestions missing inside static property call arguments  ([#213])
+- Cannot resolve references from within argument-parameter elements ([#207])
+- Update error messages ([#205])
+- Reflect Custom Error Levels in DAO Method Inspection ([#232])
+- Fix FieldAccess code completion ([#229])
+- Fix code completion for static field access ([#226])
+
+### Maintenance
+
+- Refactor: Split inspection logic ([#230])
+- Add pull request trigger to release drafter workflow ([#168])
+
+### Dependency Updates
+
+- Update dependency gradle to v8.14.2 ([#242])
+- Update plugin verifier version to 1.386 ([#209])
+- Update pluginVerifier version in dependencies and build configuration ([#218])
+- Update plugin spotless to v7.0.4 ([#203])
+- Update dependency gradle to v8.14.1 ([#188])
+
+[#243]:https://github.com/domaframework/doma-tools-for-intellij/pull/243
+[#242]:https://github.com/domaframework/doma-tools-for-intellij/pull/242
+[#241]:https://github.com/domaframework/doma-tools-for-intellij/pull/241
+[#214]:https://github.com/domaframework/doma-tools-for-intellij/pull/214
+[#216]:https://github.com/domaframework/doma-tools-for-intellij/pull/216
+[#215]:https://github.com/domaframework/doma-tools-for-intellij/pull/215
+[#213]:https://github.com/domaframework/doma-tools-for-intellij/pull/213
+[#207]:https://github.com/domaframework/doma-tools-for-intellij/pull/207
+[#205]:https://github.com/domaframework/doma-tools-for-intellij/pull/205
+[#232]:https://github.com/domaframework/doma-tools-for-intellij/pull/232
+[#229]:https://github.com/domaframework/doma-tools-for-intellij/pull/229
+[#226]:https://github.com/domaframework/doma-tools-for-intellij/pull/226
+[#230]:https://github.com/domaframework/doma-tools-for-intellij/pull/230
+[#168]:https://github.com/domaframework/doma-tools-for-intellij/pull/168
+[#209]:https://github.com/domaframework/doma-tools-for-intellij/pull/209
+[#218]:https://github.com/domaframework/doma-tools-for-intellij/pull/218
+[#203]:https://github.com/domaframework/doma-tools-for-intellij/pull/203
+[#188]:https://github.com/domaframework/doma-tools-for-intellij/pull/188
+
+
 ## [0.8.0] - 2025-05-27
 
 ### New Features
@@ -308,3 +357,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[1.0.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/0.8.0...1.0.0
