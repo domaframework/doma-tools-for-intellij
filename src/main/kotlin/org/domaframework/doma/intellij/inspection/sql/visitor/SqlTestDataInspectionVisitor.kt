@@ -23,7 +23,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.nextLeafs
 import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationTestDataResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationTestDataResult
 import org.domaframework.doma.intellij.psi.SqlBlockComment
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
 import org.domaframework.doma.intellij.psi.SqlElForDirective

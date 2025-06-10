@@ -25,9 +25,9 @@ import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.foritem.ForItem
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
+import org.domaframework.doma.intellij.common.validation.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr

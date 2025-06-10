@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.common.sql.validator.result
+package org.domaframework.doma.intellij.common.validation.result
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
@@ -21,13 +21,9 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-/**
- * Reports that the class configured in doma.compile.config
- * is not an implementation of ExpressionFunctions.
- */
-open class ValidationInvalidExpressionFunctionsResult(
-    override val identify: PsiElement,
-    override val shortName: String,
+class ValidationForDirectiveItemTypeResult(
+    override val identify: PsiElement?,
+    override val shortName: String = "",
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -38,9 +34,7 @@ open class ValidationInvalidExpressionFunctionsResult(
         val project = identify.project
         holder.registerProblem(
             identify,
-            MessageBundle.message(
-                "inspection.invalid.sql.notFound.expressionClass",
-            ),
+            MessageBundle.message("inspection.invalid.sql.iterable"),
             problemHighlightType(project, shortName),
             highlightRange,
         )

@@ -21,7 +21,7 @@ import com.intellij.psi.PsiMethod
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationSqlFileExistResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationSqlFileExistResult
 
 class SqlFileExistInspectionVisitor(
     private val holder: ProblemsHolder,
@@ -35,25 +35,19 @@ class SqlFileExistInspectionVisitor(
 
         val psiDaoMethod = PsiDaoMethod(method.project, method)
         if (psiDaoMethod.isUseSqlFileMethod()) {
-            checkDaoMethod(psiDaoMethod, holder)
+            checkDaoMethod(psiDaoMethod)
         }
     }
 
-    private fun checkDaoMethod(
-        psiDaoMethod: PsiDaoMethod,
-        problemHolder: ProblemsHolder,
-    ) {
+    private fun checkDaoMethod(psiDaoMethod: PsiDaoMethod) {
         val identifier = psiDaoMethod.psiMethod.nameIdentifier ?: return
         if (psiDaoMethod.sqlFile == null) {
             ValidationSqlFileExistResult(
                 psiDaoMethod,
                 identifier,
                 shortName,
-            ).setHighlight(
-                identifier.textRange,
-                identifier,
-                problemHolder,
-                null,
+            ).highlightElement(
+                holder,
             )
         }
     }

@@ -13,22 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.common.sql.validator.result
+package org.domaframework.doma.intellij.common.validation.result
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
 /**
- * no DAO parameter matching the name of the field access top was found
+ * This class indicates that there is no field or method defined in the class that matches the target name.
  */
-open class ValidationDaoParamResult(
+class ValidationPropertyResult(
     override val identify: PsiElement,
-    private val daoName: String,
+    override val parentClass: PsiParentClass?,
     override val shortName: String,
-) : ValidationResult(identify, null, shortName) {
+) : ValidationResult(identify, parentClass, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
         identify: PsiElement,
@@ -36,11 +37,17 @@ open class ValidationDaoParamResult(
         parent: PsiParentClass?,
     ) {
         val project = identify.project
+        val parentClassType = parentClass?.type
+        val parentName =
+            parentClass?.clazz?.name
+                ?: (parentClassType as? PsiClassType)?.name
+                ?: parentClassType?.canonicalText
+                ?: ""
         holder.registerProblem(
             identify,
             MessageBundle.message(
-                "inspection.invalid.dao.parameter",
-                daoName,
+                "inspection.invalid.sql.property",
+                parentName,
                 identify.text ?: "",
             ),
             problemHighlightType(project, shortName),

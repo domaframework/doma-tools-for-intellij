@@ -20,9 +20,9 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.sql.cleanString
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationForDirectiveItemTypeResult
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
+import org.domaframework.doma.intellij.common.validation.result.ValidationDaoParamResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationForDirectiveItemTypeResult
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.psi.SqlElForDirective

@@ -34,10 +34,10 @@ import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.foritem.ForItem
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationNotFoundTopTypeResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationPropertyResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationCompleteResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationNotFoundTopTypeResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationPropertyResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.findStaticField

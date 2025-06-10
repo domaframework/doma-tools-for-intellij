@@ -39,11 +39,11 @@ import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.directive.DirectiveCompletion
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.util.SqlCompletionUtil.createMethodLookupElement
 import org.domaframework.doma.intellij.common.util.StringUtil
+import org.domaframework.doma.intellij.common.validation.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.contributor.sql.processor.SqlCompletionDirectiveBlockProcessor
 import org.domaframework.doma.intellij.contributor.sql.processor.SqlCompletionOtherBlockProcessor
 import org.domaframework.doma.intellij.contributor.sql.processor.SqlCompletionParameterArgsBlockProcessor

@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.common.sql.validator.result
+package org.domaframework.doma.intellij.common.validation.result
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
+import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.inspection.dao.quickfix.GenerateSQLFileQuickFixFactory
 
-class ValidationForDirectiveItemTypeResult(
+class ValidationSqlFileExistResult(
+    private val psiDaoMethod: PsiDaoMethod,
     override val identify: PsiElement?,
     override val shortName: String = "",
 ) : ValidationResult(identify, null, shortName) {
@@ -31,12 +34,12 @@ class ValidationForDirectiveItemTypeResult(
         holder: ProblemsHolder,
         parent: PsiParentClass?,
     ) {
-        val project = identify.project
+        val project = psiDaoMethod.psiMethod.project
         holder.registerProblem(
             identify,
-            MessageBundle.message("inspection.invalid.sql.iterable"),
+            MessageBundle.message("inspection.invalid.dao.notExistSql"),
             problemHighlightType(project, shortName),
-            highlightRange,
+            GenerateSQLFileQuickFixFactory.createSql(psiDaoMethod),
         )
     }
 }

@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.common.sql.validator.result
+package org.domaframework.doma.intellij.common.validation.result
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
-import org.domaframework.doma.intellij.psi.SqlElClass
 
-class ValidationNotFoundStaticPropertyResult(
+class ValidationReturnTypeForReturningResult(
+    private val paramClassName: String,
     override val identify: PsiElement?,
-    val clazz: SqlElClass,
     override val shortName: String = "",
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
@@ -37,9 +36,8 @@ class ValidationNotFoundStaticPropertyResult(
         holder.registerProblem(
             identify,
             MessageBundle.message(
-                "inspection.invalid.sql.staticProperty",
-                identify.text,
-                clazz.text,
+                "inspection.invalid.dao.update.returnType.returning",
+                paramClassName,
             ),
             problemHighlightType(project, shortName),
             highlightRange,
