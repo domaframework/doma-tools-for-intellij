@@ -22,7 +22,7 @@ import com.intellij.psi.PsiElementVisitor
 import org.domaframework.doma.intellij.inspection.dao.visitor.DaoMethodReturnTypeVariableInspectionVisitor
 
 class DaoMethodReturnTypeVariableInspection : AbstractBaseJavaLocalInspectionTool() {
-    override fun getDisplayName(): String = "."
+    override fun getDisplayName(): String = "Check return type variable of DAO method"
 
     override fun getShortName(): String = "org.domaframework.doma.intellij.returnType"
 
