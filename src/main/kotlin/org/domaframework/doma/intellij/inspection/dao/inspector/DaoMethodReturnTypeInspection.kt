@@ -19,15 +19,12 @@ import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInspection.AbstractBaseJavaLocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
-import org.domaframework.doma.intellij.inspection.dao.visitor.UsedDaoMethodArgsVariableInspectionVisitor
+import org.domaframework.doma.intellij.inspection.dao.visitor.DaoMethodReturnTypeInspectionVisitor
 
-/**
- * Check if DAO method arguments are used in the corresponding SQL file
- */
-class UsedDaoMethodArgsVariableInspection : AbstractBaseJavaLocalInspectionTool() {
-    override fun getDisplayName(): String = "Check usage of DAO method arguments"
+class DaoMethodReturnTypeInspection : AbstractBaseJavaLocalInspectionTool() {
+    override fun getDisplayName(): String = "Check return type variable of DAO method"
 
-    override fun getShortName(): String = "org.domaframework.doma.intellij.variablechecker"
+    override fun getShortName(): String = "org.domaframework.doma.intellij.returnType"
 
     override fun getGroupDisplayName(): String = "DomaTools"
 
@@ -38,5 +35,5 @@ class UsedDaoMethodArgsVariableInspection : AbstractBaseJavaLocalInspectionTool(
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
-    ): PsiElementVisitor = UsedDaoMethodArgsVariableInspectionVisitor(holder)
+    ): PsiElementVisitor = DaoMethodReturnTypeInspectionVisitor(holder, this.shortName)
 }

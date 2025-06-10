@@ -33,6 +33,7 @@ enum class DomaAnnotationType(
     BatchDelete("org.seasar.doma.BatchDelete"),
     MultiInsert("org.seasar.doma.MultiInsert"),
     Procedure("org.seasar.doma.Procedure"),
+    Function("org.seasar.doma.Function"),
     Select("org.seasar.doma.Select"),
     Insert("org.seasar.doma.Insert"),
     Update("org.seasar.doma.Update"),

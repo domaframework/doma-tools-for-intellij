@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.dao.processor
+package org.domaframework.doma.intellij.inspection.dao.processor.returntype
 
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiTypes
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
-import org.domaframework.doma.intellij.common.validation.result.ValidationReturnTypeForReturningResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationReturnTypeUpdateReturningResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.isEntity
 
@@ -71,7 +71,7 @@ class UpdateAnnotationReturnTypeCheckProcessor(
      */
     private fun checkReturnTypeWithReturning(paramClass: PsiParameter): ValidationResult? {
         if (returnType == null) {
-            return ValidationReturnTypeForReturningResult(
+            return ValidationReturnTypeUpdateReturningResult(
                 paramClass.type.presentableText,
                 method.nameIdentifier,
                 shortName,
@@ -83,7 +83,7 @@ class UpdateAnnotationReturnTypeCheckProcessor(
         val returnTypeClass = project.getJavaClazz(checkReturnType.canonicalText)
 
         return if (returnTypeClass?.isEntity() != true || returnType.canonicalText != paramClass.type.canonicalText) {
-            ValidationReturnTypeForReturningResult(
+            ValidationReturnTypeUpdateReturningResult(
                 paramClass.type.presentableText,
                 method.nameIdentifier,
                 shortName,

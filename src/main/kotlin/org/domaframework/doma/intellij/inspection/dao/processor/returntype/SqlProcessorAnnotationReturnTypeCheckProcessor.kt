@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.dao.processor
+package org.domaframework.doma.intellij.inspection.dao.processor.returntype
 
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypes
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
+import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationSqlProcessorReturnResult
 
@@ -33,6 +34,8 @@ class SqlProcessorAnnotationReturnTypeCheckProcessor(
     psiDaoMethod: PsiDaoMethod,
     private val shortName: String,
 ) : ReturnTypeCheckerProcessor(psiDaoMethod, shortName) {
+    private val biFunctionClassName = DomaClassName.BI_FUNCTION.className
+
     /**
      * Checks the return type of the DAO method.
      *
@@ -40,7 +43,10 @@ class SqlProcessorAnnotationReturnTypeCheckProcessor(
      */
     override fun checkReturnType(): ValidationResult? {
         val parameters = method.parameterList.parameters
-        val biFunctionParam = parameters.firstOrNull() ?: return null
+        val biFunctionParam =
+            parameters.firstOrNull { param ->
+                param.type.canonicalText.startsWith(biFunctionClassName)
+            } ?: return null
         val convertOptional = PsiClassTypeUtil.convertOptionalType(biFunctionParam.type, project)
         val parameterType = convertOptional as PsiClassReferenceType
         return checkReturnTypeBiFunctionParam(parameterType)
@@ -53,7 +59,7 @@ class SqlProcessorAnnotationReturnTypeCheckProcessor(
      * @return [ValidationResult] if the return type is invalid, otherwise null.
      */
     private fun checkReturnTypeBiFunctionParam(parameterType: PsiClassReferenceType): ValidationResult? {
-        if (!parameterType.canonicalText.startsWith("java.util.function.BiFunction")) return null
+        if (!parameterType.canonicalText.startsWith(biFunctionClassName)) return null
 
         val parameterTypeParams = parameterType.reference.typeParameters
         if (parameterTypeParams.size < 3) return null
@@ -63,7 +69,7 @@ class SqlProcessorAnnotationReturnTypeCheckProcessor(
 
         val nestClass: PsiType = PsiClassTypeUtil.convertOptionalType(nestPsiType, project)
 
-        if (nestClass.canonicalText != "java.lang.Void") {
+        if (nestClass.canonicalText != DomaClassName.VOID.className) {
             val methodReturnType = method.returnType
             val returnTypeCheckResult =
                 (nestClass.canonicalText == "?" && methodReturnType?.canonicalText == "R") ||

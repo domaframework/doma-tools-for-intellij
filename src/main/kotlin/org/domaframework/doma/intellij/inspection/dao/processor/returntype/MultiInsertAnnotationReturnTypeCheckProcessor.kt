@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.dao.processor
+package org.domaframework.doma.intellij.inspection.dao.processor.returntype
 
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypes
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
+import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationReturnTypeForMultiInsertReturningResult
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
@@ -40,8 +41,6 @@ class MultiInsertAnnotationReturnTypeCheckProcessor(
      * @return ValidationResult if the return type is invalid, otherwise null.
      */
     override fun checkReturnType(): ValidationResult? {
-        if (psiDaoMethod.isUseSqlFileMethod()) return null
-
         val parameters = method.parameterList.parameters
         val immutableEntityParam = parameters.firstOrNull() ?: return null
 
@@ -76,8 +75,8 @@ class MultiInsertAnnotationReturnTypeCheckProcessor(
         if (paramPsiType == null) return null
 
         val returnTypeName = returnType?.canonicalText ?: ""
-        val methodResultClassName = "java.util.List"
-        val actualResultTypeText = "$methodResultClassName<${paramPsiType.canonicalText}>"
+        val methodResultClassName = DomaClassName.LIST
+        val actualResultTypeText = methodResultClassName.getGenericParamCanonicalText(paramPsiType.canonicalText)
 
         return if (actualResultTypeText != returnTypeName) {
             ValidationReturnTypeForMultiInsertReturningResult(

@@ -40,7 +40,7 @@ class LiteralDirectiveHandler(
             daoMethod
                 ?.searchParameter(bind)
                 ?.filter {
-                    PsiTypeChecker.isTargetType(it.type)
+                    PsiTypeChecker.isBaseClassType(it.type)
                 }?.map { param -> VariableLookupItem(param) }
                 ?.toList()
                 ?: emptyList()

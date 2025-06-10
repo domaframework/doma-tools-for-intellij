@@ -41,12 +41,13 @@ fun Project.findFile(file: VirtualFile): PsiFile? = PsiManager.getInstance(this)
 
 fun Project.getJavaClazz(fqdn: String): PsiClass? {
     val scope = GlobalSearchScope.allScope(this)
+    val topClassName = fqdn.substringBefore("<")
     return JavaPsiFacade
         .getInstance(this)
-        .findClasses(fqdn, scope)
+        .findClasses(topClassName, scope)
         .firstOrNull()
         ?: JavaPsiFacade.getInstance(this).findClass(
-            fqdn,
+            topClassName,
             GlobalSearchScope.allScope(this),
         )
 }

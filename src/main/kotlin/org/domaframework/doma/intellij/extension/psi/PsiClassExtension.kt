@@ -23,6 +23,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.util.PsiTypesUtil
 import org.domaframework.doma.intellij.common.psi.PropertyModifyUtil
+import org.domaframework.doma.intellij.common.util.DomaClassName
 
 val PsiClass.psiClassType: PsiClassType
     get() = PsiTypesUtil.getClassType(this)
@@ -41,8 +42,10 @@ fun PsiClass.findStaticMethod(searchName: String): PsiMethod? =
             it.hasModifierProperty(PsiModifier.PUBLIC)
     }
 
-fun PsiClass.getEntityAnnotation(): PsiAnnotation? =
+fun PsiClass.getClassAnnotation(annotationClassName: String): PsiAnnotation? =
     this.annotations
-        .firstOrNull { it.qualifiedName == "org.seasar.doma.Entity" }
+        .firstOrNull { it.qualifiedName == annotationClassName }
 
-fun PsiClass.isEntity(): Boolean = this.getEntityAnnotation() != null
+fun PsiClass.isEntity(): Boolean = this.getClassAnnotation(DomaClassName.ENTITY.className) != null
+
+fun PsiClass.isDomain(): Boolean = this.getClassAnnotation(DomaClassName.DOMAIN.className) != null

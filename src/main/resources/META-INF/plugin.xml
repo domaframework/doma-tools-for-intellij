@@ -49,8 +49,9 @@
 
     <!-- Inspection -->
     <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.dao.provider.SqlFileExistProvider" />
-    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.dao.provider.UsedDaoMethodArgsVariableProvider" />
-    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.dao.provider.DaoMethodReturnTypeVariableProvider" />
+    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.dao.provider.DaoMethodParamTypeProvider" />
+    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.dao.provider.DaoMethodReturnTypeProvider" />
+    <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.dao.provider.DaoMethodArgsProvider" />
     <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.sql.provider.SqlBindVariableProvider" />
     <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.sql.provider.SqlLoopDirectiveTypeProvider" />
     <inspectionToolProvider implementation="org.domaframework.doma.intellij.inspection.sql.provider.SqlFunctionCallProvider" />

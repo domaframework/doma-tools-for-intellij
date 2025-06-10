@@ -26,7 +26,7 @@ import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-class DaoMethodVariableSqlVisitor(
+class DaoMethodRelatedSqlVisitor(
     private val args: List<PsiParameter>,
     private val elements: MutableList<PsiParameter>,
     private val deplicateForItemElements: MutableList<PsiParameter>,

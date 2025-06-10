@@ -19,6 +19,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiType
 import com.intellij.psi.search.GlobalSearchScope
+import org.domaframework.doma.intellij.common.util.DomaClassName
 
 class PsiClassTypeUtil {
     companion object {
@@ -28,7 +29,7 @@ class PsiClassTypeUtil {
         ): Boolean {
             val iterableType =
                 PsiType.getTypeByName(
-                    "java.lang.Iterable",
+                    DomaClassName.ITERABLE.className,
                     project,
                     GlobalSearchScope.allScope(project),
                 )
@@ -68,15 +69,15 @@ class PsiClassTypeUtil {
                 val resolved = daoParamType.resolve()
                 val optionalTypeMap =
                     mapOf(
-                        "java.util.OptionalInt" to "java.lang.Integer",
-                        "java.util.OptionalDouble" to "java.lang.Double",
-                        "java.util.OptionalLong" to "java.lang.Long",
+                        DomaClassName.OPTIONAL_INT.className to DomaClassName.INTEGER.className,
+                        DomaClassName.OPTIONAL_DOUBLE.className to DomaClassName.DOUBLE.className,
+                        DomaClassName.OPTIONAL_LONG.className to DomaClassName.LONG.className,
                     )
                 if (resolved != null) {
                     when (resolved.qualifiedName) {
                         // If the type is java.util.Optional, return its parameter type if available;
                         // otherwise, return the original daoParamType.
-                        "java.util.Optional" -> return daoParamType.parameters.firstOrNull()
+                        DomaClassName.OPTIONAL.className -> return daoParamType.parameters.firstOrNull()
                             ?: daoParamType
 
                         // For primitive Optional types (e.g., OptionalInt, OptionalDouble),
