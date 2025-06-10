@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-06-10
+
+### New Features
+
+- Check DAO Method Return Type ([#247])
+
+[#247]:https://github.com/domaframework/doma-tools-for-intellij/pull/247
+
+
 ## [1.0.0] - 2025-06-09
 
 ### Bug Fixes
@@ -356,3 +365,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[1.1.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/1.0.0...1.1.0
