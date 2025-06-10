@@ -49,7 +49,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         super.setUp()
         settingJdk()
         setDirectoryRoot()
-        addLibrary("doma-core-3.2.0.jar", "doma-core")
+        addLibrary("doma-core-3.8.0.jar", "doma-core")
 
         addEntityJavaFile("User.java")
         addEntityJavaFile("UserSummary.java")
@@ -161,7 +161,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         }
     }
 
-    private fun addEntityJavaFile(fileName: String) {
+    protected fun addEntityJavaFile(fileName: String) {
         val file = File("$testDataPath/$sourceRoot/$packagePath/entity/$fileName")
         myFixture.addFileToProject(
             "main/$sourceRoot/$packagePath/entity/$fileName",
