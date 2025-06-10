@@ -61,7 +61,7 @@ class PsiDaoMethod(
         psiMethod.containingFile.virtualFile
             ?: psiMethod.containingFile.originalFile.virtualFile
     var daoType: DomaAnnotationType = DomaAnnotationType.Unknown
-    private var sqlFileOption: Boolean = false
+    var sqlFileOption: Boolean = false
 
     init {
         setDaoAnnotationType()
@@ -77,8 +77,7 @@ class PsiDaoMethod(
 
     private fun setSqlFileOption() {
         val useSqlFileOptionAnnotation = daoType.getPsiAnnotation(psiMethod) ?: return
-        val isSqlFile = daoType.getSqlFileVal(useSqlFileOptionAnnotation)
-        sqlFileOption = isSqlFile == true
+        sqlFileOption = daoType.getSqlFileVal(useSqlFileOptionAnnotation)
     }
 
     @OptIn(ExperimentalStdlibApi::class)

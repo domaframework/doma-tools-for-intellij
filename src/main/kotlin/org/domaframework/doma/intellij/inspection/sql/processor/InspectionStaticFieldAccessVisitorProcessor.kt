@@ -17,9 +17,9 @@ package org.domaframework.doma.intellij.inspection.sql.processor
 
 import com.intellij.codeInspection.ProblemsHolder
 import org.domaframework.doma.intellij.common.psi.PsiStaticElement
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationClassPathResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationNotFoundStaticPropertyResult
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
+import org.domaframework.doma.intellij.common.validation.result.ValidationClassPathResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationNotFoundStaticPropertyResult
 import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 

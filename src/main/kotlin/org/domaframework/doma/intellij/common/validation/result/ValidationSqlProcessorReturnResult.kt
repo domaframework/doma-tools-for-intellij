@@ -13,23 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.common.sql.validator.result
+package org.domaframework.doma.intellij.common.validation.result
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-/**
- * This class indicates that there is no field or method defined in the class that matches the target name.
- */
-class ValidationPropertyResult(
-    override val identify: PsiElement,
-    override val parentClass: PsiParentClass?,
-    override val shortName: String,
-) : ValidationResult(identify, parentClass, shortName) {
+class ValidationSqlProcessorReturnResult(
+    private val returnTypeName: String,
+    private val paramClassName: String,
+    override val identify: PsiElement?,
+    override val shortName: String = "",
+) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
         identify: PsiElement,
@@ -37,18 +34,12 @@ class ValidationPropertyResult(
         parent: PsiParentClass?,
     ) {
         val project = identify.project
-        val parentClassType = parentClass?.type
-        val parentName =
-            parentClass?.clazz?.name
-                ?: (parentClassType as? PsiClassType)?.name
-                ?: parentClassType?.canonicalText
-                ?: ""
         holder.registerProblem(
             identify,
             MessageBundle.message(
-                "inspection.invalid.sql.property",
-                parentName,
-                identify.text ?: "",
+                "inspection.invalid.dao.sqlProcessor.returnType.returning",
+                returnTypeName,
+                paramClassName,
             ),
             problemHighlightType(project, shortName),
             highlightRange,

@@ -21,7 +21,6 @@ import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiNameValuePair
 import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.util.PsiTreeUtil
-import kotlin.jvm.java
 
 enum class DomaAnnotationType(
     val fqdn: String,
@@ -32,6 +31,8 @@ enum class DomaAnnotationType(
     BatchInsert("org.seasar.doma.BatchInsert"),
     BatchUpdate("org.seasar.doma.BatchUpdate"),
     BatchDelete("org.seasar.doma.BatchDelete"),
+    MultiInsert("org.seasar.doma.MultiInsert"),
+    Procedure("org.seasar.doma.Procedure"),
     Select("org.seasar.doma.Select"),
     Insert("org.seasar.doma.Insert"),
     Update("org.seasar.doma.Update"),
@@ -44,7 +45,7 @@ enum class DomaAnnotationType(
 
     fun isRequireSqlTemplate(): Boolean = this == Select || this == Script || this == SqlProcessor
 
-    private fun useSqlFileOption(): Boolean =
+    private fun mayUseSqlFileOption(): Boolean =
         this == Insert ||
             this == Update ||
             this == Delete ||
@@ -59,9 +60,13 @@ enum class DomaAnnotationType(
         )
 
     fun getSqlFileVal(element: PsiAnnotation): Boolean =
-        when (this.useSqlFileOption()) {
-            true -> AnnotationUtil.getBooleanAttributeValue(element, "sqlFile") == true
-            false -> false
+        if (this.mayUseSqlFileOption()) {
+            AnnotationUtil.getBooleanAttributeValue(
+                element,
+                "sqlFile",
+            ) == true
+        } else {
+            false
         }
 
     fun isSelectTypeCollect(element: PsiAnnotation): Boolean {

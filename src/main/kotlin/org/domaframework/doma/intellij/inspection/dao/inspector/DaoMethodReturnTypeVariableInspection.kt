@@ -13,29 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.sql.inspector
+package org.domaframework.doma.intellij.inspection.dao.inspector
 
 import com.intellij.codeHighlighting.HighlightDisplayLevel
-import com.intellij.codeInspection.LocalInspectionTool
+import com.intellij.codeInspection.AbstractBaseJavaLocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
-import org.domaframework.doma.intellij.inspection.sql.visitor.SqlLoopDirectiveTypeInspectionVisitor
-import org.domaframework.doma.intellij.psi.SqlVisitor
+import com.intellij.psi.PsiElementVisitor
+import org.domaframework.doma.intellij.inspection.dao.visitor.DaoMethodReturnTypeVariableInspectionVisitor
 
-class SqlLoopDirectiveTypeInspection : LocalInspectionTool() {
-    override fun getDisplayName(): String = "Check loop directive type"
+class DaoMethodReturnTypeVariableInspection : AbstractBaseJavaLocalInspectionTool() {
+    override fun getDisplayName(): String = "Check return type variable of DAO method"
 
-    override fun getShortName(): String = "org.domaframework.doma.intellij.loopDirectiveType"
+    override fun getShortName(): String = "org.domaframework.doma.intellij.returnType"
 
     override fun getGroupDisplayName(): String = "DomaTools"
 
     override fun isEnabledByDefault(): Boolean = true
 
-    override fun getDefaultLevel(): HighlightDisplayLevel = HighlightDisplayLevel.Companion.ERROR
-
-    override fun runForWholeFile(): Boolean = true
+    override fun getDefaultLevel(): HighlightDisplayLevel = HighlightDisplayLevel.ERROR
 
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
-    ): SqlVisitor = SqlLoopDirectiveTypeInspectionVisitor(holder, this.shortName)
+    ): PsiElementVisitor = DaoMethodReturnTypeVariableInspectionVisitor(holder, this.shortName)
 }

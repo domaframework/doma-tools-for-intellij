@@ -19,7 +19,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.elementType
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationDaoParamResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationDaoParamResult
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElNewExpr
 import org.domaframework.doma.intellij.psi.SqlTypes

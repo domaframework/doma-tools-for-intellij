@@ -35,11 +35,14 @@ The plugin also provides quick fixes for DAO methods where the required SQL file
   ![quickfix.png](images/quickfix.png)
 - Checks for unused DAO method arguments.
   ![inspection.png](images/inspection.png)
+- Checks that the return type of DAO method matches the expected type based on its annotation.
+  ![returnTypeInspection.png](images/returnTypeInspection.png)
 - Checks for undefined bind variable names.
 - Checks the class name and package name for static property calls.
   ![inspectionPackageName.png](images/inspectionPackageName.png)
 - Optional types are recognized as their element type (e.g., a parameter of type `Optional<String>` is treated as type `String`).
 - For custom functions, checks for methods that are not defined in the configured ExpressionFunctions implementation class.
+
 
 ## Completion
 Code completion is available to assist you in coding within directives.

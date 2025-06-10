@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.common.sql.validator.result
+package org.domaframework.doma.intellij.common.validation.result
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
@@ -21,13 +21,10 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-/**
- * Reports invalid function calls in SQL validation.
- */
-open class ValidationInvalidFunctionCallResult(
-    override val identify: PsiElement,
-    private val expressionClassName: String,
-    override val shortName: String,
+class ValidationReturnTypeForMultiInsertReturningResult(
+    private val paramClassName: String,
+    override val identify: PsiElement?,
+    override val shortName: String = "",
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -39,9 +36,8 @@ open class ValidationInvalidFunctionCallResult(
         holder.registerProblem(
             identify,
             MessageBundle.message(
-                "inspection.invalid.sql.notFound.customFunction",
-                identify.text ?: "",
-                expressionClassName,
+                "inspection.invalid.dao.multiInsert.returnType.returning",
+                paramClassName,
             ),
             problemHighlightType(project, shortName),
             highlightRange,

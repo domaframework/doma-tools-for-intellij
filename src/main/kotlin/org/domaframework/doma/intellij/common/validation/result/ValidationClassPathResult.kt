@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.common.sql.validator.result
+package org.domaframework.doma.intellij.common.validation.result
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
@@ -21,9 +21,12 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-class ValidationTestDataResult(
-    override val identify: PsiElement?,
-    override val shortName: String = "",
+/**
+ * Non-existent package name or class
+ */
+open class ValidationClassPathResult(
+    override val identify: PsiElement,
+    override val shortName: String,
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -34,7 +37,10 @@ class ValidationTestDataResult(
         val project = identify.project
         holder.registerProblem(
             identify,
-            MessageBundle.message("inspection.invalid.sql.testdata"),
+            MessageBundle.message(
+                "inspection.invalid.sql.classpath",
+                identify.text ?: "",
+            ),
             problemHighlightType(project, shortName),
             highlightRange,
         )

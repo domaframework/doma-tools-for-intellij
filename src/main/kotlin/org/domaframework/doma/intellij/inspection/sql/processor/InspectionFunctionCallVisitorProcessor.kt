@@ -21,9 +21,9 @@ import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil
 import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil.EXPRESSION_FUNCTIONS_NAME
 import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationInvalidExpressionFunctionsResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationInvalidFunctionCallResult
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationInvalidExpressionFunctionsResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationInvalidFunctionCallResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
 import org.jetbrains.kotlin.idea.util.projectStructure.module

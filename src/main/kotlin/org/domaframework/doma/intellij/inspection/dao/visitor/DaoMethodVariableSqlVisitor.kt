@@ -39,13 +39,11 @@ class DaoMethodVariableSqlVisitor(
 
     // Recursively explore child elements in a file with PsiRecursiveElementVisitor.
     override fun visitElement(element: PsiElement) {
-        val prevElementType = PsiTreeUtil.prevLeaf(element)?.elementType
         if ((
                 element.elementType == SqlTypes.EL_IDENTIFIER ||
                     element is SqlElPrimaryExpr
             ) &&
-            prevElementType != SqlTypes.DOT &&
-            prevElementType != SqlTypes.AT_SIGN
+            element.prevSibling?.elementType != SqlTypes.DOT
         ) {
             iterator = args.minus(elements.toSet()).iterator()
             while (iterator.hasNext()) {

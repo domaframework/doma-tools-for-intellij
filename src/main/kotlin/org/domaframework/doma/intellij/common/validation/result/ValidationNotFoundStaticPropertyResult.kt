@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.common.sql.validator.result
+package org.domaframework.doma.intellij.common.validation.result
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiParameter
-import com.intellij.psi.impl.source.PsiParameterImpl
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
-import org.domaframework.doma.intellij.inspection.dao.visitor.DaoMethodVariableInspectionVisitor.DaoMethodVariableVisitorResult
+import org.domaframework.doma.intellij.psi.SqlElClass
 
-class ValidationUsedDaoMethodArgsResult(
-    private val daoMethodVariableResult: DaoMethodVariableVisitorResult,
+class ValidationNotFoundStaticPropertyResult(
     override val identify: PsiElement?,
+    val clazz: SqlElClass,
     override val shortName: String = "",
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
@@ -35,21 +33,16 @@ class ValidationUsedDaoMethodArgsResult(
         holder: ProblemsHolder,
         parent: PsiParentClass?,
     ) {
-        val param = identify as? PsiParameter ?: return
         val project = identify.project
-        val message =
-            if (daoMethodVariableResult.deplicateForItemElements.contains(identify)) {
-                MessageBundle.message("inspection.invalid.dao.duplicate")
-            } else {
-                MessageBundle.message(
-                    "inspection.invalid.dao.paramUse",
-                    param.name,
-                )
-            }
         holder.registerProblem(
-            (param.originalElement as PsiParameterImpl).nameIdentifier,
-            message,
+            identify,
+            MessageBundle.message(
+                "inspection.invalid.sql.staticProperty",
+                identify.text,
+                clazz.text,
+            ),
             problemHighlightType(project, shortName),
+            highlightRange,
         )
     }
 }

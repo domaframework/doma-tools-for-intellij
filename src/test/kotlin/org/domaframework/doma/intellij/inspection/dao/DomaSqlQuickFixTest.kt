@@ -23,30 +23,32 @@ import org.domaframework.doma.intellij.inspection.dao.inspector.SqlFileExistInsp
  * Quick fix execution test
  */
 class DomaSqlQuickFixTest : DomaSqlTest() {
+    private val packagename = "quickfix"
+
     override fun setUp() {
         super.setUp()
         addDaoJavaFile(
-            "quickfix/SelectQuickFixTestDao.java",
-            "quickfix/InsertQuickFixTestDao.java",
-            "quickfix/UpdateQuickFixTestDao.java",
-            "quickfix/DeleteQuickFixTestDao.java",
-            "quickfix/BatchInsertQuickFixTestDao.java",
-            "quickfix/BatchUpdateQuickFixTestDao.java",
-            "quickfix/BatchDeleteQuickFixTestDao.java",
-            "quickfix/ScriptQuickFixTestDao.java",
-            "quickfix/SqlProcessorQuickFixTestDao.java",
+            "$packagename/SelectQuickFixTestDao.java",
+            "$packagename/InsertQuickFixTestDao.java",
+            "$packagename/UpdateQuickFixTestDao.java",
+            "$packagename/DeleteQuickFixTestDao.java",
+            "$packagename/BatchInsertQuickFixTestDao.java",
+            "$packagename/BatchUpdateQuickFixTestDao.java",
+            "$packagename/BatchDeleteQuickFixTestDao.java",
+            "$packagename/ScriptQuickFixTestDao.java",
+            "$packagename/SqlProcessorQuickFixTestDao.java",
         )
 
         addResourceEmptySqlFile(
-            "quickfix/SelectQuickFixTestDao/existsSQLFile.sql",
-            "quickfix/InsertQuickFixTestDao/existsSQLFile.sql",
-            "quickfix/UpdateQuickFixTestDao/existsSQLFile.sql",
-            "quickfix/DeleteQuickFixTestDao/existsSQLFile.sql",
-            "quickfix/BatchInsertQuickFixTestDao/existsSQLFile.sql",
-            "quickfix/BatchUpdateQuickFixTestDao/existsSQLFile.sql",
-            "quickfix/BatchDeleteQuickFixTestDao/existsSQLFile.sql",
-            "quickfix/ScriptQuickFixTestDao/existsSQLFile.script",
-            "quickfix/SqlProcessorQuickFixTestDao/existsSQLFile.sql",
+            "$packagename/SelectQuickFixTestDao/existsSQLFile.sql",
+            "$packagename/InsertQuickFixTestDao/existsSQLFile.sql",
+            "$packagename/UpdateQuickFixTestDao/existsSQLFile.sql",
+            "$packagename/DeleteQuickFixTestDao/existsSQLFile.sql",
+            "$packagename/BatchInsertQuickFixTestDao/existsSQLFile.sql",
+            "$packagename/BatchUpdateQuickFixTestDao/existsSQLFile.sql",
+            "$packagename/BatchDeleteQuickFixTestDao/existsSQLFile.sql",
+            "$packagename/ScriptQuickFixTestDao/existsSQLFile.script",
+            "$packagename/SqlProcessorQuickFixTestDao/existsSQLFile.sql",
         )
         myFixture.enableInspections(SqlFileExistInspection())
     }
@@ -127,5 +129,5 @@ class DomaSqlQuickFixTest : DomaSqlTest() {
         afterCheck()
     }
 
-    private fun getQuickFixTestDaoName(daoName: String): String = "quickfix/$daoName"
+    private fun getQuickFixTestDaoName(daoName: String): String = "$packagename/$daoName"
 }

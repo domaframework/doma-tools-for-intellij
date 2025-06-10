@@ -16,8 +16,8 @@
 package org.domaframework.doma.intellij.inspection.sql.processor
 
 import com.intellij.codeInspection.ProblemsHolder
-import org.domaframework.doma.intellij.common.sql.validator.result.ValidationForDirectiveItemTypeResult
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
+import org.domaframework.doma.intellij.common.validation.result.ValidationForDirectiveItemTypeResult
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 

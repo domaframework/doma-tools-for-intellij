@@ -13,25 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.common.sql.validator.result
+package org.domaframework.doma.intellij.common.validation.result
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-/**
- * This class represents successful completion of field access analysis.
- */
-class ValidationCompleteResult(
-    override val identify: PsiElement,
-    override val parentClass: PsiParentClass,
-) : ValidationResult(identify, parentClass, "") {
+class ValidationTestDataResult(
+    override val identify: PsiElement?,
+    override val shortName: String = "",
+) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
         identify: PsiElement,
         holder: ProblemsHolder,
         parent: PsiParentClass?,
     ) {
+        val project = identify.project
+        holder.registerProblem(
+            identify,
+            MessageBundle.message("inspection.invalid.sql.testdata"),
+            problemHighlightType(project, shortName),
+            highlightRange,
+        )
     }
 }

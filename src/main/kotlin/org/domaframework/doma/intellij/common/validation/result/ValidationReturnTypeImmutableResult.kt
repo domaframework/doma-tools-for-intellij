@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.common.sql.validator.result
+package org.domaframework.doma.intellij.common.validation.result
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
-import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
-import org.domaframework.doma.intellij.inspection.dao.quickfix.GenerateSQLFileQuickFixFactory
 
-class ValidationSqlFileExistResult(
-    private val psiDaoMethod: PsiDaoMethod,
+class ValidationReturnTypeImmutableResult(
     override val identify: PsiElement?,
     override val shortName: String = "",
+    private val annotationName: String,
+    private val resultTypeName: String,
+    private val returnTypeName: String,
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -34,12 +34,12 @@ class ValidationSqlFileExistResult(
         holder: ProblemsHolder,
         parent: PsiParentClass?,
     ) {
-        val project = psiDaoMethod.psiMethod.project
+        val project = identify.project
         holder.registerProblem(
             identify,
-            MessageBundle.message("inspection.invalid.dao.notExistSql"),
+            MessageBundle.message("inspection.invalid.dao.returnType.immutable", annotationName, resultTypeName, returnTypeName),
             problemHighlightType(project, shortName),
-            GenerateSQLFileQuickFixFactory.createSql(psiDaoMethod),
+            highlightRange,
         )
     }
 }

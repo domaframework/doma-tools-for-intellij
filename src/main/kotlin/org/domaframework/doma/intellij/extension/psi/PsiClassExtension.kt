@@ -15,6 +15,7 @@
  */
 package org.domaframework.doma.intellij.extension.psi
 
+import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiField
@@ -26,14 +27,6 @@ import org.domaframework.doma.intellij.common.psi.PropertyModifyUtil
 val PsiClass.psiClassType: PsiClassType
     get() = PsiTypesUtil.getClassType(this)
 
-fun PsiClass.searchStaticField(searchName: String): Array<PsiField> =
-    this.allFields
-        .filter {
-            it.name.startsWith(searchName) &&
-                it.hasModifierProperty(PsiModifier.STATIC) &&
-                PropertyModifyUtil.filterPrivateField(it, this.psiClassType)
-        }.toTypedArray()
-
 fun PsiClass.findStaticField(searchName: String): PsiField? =
     this.allFields.firstOrNull {
         it.name == searchName &&
@@ -41,17 +34,15 @@ fun PsiClass.findStaticField(searchName: String): PsiField? =
             PropertyModifyUtil.filterPrivateField(it, this.psiClassType)
     }
 
-fun PsiClass.searchStaticMethod(searchName: String): Array<PsiMethod> =
-    this.allMethods
-        .filter {
-            it.name.startsWith(searchName) &&
-                it.hasModifierProperty(PsiModifier.STATIC) &&
-                it.hasModifierProperty(PsiModifier.PUBLIC)
-        }.toTypedArray()
-
 fun PsiClass.findStaticMethod(searchName: String): PsiMethod? =
     this.allMethods.firstOrNull {
         it.name == searchName &&
             it.hasModifierProperty(PsiModifier.STATIC) &&
             it.hasModifierProperty(PsiModifier.PUBLIC)
     }
+
+fun PsiClass.getEntityAnnotation(): PsiAnnotation? =
+    this.annotations
+        .firstOrNull { it.qualifiedName == "org.seasar.doma.Entity" }
+
+fun PsiClass.isEntity(): Boolean = this.getEntityAnnotation() != null
