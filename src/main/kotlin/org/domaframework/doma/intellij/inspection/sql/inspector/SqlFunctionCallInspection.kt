@@ -22,11 +22,7 @@ import org.domaframework.doma.intellij.inspection.sql.visitor.SqlFunctionCallIns
 import org.domaframework.doma.intellij.psi.SqlVisitor
 
 class SqlFunctionCallInspection : LocalInspectionTool() {
-    override fun getDisplayName(): String =
-        "This inspection checks whether the function name called " +
-            "in a function call is defined in the implementation class specified " +
-            "by the `doma.expr.functions` property of doma.compile.config," +
-            " or in org.seasar.doma.expr.ExpressionFunctions."
+    override fun getDisplayName(): String = "Check function call"
 
     override fun getShortName(): String = "org.domaframework.doma.intellij.functionCall"
 

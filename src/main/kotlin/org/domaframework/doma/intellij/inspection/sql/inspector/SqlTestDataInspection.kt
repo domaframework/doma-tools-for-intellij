@@ -25,7 +25,7 @@ import org.domaframework.doma.intellij.psi.SqlVisitor
  * Code inspection for SQL bind variables
  */
 class SqlTestDataInspection : LocalInspectionTool() {
-    override fun getDisplayName(): String = "Verify the presence of test data after SQL bind variables"
+    override fun getDisplayName(): String = "Check test data presence"
 
     override fun getShortName(): String = "org.domaframework.doma.intellij.existaftertestdata"
 

@@ -22,8 +22,7 @@ import org.domaframework.doma.intellij.inspection.sql.visitor.SqlLoopDirectiveTy
 import org.domaframework.doma.intellij.psi.SqlVisitor
 
 class SqlLoopDirectiveTypeInspection : LocalInspectionTool() {
-    override fun getDisplayName(): String =
-        "This inspection checks whether the base type of the element defined in a loop directive is of an Iterable type."
+    override fun getDisplayName(): String = "Check loop directive type"
 
     override fun getShortName(): String = "org.domaframework.doma.intellij.loopDirectiveType"
 
