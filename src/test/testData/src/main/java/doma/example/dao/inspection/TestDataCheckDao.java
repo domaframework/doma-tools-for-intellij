@@ -30,5 +30,11 @@ interface TestDataCheckDao {
   @Insert(sqlFile=true)
   int invalidTestData(Employee employee);
 
+  @Select
+  int expandDirective(Employee employee);
+
+  @Select
+  int invalidExpandDirective(Employee employee);
+
 }
 
