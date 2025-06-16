@@ -20,13 +20,15 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
+import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodProcedureParamTypeResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodProcedureParamsSupportGenericParamResult
 
 class ProcedureFunctionInOutParamAnnotationTypeChecker(
     private val annotationType: ProcedureFunctionParamAnnotationType,
-) : ProcedureFunctionParamAnnotationTypeChecker() {
+    psiDaoMethod: PsiDaoMethod,
+) : ProcedureFunctionParamAnnotationTypeChecker(psiDaoMethod) {
     override fun checkParam(
         identifier: PsiElement,
         paramType: PsiType,
@@ -56,7 +58,7 @@ class ProcedureFunctionInOutParamAnnotationTypeChecker(
             return
         }
 
-        if (checkParamType(referenceParamType, project)) return
+        if (checkParamType(referenceParamType)) return
         ValidationMethodProcedureParamsSupportGenericParamResult(
             identifier,
             shortName,

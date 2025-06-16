@@ -47,6 +47,7 @@ class ProcedureParamTypeCheckProcessor(
     override fun checkParams(holder: ProblemsHolder) {
         val params = method.parameterList.parameters
         var paramAnnotationType: ProcedureFunctionParamAnnotationType? = null
+        val psiDaoMethod = PsiDaoMethod(method.project, method)
         params.forEach { param: PsiParameter ->
             val paramAnnotation =
                 param.annotations.firstOrNull { annotation ->
@@ -61,7 +62,7 @@ class ProcedureParamTypeCheckProcessor(
                 ).highlightElement(holder)
                 return
             }
-            checkParamType(paramAnnotationType, param, holder)
+            checkParamType(psiDaoMethod, paramAnnotationType, param, holder)
         }
     }
 
@@ -73,11 +74,12 @@ class ProcedureParamTypeCheckProcessor(
      * @param holder The ProblemsHolder instance used to report validation issues.
      */
     private fun checkParamType(
+        psiDaoMethod: PsiDaoMethod,
         paramAnnotationType: ProcedureFunctionParamAnnotationType,
         param: PsiParameter,
         holder: ProblemsHolder,
     ) {
         val identifier = param.nameIdentifier ?: return
-        paramAnnotationType.checkParamType(identifier, param.type, param.project, shortName, holder)
+        paramAnnotationType.checkParamType(psiDaoMethod, identifier, param.type, param.project, shortName, holder)
     }
 }

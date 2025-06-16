@@ -19,9 +19,12 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
+import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamsProcedureInTypeResult
 
-class ProcedureFunctionInParamAnnotationTypeChecker : ProcedureFunctionParamAnnotationTypeChecker() {
+class ProcedureFunctionInParamAnnotationTypeChecker(
+    psiDaoMethod: PsiDaoMethod,
+) : ProcedureFunctionParamAnnotationTypeChecker(psiDaoMethod) {
     override fun checkParam(
         identifier: PsiElement,
         paramType: PsiType,
@@ -29,7 +32,7 @@ class ProcedureFunctionInParamAnnotationTypeChecker : ProcedureFunctionParamAnno
         shortName: String,
         holder: ProblemsHolder,
     ) {
-        if (checkParamType(paramType, project)) return
+        if (checkParamType(paramType)) return
 
         ValidationMethodParamsProcedureInTypeResult(
             identifier,

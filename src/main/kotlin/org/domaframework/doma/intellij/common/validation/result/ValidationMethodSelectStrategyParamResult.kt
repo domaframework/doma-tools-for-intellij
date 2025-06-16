@@ -21,11 +21,11 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-class ValidationMethodProcedureParamsSupportGenericParamResult(
+class ValidationMethodSelectStrategyParamResult(
     override val identify: PsiElement?,
     override val shortName: String = "",
-    private val paramTypeName: String,
-    private val requireTypeName: String,
+    private val selectTypeName: String,
+    private val requireClassName: String,
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -36,11 +36,7 @@ class ValidationMethodProcedureParamsSupportGenericParamResult(
         val project = identify.project
         holder.registerProblem(
             identify,
-            MessageBundle.message(
-                "inspection.invalid.dao.procedure.params.support.generic.param",
-                paramTypeName,
-                requireTypeName,
-            ),
+            MessageBundle.message("inspection.invalid.dao.select.param.strategy.require.type", selectTypeName, requireClassName),
             problemHighlightType(project, shortName),
             highlightRange,
         )

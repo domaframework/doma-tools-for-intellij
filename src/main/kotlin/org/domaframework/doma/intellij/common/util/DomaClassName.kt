@@ -60,6 +60,11 @@ enum class DomaClassName(
     FLOAT("java.lang.Float"),
     BOOLEAN("java.lang.Boolean"),
 
+    JAVA_FUNCTION("java.util.function.Function"),
+    JAVA_COLLECTOR("java.util.stream.Collector"),
+    JAVA_STREAM("java.util.stream.Stream"),
+    SELECT_TYPE("org.seasar.doma.SelectType"),
+
     ENTITY("org.seasar.doma.Entity"),
     ;
 
@@ -68,8 +73,8 @@ enum class DomaClassName(
     fun getGenericParamCanonicalText(vararg genericParas: String): String = "${this.className}<${genericParas.joinToString(", ")}>"
 
     companion object {
-        fun isOptionalType(paramTypeCanonicalNames: String): Boolean =
-            paramTypeCanonicalNames in
+        fun isOptionalWrapperType(paramTypeCanonicalName: String): Boolean =
+            paramTypeCanonicalName in
                 listOf(
                     OPTIONAL_INT.className,
                     OPTIONAL_DOUBLE.className,

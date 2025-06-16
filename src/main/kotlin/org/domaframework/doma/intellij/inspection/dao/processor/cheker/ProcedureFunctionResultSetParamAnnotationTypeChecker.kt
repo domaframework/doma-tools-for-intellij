@@ -20,6 +20,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
+import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
 import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodProcedureParamTypeResult
@@ -28,14 +29,13 @@ import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
 
-class ProcedureFunctionResultSetParamAnnotationTypeChecker : ProcedureFunctionParamAnnotationTypeChecker() {
-    override fun checkParamType(
-        paramType: PsiType,
-        project: Project,
-    ): Boolean {
+class ProcedureFunctionResultSetParamAnnotationTypeChecker(
+    psiDaoMethod: PsiDaoMethod,
+) : ProcedureFunctionParamAnnotationTypeChecker(psiDaoMethod) {
+    override fun checkParamType(paramType: PsiType): Boolean {
         if (PsiTypeChecker.isBaseClassType(paramType)) return true
 
-        if (DomaClassName.isOptionalType(paramType.canonicalText)) {
+        if (DomaClassName.isOptionalWrapperType(paramType.canonicalText)) {
             return true
         }
 
@@ -95,22 +95,13 @@ class ProcedureFunctionResultSetParamAnnotationTypeChecker : ProcedureFunctionPa
                 annotationType.requireType,
             )
         if (DomaClassName.MAP.isTargetClassNameStartsWith(listCanonicalText)) {
-            val mapClassName = listCanonicalText.replace(" ", "")
-            val mapExpectedType =
-                DomaClassName.MAP
-                    .getGenericParamCanonicalText(
-                        DomaClassName.STRING.className,
-                        DomaClassName.OBJECT.className,
-                    ).replace(" ", "")
-            if (mapClassName != mapExpectedType) {
-                result.highlightElement(holder)
-            }
+            if (checkMapType(listCanonicalText)) result.highlightElement(holder)
             return
         }
 
         val paramClass = project.getJavaClazz(listParamType.canonicalText)
 
-        if (checkParamType(listParamType, project) || paramClass?.isEntity() == true) return
+        if (checkParamType(listParamType) || paramClass?.isEntity() == true) return
         result.highlightElement(holder)
     }
 }

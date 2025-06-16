@@ -32,7 +32,7 @@ import org.domaframework.doma.intellij.extension.psi.isFunctionClazz
 import org.domaframework.doma.intellij.extension.psi.isSelectOption
 import org.domaframework.doma.intellij.extension.psi.methodParameters
 
-class UsedDaoMethodArgsInspectionVisitor(
+class UsedDaoMethodParamInspectionVisitor(
     private val holder: ProblemsHolder,
 ) : JavaElementVisitor() {
     override fun visitMethod(method: PsiMethod) {

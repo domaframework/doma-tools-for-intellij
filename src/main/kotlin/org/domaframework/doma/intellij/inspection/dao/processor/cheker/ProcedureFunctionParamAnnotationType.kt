@@ -19,12 +19,14 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
+import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.DomaClassName
 
 enum class ProcedureFunctionParamAnnotationType(
     val fqdn: String,
     val requireType: String,
     val checkParamType: (
+        psiDaoMethod: PsiDaoMethod,
         identifier: PsiElement,
         paramType: PsiType,
         project: Project,
@@ -32,28 +34,34 @@ enum class ProcedureFunctionParamAnnotationType(
         holder: ProblemsHolder,
     ) -> Unit,
 ) {
-    In("org.seasar.doma.In", "", { identifier, paramType, project, shortName, holder ->
-        ProcedureFunctionInParamAnnotationTypeChecker().checkParam(identifier, paramType, project, shortName, holder)
+    In("org.seasar.doma.In", "", { psiDaoMethod, identifier, paramType, project, shortName, holder ->
+        ProcedureFunctionInParamAnnotationTypeChecker(psiDaoMethod).checkParam(identifier, paramType, project, shortName, holder)
     }),
     InOut(
         "org.seasar.doma.InOut",
         DomaClassName.REFERENCE.className,
-        { identifier, paramType, project, shortName, holder ->
-            ProcedureFunctionInOutParamAnnotationTypeChecker(InOut).checkParam(identifier, paramType, project, shortName, holder)
+        { psiDaoMethod, identifier, paramType, project, shortName, holder ->
+            ProcedureFunctionInOutParamAnnotationTypeChecker(
+                InOut,
+                psiDaoMethod,
+            ).checkParam(identifier, paramType, project, shortName, holder)
         },
     ),
     Out(
         "org.seasar.doma.Out",
         DomaClassName.REFERENCE.className,
-        { identifier, paramType, project, shortName, holder ->
-            ProcedureFunctionInOutParamAnnotationTypeChecker(Out).checkParam(identifier, paramType, project, shortName, holder)
+        { psiDaoMethod, identifier, paramType, project, shortName, holder ->
+            ProcedureFunctionInOutParamAnnotationTypeChecker(
+                Out,
+                psiDaoMethod,
+            ).checkParam(identifier, paramType, project, shortName, holder)
         },
     ),
     ResultSet(
         "org.seasar.doma.ResultSet",
         DomaClassName.LIST.className,
-        { identifier, paramType, project, shortName, holder ->
-            ProcedureFunctionResultSetParamAnnotationTypeChecker().checkParam(identifier, paramType, project, shortName, holder)
+        { psiDaoMethod, identifier, paramType, project, shortName, holder ->
+            ProcedureFunctionResultSetParamAnnotationTypeChecker(psiDaoMethod).checkParam(identifier, paramType, project, shortName, holder)
         },
     ),
 }

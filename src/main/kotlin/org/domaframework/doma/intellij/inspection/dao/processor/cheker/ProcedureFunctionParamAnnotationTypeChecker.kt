@@ -17,38 +17,14 @@ package org.domaframework.doma.intellij.inspection.dao.processor.cheker
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
-import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
-import org.domaframework.doma.intellij.common.util.DomaClassName
-import org.domaframework.doma.intellij.extension.getJavaClazz
-import org.domaframework.doma.intellij.extension.psi.isDomain
+import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.inspection.dao.processor.TypeCheckerProcessor
 
-abstract class ProcedureFunctionParamAnnotationTypeChecker {
-    open fun checkParamType(
-        paramType: PsiType,
-        project: Project,
-    ): Boolean {
-        if (PsiTypeChecker.isBaseClassType(paramType)) return true
-
-        if (DomaClassName.isOptionalType(paramType.canonicalText)) {
-            return true
-        }
-
-        if (DomaClassName.OPTIONAL.isTargetClassNameStartsWith(paramType.canonicalText)) {
-            val paramClassType = paramType as? PsiClassType ?: return false
-            val optionalParam = paramClassType.parameters.firstOrNull()
-            return optionalParam?.let {
-                val optionalParamClass = project.getJavaClazz(it.canonicalText)
-                optionalParamClass?.isDomain() == true || PsiTypeChecker.isBaseClassType(it)
-            } == true
-        }
-
-        val paramClass = project.getJavaClazz(paramType.canonicalText)
-        return paramClass?.isDomain() == true
-    }
-
+abstract class ProcedureFunctionParamAnnotationTypeChecker(
+    psiDaoMethod: PsiDaoMethod,
+) : TypeCheckerProcessor(psiDaoMethod) {
     abstract fun checkParam(
         identifier: PsiElement,
         paramType: PsiType,

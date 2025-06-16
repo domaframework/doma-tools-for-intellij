@@ -49,3 +49,14 @@ fun PsiClass.getClassAnnotation(annotationClassName: String): PsiAnnotation? =
 fun PsiClass.isEntity(): Boolean = this.getClassAnnotation(DomaClassName.ENTITY.className) != null
 
 fun PsiClass.isDomain(): Boolean = this.getClassAnnotation(DomaClassName.DOMAIN.className) != null
+
+fun PsiClassType.getSuperType(superClassName: String): PsiClassType? {
+    var parent: PsiClassType? = this
+    while (parent != null && !parent.canonicalText.startsWith(superClassName)) {
+        parent =
+            parent.superTypes.find { superType ->
+                superType.canonicalText.startsWith(superClassName)
+            } as? PsiClassType
+    }
+    return parent
+}

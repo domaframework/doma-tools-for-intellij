@@ -21,11 +21,9 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-class ValidationMethodProcedureParamsSupportGenericParamResult(
+class ValidationMethodNotSelectStreamParamResult(
     override val identify: PsiElement?,
     override val shortName: String = "",
-    private val paramTypeName: String,
-    private val requireTypeName: String,
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -36,11 +34,7 @@ class ValidationMethodProcedureParamsSupportGenericParamResult(
         val project = identify.project
         holder.registerProblem(
             identify,
-            MessageBundle.message(
-                "inspection.invalid.dao.procedure.params.support.generic.param",
-                paramTypeName,
-                requireTypeName,
-            ),
+            MessageBundle.message("inspection.invalid.dao.select.param.notFound.strategy.stream"),
             problemHighlightType(project, shortName),
             highlightRange,
         )

@@ -27,6 +27,7 @@ import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.MultiI
 import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.ParamTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.ProcedureParamTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.ScriptParamTypeCheckProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.SelectParamTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.SqlProcessorParamTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.UpdateParamTypeCheckProcessor
 
@@ -75,6 +76,12 @@ class DaoMethodParamTypeInspectionVisitor(
                 )
             }
 
-            DomaAnnotationType.Select, DomaAnnotationType.Sql, DomaAnnotationType.Unknown -> null
+            DomaAnnotationType.Select -> {
+                SelectParamTypeCheckProcessor(
+                    psiDaoMethod,
+                    this.shortName,
+                )
+            }
+            DomaAnnotationType.Sql, DomaAnnotationType.Unknown -> null
         }
 }

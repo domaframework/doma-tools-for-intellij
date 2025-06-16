@@ -19,6 +19,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamsCountResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
+import org.domaframework.doma.intellij.inspection.dao.processor.TypeCheckerProcessor
 
 /**
  * Abstract base class for checking the parameter types of DAO methods.
@@ -33,13 +34,7 @@ import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 abstract class ParamTypeCheckProcessor(
     psiDaoMethod: PsiDaoMethod,
     private val shortName: String,
-) {
-    /** The method being inspected. */
-    protected val method = psiDaoMethod.psiMethod
-
-    /** The project associated with the method. */
-    protected val project = method.project
-
+) : TypeCheckerProcessor(psiDaoMethod) {
     /**
      * Abstract method for checking the parameters of the DAO method.
      *
