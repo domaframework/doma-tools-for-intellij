@@ -24,6 +24,7 @@ import org.domaframework.doma.intellij.common.psi.PsiParentClass
 class ValidationTestDataResult(
     override val identify: PsiElement?,
     override val shortName: String = "",
+    private val expand: Boolean,
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -31,10 +32,16 @@ class ValidationTestDataResult(
         holder: ProblemsHolder,
         parent: PsiParentClass?,
     ) {
+        val message =
+            if (expand) {
+                MessageBundle.message("inspection.invalid.sql.expand")
+            } else {
+                MessageBundle.message("inspection.invalid.sql.testdata")
+            }
         val project = identify.project
         holder.registerProblem(
             identify,
-            MessageBundle.message("inspection.invalid.sql.testdata"),
+            message,
             problemHighlightType(project, shortName),
             highlightRange,
         )

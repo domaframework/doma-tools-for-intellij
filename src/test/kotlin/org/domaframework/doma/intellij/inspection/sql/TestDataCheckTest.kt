@@ -34,6 +34,8 @@ class TestDataCheckTest : DomaSqlTest() {
             "$packageName/$testDaoName/commentBlock.sql",
             "$packageName/$testDaoName/populateDirective.sql",
             "$packageName/$testDaoName/invalidTestData.sql",
+            "$packageName/$testDaoName/expandDirective.sql",
+            "$packageName/$testDaoName/invalidExpandDirective.sql",
         )
         myFixture.enableInspections(SqlTestDataInspection())
     }
@@ -83,6 +85,24 @@ class TestDataCheckTest : DomaSqlTest() {
     fun testInvalidTestData() {
         val sqlFile =
             findSqlFile("$packageName/$testDaoName/invalidTestData.sql")
+        assertNotNull("Not Found SQL File", sqlFile)
+        if (sqlFile == null) return
+
+        myFixture.testHighlighting(false, false, false, sqlFile)
+    }
+
+    fun testExpandDirective() {
+        val sqlFile =
+            findSqlFile("$packageName/$testDaoName/expandDirective.sql")
+        assertNotNull("Not Found SQL File", sqlFile)
+        if (sqlFile == null) return
+
+        myFixture.testHighlighting(false, false, false, sqlFile)
+    }
+
+    fun testInvalidExpandDirective() {
+        val sqlFile =
+            findSqlFile("$packageName/$testDaoName/invalidExpandDirective.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 

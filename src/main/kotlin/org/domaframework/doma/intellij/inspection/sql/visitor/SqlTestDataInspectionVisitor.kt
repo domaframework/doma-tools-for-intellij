@@ -51,12 +51,20 @@ class SqlTestDataInspectionVisitor(
         super.visitBlockComment(element)
         if (hasOtherBindVariable(element)) return
 
-        val result = ValidationTestDataResult(element, shortName)
         val nextElement = element.nextSibling
+        val expand = isExpand(element)
+        val result = ValidationTestDataResult(element, shortName, expand)
+
+        if (expand) {
+            if (!checkExpandDirective(nextElement)) result.highlightElement(holder)
+            return
+        }
+
         if (nextElement == null) {
             result.highlightElement(holder)
             return
         }
+
         if (isSqlLiteral(nextElement)) return
         if (isMatchListTestData(element)) return
 
@@ -90,6 +98,11 @@ class SqlTestDataInspectionVisitor(
         element.elementType == SqlTypes.STRING ||
             listOf("true", "false", "null").contains(element.text.lowercase()) ||
             element.text.matches(Regex("^\\d+$"))
+
+    private fun isExpand(element: PsiElement): Boolean =
+        PsiTreeUtil.getChildOfType(element, PsiElement::class.java)?.nextSibling?.elementType == SqlTypes.EL_EXPAND
+
+    private fun checkExpandDirective(element: PsiElement): Boolean = element.elementType == SqlTypes.ASTERISK
 
     /**
      * Determines if the given element matches the pattern for "List type test data."
