@@ -14,11 +14,11 @@ public interface SqlProcessorReturnTypeDao {
     <R> R processSqlReturnsR(BiFunction<Config, PreparedSql, R> handler);
 
     @SqlProcessor
-    String <error descr="The return type \"java.lang.String\" is not the same as the third type argument \"java.lang.Integer\" of BiFunction.">processSqlReturnsString</error>(BiFunction<Config, PreparedSql, Integer> handler);
+    String <error descr="The return type \"java.lang.String\" is not the same as the third type argument \"java.lang.Integer\" of BiFunction">processSqlReturnsString</error>(BiFunction<Config, PreparedSql, Integer> handler);
 
     @SqlProcessor
     void processSqlReturnsVoid(BiFunction<Config, PreparedSql, Void> handler);
 
     @SqlProcessor
-    String <error descr="The return type must be \"void\".">processSqlReturnsStringWithVoidHandler</error>(BiFunction<Config, PreparedSql, Void> handler);
+    String <error descr="The return type must be \"void\"">processSqlReturnsStringWithVoidHandler</error>(BiFunction<Config, PreparedSql, Void> handler);
 }
