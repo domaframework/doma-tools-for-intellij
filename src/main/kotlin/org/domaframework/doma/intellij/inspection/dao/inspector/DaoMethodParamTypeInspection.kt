@@ -22,9 +22,9 @@ import com.intellij.psi.PsiElementVisitor
 import org.domaframework.doma.intellij.inspection.dao.visitor.DaoMethodParamTypeInspectionVisitor
 
 class DaoMethodParamTypeInspection : AbstractBaseJavaLocalInspectionTool() {
-    override fun getDisplayName(): String = "Check return type variable of DAO method"
+    override fun getDisplayName(): String = "Check parameter type variable of DAO method"
 
-    override fun getShortName(): String = "org.domaframework.doma.intellij.args"
+    override fun getShortName(): String = "org.domaframework.doma.intellij.param"
 
     override fun getGroupDisplayName(): String = "DomaTools"
 
