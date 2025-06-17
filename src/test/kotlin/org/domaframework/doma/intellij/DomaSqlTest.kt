@@ -205,7 +205,8 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
     }
 
     fun findDaoClass(testDaoName: String): PsiClass {
-        val dao = myFixture.findClass("doma.example.dao.$testDaoName")
+        val daoName = testDaoName.replace("/", ".")
+        val dao = myFixture.findClass("doma.example.dao.$daoName")
         assertNotNull("Not Found [$testDaoName]", dao)
         return dao
     }

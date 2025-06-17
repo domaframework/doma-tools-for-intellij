@@ -1,0 +1,60 @@
+package doma.example.dao.inspection.paramtype;
+
+import org.seasar.doma.*;
+import org.seasar.doma.message.Message;
+import doma.example.entity.*;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.stream.Collector;
+import java.util.stream.Stream;
+import java.util.function.Function;
+
+@Dao
+public interface SelectParamTestDao {
+
+  @Select
+  Pckt selectPcktById(Integer id);
+
+  @Select
+  @Sql("SELECT * FROM packet WHERE id = /* pckt.id */0")
+  Pckt selectEmp(Pckt pckt);
+
+  @Select(strategy = SelectType.STREAM)
+  @Sql("Select 10000 from user where name = /* name */'name' and salary = /* salary */0")
+  Stream<Packet> selectReturnStreamWithStreamOption(String name, BigDecimal salary);
+
+  @Select
+  @Sql("Select 10000 from user")
+  Stream<Packet> selectReturnStreamWithOutStreamOption(Function<Stream<Packet>, BigDecimal> streams);
+
+  @Select(strategy = SelectType.STREAM)
+  @Sql("Select 10000 from user")
+  Integer selectReturnStream(Function<Stream<Pckt>, BigDecimal> stream);
+
+  @Select(strategy = SelectType.STREAM)
+  @Sql("Select 10000 from user")
+  BigDecimal selectStream(Function<Stream<Pckt>, BigDecimal> stream);
+
+  @Suppress(messages = { Message.DOMA4274 })
+  @Select
+  @Sql("Select 10000 from user where name = /* name */'name' and salary = /* salary */0")
+  Stream<Package> selectReturnStream(String name, BigDecimal salary);
+
+  @Select
+  @Sql("select * from packet where salary > /* salary */0")
+  Pckt selectCollectNotOption(BigDecimal salary, Collector<Packet, BigDecimal, Pckt> collector);
+
+  @Select(strategy = SelectType.COLLECT)
+  @Sql("select * from packet where salary > /* salary */0")
+  Pckt selectCollectAccumulation(BigDecimal salary, Packet packet);
+
+  @Select(strategy = SelectType.COLLECT)
+  @Sql("select * from emp where salary > /* salary */0")
+  Optional<Packet> selectCollectInValidParamResult(BigDecimal salary,Collector<Packet, ?, Optional<Packet>> collector);
+
+  @Select(strategy = SelectType.COLLECT)
+  @Sql("select * from emp where salary > /* salary */0")
+  Pckt selectCollectAccumulation(BigDecimal salary, Collector<Packet, BigDecimal, Pckt> collector);
+}
+
