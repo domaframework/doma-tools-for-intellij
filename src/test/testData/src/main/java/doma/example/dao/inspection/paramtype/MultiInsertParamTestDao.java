@@ -2,6 +2,7 @@ package doma.example.dao.inspection.paramtype;
 
 import doma.example.entity.*;
 import org.seasar.doma.*;
+import org.seasar.doma.jdbc.MultiResult;
 
 import java.util.List;
 
@@ -21,13 +22,13 @@ public interface MultiInsertParamTestDao {
     int[] multiInsert(List<Pckt> PcktList);
 
     @MultiInsert
-    MultiResult<<error descr="Cannot resolve symbol 'Prj'">Prj</error>> multiInsertNoMatchResult(List<Pckt> PcktList);
+    MultiResult<User> multiInsertNoMatchResult(List<Pckt> PcktList);
 
     @MultiInsert
-    <error descr="Cannot resolve symbol 'MultiResult'">MultiResult</error><Pckt> multiInsertResult(List<Pckt> PcktList);
+    MultiResult<Pckt> multiInsertResult(List<Pckt> PcktList);
 
     @MultiInsert
-    <error descr="Cannot resolve symbol 'MultiResult'">MultiResult</error><Packet> multiInsertPacket(List<Packet> PacketList);
+    MultiResult<Packet> multiInsertPacket(List<Packet> PacketList);
 
     @MultiInsert(returning = @Returning)
     int[] multiInsertReturning(List<Pckt> Pckts);

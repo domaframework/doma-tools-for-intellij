@@ -44,6 +44,11 @@ class AnnotationParamTypeCheckInspectionTest : DomaSqlTest() {
         }
     }
 
+    fun testSelectParam() {
+        val dao = findDaoClass("$daoPackage.SelectParamTestDao")
+        myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
+    }
+
     fun testInsertUpdateDeleteParam() {
         val dao = findDaoClass("$daoPackage.InsertUpdateDeleteParamTestDao")
         myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
