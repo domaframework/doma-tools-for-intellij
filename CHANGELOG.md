@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-06-19
+
+### New Features
+
+- DAO Method Parameter Validation ([#257])
+- Check DAO Method Return Type ([#247])
+
+### Bug Fixes
+
+- Expand directive incorrectly treated as bind variable directive ([#255])
+
+### Dependency Updates
+
+- Update dependency org.jetbrains.intellij.plugins:verifier-cli to v1.388 ([#258])
+- Update dependency com.fasterxml.jackson.module:jackson-module-kotlin to v2.19.1 ([#253])
+
+[#257]:https://github.com/domaframework/doma-tools-for-intellij/pull/257
+[#247]:https://github.com/domaframework/doma-tools-for-intellij/pull/247
+[#255]:https://github.com/domaframework/doma-tools-for-intellij/pull/255
+[#258]:https://github.com/domaframework/doma-tools-for-intellij/pull/258
+[#253]:https://github.com/domaframework/doma-tools-for-intellij/pull/253
+
+
 ## [1.0.0] - 2025-06-09
 
 ### Bug Fixes
@@ -356,3 +379,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[1.1.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/1.0.0...1.1.0
