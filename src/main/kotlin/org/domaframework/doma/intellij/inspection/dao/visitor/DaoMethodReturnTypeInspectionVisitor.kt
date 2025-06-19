@@ -22,14 +22,15 @@ import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
-import org.domaframework.doma.intellij.inspection.dao.processor.BatchAnnotationReturnTypeCheckProcessor
-import org.domaframework.doma.intellij.inspection.dao.processor.MultiInsertAnnotationReturnTypeCheckProcessor
-import org.domaframework.doma.intellij.inspection.dao.processor.ProcedureAnnotationReturnTypeCheckProcessor
-import org.domaframework.doma.intellij.inspection.dao.processor.ReturnTypeCheckerProcessor
-import org.domaframework.doma.intellij.inspection.dao.processor.SqlProcessorAnnotationReturnTypeCheckProcessor
-import org.domaframework.doma.intellij.inspection.dao.processor.UpdateAnnotationReturnTypeCheckProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.returntype.BatchAnnotationReturnTypeCheckProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.returntype.MultiInsertAnnotationReturnTypeCheckProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.returntype.ProcedureAnnotationReturnTypeCheckProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.returntype.ReturnTypeCheckerProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.returntype.ScriptAnnotationReturnTypeCheckProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.returntype.SqlProcessorAnnotationReturnTypeCheckProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.returntype.UpdateAnnotationReturnTypeCheckProcessor
 
-class DaoMethodReturnTypeVariableInspectionVisitor(
+class DaoMethodReturnTypeInspectionVisitor(
     private val holder: ProblemsHolder,
     private val shortName: String,
 ) : JavaElementVisitor() {
@@ -68,7 +69,13 @@ class DaoMethodReturnTypeVariableInspectionVisitor(
                     psiDaoMethod,
                     this.shortName,
                 )
+            DomaAnnotationType.Script -> {
+                ScriptAnnotationReturnTypeCheckProcessor(
+                    psiDaoMethod,
+                    this.shortName,
+                )
+            }
 
-            DomaAnnotationType.Select, DomaAnnotationType.Sql, DomaAnnotationType.Script, DomaAnnotationType.Unknown -> null
+            else -> null
         }
 }

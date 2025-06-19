@@ -32,7 +32,7 @@ import org.domaframework.doma.intellij.extension.psi.isFunctionClazz
 import org.domaframework.doma.intellij.extension.psi.isSelectOption
 import org.domaframework.doma.intellij.extension.psi.methodParameters
 
-class UsedDaoMethodArgsVariableInspectionVisitor(
+class UsedDaoMethodParamInspectionVisitor(
     private val holder: ProblemsHolder,
 ) : JavaElementVisitor() {
     override fun visitMethod(method: PsiMethod) {
@@ -85,7 +85,7 @@ class UsedDaoMethodArgsVariableInspectionVisitor(
         val elements = mutableListOf<PsiParameter>()
         val deplicateForItemElements = mutableListOf<PsiParameter>()
 
-        sqlFile.accept(DaoMethodVariableSqlVisitor(args, elements, deplicateForItemElements))
+        sqlFile.accept(DaoMethodRelatedSqlVisitor(args, elements, deplicateForItemElements))
         val result = DaoMethodVariableVisitorResult(elements, deplicateForItemElements)
         return result
     }

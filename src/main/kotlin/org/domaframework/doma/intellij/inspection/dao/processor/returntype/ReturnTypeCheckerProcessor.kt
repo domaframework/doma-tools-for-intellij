@@ -13,24 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.dao.processor
+package org.domaframework.doma.intellij.inspection.dao.processor.returntype
 
 import com.intellij.codeInsight.AnnotationUtil
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationReturnTypeImmutableResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationReturnTypeResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
-import org.domaframework.doma.intellij.extension.psi.getEntityAnnotation
+import org.domaframework.doma.intellij.extension.psi.getClassAnnotation
 
 abstract class ReturnTypeCheckerProcessor(
     private val psiDaoMethod: PsiDaoMethod,
     private val shortName: String,
 ) {
-    protected val returningFqn = "org.seasar.doma.Returning"
+    protected val returningFqn = DomaClassName.RETURNING.className
     protected val method = psiDaoMethod.psiMethod
     protected val project = method.project
     protected val returnType = psiDaoMethod.psiMethod.returnType
@@ -41,10 +42,11 @@ abstract class ReturnTypeCheckerProcessor(
 
     protected fun isImmutableEntity(canonicalText: String): Boolean {
         val returnTypeClass = method.project.getJavaClazz(canonicalText)
-        val entity = returnTypeClass?.getEntityAnnotation() ?: return false
+        val entity = returnTypeClass?.getClassAnnotation(DomaClassName.ENTITY.className) ?: return false
         return entity.let { entity ->
             AnnotationUtil.getBooleanAttributeValue(entity, "immutable") == true
-        } == true
+        } == true ||
+            returnTypeClass.isRecord == true
     }
 
     protected fun hasReturingOption(): Boolean {
@@ -66,9 +68,9 @@ abstract class ReturnTypeCheckerProcessor(
         return returningOption
     }
 
-    protected fun generatePsiTypeReturnTypeResult(methodOtherReturnType: PsiType): ValidationResult? {
-        return if (returnType != methodOtherReturnType) {
-            return ValidationReturnTypeResult(
+    protected fun generatePsiTypeReturnTypeResult(methodOtherReturnType: PsiType): ValidationResult? =
+        if (returnType != methodOtherReturnType) {
+            ValidationReturnTypeResult(
                 method.nameIdentifier,
                 shortName,
                 methodOtherReturnType.presentableText,
@@ -76,7 +78,6 @@ abstract class ReturnTypeCheckerProcessor(
         } else {
             null
         }
-    }
 
     protected fun generateResultReturnTypeImmutable(
         annotation: DomaAnnotationType,

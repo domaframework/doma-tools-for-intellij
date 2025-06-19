@@ -20,35 +20,36 @@ import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiType
 import com.intellij.psi.util.PsiUtil
+import org.domaframework.doma.intellij.common.util.DomaClassName
 
 object PsiTypeChecker {
     private val TARGET_CLASSES: MutableSet<String> = HashSet()
     private val WRAPPER_CLASSES: MutableSet<String> = HashSet()
 
     init {
-        TARGET_CLASSES.add("java.lang.String")
-        TARGET_CLASSES.add("java.lang.Object")
-        TARGET_CLASSES.add("java.math.BigDecimal")
-        TARGET_CLASSES.add("java.math.BigInteger")
-        TARGET_CLASSES.add("java.time.LocalDate")
-        TARGET_CLASSES.add("java.time.LocalTime")
-        TARGET_CLASSES.add("java.time.LocalDateTime")
-        TARGET_CLASSES.add("java.sql.Date")
-        TARGET_CLASSES.add("java.sql.Time")
-        TARGET_CLASSES.add("java.sql.Timestamp")
-        TARGET_CLASSES.add("java.sql.Array")
-        TARGET_CLASSES.add("java.sql.Blob")
-        TARGET_CLASSES.add("java.sql.Clob")
-        TARGET_CLASSES.add("java.sql.SQLXML")
-        TARGET_CLASSES.add("java.util.Date")
+        TARGET_CLASSES.add(DomaClassName.STRING.className)
+        TARGET_CLASSES.add(DomaClassName.OBJECT.className)
+        TARGET_CLASSES.add(DomaClassName.BIG_DECIMAL.className)
+        TARGET_CLASSES.add(DomaClassName.BIG_INTEGER.className)
+        TARGET_CLASSES.add(DomaClassName.LOCAL_DATE.className)
+        TARGET_CLASSES.add(DomaClassName.LOCAL_TIME.className)
+        TARGET_CLASSES.add(DomaClassName.LOCAL_DATE_TIME.className)
+        TARGET_CLASSES.add(DomaClassName.SQL_DATE.className)
+        TARGET_CLASSES.add(DomaClassName.SQL_TIME.className)
+        TARGET_CLASSES.add(DomaClassName.SQL_TIMESTAMP.className)
+        TARGET_CLASSES.add(DomaClassName.SQL_ARRAY.className)
+        TARGET_CLASSES.add(DomaClassName.SQL_BLOB.className)
+        TARGET_CLASSES.add(DomaClassName.SQL_CLOB.className)
+        TARGET_CLASSES.add(DomaClassName.SQL_XML.className)
+        TARGET_CLASSES.add(DomaClassName.UTIL_DATE.className)
 
-        WRAPPER_CLASSES.add("java.lang.Byte")
-        WRAPPER_CLASSES.add("java.lang.Short")
-        WRAPPER_CLASSES.add("java.lang.Integer")
-        WRAPPER_CLASSES.add("java.lang.Long")
-        WRAPPER_CLASSES.add("java.lang.Float")
-        WRAPPER_CLASSES.add("java.lang.Double")
-        WRAPPER_CLASSES.add("java.lang.Boolean")
+        WRAPPER_CLASSES.add(DomaClassName.BYTE.className)
+        WRAPPER_CLASSES.add(DomaClassName.SHORT.className)
+        WRAPPER_CLASSES.add(DomaClassName.INTEGER.className)
+        WRAPPER_CLASSES.add(DomaClassName.LONG.className)
+        WRAPPER_CLASSES.add(DomaClassName.FLOAT.className)
+        WRAPPER_CLASSES.add(DomaClassName.DOUBLE.className)
+        WRAPPER_CLASSES.add(DomaClassName.BOOLEAN.className)
     }
 
     /**
@@ -56,11 +57,14 @@ object PsiTypeChecker {
      * @param psiType Check target PsiType
      * @return true if the condition is met
      */
-    fun isTargetType(psiType: PsiType?): Boolean {
+    fun isBaseClassType(psiType: PsiType?): Boolean {
         if (psiType == null) return false
+        // Check if the type is a primitive type
         if (psiType is PsiPrimitiveType && psiType.canonicalText == "char") {
             return false
         }
+
+        // Check if the type is a wrapper class
         if (psiType is PsiClassType) {
             val psiClass = PsiUtil.resolveClassInType(psiType)
             if (psiClass != null) {
@@ -79,10 +83,9 @@ object PsiTypeChecker {
         }
         if (psiType is PsiArrayType) {
             val componentType = psiType.componentType.canonicalText
-            if ("java.lang.Byte" == componentType) {
-                return true
-            }
+            return DomaClassName.BYTE.className == componentType
         }
-        return true
+        // TODO If the condition does not match, return false to strengthen type checking.
+        return false
     }
 }

@@ -21,7 +21,7 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-class ValidationReturnTypeForReturningResult(
+class ValidationReturnTypeUpdateReturningResult(
     private val paramClassName: String,
     override val identify: PsiElement?,
     override val shortName: String = "",

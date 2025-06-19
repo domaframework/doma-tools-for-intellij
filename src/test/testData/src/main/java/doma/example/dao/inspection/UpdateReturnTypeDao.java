@@ -11,7 +11,7 @@ public interface UpdateReturnTypeDao {
     int insertReturnsInt(Packet e);
 
     @Update
-    String <error descr="The return type must be \"int\".">updateReturnsString</error>(Packet e);
+    String <error descr="The return type must be \"int\"">updateReturnsString</error>(Packet e);
 
     @Delete(returning = @Returning)
     Packet deleteReturningEntity(Packet e);
@@ -23,6 +23,6 @@ public interface UpdateReturnTypeDao {
     Result<Pckt> updateReturnsResultWithImmutable(Pckt e);
 
     @Update
-    int <error descr="If a method annotated with @Update targets immutable entities for insertion, the return type must be Result<Pckt>.">updateReturnsIntWithImmutable</error>(Pckt e);
+    int <error descr="If a method annotated with @Update targets immutable entities for insertion, the return type must be Result<Pckt>">updateReturnsIntWithImmutable</error>(Pckt e);
 }
 

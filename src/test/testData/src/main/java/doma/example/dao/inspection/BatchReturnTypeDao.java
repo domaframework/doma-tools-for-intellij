@@ -11,10 +11,10 @@ public interface BatchReturnTypeDao {
     int[] batchInsertReturnsIntArray(List<Packet> e);
 
     @BatchUpdate
-    String <error descr="The return type must be \"int[]\".">batchUpdateReturnsString</error>(List<Packet> e);
+    String <error descr="The return type must be \"int[]\"">batchUpdateReturnsString</error>(List<Packet> e);
 
     @BatchDelete
-    int[] <error descr="If a method annotated with @BatchDelete targets immutable entities for insertion, the return type must be BatchResult<Pckt>.">batchDeleteReturnsIntWithImmutable</error>(List<Pckt> e);
+    int[] <error descr="If a method annotated with @BatchDelete targets immutable entities for insertion, the return type must be BatchResult<Pckt>">batchDeleteReturnsIntWithImmutable</error>(List<Pckt> e);
 
     @BatchDelete
     BatchResult<Pckt> batchDeleteReturnsBatchResultWithImmutable(List<Pckt> e);

@@ -16,7 +16,7 @@
 package org.domaframework.doma.intellij.inspection.dao
 
 import org.domaframework.doma.intellij.DomaSqlTest
-import org.domaframework.doma.intellij.inspection.dao.inspector.DaoMethodReturnTypeVariableInspection
+import org.domaframework.doma.intellij.inspection.dao.inspector.DaoMethodReturnTypeInspection
 
 /**
  * Test class for annotation return type check inspection.
@@ -40,7 +40,7 @@ class AnnotationReturnTypeCheckInspectionTest : DomaSqlTest() {
         // Entity classes
         addEntityJavaFile("Packet.java")
         addEntityJavaFile("Pckt.java")
-        myFixture.enableInspections(DaoMethodReturnTypeVariableInspection())
+        myFixture.enableInspections(DaoMethodReturnTypeInspection())
     }
 
     fun testUpdateAnnotationReturnTypeCheckProcessor() {

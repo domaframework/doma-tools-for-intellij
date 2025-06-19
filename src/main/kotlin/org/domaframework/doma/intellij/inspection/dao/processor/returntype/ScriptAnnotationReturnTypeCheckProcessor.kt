@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.dao.processor
+package org.domaframework.doma.intellij.inspection.dao.processor.returntype
 
 import com.intellij.psi.PsiTypes
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 
-class ProcedureAnnotationReturnTypeCheckProcessor(
+class ScriptAnnotationReturnTypeCheckProcessor(
     psiDaoMethod: PsiDaoMethod,
     shortName: String,
 ) : ReturnTypeCheckerProcessor(psiDaoMethod, shortName) {

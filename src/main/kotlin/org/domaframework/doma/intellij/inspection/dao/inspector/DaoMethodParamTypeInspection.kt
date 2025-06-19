@@ -19,12 +19,12 @@ import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInspection.AbstractBaseJavaLocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
-import org.domaframework.doma.intellij.inspection.dao.visitor.DaoMethodReturnTypeVariableInspectionVisitor
+import org.domaframework.doma.intellij.inspection.dao.visitor.DaoMethodParamTypeInspectionVisitor
 
-class DaoMethodReturnTypeVariableInspection : AbstractBaseJavaLocalInspectionTool() {
-    override fun getDisplayName(): String = "Check return type variable of DAO method"
+class DaoMethodParamTypeInspection : AbstractBaseJavaLocalInspectionTool() {
+    override fun getDisplayName(): String = "Check parameter type variable of DAO method"
 
-    override fun getShortName(): String = "org.domaframework.doma.intellij.returnType"
+    override fun getShortName(): String = "org.domaframework.doma.intellij.param"
 
     override fun getGroupDisplayName(): String = "DomaTools"
 
@@ -35,5 +35,5 @@ class DaoMethodReturnTypeVariableInspection : AbstractBaseJavaLocalInspectionToo
     override fun buildVisitor(
         holder: ProblemsHolder,
         isOnTheFly: Boolean,
-    ): PsiElementVisitor = DaoMethodReturnTypeVariableInspectionVisitor(holder, this.shortName)
+    ): PsiElementVisitor = DaoMethodParamTypeInspectionVisitor(holder, this.shortName)
 }
