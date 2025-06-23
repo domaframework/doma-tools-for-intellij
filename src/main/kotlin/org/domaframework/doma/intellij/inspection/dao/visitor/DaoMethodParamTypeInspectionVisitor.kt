@@ -23,6 +23,7 @@ import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.BatchParamTypeCheckProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.FactoryParamTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.MultiInsertParamTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.ParamTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.paramtype.ProcedureParamTypeCheckProcessor
@@ -47,6 +48,13 @@ class DaoMethodParamTypeInspectionVisitor(
 
     private fun getParamTypeCheckProcessor(psiDaoMethod: PsiDaoMethod): ParamTypeCheckProcessor? =
         when (psiDaoMethod.daoType) {
+            DomaAnnotationType.Select -> {
+                SelectParamTypeCheckProcessor(
+                    psiDaoMethod,
+                    this.shortName,
+                )
+            }
+
             DomaAnnotationType.Insert, DomaAnnotationType.Update, DomaAnnotationType.Delete -> {
                 UpdateParamTypeCheckProcessor(psiDaoMethod, this.shortName)
             }
@@ -76,12 +84,15 @@ class DaoMethodParamTypeInspectionVisitor(
                 )
             }
 
-            DomaAnnotationType.Select -> {
-                SelectParamTypeCheckProcessor(
+            DomaAnnotationType.ArrayFactory, DomaAnnotationType.BlobFactory, DomaAnnotationType.ClobFactory,
+            DomaAnnotationType.NClobFactory, DomaAnnotationType.SQLXMLFactory,
+            -> {
+                FactoryParamTypeCheckProcessor(
                     psiDaoMethod,
                     this.shortName,
                 )
             }
+
             DomaAnnotationType.Sql, DomaAnnotationType.Unknown -> null
         }
 }

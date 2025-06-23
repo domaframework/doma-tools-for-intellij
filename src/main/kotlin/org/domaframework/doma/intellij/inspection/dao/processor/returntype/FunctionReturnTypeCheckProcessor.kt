@@ -27,7 +27,7 @@ import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
 
-class FunctionAnnotationReturnTypeCheckProcessor(
+class FunctionReturnTypeCheckProcessor(
     psiDaoMethod: PsiDaoMethod,
     private val shortName: String,
 ) : ReturnTypeCheckerProcessor(psiDaoMethod, shortName) {

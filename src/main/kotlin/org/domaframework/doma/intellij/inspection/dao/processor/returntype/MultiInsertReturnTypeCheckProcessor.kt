@@ -31,7 +31,7 @@ import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
  * @property psiDaoMethod The target DAO method info to be checked.
  * @property shortName The short name of the inspection to check.
  */
-class MultiInsertAnnotationReturnTypeCheckProcessor(
+class MultiInsertReturnTypeCheckProcessor(
     private val psiDaoMethod: PsiDaoMethod,
     private val shortName: String,
 ) : ReturnTypeCheckerProcessor(psiDaoMethod, shortName) {

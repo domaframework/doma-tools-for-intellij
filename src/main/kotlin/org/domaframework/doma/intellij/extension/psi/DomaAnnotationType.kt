@@ -38,6 +38,11 @@ enum class DomaAnnotationType(
     Insert("org.seasar.doma.Insert"),
     Update("org.seasar.doma.Update"),
     Delete("org.seasar.doma.Delete"),
+    ArrayFactory("org.seasar.doma.ArrayFactory"),
+    BlobFactory("org.seasar.doma.BlobFactory"),
+    ClobFactory("org.seasar.doma.ClobFactory"),
+    NClobFactory("org.seasar.doma.NClobFactory"),
+    SQLXMLFactory("org.seasar.doma.SQLXMLFactory"),
     Sql("org.seasar.doma.Sql"),
     Unknown("Unknown"),
     ;
