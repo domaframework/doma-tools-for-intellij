@@ -23,8 +23,8 @@ import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
 import org.domaframework.doma.intellij.common.util.DomaClassName
+import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamsSupportGenericParamResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodProcedureParamTypeResult
-import org.domaframework.doma.intellij.common.validation.result.ValidationMethodProcedureParamsSupportGenericParamResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
@@ -77,7 +77,7 @@ class ProcedureFunctionResultSetParamAnnotationTypeChecker(
         // Check if the parameter type is a valid List type with generic parameters
         val listParamType = (paramType as? PsiClassType)?.parameters?.firstOrNull()
         if (listParamType == null) {
-            ValidationMethodProcedureParamsSupportGenericParamResult(
+            ValidationMethodParamsSupportGenericParamResult(
                 identifier,
                 shortName,
                 "Unknown",
@@ -88,14 +88,14 @@ class ProcedureFunctionResultSetParamAnnotationTypeChecker(
 
         val listCanonicalText = listParamType.canonicalText
         val result =
-            ValidationMethodProcedureParamsSupportGenericParamResult(
+            ValidationMethodParamsSupportGenericParamResult(
                 identifier,
                 shortName,
                 listCanonicalText,
                 annotationType.requireType,
             )
         if (DomaClassName.MAP.isTargetClassNameStartsWith(listCanonicalText)) {
-            if (checkMapType(listCanonicalText)) result.highlightElement(holder)
+            if (!checkMapType(listCanonicalText)) result.highlightElement(holder)
             return
         }
 

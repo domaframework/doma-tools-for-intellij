@@ -21,11 +21,10 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-class ValidationMethodSelectStrategyParamResult(
+class ValidationMethodInvalidReturnTypeResult(
     override val identify: PsiElement?,
     override val shortName: String = "",
-    private val genericTypeName: String,
-    private val parentParamTypeName: String,
+    private val returnTypeName: String,
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -36,11 +35,7 @@ class ValidationMethodSelectStrategyParamResult(
         val project = identify.project
         holder.registerProblem(
             identify,
-            MessageBundle.message(
-                "inspection.invalid.dao.select.param.strategy.require.type",
-                genericTypeName,
-                parentParamTypeName,
-            ),
+            MessageBundle.message("inspection.invalid.dao.returnType.invalid", returnTypeName),
             problemHighlightType(project, shortName),
             highlightRange,
         )

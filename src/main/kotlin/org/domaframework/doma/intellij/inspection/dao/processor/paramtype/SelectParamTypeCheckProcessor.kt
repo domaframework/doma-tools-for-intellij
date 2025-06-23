@@ -17,34 +17,22 @@ package org.domaframework.doma.intellij.inspection.dao.processor.paramtype
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiClassType
-import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
 import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodNotSelectStreamParamResult
-import org.domaframework.doma.intellij.common.validation.result.ValidationMethodProcedureParamsSupportGenericParamResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamsSupportGenericParamResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodSelectStrategyParamResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
-import org.domaframework.doma.intellij.extension.psi.getSuperType
 import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
+import org.domaframework.doma.intellij.inspection.dao.processor.StrategyParam
 
 class SelectParamTypeCheckProcessor(
     private val psiDaoMethod: PsiDaoMethod,
     private val shortName: String,
 ) : ParamTypeCheckProcessor(psiDaoMethod, shortName) {
-    private class StrategyParam(
-        val fieldName: String = "",
-        parentClassName: String?,
-    ) {
-        private val isSelectType: Boolean = parentClassName == DomaClassName.SELECT_TYPE.className
-
-        fun isStream(): Boolean = fieldName == "STREAM" && isSelectType
-
-        fun isCollect(): Boolean = fieldName == "COLLECT" && isSelectType
-    }
-
     override fun checkParamType(paramType: PsiType): Boolean {
         if (PsiTypeChecker.isBaseClassType(paramType)) return true
 
@@ -125,7 +113,7 @@ class SelectParamTypeCheckProcessor(
 
         val streamTargetTypeCanonicalText = streamTargetParam.canonicalText
         if (DomaClassName.MAP.isTargetClassNameStartsWith(streamTargetTypeCanonicalText)) {
-            if (checkMapType(streamTargetTypeCanonicalText)) {
+            if (!checkMapType(streamTargetTypeCanonicalText)) {
                 generateTargetTypeResult(streamTargetTypeCanonicalText).highlightElement(holder)
             }
             return
@@ -158,7 +146,7 @@ class SelectParamTypeCheckProcessor(
 
         val streamTargetTypeCanonicalText = collectorTargetParam.canonicalText
         if (DomaClassName.MAP.isTargetClassNameStartsWith(streamTargetTypeCanonicalText)) {
-            if (checkMapType(streamTargetTypeCanonicalText)) {
+            if (!checkMapType(streamTargetTypeCanonicalText)) {
                 generateTargetTypeResult(streamTargetTypeCanonicalText).highlightElement(holder)
             }
             return
@@ -179,13 +167,8 @@ class SelectParamTypeCheckProcessor(
         }
     }
 
-    private fun getMethodParamTargetType(typeName: String): PsiParameter? =
-        method.parameterList.parameters.find { param ->
-            (param.type as? PsiClassType)?.getSuperType(typeName) != null
-        }
-
-    fun generateTargetTypeResult(streamParamTypeName: String): ValidationMethodProcedureParamsSupportGenericParamResult =
-        ValidationMethodProcedureParamsSupportGenericParamResult(
+    fun generateTargetTypeResult(streamParamTypeName: String): ValidationMethodParamsSupportGenericParamResult =
+        ValidationMethodParamsSupportGenericParamResult(
             method.nameIdentifier,
             shortName,
             streamParamTypeName,
