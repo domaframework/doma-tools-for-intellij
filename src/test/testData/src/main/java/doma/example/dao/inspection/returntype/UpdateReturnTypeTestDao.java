@@ -1,4 +1,4 @@
-package doma.example.dao.inspection;
+package doma.example.dao.inspection.returntype;
 
 import org.seasar.doma.*;
 import org.seasar.doma.jdbc.Result;
@@ -6,7 +6,7 @@ import doma.example.entity.*;
 import java.util.List;
 
 @Dao
-public interface UpdateReturnTypeDao {
+public interface UpdateReturnTypeTestDao {
     @Insert
     int insertReturnsInt(Packet e);
 

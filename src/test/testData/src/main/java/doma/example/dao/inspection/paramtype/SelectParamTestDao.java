@@ -51,7 +51,7 @@ public interface SelectParamTestDao {
 
   @Select(strategy = SelectType.COLLECT)
   @Sql("select * from emp where salary > /* salary */0")
-  Optional<Packet> selectCollectInValidParamResult(BigDecimal salary,Collector<Packet, ?, Optional<Packet>> collector);
+  Optional<Packet> selectCollectOptionalParamResult(BigDecimal salary,Collector<Packet, ?, Optional<Packet>> collector);
 
   @Select(strategy = SelectType.COLLECT)
   @Sql("select * from emp where salary > /* salary */0")

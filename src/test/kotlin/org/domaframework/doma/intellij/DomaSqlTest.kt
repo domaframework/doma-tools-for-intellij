@@ -169,6 +169,17 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         )
     }
 
+    protected fun addOtherJavaFile(
+        packageName: String,
+        fileName: String,
+    ) {
+        val file = File("$testDataPath/$sourceRoot/$packagePath/$packageName/$fileName")
+        myFixture.addFileToProject(
+            "main/$sourceRoot/$packagePath/$packageName/$fileName",
+            file.readText(),
+        )
+    }
+
     fun addResourceEmptySqlFile(vararg sqlFileNames: String) {
         for (sqlFileName in sqlFileNames) {
             myFixture.addFileToProject(

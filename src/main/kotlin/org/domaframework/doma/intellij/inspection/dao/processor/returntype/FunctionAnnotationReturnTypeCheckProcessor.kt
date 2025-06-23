@@ -79,7 +79,6 @@ class FunctionAnnotationReturnTypeCheckProcessor(
         }
 
         val checkTypeClass = project.getJavaClazz(checkType.canonicalText)
-        // TODO: 基本クラス、ドメイン、エンティティ、Map<String, Object>、Optional 以外の型チェックを実装
         if (checkTypeClass != null &&
             (
                 checkTypeClass.isDomain() ||
