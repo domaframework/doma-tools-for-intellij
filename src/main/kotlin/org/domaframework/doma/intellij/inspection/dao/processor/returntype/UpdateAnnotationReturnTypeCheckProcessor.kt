@@ -15,14 +15,17 @@
  */
 package org.domaframework.doma.intellij.inspection.dao.processor.returntype
 
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiTypes
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
+import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationReturnTypeUpdateReturningResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.isEntity
+import org.domaframework.doma.intellij.extension.psi.psiClassType
 
 /**
  * Processor for checking the return type of update-related annotations in DAO methods.
@@ -41,13 +44,22 @@ class UpdateAnnotationReturnTypeCheckProcessor(
      */
     override fun checkReturnType(): ValidationResult? {
         val methodOtherReturnType = PsiTypes.intType()
-        if (psiDaoMethod.useSqlAnnotation() || psiDaoMethod.sqlFileOption) {
-            return generatePsiTypeReturnTypeResult(methodOtherReturnType)
-        }
-
         val parameters = method.parameterList.parameters
         val immutableEntityParam =
-            parameters.firstOrNull() ?: return null
+            parameters.firstOrNull()
+                ?: return generatePsiTypeReturnTypeResult(methodOtherReturnType)
+
+        if (psiDaoMethod.useSqlAnnotation() || psiDaoMethod.sqlFileOption) {
+            immutableEntityParam.let { methodParam ->
+                val paramTypeName = methodParam.type.canonicalText
+                project.getJavaClazz(paramTypeName)?.let {
+                    if (isImmutableEntity(paramTypeName)) {
+                        return checkReturnTypeImmutableEntity(immutableEntityParam)
+                    }
+                }
+            }
+            return generatePsiTypeReturnTypeResult(methodOtherReturnType)
+        }
 
         // Check if the method is annotated with @Returning
         if (hasReturingOption()) {
@@ -82,7 +94,7 @@ class UpdateAnnotationReturnTypeCheckProcessor(
             PsiClassTypeUtil.convertOptionalType(returnType, project)
         val returnTypeClass = project.getJavaClazz(checkReturnType.canonicalText)
 
-        return if (returnTypeClass?.isEntity() != true || returnType.canonicalText != paramClass.type.canonicalText) {
+        return if (!validateReturnType(returnTypeClass, paramClass)) {
             ValidationReturnTypeUpdateReturningResult(
                 paramClass.type.presentableText,
                 method.nameIdentifier,
@@ -91,6 +103,23 @@ class UpdateAnnotationReturnTypeCheckProcessor(
         } else {
             null
         }
+    }
+
+    private fun validateReturnType(
+        returnTypeClass: PsiClass?,
+        paramClass: PsiParameter,
+    ): Boolean {
+        if (returnTypeClass?.isEntity() != true) return false
+
+        if (DomaClassName.OPTIONAL.isTargetClassNameStartsWith(returnTypeClass.psiClassType.canonicalText)) {
+            val optionalType = returnTypeClass.psiClassType
+            val optionalParam =
+                optionalType.parameters.firstOrNull()
+                    ?: return false
+            return optionalParam.canonicalText == paramClass.type.canonicalText
+        }
+
+        return returnTypeClass.psiClassType.canonicalText == paramClass.type.canonicalText
     }
 
     /**
