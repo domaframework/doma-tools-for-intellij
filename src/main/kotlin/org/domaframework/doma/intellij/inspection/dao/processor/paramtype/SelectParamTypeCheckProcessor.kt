@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.inspection.dao.processor.paramtype
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
@@ -83,20 +84,36 @@ class SelectParamTypeCheckProcessor(
     }
 
     private fun checkStream(holder: ProblemsHolder) {
+        val stream = DomaClassName.JAVA_STREAM.className
         val result =
             ValidationMethodSelectStrategyParamResult(
                 method.nameIdentifier,
                 shortName,
                 "STREAM",
-                DomaClassName.JAVA_FUNCTION.getGenericParamCanonicalText(DomaClassName.JAVA_STREAM.className),
+                DomaClassName.JAVA_FUNCTION.className,
             )
+
         val function = getMethodParamTargetType(DomaClassName.JAVA_FUNCTION.className)
         if (function == null) {
             result.highlightElement(holder)
             return
         }
 
-        val functionFirstParam = (function.type as? PsiClassType)?.parameters?.firstOrNull()
+        val functionType = function.type
+        val identifier = function.nameIdentifier ?: return
+
+        // Check if the first parameter of the function is a stream type
+        val functionClass = project.getJavaClazz(functionType.canonicalText) ?: return
+        var superCollection: PsiClassType? = functionType as PsiClassType?
+        while (superCollection != null &&
+            !DomaClassName.JAVA_FUNCTION.isTargetClassNameStartsWith(superCollection.canonicalText)
+        ) {
+            superCollection =
+                functionClass.superTypes
+                    .find { sp -> DomaClassName.JAVA_FUNCTION.isTargetClassNameStartsWith(sp.canonicalText) }
+        }
+
+        val functionFirstParam = superCollection?.parameters?.firstOrNull()
         if (functionFirstParam == null ||
             !DomaClassName.JAVA_STREAM.isTargetClassNameStartsWith(functionFirstParam.canonicalText)
         ) {
@@ -104,23 +121,24 @@ class SelectParamTypeCheckProcessor(
             return
         }
 
-        // Check if the first parameter of the function is a stream type
-        val streamTargetParam = (functionFirstParam as? PsiClassType)?.parameters?.firstOrNull()
-        if (streamTargetParam == null) {
-            generateTargetTypeResult("Unknown").highlightElement(holder)
+        // Check if the first parameter of the stream is a valid type
+        val streamParamClassType = functionFirstParam as? PsiClassType
+        val strategyParamType = streamParamClassType?.parameters?.firstOrNull()
+        if (strategyParamType == null) {
+            generateTargetTypeResult(identifier, "Unknown", stream).highlightElement(holder)
             return
         }
 
-        val streamTargetTypeCanonicalText = streamTargetParam.canonicalText
-        if (DomaClassName.MAP.isTargetClassNameStartsWith(streamTargetTypeCanonicalText)) {
-            if (!checkMapType(streamTargetTypeCanonicalText)) {
-                generateTargetTypeResult(streamTargetTypeCanonicalText).highlightElement(holder)
+        val strategyParamTypeName = strategyParamType.canonicalText
+        if (DomaClassName.MAP.isTargetClassNameStartsWith(strategyParamTypeName)) {
+            if (!checkMapType(strategyParamTypeName)) {
+                generateTargetTypeResult(identifier, strategyParamTypeName, stream).highlightElement(holder)
             }
             return
         }
 
-        if (!checkParamType(streamTargetParam)) {
-            generateTargetTypeResult(streamTargetTypeCanonicalText).highlightElement(holder)
+        if (!checkParamType(strategyParamType)) {
+            generateTargetTypeResult(identifier, strategyParamTypeName, stream).highlightElement(holder)
         }
     }
 
@@ -132,28 +150,42 @@ class SelectParamTypeCheckProcessor(
                 "COLLECT",
                 DomaClassName.JAVA_COLLECTOR.className,
             )
+        val collector = DomaClassName.JAVA_COLLECTOR.className
         val collection = getMethodParamTargetType(DomaClassName.JAVA_COLLECTOR.className)
         if (collection == null) {
             result.highlightElement(holder)
             return
         }
 
-        val collectorTargetParam = (collection.type as? PsiClassType)?.parameters?.firstOrNull()
+        val collectionType = collection.type
+        val identifier = collection.nameIdentifier ?: return
+
+        val collectionClass = project.getJavaClazz(collectionType.canonicalText) ?: return
+        var superCollection: PsiClassType? = collection.type as? PsiClassType
+        while (superCollection != null &&
+            !DomaClassName.JAVA_COLLECTOR.isTargetClassNameStartsWith(superCollection.canonicalText)
+        ) {
+            superCollection =
+                collectionClass.superTypes
+                    .find { sp -> DomaClassName.JAVA_COLLECTOR.isTargetClassNameStartsWith(sp.canonicalText) }
+        }
+
+        val collectorTargetParam = superCollection?.parameters?.firstOrNull()
         if (collectorTargetParam == null) {
-            generateTargetTypeResult("Unknown").highlightElement(holder)
+            generateTargetTypeResult(identifier, "Unknown", collector).highlightElement(holder)
             return
         }
 
-        val streamTargetTypeCanonicalText = collectorTargetParam.canonicalText
-        if (DomaClassName.MAP.isTargetClassNameStartsWith(streamTargetTypeCanonicalText)) {
-            if (!checkMapType(streamTargetTypeCanonicalText)) {
-                generateTargetTypeResult(streamTargetTypeCanonicalText).highlightElement(holder)
+        val collectorTargetTypeCanonicalText = collectorTargetParam.canonicalText
+        if (DomaClassName.MAP.isTargetClassNameStartsWith(collectorTargetTypeCanonicalText)) {
+            if (!checkMapType(collectorTargetTypeCanonicalText)) {
+                generateTargetTypeResult(identifier, collectorTargetTypeCanonicalText, collector).highlightElement(holder)
             }
             return
         }
 
         if (!checkParamType(collectorTargetParam)) {
-            generateTargetTypeResult(streamTargetTypeCanonicalText).highlightElement(holder)
+            generateTargetTypeResult(identifier, collectorTargetTypeCanonicalText, collector).highlightElement(holder)
         }
     }
 
@@ -167,11 +199,15 @@ class SelectParamTypeCheckProcessor(
         }
     }
 
-    fun generateTargetTypeResult(streamParamTypeName: String): ValidationMethodParamsSupportGenericParamResult =
+    fun generateTargetTypeResult(
+        target: PsiElement,
+        paramTypeName: String,
+        genericType: String,
+    ): ValidationMethodParamsSupportGenericParamResult =
         ValidationMethodParamsSupportGenericParamResult(
-            method.nameIdentifier,
+            target,
             shortName,
-            streamParamTypeName,
-            DomaClassName.JAVA_STREAM.className,
+            paramTypeName,
+            genericType,
         )
 }

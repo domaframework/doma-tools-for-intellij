@@ -13,6 +13,7 @@ import org.seasar.doma.message.Message;
 import doma.example.entity.*;
 import doma.example.domain.*;
 import doma.example.collector.*;
+import doma.example.function.*;
 
 @Dao
 public interface SelectReturnTypeTestDao {
@@ -125,6 +126,15 @@ public interface SelectReturnTypeTestDao {
 
   @Select(strategy = SelectType.COLLECT, mapKeyNaming = MapKeyNamingType.CAMEL_CASE)
   <R> R selectByIdAsMap(Integer id, Collector<Map<String, Object>, ?, R> collector);
+
+  @Select(strategy = SelectType.COLLECT)
+  @Sql("select * from emp where salary > /* salary */0")
+  Pckt selectHogeCollect(BigDecimal salary, HogeCollector collector);
+
+  @Select(strategy = SelectType.STREAM)
+  @Sql("select * from emp where salary > /* salary */0")
+  String selectHogeCollect(BigDecimal salary, HogeFunction function);
+
 
 
 }
