@@ -22,8 +22,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.DomaClassName
+import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamsSupportGenericParamResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodProcedureParamTypeResult
-import org.domaframework.doma.intellij.common.validation.result.ValidationMethodProcedureParamsSupportGenericParamResult
 
 class ProcedureFunctionInOutParamAnnotationTypeChecker(
     private val annotationType: ProcedureFunctionParamAnnotationType,
@@ -49,7 +49,7 @@ class ProcedureFunctionInOutParamAnnotationTypeChecker(
         // Check if the parameter type is a valid reference type with generic parameters
         val referenceParamType = (paramType as? PsiClassType)?.parameters?.firstOrNull()
         if (referenceParamType == null) {
-            ValidationMethodProcedureParamsSupportGenericParamResult(
+            ValidationMethodParamsSupportGenericParamResult(
                 identifier,
                 shortName,
                 "Unknown",
@@ -59,7 +59,7 @@ class ProcedureFunctionInOutParamAnnotationTypeChecker(
         }
 
         if (checkParamType(referenceParamType)) return
-        ValidationMethodProcedureParamsSupportGenericParamResult(
+        ValidationMethodParamsSupportGenericParamResult(
             identifier,
             shortName,
             referenceParamType.canonicalText,

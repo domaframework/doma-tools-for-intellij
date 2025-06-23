@@ -1,4 +1,4 @@
-package doma.example.dao.inspection;
+package doma.example.dao.inspection.returntype;
 
 import org.seasar.doma.Dao;
 import org.seasar.doma.SqlProcessor;
@@ -9,7 +9,7 @@ import java.util.function.BiFunction;
 import doma.example.entity.*;
 
 @Dao
-public interface SqlProcessorReturnTypeDao {
+public interface SqlProcessorReturnTypeTestDao {
     @SqlProcessor
     <R> R processSqlReturnsR(BiFunction<Config, PreparedSql, R> handler);
 

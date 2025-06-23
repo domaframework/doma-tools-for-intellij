@@ -26,19 +26,16 @@ import org.domaframework.doma.intellij.common.validation.result.ValidationReturn
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getClassAnnotation
+import org.domaframework.doma.intellij.inspection.dao.processor.TypeCheckerProcessor
 
 abstract class ReturnTypeCheckerProcessor(
     private val psiDaoMethod: PsiDaoMethod,
     private val shortName: String,
-) {
+) : TypeCheckerProcessor(psiDaoMethod) {
     protected val returningFqn = DomaClassName.RETURNING.className
-    protected val method = psiDaoMethod.psiMethod
-    protected val project = method.project
     protected val returnType = psiDaoMethod.psiMethod.returnType
 
     abstract fun checkReturnType(): ValidationResult?
-
-    protected fun getAnnotation(fqName: String): PsiAnnotation = method.annotations.first { it.qualifiedName == fqName }
 
     protected fun isImmutableEntity(canonicalText: String): Boolean {
         val returnTypeClass = method.project.getJavaClazz(canonicalText)
@@ -50,22 +47,10 @@ abstract class ReturnTypeCheckerProcessor(
     }
 
     protected fun hasReturingOption(): Boolean {
-        val methodAnnotation: PsiAnnotation = getAnnotation(psiDaoMethod.daoType.fqdn)
+        val methodAnnotation: PsiAnnotation =
+            getAnnotation(psiDaoMethod.daoType.fqdn) ?: return false
         val returningOption: PsiAnnotation? = getDaoAnnotationOption(methodAnnotation, "returning")
         return returningOption?.nameReferenceElement?.qualifiedName == returningFqn
-    }
-
-    private fun getDaoAnnotationOption(
-        psiAnnotation: PsiAnnotation,
-        findOptionName: String,
-    ): PsiAnnotation? {
-        val returningOption =
-            psiAnnotation.parameterList.attributes
-                .firstOrNull { param ->
-                    param.name == findOptionName
-                }?.value as? PsiAnnotation
-
-        return returningOption
     }
 
     protected fun generatePsiTypeReturnTypeResult(methodOtherReturnType: PsiType): ValidationResult? =

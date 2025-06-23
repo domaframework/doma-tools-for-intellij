@@ -1,9 +1,9 @@
-package doma.example.dao.inspection;
+package doma.example.dao.inspection.returntype;
 
 import org.seasar.doma.*;
 
 @Dao
-public interface ProcedureReturnTypeDao {
+public interface ProcedureReturnTypeTestDao {
     @Procedure
     void callProcedureReturnsVoid();
     @Procedure

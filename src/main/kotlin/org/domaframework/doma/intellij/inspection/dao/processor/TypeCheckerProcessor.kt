@@ -18,12 +18,14 @@ package org.domaframework.doma.intellij.inspection.dao.processor
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiField
+import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
 import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.extension.getJavaClazz
+import org.domaframework.doma.intellij.extension.psi.getSuperType
 import org.domaframework.doma.intellij.extension.psi.isDomain
 
 abstract class TypeCheckerProcessor(
@@ -33,6 +35,11 @@ abstract class TypeCheckerProcessor(
     protected val project = method.project
 
     protected fun getAnnotation(fqName: String): PsiAnnotation? = method.annotations.find { it.qualifiedName == fqName }
+
+    protected fun getMethodParamTargetType(typeName: String): PsiParameter? =
+        method.parameterList.parameters.find { param ->
+            (param.type as? PsiClassType)?.getSuperType(typeName) != null
+        }
 
     protected fun getDaoAnnotationOption(
         psiAnnotation: PsiAnnotation,
@@ -90,6 +97,6 @@ abstract class TypeCheckerProcessor(
                     DomaClassName.STRING.className,
                     DomaClassName.OBJECT.className,
                 ).replace(" ", "")
-        return mapClassName != mapExpectedType
+        return mapClassName == mapExpectedType
     }
 }

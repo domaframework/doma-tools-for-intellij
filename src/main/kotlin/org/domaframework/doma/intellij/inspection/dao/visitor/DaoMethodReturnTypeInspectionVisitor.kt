@@ -23,10 +23,12 @@ import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 import org.domaframework.doma.intellij.inspection.dao.processor.returntype.BatchAnnotationReturnTypeCheckProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.returntype.FunctionAnnotationReturnTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.returntype.MultiInsertAnnotationReturnTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.returntype.ProcedureAnnotationReturnTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.returntype.ReturnTypeCheckerProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.returntype.ScriptAnnotationReturnTypeCheckProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.returntype.SelectAnnotationReturnTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.returntype.SqlProcessorAnnotationReturnTypeCheckProcessor
 import org.domaframework.doma.intellij.inspection.dao.processor.returntype.UpdateAnnotationReturnTypeCheckProcessor
 
@@ -47,6 +49,12 @@ class DaoMethodReturnTypeInspectionVisitor(
 
     private fun getReturnTypeCheckProcessor(psiDaoMethod: PsiDaoMethod): ReturnTypeCheckerProcessor? =
         when (psiDaoMethod.daoType) {
+            DomaAnnotationType.Select -> {
+                SelectAnnotationReturnTypeCheckProcessor(
+                    psiDaoMethod,
+                    this.shortName,
+                )
+            }
             DomaAnnotationType.Insert, DomaAnnotationType.Update, DomaAnnotationType.Delete -> {
                 UpdateAnnotationReturnTypeCheckProcessor(psiDaoMethod, this.shortName)
             }
@@ -58,19 +66,29 @@ class DaoMethodReturnTypeInspectionVisitor(
             DomaAnnotationType.Procedure -> {
                 ProcedureAnnotationReturnTypeCheckProcessor(psiDaoMethod, this.shortName)
             }
+
             DomaAnnotationType.SqlProcessor -> {
                 SqlProcessorAnnotationReturnTypeCheckProcessor(
                     psiDaoMethod,
                     this.shortName,
                 )
             }
+
             DomaAnnotationType.MultiInsert ->
                 MultiInsertAnnotationReturnTypeCheckProcessor(
                     psiDaoMethod,
                     this.shortName,
                 )
+
             DomaAnnotationType.Script -> {
                 ScriptAnnotationReturnTypeCheckProcessor(
+                    psiDaoMethod,
+                    this.shortName,
+                )
+            }
+
+            DomaAnnotationType.Function -> {
+                FunctionAnnotationReturnTypeCheckProcessor(
                     psiDaoMethod,
                     this.shortName,
                 )
