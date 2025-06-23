@@ -16,7 +16,6 @@
 package org.domaframework.doma.intellij.inspection.dao.processor.returntype
 
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiTypes
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
@@ -112,10 +111,10 @@ class UpdateAnnotationReturnTypeCheckProcessor(
     ): Boolean {
         if (returnTypeClass?.isEntity() != true) return false
 
-        if (DomaClassName.OPTIONAL.isTargetClassNameStartsWith(paramClass.type.canonicalText)) {
-            val optionalType = paramClass.type as? PsiClassType
+        if (DomaClassName.OPTIONAL.isTargetClassNameStartsWith(returnTypeClass.psiClassType.canonicalText)) {
+            val optionalType = returnTypeClass.psiClassType
             val optionalParam =
-                optionalType?.parameters?.firstOrNull()
+                optionalType.parameters.firstOrNull()
                     ?: return false
             return optionalParam.canonicalText == paramClass.type.canonicalText
         }
