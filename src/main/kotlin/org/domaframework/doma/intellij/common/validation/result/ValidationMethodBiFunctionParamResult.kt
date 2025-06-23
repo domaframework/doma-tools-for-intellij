@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.common.validation.result
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.util.DomaClassName
 
@@ -43,9 +44,21 @@ class ValidationMethodBiFunctionParamResult(
 
     private fun getCheckParamIndexMessage(index: Int): String =
         when (index) {
-            0 -> "The first type argument of BiFunction must be ${DomaClassName.CONFIG.className}"
-            1 -> "The second type argument of BiFunction must be ${DomaClassName.PREPARED_SQL.className}"
+            0 ->
+                MessageBundle.message(
+                    "inspection.invalid.dao.sqlProcessor.params.biFunction.param.first",
+                    DomaClassName.CONFIG.className,
+                )
+            1 ->
+                MessageBundle.message(
+                    "inspection.invalid.dao.sqlProcessor.params.biFunction.param.second",
+                    DomaClassName.PREPARED_SQL.className,
+                )
 
-            else -> "The type argument at index $index is not supported"
+            else ->
+                MessageBundle.message(
+                    "inspection.invalid.dao.sqlProcessor.params.biFunction.param.invalid",
+                    index,
+                )
         }
 }

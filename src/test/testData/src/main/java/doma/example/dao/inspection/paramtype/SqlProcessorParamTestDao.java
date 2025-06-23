@@ -15,11 +15,10 @@ public interface SqlProcessorParamTestDao {
 
     @SqlProcessor
     @Sql("")
-    <R> R executeBiFunctionNotConfig(BiFunction<String,PreparedSql, R> <error descr="The first type argument of BiFunction must be org.seasar.doma.jdbc.Config">func</error>);
+    <R> R executeBiFunctionNotConfig(BiFunction<String,PreparedSql, R> <error descr="The first type argument of BiFunction must be \"org.seasar.doma.jdbc.Config\"">func</error>);
 
     @SqlProcessor
-    <R> R executeBiFunctionNotPreparedSql(BiFunction<Config,String, R> <error descr="The second type argument of BiFunction must be org.seasar.doma.jdbc.PreparedSql">func</error>);
-
+    <R> R executeBiFunctionNotPreparedSql(BiFunction<Config,String, R> <error descr="The second type argument of BiFunction must be \"org.seasar.doma.jdbc.PreparedSql\"">func</error>);
     @SqlProcessor
     <R> R executeR(Integer id,BiFunction<Config, PreparedSql, Pckt> func);
 
