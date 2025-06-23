@@ -21,6 +21,7 @@ import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
+import org.domaframework.doma.intellij.extension.getJavaClazz
 
 /**
  * Processor for checking the return type of batch annotations.
@@ -39,11 +40,6 @@ class BatchAnnotationReturnTypeCheckProcessor(
      */
     override fun checkReturnType(): ValidationResult? {
         val methodOtherReturnType = PsiTypes.intType().createArrayType()
-        if (psiDaoMethod.useSqlAnnotation() || psiDaoMethod.sqlFileOption) {
-            return generatePsiTypeReturnTypeResult(methodOtherReturnType)
-        }
-
-        // Check if it has an immutable entity parameter
         val parameters = method.parameterList.parameters
         val immutableEntityParam = parameters.firstOrNull() ?: return null
 
@@ -52,6 +48,19 @@ class BatchAnnotationReturnTypeCheckProcessor(
         val nestPsiType = parameterType.reference.typeParameters.firstOrNull() ?: return null
         val nestClass: PsiType = PsiClassTypeUtil.convertOptionalType(nestPsiType, project)
 
+        if (psiDaoMethod.useSqlAnnotation() || psiDaoMethod.sqlFileOption) {
+            nestClass.let { methodParam ->
+                val paramTypeName = methodParam.canonicalText
+                project.getJavaClazz(paramTypeName)?.let {
+                    if (isImmutableEntity(paramTypeName)) {
+                        return checkReturnTypeImmutableEntity(nestClass)
+                    }
+                }
+            }
+            return generatePsiTypeReturnTypeResult(methodOtherReturnType)
+        }
+
+        // Check if it has an immutable entity parameter
         if (isImmutableEntity(nestClass.canonicalText)) {
             return checkReturnTypeImmutableEntity(nestClass)
         }
