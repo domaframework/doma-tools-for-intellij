@@ -19,7 +19,7 @@ import com.intellij.psi.PsiTypes
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 
-class ProcedureAnnotationReturnTypeCheckProcessor(
+class ScriptReturnTypeCheckProcessor(
     psiDaoMethod: PsiDaoMethod,
     shortName: String,
 ) : ReturnTypeCheckerProcessor(psiDaoMethod, shortName) {

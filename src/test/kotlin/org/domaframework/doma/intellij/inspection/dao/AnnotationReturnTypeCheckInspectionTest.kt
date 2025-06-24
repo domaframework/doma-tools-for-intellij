@@ -31,6 +31,7 @@ class AnnotationReturnTypeCheckInspectionTest : DomaSqlTest() {
             "SqlProcessorReturnTypeTestDao",
             "ProcedureReturnTypeTestDao",
             "FunctionReturnTypeTestDao",
+            "FactoryReturnTypeTestDao",
         )
     private val daoPackage = "inspection/returntype"
 
@@ -52,33 +53,38 @@ class AnnotationReturnTypeCheckInspectionTest : DomaSqlTest() {
         myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
     }
 
-    fun testUpdateAnnotationReturnTypeCheckProcessor() {
+    fun testUpdateReturnTypeCheckProcessor() {
         val dao = findDaoClass("$daoPackage.UpdateReturnTypeTestDao")
         myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
     }
 
-    fun testBatchAnnotationReturnTypeCheckProcessor() {
+    fun testBatchReturnTypeCheckProcessor() {
         val dao = findDaoClass("$daoPackage.BatchReturnTypeTestDao")
         myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
     }
 
-    fun testMultiInsertAnnotationReturnTypeCheckProcessor() {
+    fun testMultiInsertReturnTypeCheckProcessor() {
         val dao = findDaoClass("$daoPackage.MultiInsertReturnTypeTestDao")
         myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
     }
 
-    fun testSqlProcessorAnnotationReturnTypeCheckProcessor() {
+    fun testSqlProcessorReturnTypeCheckProcessor() {
         val dao = findDaoClass("$daoPackage.SqlProcessorReturnTypeTestDao")
         myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
     }
 
-    fun testProcedureAnnotationReturnTypeCheckProcessor() {
+    fun testProcedureReturnTypeCheckProcessor() {
         val dao = findDaoClass("$daoPackage.ProcedureReturnTypeTestDao")
         myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
     }
 
-    fun testFunctionAnnotationReturnTypeCheckProcessor() {
+    fun testFunctionReturnTypeCheckProcessor() {
         val dao = findDaoClass("$daoPackage.FunctionReturnTypeTestDao")
+        myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
+    }
+
+    fun testFactoryReturnTypeCheckProcessor() {
+        val dao = findDaoClass("$daoPackage.FactoryReturnTypeTestDao")
         myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
     }
 }

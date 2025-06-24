@@ -14,7 +14,7 @@ public interface InsertUpdateDeleteParamTestDao {
     int insertEntity(Packet packet);
 
     @Insert
-    int insertPrimitive(Integer <error descr="The parameter type must be an entity class">id</error>);
+    int insertPrimitive(Integer <error descr="The parameter type must be an entity">id</error>);
 
     @Update
     int <error descr="The number of parameters must be one">updateNoParams</error>();

@@ -30,7 +30,7 @@ import org.domaframework.doma.intellij.common.validation.result.ValidationSqlPro
  * @param psiDaoMethod The target DAO method info to be checked.
  * @param shortName The short name of the inspection to check.
  */
-class SqlProcessorAnnotationReturnTypeCheckProcessor(
+class SqlProcessorReturnTypeCheckProcessor(
     psiDaoMethod: PsiDaoMethod,
     private val shortName: String,
 ) : ReturnTypeCheckerProcessor(psiDaoMethod, shortName) {

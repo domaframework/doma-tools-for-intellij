@@ -17,7 +17,7 @@ package org.domaframework.doma.intellij.inspection.dao.processor.paramtype
 
 import com.intellij.codeInspection.ProblemsHolder
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
-import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamEntityResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamTypeResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.isEntity
 
@@ -61,9 +61,10 @@ class UpdateParamTypeCheckProcessor(
         val paramClass = project.getJavaClazz(param?.type?.canonicalText ?: "")
         val identifier = param?.nameIdentifier ?: return
         if (paramClass == null || !paramClass.isEntity()) {
-            ValidationMethodParamEntityResult(
+            ValidationMethodParamTypeResult(
                 identifier,
                 shortName,
+                "an entity",
             ).highlightElement(holder)
         }
     }

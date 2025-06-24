@@ -29,7 +29,7 @@ import org.domaframework.doma.intellij.extension.getJavaClazz
  * @property psiDaoMethod The target DAO method info to be checked.
  * @property shortName The short name of inspection to check.
  */
-class BatchAnnotationReturnTypeCheckProcessor(
+class BatchReturnTypeCheckProcessor(
     private val psiDaoMethod: PsiDaoMethod,
     private val shortName: String,
 ) : ReturnTypeCheckerProcessor(psiDaoMethod, shortName) {

@@ -21,9 +21,10 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
-class ValidationMethodParamEntityResult(
+class ValidationMethodParamTypeResult(
     override val identify: PsiElement?,
     override val shortName: String = "",
+    private val typeName: String,
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -34,7 +35,7 @@ class ValidationMethodParamEntityResult(
         val project = identify.project
         holder.registerProblem(
             identify,
-            MessageBundle.message("inspection.invalid.dao.params.entity"),
+            MessageBundle.message("inspection.invalid.dao.params.type", typeName),
             problemHighlightType(project, shortName),
             highlightRange,
         )

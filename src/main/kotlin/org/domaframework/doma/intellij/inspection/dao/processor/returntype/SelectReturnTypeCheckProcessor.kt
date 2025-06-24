@@ -28,7 +28,7 @@ import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
 import org.domaframework.doma.intellij.inspection.dao.processor.StrategyParam
 
-class SelectAnnotationReturnTypeCheckProcessor(
+class SelectReturnTypeCheckProcessor(
     private val psiDaoMethod: PsiDaoMethod,
     private val shortName: String,
 ) : ReturnTypeCheckerProcessor(psiDaoMethod, shortName) {
