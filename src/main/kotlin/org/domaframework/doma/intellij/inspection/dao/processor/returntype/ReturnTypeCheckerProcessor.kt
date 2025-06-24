@@ -26,6 +26,7 @@ import org.domaframework.doma.intellij.common.validation.result.ValidationReturn
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.getClassAnnotation
+import org.domaframework.doma.intellij.extension.psi.getSuperClassType
 import org.domaframework.doma.intellij.inspection.dao.processor.TypeCheckerProcessor
 
 abstract class ReturnTypeCheckerProcessor(
@@ -39,7 +40,8 @@ abstract class ReturnTypeCheckerProcessor(
 
     protected fun isImmutableEntity(canonicalText: String): Boolean {
         val returnTypeClass = method.project.getJavaClazz(canonicalText)
-        val entity = returnTypeClass?.getClassAnnotation(DomaClassName.ENTITY.className) ?: return false
+        val entity =
+            returnTypeClass?.getClassAnnotation(DomaClassName.ENTITY.className) ?: return false
         return entity.let { entity ->
             AnnotationUtil.getBooleanAttributeValue(entity, "immutable") == true
         } == true ||
@@ -83,5 +85,34 @@ abstract class ReturnTypeCheckerProcessor(
         } else {
             null
         }
+    }
+
+    /**
+     * Retrieve parameters with a specified type from the method parameters, and obtain the element type at the specified index.
+     * @param targetType The target type to check against the method parameters.
+     * @param resultIndex The index of the element type to retrieve from the target type's parameters.
+     * @return [ValidationResult] if the parameter type is invalid, otherwise null.
+     */
+    protected open fun checkParamTypeResult(
+        targetType: DomaClassName,
+        resultIndex: Int,
+    ): ValidationResult? = null
+
+    /**
+     * Retrieve the method parameter type that matches the target type.
+     * @param targetType The target type to check against the method parameters.
+     * @param resultIndex The index of the element type to retrieve from the target type's parameters.
+     * @return The method parameter type if found, otherwise null.
+     */
+    protected fun getMethodParamTargetArgByIndex(
+        targetType: DomaClassName,
+        resultIndex: Int,
+    ): PsiType? {
+        val methodParameter = getMethodParamTargetType(targetType.className) ?: return null
+        val targetParamClassType = methodParameter.getSuperClassType(targetType)
+        val targetClassTypeParams = targetParamClassType?.parameters ?: return null
+        if (targetClassTypeParams.size < resultIndex + 1) return null
+
+        return targetClassTypeParams[resultIndex]
     }
 }

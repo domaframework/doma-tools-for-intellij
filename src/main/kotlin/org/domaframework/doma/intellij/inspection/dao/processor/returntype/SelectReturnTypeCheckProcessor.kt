@@ -113,35 +113,28 @@ class SelectReturnTypeCheckProcessor(
     }
 
     private fun checkStream(): ValidationResult? {
-        val function =
-            getMethodParamTargetType(DomaClassName.JAVA_FUNCTION.className) ?: return null
-
-        val functionClassType = (function.type as? PsiClassType)
-        val functionParams = functionClassType?.parameters ?: return null
-        if (functionParams.size < 2) return null
-        val functionResultParam = functionParams[1] ?: return null
-
-        if (functionResultParam == method.returnType) return null
-        return ValidationMethodSelectStrategyReturnTypeResult(
-            method.nameIdentifier,
-            shortName,
-            DomaClassName.JAVA_FUNCTION.className,
-        )
+        val targetType = DomaClassName.JAVA_FUNCTION
+        return checkParamTypeResult(targetType, 1)
     }
 
     private fun checkCollect(): ValidationResult? {
-        val collection = getMethodParamTargetType(DomaClassName.JAVA_COLLECTOR.className) ?: return null
-        val collectorParamClassType = (collection.type as? PsiClassType)
-        val collectorParams = collectorParamClassType?.parameters ?: return null
-        if (collectorParams.size < 3) return null
+        val targetType = DomaClassName.JAVA_COLLECTOR
+        return checkParamTypeResult(targetType, 2)
+    }
 
-        val collectorTargetParam = collectorParams[2]
-        if (collectorTargetParam == method.returnType) return null
+    override fun checkParamTypeResult(
+        targetType: DomaClassName,
+        resultIndex: Int,
+    ): ValidationResult? {
+        val resultParam =
+            getMethodParamTargetArgByIndex(targetType, resultIndex)
+                ?: return null
+        if (resultParam == method.returnType) return null
 
         return ValidationMethodSelectStrategyReturnTypeResult(
             method.nameIdentifier,
             shortName,
-            DomaClassName.JAVA_COLLECTOR.className,
+            targetType.className,
         )
     }
 }
