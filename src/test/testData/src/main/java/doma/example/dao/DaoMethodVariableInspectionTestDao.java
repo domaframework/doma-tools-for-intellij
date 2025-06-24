@@ -17,7 +17,12 @@ import org.seasar.doma.jdbc.Config;
 import org.seasar.doma.jdbc.PreparedSql;
 import org.seasar.doma.jdbc.SelectOptions;
 import org.seasar.doma.SelectType;
+import java.util.stream.Stream;
+import java.util.function.Function;
 import java.util.stream.Collector;
+import doma.example.function.*;
+import doma.example.collector.*;
+import doma.example.option.*;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -38,20 +43,52 @@ interface DaoMethodVariableInspectionTestDao {
   @SqlProcessor
   <R> R biFunctionDoesNotCauseError(Integer id, BiFunction<Config, PreparedSql, R> handler);
 
+  @SqlProcessor
+  @Sql("SELECT id, name FROM demo")
+  <R> R biFunctionHogeFunction(HogeBiFunction handler);
+
   @Select
-  Project selectOptionDoesNotCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,String searchName,SelectOptions options);
+  Project selectOptionDoesNotCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,
+      String searchName,
+      SelectOptions options);
+
+  @Select
+  @Sql("SELECT * FROM project WHERE name = /* searchName */'test'")
+  Project selectHogeOption(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,
+      String searchName,
+      HogeSelectOptions options);
 
   @Select(strategy = SelectType.COLLECT)
-  Project collectDoesNotCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,Integer id,Collector<Project, ?, Project> collector);
+  Project collectDoesNotCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,
+      Integer id,
+      Collector<Project, ?, Project> collector);
+
+  @Select(strategy = SelectType.COLLECT)
+  Project selectHogeCollector(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,
+      Integer id,
+      HogeCollector collector);
 
   @Select
-  Project collectDoesCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,String searchName,Collector<Project, ?, Project> <error descr="There are unused parameters in the SQL [collector]">collector</error>);
+  Project collectDoesCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,
+      String searchName,
+      Collector<Project, ?, Project> collector);
+
+  @Select(strategy = SelectType.STREAM)
+  String functionDoesNotCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,
+      Integer id,
+      Function<Stream<Employee>, String> function);
+
+  @Select(strategy = SelectType.STREAM)
+  String selectHogeFunction(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,
+      Integer id,
+      HogeFunction function);
 
   @Select
   Project noErrorWhenUsedInFunctionParameters(Employee employee, Integer count);
 
   @Select
-  Employee duplicateForDirectiveDefinitionNames(Employee <error descr="An element name that is a duplicate of an element name defined in SQL is used">member</error>, Integer <error descr="There are unused parameters in the SQL [count]">count</error>,
+  Employee duplicateForDirectiveDefinitionNames(Employee <error descr="An element name that is a duplicate of an element name defined in SQL is used">member</error>,
+      Integer <error descr="There are unused parameters in the SQL [count]">count</error>,
       List<Employee> users,
       String searchName,
       Boolean inForm);

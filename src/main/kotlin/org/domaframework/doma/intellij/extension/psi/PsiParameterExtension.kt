@@ -17,22 +17,29 @@ package org.domaframework.doma.intellij.extension.psi
 
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiParameter
+import org.domaframework.doma.intellij.common.util.DomaClassName
 
-val PsiParameter.isFunctionClazz: Boolean
-    get() =
-        (this.typeElement?.type as? PsiClassType)
-            ?.resolve()
-            ?.qualifiedName
-            ?.contains("java.util.function") == true
+private val ignoreUsageCheckType =
+    listOf<DomaClassName>(
+        DomaClassName.JAVA_FUNCTION,
+        DomaClassName.BI_FUNCTION,
+        DomaClassName.SELECT_OPTIONS,
+        DomaClassName.JAVA_COLLECTOR,
+    )
 
-val PsiParameter.isSelectOption: Boolean
-    get() =
-        (this.typeElement?.type as? PsiClassType)
-            ?.resolve()
-            ?.qualifiedName == "org.seasar.doma.jdbc.SelectOptions"
+fun PsiParameter.isIgnoreUsageCheck(): Boolean =
+    ignoreUsageCheckType.any { type ->
+        getSuperClassType(type) != null
+    }
 
-val PsiParameter.isCollector: Boolean
-    get() =
-        (this.typeElement?.type as? PsiClassType)
-            ?.resolve()
-            ?.qualifiedName == "java.util.stream.Collector"
+fun PsiParameter.getSuperClassType(superClassType: DomaClassName): PsiClassType? {
+    val clazzType = this.typeElement?.type as? PsiClassType
+    var superCollection: PsiClassType? = clazzType
+    while (superCollection != null &&
+        !superClassType.isTargetClassNameStartsWith(superCollection.canonicalText)
+    ) {
+        superCollection =
+            superCollection.getSuperType(superClassType.className)
+    }
+    return superCollection
+}
