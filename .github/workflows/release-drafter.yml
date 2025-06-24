@@ -24,7 +24,7 @@ jobs:
 
   update_version:
     needs: update_release_draft
-    if: ${{ !contains(github.head_ref, 'doc/changelog-update-') && startsWith(github.event.head_commit.message, 'Merge pull request') }}
+    if: ${{ !contains(github.head_ref, 'doc/changelog-update-') && !contains(github.event.head_commit.message, 'from domaframework/doc/changelog-update-') && startsWith(github.event.head_commit.message, 'Merge pull request') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
