@@ -19,10 +19,10 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiClassType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamsCountResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamsIterableEntityResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
-import org.domaframework.doma.intellij.extension.psi.isEntity
 import org.domaframework.doma.intellij.extension.psi.psiClassType
 
 /**
@@ -86,13 +86,9 @@ class BatchParamTypeCheckProcessor(
 
         val iterableClassType = param.type as? PsiClassType
         iterableClassType?.parameters?.firstOrNull()?.let { iterableParam ->
-            project
-                .getJavaClazz(iterableParam.canonicalText)
-                ?.let {
-                    if (!it.isEntity()) {
-                        resultParamType.highlightElement(holder)
-                    }
-                }
+            if (!TypeUtil.isEntity(iterableParam, project)) {
+                resultParamType.highlightElement(holder)
+            }
             return
         }
         resultParamType.highlightElement(holder)

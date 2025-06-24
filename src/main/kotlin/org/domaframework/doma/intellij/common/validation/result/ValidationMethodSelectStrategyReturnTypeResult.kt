@@ -24,7 +24,8 @@ import org.domaframework.doma.intellij.common.psi.PsiParentClass
 class ValidationMethodSelectStrategyReturnTypeResult(
     override val identify: PsiElement?,
     override val shortName: String = "",
-    private val resultType: String,
+    private val matchResultType: String,
+    private val paramType: String,
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -37,7 +38,8 @@ class ValidationMethodSelectStrategyReturnTypeResult(
             identify,
             MessageBundle.message(
                 "inspection.invalid.dao.select.returnType.strategy",
-                resultType,
+                matchResultType,
+                paramType,
             ),
             problemHighlightType(project, shortName),
             highlightRange,

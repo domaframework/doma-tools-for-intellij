@@ -26,6 +26,7 @@ import org.domaframework.doma.intellij.common.validation.result.ValidationMethod
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamsSupportGenericParamResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodSelectStrategyParamResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
+import org.domaframework.doma.intellij.extension.psi.getSuperClassType
 import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
 import org.domaframework.doma.intellij.inspection.dao.processor.StrategyParam
@@ -99,19 +100,11 @@ class SelectParamTypeCheckProcessor(
             return
         }
 
-        val functionType = function.type
         val identifier = function.nameIdentifier ?: return
 
         // Check if the first parameter of the function is a stream type
-        val functionClass = project.getJavaClazz(functionType.canonicalText) ?: return
-        var superCollection: PsiClassType? = functionType as PsiClassType?
-        while (superCollection != null &&
-            !DomaClassName.JAVA_FUNCTION.isTargetClassNameStartsWith(superCollection.canonicalText)
-        ) {
-            superCollection =
-                functionClass.superTypes
-                    .find { sp -> DomaClassName.JAVA_FUNCTION.isTargetClassNameStartsWith(sp.canonicalText) }
-        }
+        val targetType = DomaClassName.JAVA_FUNCTION
+        var superCollection: PsiClassType? = function.getSuperClassType(targetType)
 
         val functionFirstParam = superCollection?.parameters?.firstOrNull()
         if (functionFirstParam == null ||
@@ -157,19 +150,10 @@ class SelectParamTypeCheckProcessor(
             return
         }
 
-        val collectionType = collection.type
         val identifier = collection.nameIdentifier ?: return
 
-        val collectionClass = project.getJavaClazz(collectionType.canonicalText) ?: return
-        var superCollection: PsiClassType? = collection.type as? PsiClassType
-        while (superCollection != null &&
-            !DomaClassName.JAVA_COLLECTOR.isTargetClassNameStartsWith(superCollection.canonicalText)
-        ) {
-            superCollection =
-                collectionClass.superTypes
-                    .find { sp -> DomaClassName.JAVA_COLLECTOR.isTargetClassNameStartsWith(sp.canonicalText) }
-        }
-
+        val targetType = DomaClassName.JAVA_COLLECTOR
+        var superCollection: PsiClassType? = collection.getSuperClassType(targetType)
         val collectorTargetParam = superCollection?.parameters?.firstOrNull()
         if (collectorTargetParam == null) {
             generateTargetTypeResult(identifier, "Unknown", collector).highlightElement(holder)

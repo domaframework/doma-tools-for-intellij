@@ -50,7 +50,7 @@ public interface SelectReturnTypeTestDao {
   <R> R selectAllAsMapList(Function<Stream<Map<String, Object>>, R> mapper,SelectOptions options);
 
   @Select(strategy = SelectType.STREAM, mapKeyNaming = MapKeyNamingType.CAMEL_CASE)
-  String <error descr="The return type must match RESULT of the \"java.util.function.Function\" type parameter">selectStreamInvalid</error>(Function<Stream<Map<String, Object>>, Integer> mapper,SelectOptions options);
+  String <error descr="The return type must match the \"java.lang.Integer\" type parameter \"java.util.function.Function\"">selectStreamInvalid</error>(Function<Stream<Map<String, Object>>, Integer> mapper,SelectOptions options);
 
   @Select
   List<Employee> selectByNamePrefix(String employeeName);
@@ -121,20 +121,22 @@ public interface SelectReturnTypeTestDao {
   @Select(strategy = SelectType.COLLECT)
   <R extends Number> R select(Collector<String, ?, R> collector);
 
-  @Select(strategy = SelectType.COLLECT)
-  String selectWithHogeCollector(HogeCollector collector);
-
   @Select(strategy = SelectType.COLLECT, mapKeyNaming = MapKeyNamingType.CAMEL_CASE)
   <R> R selectByIdAsMap(Integer id, Collector<Map<String, Object>, ?, R> collector);
 
   @Select(strategy = SelectType.COLLECT)
+  String selectWithHogeCollector(HogeCollector collector);
+
+  @Select(strategy = SelectType.COLLECT)
   @Sql("select * from emp where salary > /* salary */0")
-  Pckt selectHogeCollect(BigDecimal salary, HogeCollector collector);
+  Pckt <error descr="The return type must match the \"java.lang.String\" type parameter \"java.util.stream.Collector\"">selectHogeCollectInvaliReturn</error>(BigDecimal salary, HogeCollector collector);
 
   @Select(strategy = SelectType.STREAM)
   @Sql("select * from emp where salary > /* salary */0")
-  String selectHogeCollect(BigDecimal salary, HogeFunction function);
+  Integer <error descr="The return type must match the \"java.lang.String\" type parameter \"java.util.function.Function\"">selectHogeFunctionInvalidReturn</error>(BigDecimal salary, HogeFunction function);
 
-
+  @Select(strategy = SelectType.STREAM)
+  @Sql("select * from emp where salary > /* salary */0")
+  String selectHogeFunction(BigDecimal salary, HogeFunction function);
 
 }

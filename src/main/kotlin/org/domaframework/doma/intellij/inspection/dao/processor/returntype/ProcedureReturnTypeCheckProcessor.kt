@@ -19,6 +19,13 @@ import com.intellij.psi.PsiTypes
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 
+/**
+ * Processor for checking the return type of DAO methods annotated with @Procedure.
+ *
+ * This class validates that the return type of methods annotated with @Procedure is void.
+ *
+ * @property shortName The short name of the annotation being processed.
+ */
 class ProcedureReturnTypeCheckProcessor(
     psiDaoMethod: PsiDaoMethod,
     shortName: String,

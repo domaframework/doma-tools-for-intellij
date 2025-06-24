@@ -28,6 +28,15 @@ import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.getSuperType
 import org.domaframework.doma.intellij.extension.psi.isDomain
 
+/**
+ * Abstract base class for type checking processors in DAO inspections.
+ *
+ * Provides utility methods for retrieving annotations, parameters, and checking types
+ * in the context of Doma DAO method inspections.
+ *
+ * @property method The inspected DAO method.
+ * @property project The IntelliJ project instance.
+ */
 abstract class TypeCheckerProcessor(
     psiDaoMethod: PsiDaoMethod,
 ) {

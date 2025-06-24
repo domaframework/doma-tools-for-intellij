@@ -51,11 +51,7 @@ class SqlProcessorParamTypeCheckProcessor(
      * @param holder The ProblemsHolder instance used to report validation issues.
      */
     override fun checkParams(holder: ProblemsHolder) {
-        val parameters = method.parameterList.parameters
-        val biFunctionParam =
-            parameters.firstOrNull { param ->
-                param.type.canonicalText.startsWith(biFunctionClassName)
-            }
+        val biFunctionParam = getMethodParamTargetType(biFunctionClassName)
         if (biFunctionParam == null) {
             ValidationMethodHasRequireClassParamResult(
                 method.nameIdentifier,

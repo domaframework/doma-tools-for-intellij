@@ -69,6 +69,9 @@ class ProcedureParamTypeCheckProcessor(
     /**
      * Validates the type of parameter based on its annotation.
      *
+     * Checks if the parameter type is valid for the given annotation type in the context of the DAO method.
+     *
+     * @param psiDaoMethod The DAO method containing the parameter.
      * @param paramAnnotationType The type of the annotation on the parameter.
      * @param param The parameter to be validated.
      * @param holder The ProblemsHolder instance used to report validation issues.
