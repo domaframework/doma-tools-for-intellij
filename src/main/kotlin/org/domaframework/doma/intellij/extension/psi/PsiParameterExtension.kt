@@ -19,32 +19,17 @@ import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiParameter
 import org.domaframework.doma.intellij.common.util.DomaClassName
 
-val PsiParameter.isFunctionClazz: Boolean
-    get() {
-        val functionType = DomaClassName.JAVA_FUNCTION
-        val superCollection: PsiClassType? = getSuperClassType(functionType)
-        return superCollection != null
-    }
+private val ignoreUsageCheckType =
+    listOf<DomaClassName>(
+        DomaClassName.JAVA_FUNCTION,
+        DomaClassName.BI_FUNCTION,
+        DomaClassName.SELECT_OPTIONS,
+        DomaClassName.JAVA_COLLECTOR,
+    )
 
-val PsiParameter.isBiFunctionClazz: Boolean
-    get() {
-        val functionType = DomaClassName.BI_FUNCTION
-        val superCollection: PsiClassType? = getSuperClassType(functionType)
-        return superCollection != null
-    }
-
-val PsiParameter.isSelectOption: Boolean
-    get() {
-        val collectorType = DomaClassName.SELECT_OPTIONS
-        val superCollection: PsiClassType? = getSuperClassType(collectorType)
-        return superCollection != null
-    }
-
-val PsiParameter.isCollector: Boolean
-    get() {
-        val collectorType = DomaClassName.JAVA_COLLECTOR
-        val superCollection: PsiClassType? = getSuperClassType(collectorType)
-        return superCollection != null
+fun PsiParameter.isIgnoreUsageCheck(): Boolean =
+    ignoreUsageCheckType.any { type ->
+        getSuperClassType(type) != null
     }
 
 fun PsiParameter.getSuperClassType(superClassType: DomaClassName): PsiClassType? {
