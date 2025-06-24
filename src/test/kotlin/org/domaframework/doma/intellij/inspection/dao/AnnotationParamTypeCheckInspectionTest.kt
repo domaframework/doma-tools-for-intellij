@@ -24,13 +24,14 @@ import org.domaframework.doma.intellij.inspection.dao.inspector.DaoMethodParamTy
 class AnnotationParamTypeCheckInspectionTest : DomaSqlTest() {
     private val testDaoNames =
         listOf(
+            "SelectParamTestDao",
             "InsertUpdateDeleteParamTestDao",
             "BatchInsertUpdateDeleteParamTestDao",
             "MultiInsertParamTestDao",
             "ProcedureParamTestDao",
             "ScriptParamTestDao",
             "SqlProcessorParamTestDao",
-            "SelectParamTestDao",
+            "FactoryParamTestDao",
         )
     private val daoPackage = "inspection/paramtype"
 
@@ -78,6 +79,11 @@ class AnnotationParamTypeCheckInspectionTest : DomaSqlTest() {
 
     fun testSqlProcessorParam() {
         val dao = findDaoClass("$daoPackage.SqlProcessorParamTestDao")
+        myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
+    }
+
+    fun testFactoryParam() {
+        val dao = findDaoClass("$daoPackage.FactoryParamTestDao")
         myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
     }
 }
