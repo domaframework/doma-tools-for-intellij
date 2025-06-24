@@ -17,22 +17,44 @@ package org.domaframework.doma.intellij.extension.psi
 
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiParameter
+import org.domaframework.doma.intellij.common.util.DomaClassName
 
 val PsiParameter.isFunctionClazz: Boolean
-    get() =
-        (this.typeElement?.type as? PsiClassType)
-            ?.resolve()
-            ?.qualifiedName
-            ?.contains("java.util.function") == true
+    get() {
+        val functionType = DomaClassName.JAVA_FUNCTION
+        val superCollection: PsiClassType? = getSuperClassType(functionType)
+        return superCollection != null
+    }
+
+val PsiParameter.isBiFunctionClazz: Boolean
+    get() {
+        val functionType = DomaClassName.BI_FUNCTION
+        val superCollection: PsiClassType? = getSuperClassType(functionType)
+        return superCollection != null
+    }
 
 val PsiParameter.isSelectOption: Boolean
-    get() =
-        (this.typeElement?.type as? PsiClassType)
-            ?.resolve()
-            ?.qualifiedName == "org.seasar.doma.jdbc.SelectOptions"
+    get() {
+        val collectorType = DomaClassName.SELECT_OPTIONS
+        val superCollection: PsiClassType? = getSuperClassType(collectorType)
+        return superCollection != null
+    }
 
 val PsiParameter.isCollector: Boolean
-    get() =
-        (this.typeElement?.type as? PsiClassType)
-            ?.resolve()
-            ?.qualifiedName == "java.util.stream.Collector"
+    get() {
+        val collectorType = DomaClassName.JAVA_COLLECTOR
+        val superCollection: PsiClassType? = getSuperClassType(collectorType)
+        return superCollection != null
+    }
+
+fun PsiParameter.getSuperClassType(superClassType: DomaClassName): PsiClassType? {
+    val clazzType = this.typeElement?.type as? PsiClassType
+    var superCollection: PsiClassType? = clazzType
+    while (superCollection != null &&
+        !superClassType.isTargetClassNameStartsWith(superCollection.canonicalText)
+    ) {
+        superCollection =
+            superCollection.getSuperType(superClassType.className)
+    }
+    return superCollection
+}

@@ -38,6 +38,7 @@ enum class DomaClassName(
     VOID("java.lang.Void"),
     RETURNING("org.seasar.doma.Returning"),
     REFERENCE("org.seasar.doma.jdbc.Reference"),
+    SELECT_OPTIONS("org.seasar.doma.jdbc.SelectOptions"),
 
     STRING("java.lang.String"),
     OBJECT("java.lang.Object"),

@@ -129,7 +129,7 @@ public interface SelectReturnTypeTestDao {
 
   @Select(strategy = SelectType.COLLECT)
   @Sql("select * from emp where salary > /* salary */0")
-  Pckt selectHogeCollect(BigDecimal salary, HogeCollector collector);
+  Pckt <error descr="The return type must match RESULT of the \"java.util.stream.Collector\" type parameter">selectHogeCollect</error>(BigDecimal salary, HogeCollector collector);
 
   @Select(strategy = SelectType.STREAM)
   @Sql("select * from emp where salary > /* salary */0")

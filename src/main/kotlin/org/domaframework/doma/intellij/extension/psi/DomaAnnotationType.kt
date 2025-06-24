@@ -18,9 +18,6 @@ package org.domaframework.doma.intellij.extension.psi
 import com.intellij.codeInsight.AnnotationUtil
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiModifierListOwner
-import com.intellij.psi.PsiNameValuePair
-import com.intellij.psi.PsiReferenceExpression
-import com.intellij.psi.util.PsiTreeUtil
 
 enum class DomaAnnotationType(
     val fqdn: String,
@@ -74,19 +71,4 @@ enum class DomaAnnotationType(
         } else {
             false
         }
-
-    fun isSelectTypeCollect(element: PsiAnnotation): Boolean {
-        val strategyPair =
-            PsiTreeUtil
-                .getChildrenOfTypeAsList(element.parameterList, PsiNameValuePair::class.java)
-                .firstOrNull {
-                    it.text.startsWith("strategy")
-                } ?: return false
-
-        return PsiTreeUtil
-            .getChildOfType(
-                strategyPair,
-                PsiReferenceExpression::class.java,
-            )?.text == "SelectType.COLLECT"
-    }
 }

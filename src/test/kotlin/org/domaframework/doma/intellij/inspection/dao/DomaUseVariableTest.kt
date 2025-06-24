@@ -36,7 +36,14 @@ class DomaUseVariableTest : DomaSqlTest() {
             "$testDaoName/collectDoesCauseError.sql",
             "$testDaoName/noErrorWhenUsedInFunctionParameters.sql",
             "$testDaoName/duplicateForDirectiveDefinitionNames.sql",
+            "$testDaoName/selectHogeFunction.sql",
+            "$testDaoName/functionDoesNotCauseError.sql",
+            "$testDaoName/selectHogeCollector.sql",
         )
+        addOtherJavaFile("collector", "HogeCollector.java")
+        addOtherJavaFile("function", "HogeFunction.java")
+        addOtherJavaFile("function", "HogeBiFunction.java")
+        addOtherJavaFile("option", "HogeSelectOptions.java")
         myFixture.enableInspections(UsedDaoMethodParamInspection())
     }
 

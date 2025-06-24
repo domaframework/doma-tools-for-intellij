@@ -27,6 +27,7 @@ import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.extension.findFile
+import org.domaframework.doma.intellij.extension.psi.isBiFunctionClazz
 import org.domaframework.doma.intellij.extension.psi.isCollector
 import org.domaframework.doma.intellij.extension.psi.isFunctionClazz
 import org.domaframework.doma.intellij.extension.psi.isSelectOption
@@ -45,7 +46,7 @@ class UsedDaoMethodParamInspectionVisitor(
 
         val methodParameters =
             method.methodParameters
-                .filter { !it.isFunctionClazz && !it.isSelectOption && !(it.isCollector && psiDaoMethod.isSelectTypeCollect()) }
+                .filter { !it.isFunctionClazz && !it.isBiFunctionClazz && !it.isSelectOption && !it.isCollector }
         val sqlFileManager =
             psiDaoMethod.sqlFile?.let {
                 method.project.findFile(it)
