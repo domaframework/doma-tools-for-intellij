@@ -2,6 +2,7 @@ package doma.example.dao.inspection.paramtype;
 
 import org.seasar.doma.*;
 import doma.example.entity.*;
+import doma.example.function.*;
 import java.util.function.BiFunction;
 import org.seasar.doma.jdbc.Config;
 import org.seasar.doma.jdbc.PreparedSql;
@@ -30,5 +31,8 @@ public interface SqlProcessorParamTestDao {
 
     @SqlProcessor
     <R> R execute(BiFunction<Config, PreparedSql, R> func);
+
+    @SqlProcessor
+    String executeHogeBiFunction(HogeBiFunction func);
 }
 

@@ -17,13 +17,30 @@ package org.domaframework.doma.intellij.inspection.dao.processor
 
 import org.domaframework.doma.intellij.common.util.DomaClassName
 
+/**
+ * Represents a strategy parameter for Doma DAO method inspections.
+ *
+ * Provides methods to determine if the parameter is a stream or collect type
+ * in the context of select operations.
+ *
+ * @property fieldName The name of the field.
+ * @property isSelectType True if the parent class is a select type.
+ */
 class StrategyParam(
     val fieldName: String = "",
     parentClassName: String?,
 ) {
     private val isSelectType: Boolean = parentClassName == DomaClassName.SELECT_TYPE.className
 
+    /**
+     * Checks if the parameter represents a stream type.
+     * @return True if the field is STREAM and the parent is select type.
+     */
     fun isStream(): Boolean = fieldName == "STREAM" && isSelectType
 
+    /**
+     * Checks if the parameter represents a collect type.
+     * @return True if the field is COLLECT and the parent is select type.
+     */
     fun isCollect(): Boolean = fieldName == "COLLECT" && isSelectType
 }

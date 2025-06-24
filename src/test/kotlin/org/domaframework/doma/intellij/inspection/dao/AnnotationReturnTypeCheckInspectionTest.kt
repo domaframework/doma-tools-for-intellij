@@ -45,6 +45,7 @@ class AnnotationReturnTypeCheckInspectionTest : DomaSqlTest() {
         addOtherJavaFile("domain", "Hiredate.java")
         addOtherJavaFile("collector", "HogeCollector.java")
         addOtherJavaFile("function", "HogeFunction.java")
+        addOtherJavaFile("function", "HogeBiFunction.java")
         myFixture.enableInspections(DaoMethodReturnTypeInspection())
     }
 

@@ -20,8 +20,8 @@ import com.intellij.psi.PsiTypes
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
-import org.domaframework.doma.intellij.extension.getJavaClazz
 
 /**
  * Processor for checking the return type of batch annotations.
@@ -43,25 +43,23 @@ class BatchReturnTypeCheckProcessor(
         val parameters = method.parameterList.parameters
         val immutableEntityParam = parameters.firstOrNull() ?: return null
 
-        val convertOptional = PsiClassTypeUtil.convertOptionalType(immutableEntityParam.type, project)
+        val convertOptional =
+            PsiClassTypeUtil.convertOptionalType(immutableEntityParam.type, project)
         val parameterType = convertOptional as PsiClassReferenceType
         val nestPsiType = parameterType.reference.typeParameters.firstOrNull() ?: return null
         val nestClass: PsiType = PsiClassTypeUtil.convertOptionalType(nestPsiType, project)
 
         if (psiDaoMethod.useSqlAnnotation() || psiDaoMethod.sqlFileOption) {
             nestClass.let { methodParam ->
-                val paramTypeName = methodParam.canonicalText
-                project.getJavaClazz(paramTypeName)?.let {
-                    if (isImmutableEntity(paramTypeName)) {
-                        return checkReturnTypeImmutableEntity(nestClass)
-                    }
+                if (TypeUtil.isImmutableEntity(project, methodParam.canonicalText)) {
+                    return checkReturnTypeImmutableEntity(nestClass)
                 }
             }
             return generatePsiTypeReturnTypeResult(methodOtherReturnType)
         }
 
         // Check if it has an immutable entity parameter
-        if (isImmutableEntity(nestClass.canonicalText)) {
+        if (TypeUtil.isImmutableEntity(project, nestClass.canonicalText)) {
             return checkReturnTypeImmutableEntity(nestClass)
         }
 

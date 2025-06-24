@@ -21,6 +21,7 @@ import com.intellij.psi.PsiTypes
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.util.DomaClassName
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationReturnTypeUpdateReturningResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
@@ -51,11 +52,8 @@ class UpdateReturnTypeCheckProcessor(
 
         if (psiDaoMethod.useSqlAnnotation() || psiDaoMethod.sqlFileOption) {
             immutableEntityParam.let { methodParam ->
-                val paramTypeName = methodParam.type.canonicalText
-                project.getJavaClazz(paramTypeName)?.let {
-                    if (isImmutableEntity(paramTypeName)) {
-                        return checkReturnTypeImmutableEntity(immutableEntityParam)
-                    }
+                if (TypeUtil.isImmutableEntity(project, methodParam.type.canonicalText)) {
+                    return checkReturnTypeImmutableEntity(immutableEntityParam)
                 }
             }
             return generatePsiTypeReturnTypeResult(methodOtherReturnType)
@@ -67,7 +65,7 @@ class UpdateReturnTypeCheckProcessor(
         }
 
         // Check if it has an immutable entity parameter
-        if (isImmutableEntity(immutableEntityParam.type.canonicalText)) {
+        if (TypeUtil.isImmutableEntity(project, immutableEntityParam.type.canonicalText)) {
             return checkReturnTypeImmutableEntity(immutableEntityParam)
         }
 

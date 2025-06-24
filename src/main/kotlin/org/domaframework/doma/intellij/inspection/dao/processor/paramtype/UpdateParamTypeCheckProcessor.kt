@@ -17,9 +17,8 @@ package org.domaframework.doma.intellij.inspection.dao.processor.paramtype
 
 import com.intellij.codeInspection.ProblemsHolder
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamTypeResult
-import org.domaframework.doma.intellij.extension.getJavaClazz
-import org.domaframework.doma.intellij.extension.psi.isEntity
 
 /**
  * Processor for checking the parameter types of DAO methods annotated with @Insert,@Update,@Delete.
@@ -58,11 +57,9 @@ class UpdateParamTypeCheckProcessor(
 
         // Check if the method has a parameter of type entity
         val param = method.parameterList.parameters.firstOrNull()
-        val paramClass = project.getJavaClazz(param?.type?.canonicalText ?: "")
-        val identifier = param?.nameIdentifier ?: return
-        if (paramClass == null || !paramClass.isEntity()) {
+        if (!TypeUtil.isEntity(param?.type, project)) {
             ValidationMethodParamTypeResult(
-                identifier,
+                param?.nameIdentifier,
                 shortName,
                 "an entity",
             ).highlightElement(holder)

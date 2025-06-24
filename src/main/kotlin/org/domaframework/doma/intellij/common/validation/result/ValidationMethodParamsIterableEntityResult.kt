@@ -22,7 +22,7 @@ import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 
 class ValidationMethodParamsIterableEntityResult(
-    override val identify: PsiElement?,
+    override val identify: PsiElement,
     override val shortName: String = "",
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(

@@ -15,7 +15,6 @@
  */
 package org.domaframework.doma.intellij.inspection.dao.processor.returntype
 
-import com.intellij.codeInsight.AnnotationUtil
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
@@ -23,9 +22,7 @@ import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationReturnTypeImmutableResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationReturnTypeResult
-import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
-import org.domaframework.doma.intellij.extension.psi.getClassAnnotation
 import org.domaframework.doma.intellij.extension.psi.getSuperClassType
 import org.domaframework.doma.intellij.inspection.dao.processor.TypeCheckerProcessor
 
@@ -37,16 +34,6 @@ abstract class ReturnTypeCheckerProcessor(
     protected val returnType = psiDaoMethod.psiMethod.returnType
 
     abstract fun checkReturnType(): ValidationResult?
-
-    protected fun isImmutableEntity(canonicalText: String): Boolean {
-        val returnTypeClass = method.project.getJavaClazz(canonicalText)
-        val entity =
-            returnTypeClass?.getClassAnnotation(DomaClassName.ENTITY.className) ?: return false
-        return entity.let { entity ->
-            AnnotationUtil.getBooleanAttributeValue(entity, "immutable") == true
-        } == true ||
-            returnTypeClass.isRecord == true
-    }
 
     protected fun hasReturingOption(): Boolean {
         val methodAnnotation: PsiAnnotation =

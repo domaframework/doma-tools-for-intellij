@@ -42,6 +42,7 @@ class AnnotationParamTypeCheckInspectionTest : DomaSqlTest() {
         addEntityJavaFile("Packet.java")
         addOtherJavaFile("collector", "HogeCollector.java")
         addOtherJavaFile("function", "HogeFunction.java")
+        addOtherJavaFile("function", "HogeBiFunction.java")
         testDaoNames.forEach { daoName ->
             addDaoJavaFile("$daoPackage/$daoName.java")
         }

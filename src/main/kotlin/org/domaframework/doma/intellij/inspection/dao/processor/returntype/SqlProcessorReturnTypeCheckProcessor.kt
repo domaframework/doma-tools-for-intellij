@@ -15,10 +15,8 @@
  */
 package org.domaframework.doma.intellij.inspection.dao.processor.returntype
 
-import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypes
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
-import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationSqlProcessorReturnResult
@@ -49,18 +47,18 @@ class SqlProcessorReturnTypeCheckProcessor(
         val resultParam =
             getMethodParamTargetArgByIndex(targetType, resultIndex)
                 ?: return null
-        val optionalNestClass: PsiType = PsiClassTypeUtil.convertOptionalType(resultParam, project)
 
-        if (optionalNestClass.canonicalText != DomaClassName.VOID.className) {
+        val resultParamName = resultParam.canonicalText
+        if (resultParamName != DomaClassName.VOID.className) {
             val methodReturnType = method.returnType
             val returnTypeCheckResult =
-                (optionalNestClass.canonicalText == "?" && methodReturnType?.canonicalText == "R") ||
-                    methodReturnType?.canonicalText == optionalNestClass.canonicalText
+                (resultParamName == "?" && methodReturnType?.canonicalText == "R") ||
+                    methodReturnType?.canonicalText == resultParamName
 
             return if (!returnTypeCheckResult) {
                 ValidationSqlProcessorReturnResult(
                     returnType?.canonicalText ?: "void",
-                    optionalNestClass.canonicalText,
+                    resultParamName,
                     method.nameIdentifier,
                     shortName,
                 )

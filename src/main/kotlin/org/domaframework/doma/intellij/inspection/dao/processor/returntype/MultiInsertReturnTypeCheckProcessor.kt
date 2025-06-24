@@ -21,6 +21,7 @@ import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.util.DomaClassName
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationReturnTypeForMultiInsertReturningResult
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
@@ -56,7 +57,7 @@ class MultiInsertReturnTypeCheckProcessor(
         }
 
         // Check if it has an immutable entity parameter
-        if (nestClass != null && isImmutableEntity(nestClass.canonicalText)) {
+        if (nestClass != null && TypeUtil.isImmutableEntity(project, nestClass.canonicalText)) {
             return checkReturnTypeImmutableEntity(nestClass)
         }
 

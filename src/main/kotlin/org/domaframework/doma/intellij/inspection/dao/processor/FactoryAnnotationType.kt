@@ -15,6 +15,16 @@
  */
 package org.domaframework.doma.intellij.inspection.dao.processor
 
+/**
+ * Enum representing factory annotation types for Doma DAO methods.
+ *
+ * Each entry defines the fully qualified annotation name, the expected return type,
+ * and the required parameter count for the factory method.
+ *
+ * @property fqdn The fully qualified name of the annotation.
+ * @property returnType The expected return type for the factory.
+ * @property paramCount The number of parameters required by the factory method.
+ */
 enum class FactoryAnnotationType(
     val fqdn: String,
     val returnType: String,
