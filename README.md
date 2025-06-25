@@ -6,6 +6,8 @@
 <!-- Plugin description -->
 "Doma Tools" is a plugin that supports the development of [Doma](https://github.com/domaframework/doma) based projects in IntelliJ.
 
+"Doma Tools" supports development using both Doma 2 and Doma 3.
+
 It checks associations between DAO and SQL and offers coding support features for Doma syntax,
 such as generating SQL template files, navigating between files, and inspecting the validity of bind variables.
 
