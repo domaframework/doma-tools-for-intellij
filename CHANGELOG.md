@@ -2,6 +2,44 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-06-25
+
+### New Features
+
+- DAO Method Parameter Validation ([#257])
+- Check DAO Method Return Type ([#247])
+- Factory DAO Method Check ([#272])
+- Implement Return Type Checking for Select and Function Annotations ([#266])
+
+### Bug Fixes
+
+- Expand directive incorrectly treated as bind variable directive ([#255])
+- Enhance the usage checks of DAO method parameters for subtypes. ([#273])
+- Fix Return Type Check ([#270])
+- Resource for parameter error messages of Processor methods ([#269])
+- Refactoring dao method inspections ([#274])
+
+### Dependency Updates
+
+- Update dependency org.jetbrains.kotlin.jvm to v2.2.0 ([#271])
+- Update dependency org.jetbrains.intellij.plugins:verifier-cli to v1.388 ([#258])
+- Update dependency com.fasterxml.jackson.module:jackson-module-kotlin to v2.19.1 ([#253])
+
+[#257]:https://github.com/domaframework/doma-tools-for-intellij/pull/257
+[#247]:https://github.com/domaframework/doma-tools-for-intellij/pull/247
+[#272]:https://github.com/domaframework/doma-tools-for-intellij/pull/272
+[#266]:https://github.com/domaframework/doma-tools-for-intellij/pull/266
+[#255]:https://github.com/domaframework/doma-tools-for-intellij/pull/255
+[#273]:https://github.com/domaframework/doma-tools-for-intellij/pull/273
+[#270]:https://github.com/domaframework/doma-tools-for-intellij/pull/270
+[#269]:https://github.com/domaframework/doma-tools-for-intellij/pull/269
+[#275]:https://github.com/domaframework/doma-tools-for-intellij/pull/275
+[#274]:https://github.com/domaframework/doma-tools-for-intellij/pull/274
+[#271]:https://github.com/domaframework/doma-tools-for-intellij/pull/271
+[#258]:https://github.com/domaframework/doma-tools-for-intellij/pull/258
+[#253]:https://github.com/domaframework/doma-tools-for-intellij/pull/253
+
+
 ## [1.0.0] - 2025-06-09
 
 ### Bug Fixes
@@ -356,3 +394,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[1.1.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/1.0.0...1.1.0
