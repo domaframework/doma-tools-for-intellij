@@ -17,10 +17,6 @@
 - Enhance the usage checks of DAO method parameters for subtypes. ([#273])
 - Fix Return Type Check ([#270])
 - Resource for parameter error messages of Processor methods ([#269])
-
-### Maintenance
-
-- Update release drafter conditions to exclude specific changelog updates ([#275])
 - Refactoring dao method inspections ([#274])
 
 ### Dependency Updates
