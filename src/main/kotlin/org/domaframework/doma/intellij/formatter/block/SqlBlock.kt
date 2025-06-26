@@ -260,36 +260,11 @@ open class SqlBlock(
                         return@setParentGroups lastGroupBlock
                     }
                 } else if (lastIndentLevel == childBlock.indent.indentLevel) {
-                    // The AND following an OR will be a child of OR unless surrounded by a subgroup
-                    if (childBlock.getNodeText() == "and" && lastGroupBlock.getNodeText() == "or") {
-                        setParentGroups(
-                            childBlock,
-                        ) { history ->
-                            return@setParentGroups lastGroupBlock
-                        }
-                    } else {
-                        if (childBlock.getNodeText() == "or" &&
-                            lastGroupBlock.getNodeText() == "and" &&
-                            lastGroupBlock.parentBlock?.getNodeText() == "or"
-                        ) {
-                            val orParentIndex =
-                                blockBuilder.getGroupTopNodeIndex { block ->
-                                    block is SqlKeywordGroupBlock && block.getNodeText() == "or"
-                                }
-                            blockBuilder.clearSubListGroupTopNodeIndexHistory(orParentIndex)
-                            setParentGroups(
-                                childBlock,
-                            ) { history ->
-                                return@setParentGroups history.lastOrNull()?.second
-                            }
-                        } else {
-                            blockBuilder.removeLastGroupTopNodeIndexHistory()
-                            setParentGroups(
-                                childBlock,
-                            ) { history ->
-                                return@setParentGroups lastGroupBlock.parentBlock
-                            }
-                        }
+                    blockBuilder.removeLastGroupTopNodeIndexHistory()
+                    setParentGroups(
+                        childBlock,
+                    ) { history ->
+                        return@setParentGroups lastGroupBlock.parentBlock
                     }
                 } else if (lastIndentLevel < childBlock.indent.indentLevel) {
                     setParentGroups(

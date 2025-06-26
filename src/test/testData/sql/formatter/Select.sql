@@ -35,7 +35,9 @@ SELECT COUNT( DISTINCT (x)),o.*
             /** And  Group */
             AND (p.psfmag_g - p.extinction_g + 5 * LOG(u.propermotion / 100.) + 5 > 16.136 + 2.727 * (p.psfmag_g - p.extinction_g - (p.psfmag_i - p.extinction_i))
 
-                  OR p.psfmag_g - p.extinction_g - (p.psfmag_i - p.extinction_i) < 0.)/*%end*/) AS o
+                  OR p.psfmag_g - p.extinction_g - (p.psfmag_i - p.extinction_i) < 0. AND p.extinction_g - u.propermotion > 0)
+                 
+                /*%end*/) AS o
 
        LEFT OUTER JOIN ( SELECT n.objid
                                 , MIN(n.distance) AS nearest
