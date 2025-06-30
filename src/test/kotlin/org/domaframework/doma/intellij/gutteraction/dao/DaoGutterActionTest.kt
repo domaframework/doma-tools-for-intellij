@@ -20,6 +20,7 @@ import com.intellij.codeInsight.daemon.GutterMark
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.DomaSqlTest
 import org.domaframework.doma.intellij.bundle.MessageBundle
@@ -72,76 +73,86 @@ class DaoGutterActionTest : DomaSqlTest() {
             "$packageName/BatchUpdateGutterTestDao/existsSQLFile3.sql",
             "$packageName/BatchDeleteGutterTestDao/existsSQLFile3.sql",
         )
+
+        addOtherPackageJavaFile("doma/java/dao", "SourceNameDao.java")
+        addOtherPackageSqlFile("doma/java/dao", "SourceNameDao/existsSQLFile1.sql")
     }
 
     fun testSelectDisplayGutter() {
         val daoName = "$packageName.SelectGutterTestDao"
         val total = 2
-        val targetGutter = gutterIconsDisplayedTest(daoName, total)
+        val targetGutter = gutterIconsDisplayedTest(findDaoClass(daoName), total)
         gutterIconNavigation("existsSQLFile1.sql", targetGutter)
     }
 
     fun testInsertDisplayGutter() {
         val daoName = "$packageName.InsertGutterTestDao"
         val total = 2
-        val targetGutter = gutterIconsDisplayedTest(daoName, total)
+        val targetGutter = gutterIconsDisplayedTest(findDaoClass(daoName), total)
         gutterIconNavigation("existsSQLFile1.sql", targetGutter)
     }
 
     fun testUpdateDisplayGutter() {
         val daoName = "$packageName.UpdateGutterTestDao"
         val total = 2
-        val targetGutter = gutterIconsDisplayedTest(daoName, total)
+        val targetGutter = gutterIconsDisplayedTest(findDaoClass(daoName), total)
         gutterIconNavigation("existsSQLFile1.sql", targetGutter)
     }
 
     fun testDeleteDisplayGutter() {
         val daoName = "$packageName.DeleteGutterTestDao"
         val total = 1
-        val targetGutter = gutterIconsDisplayedTest(daoName, total)
+        val targetGutter = gutterIconsDisplayedTest(findDaoClass(daoName), total)
         gutterIconNavigation("existsSQLFile1.sql", targetGutter)
     }
 
     fun testBatchInsertDisplayGutter() {
         val daoName = "$packageName.BatchInsertGutterTestDao"
         val total = 3
-        val targetGutter = gutterIconsDisplayedTest(daoName, total)
+        val targetGutter = gutterIconsDisplayedTest(findDaoClass(daoName), total)
         gutterIconNavigation("existsSQLFile1.sql", targetGutter)
     }
 
     fun testBatchUpdateDisplayGutter() {
         val daoName = "$packageName.BatchUpdateGutterTestDao"
         val total = 3
-        val targetGutter = gutterIconsDisplayedTest(daoName, total)
+        val targetGutter = gutterIconsDisplayedTest(findDaoClass(daoName), total)
         gutterIconNavigation("existsSQLFile1.sql", targetGutter)
     }
 
     fun testBatchDeleteDisplayGutter() {
         val daoName = "$packageName.BatchDeleteGutterTestDao"
         val total = 2
-        val targetGutter = gutterIconsDisplayedTest(daoName, total)
+        val targetGutter = gutterIconsDisplayedTest(findDaoClass(daoName), total)
         gutterIconNavigation("existsSQLFile1.sql", targetGutter)
     }
 
     fun testScriptDisplayGutter() {
         val daoName = "$packageName.ScriptGutterTestDao"
         val total = 2
-        val targetGutter = gutterIconsDisplayedTest(daoName, total)
+        val targetGutter = gutterIconsDisplayedTest(findDaoClass(daoName), total)
         gutterIconNavigation("existsSQLFile1.script", targetGutter)
     }
 
     fun testSqlProcessorDisplayGutter() {
         val daoName = "$packageName.SqlProcessorGutterTestDao"
         val total = 2
-        val targetGutter = gutterIconsDisplayedTest(daoName, total)
+        val targetGutter = gutterIconsDisplayedTest(findDaoClass(daoName), total)
+        gutterIconNavigation("existsSQLFile1.sql", targetGutter)
+    }
+
+    fun testSourceDirectoryDisplayGutter() {
+        val originalPackageName = "doma.java.dao"
+        val daoName = "SourceNameDao"
+        val total = 1
+        val targetGutter = gutterIconsDisplayedTest(findDaoClass(originalPackageName, daoName), total)
         gutterIconNavigation("existsSQLFile1.sql", targetGutter)
     }
 
     private fun gutterIconsDisplayedTest(
-        daoName: String,
+        dao: PsiClass,
         total: Int,
     ): LineMarkerInfo<*>? {
-        val dao = findDaoClass(daoName)
         val targetElementNames = listOf("existsSQLFile1", "existsSQLFile2", "existsSQLFile3")
 
         myFixture.configureFromExistingVirtualFile(dao.containingFile.virtualFile)

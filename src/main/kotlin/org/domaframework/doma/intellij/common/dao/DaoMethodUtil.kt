@@ -218,12 +218,12 @@ fun getRelativeSqlFilePathFromDaoFilePath(
     val pathParams = CommonPathParameterUtil.getModulePaths(module)
     var relativeSqlFilePath =
         daoFile.path
-            .replace(pathParams.moduleBasePath?.path ?: "", "")
+            .replaceFirst(pathParams.moduleBasePath?.path ?: "", "")
             .replace(".$extension", "")
     val sources = CommonPathParameterUtil.getSources(module, daoFile)
     sources.forEach { source ->
         relativeSqlFilePath =
-            relativeSqlFilePath.replace(
+            relativeSqlFilePath.replaceFirst(
                 "/" + source.nameWithoutExtension,
                 RESOURCES_META_INF_PATH,
             )

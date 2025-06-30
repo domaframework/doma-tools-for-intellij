@@ -173,9 +173,17 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         packageName: String,
         fileName: String,
     ) {
-        val file = File("$testDataPath/$sourceRoot/$packagePath/$packageName/$fileName")
+        val originalPackageName = "$packagePath/$packageName"
+        addOtherPackageJavaFile(originalPackageName, fileName)
+    }
+
+    protected fun addOtherPackageJavaFile(
+        packageName: String,
+        fileName: String,
+    ) {
+        val file = File("$testDataPath/$sourceRoot/$packageName/$fileName")
         myFixture.addFileToProject(
-            "main/$sourceRoot/$packagePath/$packageName/$fileName",
+            "main/$sourceRoot/$packageName/$fileName",
             file.readText(),
         )
     }
@@ -199,26 +207,45 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
 
     fun addSqlFile(vararg sqlNames: String) {
         for (sqlName in sqlNames) {
-            val file = File("$testDataPath/$resourceRoot/$RESOURCES_META_INF_PATH/$packagePath/dao/$sqlName")
-            myFixture.addFileToProject(
-                "main/$resourceRoot/$RESOURCES_META_INF_PATH/$packagePath/dao/$sqlName",
-                file.readText(),
-            )
+            addOtherPackageSqlFile("$packagePath/dao", sqlName)
         }
     }
 
-    fun findSqlFile(sqlName: String): VirtualFile? {
+    fun addOtherPackageSqlFile(
+        packageName: String,
+        sqlName: String,
+    ) {
+        val sqlPath = "$resourceRoot/$RESOURCES_META_INF_PATH/$packageName/$sqlName"
+        val file = File("$testDataPath/$sqlPath")
+        myFixture.addFileToProject(
+            "main/$sqlPath",
+            file.readText(),
+        )
+    }
+
+    fun findSqlFile(sqlName: String): VirtualFile? = findSqlFile(packagePath, sqlName)
+
+    fun findSqlFile(
+        packageName: String,
+        sqlName: String,
+    ): VirtualFile? {
         val module = myFixture.module
+        val sqlFileName = "$RESOURCES_META_INF_PATH/$packageName/dao/$sqlName"
         return module?.getResourcesSQLFile(
-            "$RESOURCES_META_INF_PATH/$packagePath/dao/$sqlName",
+            sqlFileName,
             false,
         )
     }
 
-    fun findDaoClass(testDaoName: String): PsiClass {
-        val daoName = testDaoName.replace("/", ".")
-        val dao = myFixture.findClass("doma.example.dao.$daoName")
-        assertNotNull("Not Found [$testDaoName]", dao)
+    fun findDaoClass(testDaoName: String): PsiClass = findDaoClass("doma.example.dao", testDaoName)
+
+    fun findDaoClass(
+        packageName: String,
+        testDaoName: String,
+    ): PsiClass {
+        val daoName = "$packageName.$testDaoName".replace("/", ".")
+        val dao = myFixture.findClass(daoName)
+        assertNotNull("Not Found [$daoName]", dao)
         return dao
     }
 
