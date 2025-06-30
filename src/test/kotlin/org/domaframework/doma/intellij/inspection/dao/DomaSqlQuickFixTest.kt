@@ -172,9 +172,7 @@ class DomaSqlQuickFixTest : DomaSqlTest() {
         val extension = if (isScript) "script" else "sql"
         findSqlFile(packageName, "$testDaoName/generateSQLFile.$extension")?.let { generatedSql ->
             afterCheck(generatedSql)
-        } ?: {
-            fail("Not Found SQL File: $packageName/$testDaoName/generateSQLFile.$extension")
-        }
+        } ?: fail("Not Found SQL File: $packageName/$testDaoName/generateSQLFile.$extension")
     }
 
     private fun getQuickFixTestDaoName(daoName: String): String = "$packagename/$daoName"
