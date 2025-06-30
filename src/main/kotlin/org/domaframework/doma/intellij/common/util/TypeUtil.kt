@@ -24,6 +24,8 @@ import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.getClassAnnotation
 import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import kotlin.reflect.KClass
 
 object TypeUtil {
     /**
@@ -94,4 +96,15 @@ object TypeUtil {
         if (type == null) return false
         return PsiTypeChecker.isBaseClassType(type) || DomaClassName.isOptionalWrapperType(type.canonicalText)
     }
+
+    /**
+     * Determines whether the specified class instance matches.
+     */
+    fun isExpectedClassType(
+        expectedClasses: List<KClass<*>>,
+        childBlock: SqlBlock,
+    ): Boolean =
+        expectedClasses.any { clazz ->
+            clazz.isInstance(childBlock)
+        }
 }
