@@ -8,15 +8,11 @@ import org.seasar.doma.Dao;
 @Dao
 public interface BatchDeleteQuickFixTestDao {
 
-
-
   @BatchDelete
   int[] nonExistSQLFile(List<Employee> employees);
 
-
   @BatchDelete(sqlFile = true)
   int[] generateSQLFile<caret>(List<Employee> employees);
-
 
   @BatchDelete(sqlFile = true)
   int[] existsSQLFile(List<Employee> employees);

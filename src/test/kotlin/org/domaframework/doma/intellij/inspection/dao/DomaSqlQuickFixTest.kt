@@ -15,6 +15,7 @@
  */
 package org.domaframework.doma.intellij.inspection.dao
 
+import com.intellij.openapi.vfs.VirtualFile
 import org.domaframework.doma.intellij.DomaSqlTest
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.inspection.dao.inspector.SqlFileExistInspection
@@ -39,6 +40,8 @@ class DomaSqlQuickFixTest : DomaSqlTest() {
             "$packagename/SqlProcessorQuickFixTestDao.java",
         )
 
+        addOtherPackageJavaFile("doma/java/dao", "SourceNameDao.java")
+
         addResourceEmptySqlFile(
             "$packagename/SelectQuickFixTestDao/existsSQLFile.sql",
             "$packagename/InsertQuickFixTestDao/existsSQLFile.sql",
@@ -55,78 +58,123 @@ class DomaSqlQuickFixTest : DomaSqlTest() {
 
     fun testSelectGenerateSQLFileQuickFix() {
         val testDaoName = "SelectQuickFixTestDao"
-        daoQuickFixTest(testDaoName, false) {
-            highlightingDao(testDaoName)
+        daoQuickFixTest(testDaoName) { virtual ->
+            highlightingDao(virtual)
         }
     }
 
     fun testInsertGenerateSQLFileQuickFix() {
         val testDaoName = "InsertQuickFixTestDao"
-        daoQuickFixTest(testDaoName, false) { highlightingDao(testDaoName) }
+        daoQuickFixTest(testDaoName) { virtual ->
+            highlightingDao(virtual)
+        }
     }
 
     fun testUpdateGenerateSQLFileQuickFix() {
         val testDaoName = "UpdateQuickFixTestDao"
-        daoQuickFixTest(testDaoName, false) { highlightingDao(testDaoName) }
+        daoQuickFixTest(testDaoName) { virtual ->
+            highlightingDao(virtual)
+        }
     }
 
     fun testDeleteGenerateSQLFileQuickFix() {
         val testDaoName = "DeleteQuickFixTestDao"
-        daoQuickFixTest(testDaoName, false) { highlightingDao(testDaoName) }
+        daoQuickFixTest(testDaoName) { virtual ->
+            highlightingDao(virtual)
+        }
     }
 
     fun testBatchInsertGenerateSQLFileQuickFix() {
         val testDaoName = "BatchInsertQuickFixTestDao"
-        daoQuickFixTest(testDaoName, false) { highlightingDao(testDaoName) }
+        daoQuickFixTest(testDaoName) { virtual ->
+            highlightingDao(virtual)
+        }
     }
 
     fun testBatchUpdateGenerateSQLFileQuickFix() {
         val testDaoName = "BatchUpdateQuickFixTestDao"
-        daoQuickFixTest(testDaoName, false) { highlightingDao(testDaoName) }
+        daoQuickFixTest(testDaoName) { virtual ->
+            highlightingDao(virtual)
+        }
     }
 
     fun testBatchDeleteGenerateSQLFileQuickFix() {
         val testDaoName = "BatchDeleteQuickFixTestDao"
-        daoQuickFixTest(testDaoName, false) { highlightingDao(testDaoName) }
+        daoQuickFixTest(testDaoName) { virtual ->
+            highlightingDao(virtual)
+        }
     }
 
     fun testScriptGenerateSQLFileQuickFix() {
         val testDaoName = "ScriptQuickFixTestDao"
-        daoQuickFixTest(testDaoName, true) { highlightingDao(testDaoName) }
+        daoQuickFixTest(testDaoName, true) { virtual ->
+            highlightingDao(virtual)
+        }
     }
 
     fun testSqlProcessorGenerateSQLFileQuickFix() {
         val testDaoName = "SqlProcessorQuickFixTestDao"
-        daoQuickFixTest(testDaoName, false) { highlightingDao(testDaoName) }
+        daoQuickFixTest(testDaoName) { virtual ->
+            highlightingDao(virtual)
+        }
     }
 
-    private fun highlightingDao(testDaoName: String) {
-        val dao = findDaoClass(getQuickFixTestDaoName(testDaoName).replace("/", "."))
+    fun testSourceNameDaoGenerateSQLFileQuickFix() {
+        val originalPackageName = "doma/java"
+        val testDaoName = "SourceNameDao"
+        daoQuickFixTestOtherPackage(originalPackageName, testDaoName) { virtual ->
+            highlightingDao(virtual)
+        }
+    }
+
+    private fun highlightingDao(virtual: VirtualFile) {
         myFixture.testHighlighting(
             false,
             false,
             false,
-            dao.containingFile.virtualFile,
+            virtual,
         )
     }
 
     private fun daoQuickFixTest(
         testDaoName: String,
-        isScript: Boolean,
-        afterCheck: () -> Unit,
+        isScript: Boolean = false,
+        afterCheck: (VirtualFile) -> Unit,
     ) {
         val quickFixDaoName = getQuickFixTestDaoName(testDaoName)
-        val dao = findDaoClass(quickFixDaoName.replace("/", "."))
+        val dao = findDaoClass(quickFixDaoName)
 
         myFixture.configureFromExistingVirtualFile(dao.containingFile.virtualFile)
-        val intention = myFixture.findSingleIntention(MessageBundle.message("generate.sql.quickfix.title"))
+        val intention =
+            myFixture.findSingleIntention(MessageBundle.message("generate.sql.quickfix.title"))
         myFixture.launchAction(intention)
 
-        val generatedSql =
-            findSqlFile("$quickFixDaoName/generateSQLFile.${if (isScript) "script" else "sql"}")
-        assertTrue("Not Found SQL File", generatedSql != null)
+        val extension = if (isScript) "script" else "sql"
+        findSqlFile("$quickFixDaoName/generateSQLFile.$extension")?.let { generatedSql ->
+            afterCheck(generatedSql)
+        }
+    }
 
-        afterCheck()
+    private fun daoQuickFixTestOtherPackage(
+        packageName: String,
+        testDaoName: String,
+        isScript: Boolean = false,
+        afterCheck: (VirtualFile) -> Unit,
+    ) {
+        val daoPackage = packageName.plus("/dao")
+        val dao = findDaoClass(daoPackage.replace("/", "."), testDaoName)
+
+        myFixture.configureFromExistingVirtualFile(dao.containingFile.virtualFile)
+        val intention =
+            myFixture.findSingleIntention(MessageBundle.message("generate.sql.quickfix.title"))
+        myFixture.launchAction(intention)
+
+        val extension = if (isScript) "script" else "sql"
+        findSqlFile(packageName, "$testDaoName/generateSQLFile.$extension")?.let { generatedSql ->
+            afterCheck(generatedSql)
+        } ?: {
+            fail("Not Found SQL File: $packageName/$testDaoName/generateSQLFile.$extension")
+        }
     }
 
     private fun getQuickFixTestDaoName(daoName: String): String = "$packagename/$daoName"
