@@ -6,5 +6,11 @@ import org.seasar.doma.*;
 @Dao
 interface SourceNameDao {
   @Select
-  Employee generateSQLFile<caret>(Integer id,String name);
+  Employee generateSQLFile(Integer id,String name);
+
+  @Select
+  Employee <caret>jumpToDaoFile(Integer id);
+
+  @Select
+  Employee existsSQLFile1(Integer id, String name);
 }

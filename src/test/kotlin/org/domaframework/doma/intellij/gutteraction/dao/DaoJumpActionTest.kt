@@ -24,6 +24,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.psi.PsiClass
 import org.domaframework.doma.intellij.DomaSqlTest
 import java.awt.event.InputEvent
 import java.awt.event.MouseEvent
@@ -83,12 +84,15 @@ class DaoJumpActionTest : DomaSqlTest() {
             "$packageName/ScriptGutterTestDao/existsSQLFile2.script",
             "$packageName/SqlProcessorGutterTestDao/existsSQLFile2.sql",
         )
+
+        addOtherPackageJavaFile("doma/java/dao", "SourceNameDao.java")
+        addOtherPackageSqlFile("doma/java/dao", "SourceNameDao/jumpToDaoFile.sql")
     }
 
     fun testSelectJumpToSqlAction() {
         val daoName = "$packageName.SelectGutterTestDao"
         val sqlFileName = "existsSQLFile1.sql"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isDisplayedActionTest(action)
         jumpToSqlTest(action, sqlFileName)
     }
@@ -96,7 +100,7 @@ class DaoJumpActionTest : DomaSqlTest() {
     fun testInsertJumpToSqlAction() {
         val daoName = "$packageName.InsertGutterTestDao"
         val sqlFileName = "existsSQLFile2.sql"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isDisplayedActionTest(action)
         jumpToSqlTest(action, sqlFileName)
     }
@@ -104,7 +108,7 @@ class DaoJumpActionTest : DomaSqlTest() {
     fun testUpdateJumpToSqlAction() {
         val daoName = "$packageName.UpdateGutterTestDao"
         val sqlFileName = "existsSQLFile1.sql"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isDisplayedActionTest(action)
         jumpToSqlTest(action, sqlFileName)
     }
@@ -112,7 +116,7 @@ class DaoJumpActionTest : DomaSqlTest() {
     fun testDeleteJumpToSqlAction() {
         val daoName = "$packageName.DeleteGutterTestDao"
         val sqlFileName = "existsSQLFile1.sql"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isDisplayedActionTest(action)
         jumpToSqlTest(action, sqlFileName)
     }
@@ -120,7 +124,7 @@ class DaoJumpActionTest : DomaSqlTest() {
     fun testBatchInsertJumpToSqlAction() {
         val daoName = "$packageName.BatchInsertGutterTestDao"
         val sqlFileName = "existsSQLFile2.sql"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isDisplayedActionTest(action)
         jumpToSqlTest(action, sqlFileName)
     }
@@ -128,7 +132,7 @@ class DaoJumpActionTest : DomaSqlTest() {
     fun testBatchUpdateJumpToSqlAction() {
         val daoName = "$packageName.BatchUpdateGutterTestDao"
         val sqlFileName = "existsSQLFile2.sql"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isDisplayedActionTest(action)
         jumpToSqlTest(action, sqlFileName)
     }
@@ -136,7 +140,7 @@ class DaoJumpActionTest : DomaSqlTest() {
     fun testBatchDeleteJumpToSqlAction() {
         val daoName = "$packageName.BatchDeleteGutterTestDao"
         val sqlFileName = "existsSQLFile2.sql"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isDisplayedActionTest(action)
         jumpToSqlTest(action, sqlFileName)
     }
@@ -144,7 +148,7 @@ class DaoJumpActionTest : DomaSqlTest() {
     fun testScriptJumpToSqlAction() {
         val daoName = "$packageName.ScriptGutterTestDao"
         val sqlFileName = "existsSQLFile2.script"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isDisplayedActionTest(action)
         jumpToSqlTest(action, sqlFileName)
     }
@@ -152,83 +156,90 @@ class DaoJumpActionTest : DomaSqlTest() {
     fun testSqlProcessorJumpToSqlAction() {
         val daoName = "$packageName.SqlProcessorGutterTestDao"
         val sqlFileName = "existsSQLFile1.sql"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
+        isDisplayedActionTest(action)
+        jumpToSqlTest(action, sqlFileName)
+    }
+
+    fun testSourceNameJumpToSql() {
+        val daoName = "SourceNameDao"
+        val sqlFileName = "jumpToDaoFile.sql"
+        val action: AnAction = getActionTest(findDaoClass("doma.java.dao", daoName))
         isDisplayedActionTest(action)
         jumpToSqlTest(action, sqlFileName)
     }
 
     fun testSelectNotDisplayJumpToSql() {
         val daoName = "$packageName.SelectInvalidCaretTestDao"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isNotDisplayedActionTest(action)
         canSqlTest(action, "nonExistSQLFile.sql")
     }
 
     fun testInsertNotDisplayJumpToSql() {
         val daoName = "$packageName.InsertInvalidCaretTestDao"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isNotDisplayedActionTest(action)
         canSqlTest(action, "nonExistSQLFileAndTemplateIncludedList.sql")
     }
 
     fun testUpdateNotDisplayJumpToSql() {
         val daoName = "$packageName.UpdateInvalidCaretTestDao"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isNotDisplayedActionTest(action)
         canSqlTest(action, "nonRequireSQLFile.sql")
     }
 
     fun testDeleteNotDisplayJumpToSql() {
         val daoName = "$packageName.DeleteInvalidCaretTestDao"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isNotDisplayedActionTest(action)
         canSqlTest(action, "nonRequireSQLFile.sql")
     }
 
     fun testBatchInsertNotDisplayJumpToSql() {
         val daoName = "$packageName.BatchInsertInvalidCaretTestDao"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isNotDisplayedActionTest(action)
         canSqlTest(action, "nonExistSQLFileError.sql")
     }
 
     fun testBatchUpdateNotDisplayJumpToSql() {
         val daoName = "$packageName.BatchUpdateInvalidCaretTestDao"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isNotDisplayedActionTest(action)
         canSqlTest(action, "nonExistSQLFileAndTemplateIncludedList.sql")
     }
 
     fun testBatchDeleteNotDisplayJumpToSql() {
         val daoName = "$packageName.BatchDeleteInvalidCaretTestDao"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isNotDisplayedActionTest(action)
         canSqlTest(action, "nonRequireSQLFile.sql")
     }
 
     fun testScriptNotDisplayJumpToSql() {
         val daoName = "$packageName.ScriptInvalidCaretTestDao"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isNotDisplayedActionTest(action)
         canSqlTest(action, "nonExistSQLFileAndTemplateIncludedList.script")
     }
 
     fun testSqlProcessorNotDisplayJumpToSql() {
         val daoName = "$packageName.SqlProcessorInvalidCaretTestDao"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isNotDisplayedActionTest(action)
         canSqlTest(action, "nonExistSQLFile.sql")
     }
 
     fun testSqlNotDisplayJumpToSql() {
         val daoName = "$packageName.InvalidCaretTestDao"
-        val action: AnAction = getActionTest(daoName)
+        val action: AnAction = getActionTest(findDaoClass(daoName))
         isNotDisplayedActionTest(action)
         canSqlTest(action, "nonExistSQLFile.sql")
     }
 
-    private fun getActionTest(daoName: String): AnAction {
-        val dao = findDaoClass(daoName)
+    private fun getActionTest(dao: PsiClass): AnAction {
         myFixture.configureFromExistingVirtualFile(dao.containingFile.virtualFile)
 
         val action: AnAction = ActionManager.getInstance().getAction(actionId)

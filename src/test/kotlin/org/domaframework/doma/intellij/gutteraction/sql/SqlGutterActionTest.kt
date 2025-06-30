@@ -20,6 +20,7 @@ import com.intellij.codeInsight.daemon.GutterMark
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.DomaSqlTest
 import org.domaframework.doma.intellij.bundle.MessageBundle
@@ -38,29 +39,40 @@ class SqlGutterActionTest : DomaSqlTest() {
             "$packageName/JumpActionTestDao/jumpToDaoFile.sql",
             "$packageName/JumpActionTestDao/notDisplayGutterWithNonExistentDaoMethod.sql",
         )
+        addOtherPackageJavaFile("doma/java/dao", "SourceNameDao.java")
+        addOtherPackageSqlFile("doma/java/dao", "SourceNameDao/jumpToDaoFile.sql")
     }
 
     fun testSqlDisplayGutter() {
         val sqlName = "$packageName/JumpActionTestDao/jumpToDaoFile.sql"
         val total = 1
-        val targetGutter = gutterIconsDisplayedTest(sqlName, total)
+        val targetGutter = gutterIconsDisplayedTest(findSqlFile(sqlName), total)
         gutterIconNavigation("JumpActionTestDao.java", targetGutter)
     }
 
     fun testSqlNonDisplayGutter() {
         val sqlName = "$packageName/JumpActionTestDao/notDisplayGutterWithNonExistentDaoMethod.sql"
         val total = 0
-        val targetGutter = gutterIconsDisplayedTest(sqlName, total)
+        val targetGutter = gutterIconsDisplayedTest(findSqlFile(sqlName), total)
         assertNull("Gutter is displayed", targetGutter)
     }
 
+    fun testSourceDirectoryPackageGutter() {
+        val packageName = "doma/java"
+        val sqlName = "SourceNameDao/jumpToDaoFile.sql"
+        val total = 1
+        val targetGutter = gutterIconsDisplayedTest(findSqlFile(packageName, sqlName), total)
+        gutterIconNavigation("SourceNameDao.java", targetGutter)
+    }
+
     private fun gutterIconsDisplayedTest(
-        sqlName: String,
+        sql: VirtualFile?,
         total: Int,
     ): LineMarkerInfo<*>? {
-        val sql = findSqlFile(sqlName)
-        assertNotNull("Not Found SQL File", sql)
-        if (sql == null) return null
+        if (sql == null) {
+            fail("Not Found SQL File")
+            return null
+        }
 
         myFixture.configureFromExistingVirtualFile(sql)
         myFixture.doHighlighting()

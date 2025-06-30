@@ -207,12 +207,20 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
 
     fun addSqlFile(vararg sqlNames: String) {
         for (sqlName in sqlNames) {
-            val file = File("$testDataPath/$resourceRoot/$RESOURCES_META_INF_PATH/$packagePath/dao/$sqlName")
-            myFixture.addFileToProject(
-                "main/$resourceRoot/$RESOURCES_META_INF_PATH/$packagePath/dao/$sqlName",
-                file.readText(),
-            )
+            addOtherPackageSqlFile("$packagePath/dao", sqlName)
         }
+    }
+
+    fun addOtherPackageSqlFile(
+        packageName: String,
+        sqlName: String,
+    ) {
+        val sqlPath = "$resourceRoot/$RESOURCES_META_INF_PATH/$packageName/$sqlName"
+        val file = File("$testDataPath/$sqlPath")
+        myFixture.addFileToProject(
+            "main/$sqlPath",
+            file.readText(),
+        )
     }
 
     fun findSqlFile(sqlName: String): VirtualFile? = findSqlFile(packagePath, sqlName)

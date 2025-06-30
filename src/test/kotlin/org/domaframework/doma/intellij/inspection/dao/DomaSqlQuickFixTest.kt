@@ -40,7 +40,7 @@ class DomaSqlQuickFixTest : DomaSqlTest() {
             "$packagename/SqlProcessorQuickFixTestDao.java",
         )
 
-        addOtherPackageJavaFile("doma/java/dao", "SourceNameDao.java")
+        addOtherPackageJavaFile("doma/java/dao", "SourceNameGenerateDao.java")
 
         addResourceEmptySqlFile(
             "$packagename/SelectQuickFixTestDao/existsSQLFile.sql",
@@ -119,9 +119,9 @@ class DomaSqlQuickFixTest : DomaSqlTest() {
         }
     }
 
-    fun testSourceNameDaoGenerateSQLFileQuickFix() {
+    fun testSourceNameGenerateDaoGenerateSQLFileQuickFix() {
         val originalPackageName = "doma/java"
-        val testDaoName = "SourceNameDao"
+        val testDaoName = "SourceNameGenerateDao"
         daoQuickFixTestOtherPackage(originalPackageName, testDaoName) { virtual ->
             highlightingDao(virtual)
         }

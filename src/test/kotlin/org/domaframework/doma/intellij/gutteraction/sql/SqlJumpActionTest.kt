@@ -24,6 +24,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.vfs.VirtualFile
 import org.domaframework.doma.intellij.DomaSqlTest
 import java.awt.event.InputEvent
 import java.awt.event.MouseEvent
@@ -47,32 +48,53 @@ class SqlJumpActionTest : DomaSqlTest() {
             "$packageName/$testDaoName/jumpToStaticFieldDefinition.sql",
             "$packageName/$testDaoName/jumpToStaticMethodDefinition.sql",
         )
+
+        addOtherPackageJavaFile("doma/java/dao", "SourceNameDao.java")
+        addOtherPackageSqlFile("doma/java/dao", "SourceNameDao/jumpToDaoFile.sql")
     }
 
     fun testJumpActionFromSQLFileToDaoMethodCanBePerformed() {
         val sqlName = "$packageName/$testDaoName/jumpToDaoFile.sql"
-        val action: AnAction? = getJumDaoActionTest(sqlName)
-        assertNotNull("Not Found Action", action)
-        if (action == null) return
+        val action: AnAction? = getJumDaoActionTest(findSqlFile(sqlName))
+        if (action == null) {
+            fail("Not Found Action : [$sqlName]")
+            return
+        }
 
         isDisplayedActionTest(action)
         jumpToDaoTest(action, "$testDaoName.java")
     }
 
+    fun testJumpActionFromSourceDirectoryNameSQLFileToDaoMethodCanBePerformed() {
+        val originalPackageName = "doma/java"
+        val sqlName = "SourceNameDao/jumpToDaoFile.sql"
+        val action: AnAction? = getJumDaoActionTest(findSqlFile(originalPackageName, sqlName))
+        if (action == null) {
+            fail("Not Found Action : [$originalPackageName/$sqlName]")
+            return
+        }
+
+        isDisplayedActionTest(action)
+        jumpToDaoTest(action, "SourceNameDao.java")
+    }
+
     fun testNotDisplayedJumpMethodActionInSQLForNonExistentDaoMethod() {
         val sqlName = "$packageName/$testDaoName/notDisplayGutterWithNonExistentDaoMethod.sql"
-        val action: AnAction? = getJumDaoActionTest(sqlName)
-        assertNotNull("Not Found Action", action)
-        if (action == null) return
+        val action: AnAction? = getJumDaoActionTest(findSqlFile(sqlName))
+        if (action == null) {
+            fail("Not Found Action : [$sqlName]")
+            return
+        }
 
         isNotDisplayedActionTest(action)
         canNotJumpToDaoTest(action, "$testDaoName.java")
     }
 
-    private fun getJumDaoActionTest(sqlName: String): AnAction? {
-        val sql = findSqlFile(sqlName)
-        assertNotNull("Not Found SQL File", sql)
-        if (sql == null) return null
+    private fun getJumDaoActionTest(sql: VirtualFile?): AnAction? {
+        if (sql == null) {
+            fail("Not Found SQL File")
+            return null
+        }
 
         myFixture.configureFromExistingVirtualFile(sql)
 
