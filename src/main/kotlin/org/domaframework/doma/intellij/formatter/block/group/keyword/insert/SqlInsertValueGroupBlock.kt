@@ -27,7 +27,6 @@ class SqlInsertValueGroupBlock(
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             return parent.indent.groupIndentLen.plus(1)
-            return 1
         } ?: return 1
     }
 }

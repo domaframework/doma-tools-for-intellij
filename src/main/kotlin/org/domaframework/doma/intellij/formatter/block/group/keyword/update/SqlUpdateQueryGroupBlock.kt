@@ -19,9 +19,7 @@ import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 
 class SqlUpdateQueryGroupBlock(
     node: ASTNode,
@@ -43,30 +41,22 @@ class SqlUpdateQueryGroupBlock(
         createGroupIndentLen()
     }
 
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        (lastGroup as? SqlDoGroupBlock)?.doQueryBlock = this
+    }
+
     override fun getBaseIndentLen(
         preChildBlock: SqlBlock?,
-        block: SqlBlock?,
+        lastGroup: SqlBlock?,
     ): Int {
-        if (block == null) {
+        if (lastGroup == null) {
             return createBlockIndentLen(preChildBlock)
         }
-        if (preChildBlock == null) return createBlockIndentLen(preChildBlock)
 
-        if (preChildBlock.indent.indentLevel == this.indent.indentLevel &&
-            !SqlKeywordUtil.Companion.isSetLineKeyword(getNodeText(), preChildBlock.getNodeText())
-        ) {
-            if (indent.indentLevel == IndentType.SECOND) {
-                val diffPreBlockTextLen = getNodeText().length.minus(preChildBlock.getNodeText().length)
-                return preChildBlock.indent.indentLen.minus(diffPreBlockTextLen)
-            } else {
-                val diffPretextLen = getNodeText().length.minus(preChildBlock.getNodeText().length)
-                return preChildBlock.indent.indentLen.minus(diffPretextLen)
-            }
+        return if (lastGroup is SqlDoGroupBlock) {
+            lastGroup.getNodeText().length.plus(1)
         } else {
-            if (preChildBlock is SqlDoGroupBlock && getNodeText() == "update") {
-                preChildBlock.doQueryBlock = this
-            }
-            return createBlockIndentLen(preChildBlock)
+            createBlockIndentLen(preChildBlock)
         }
     }
 }

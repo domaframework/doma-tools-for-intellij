@@ -1,7 +1,7 @@
-INSERT INTO users
-            (username
-             , email)
-     VALUES ('user'             
-              , 'user@example.com')
-ON CONFLICT(username) 
+INSERT INTO employee
+            (id
+             , username)
+     VALUES ( /* employees.id */0
+             , /* employees.name */'name')
+ON CONFLICT (username)
 DO NOTHING 

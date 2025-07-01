@@ -3,7 +3,7 @@ INSERT INTO users
              , email)
      VALUES ('user'
              , 'user@example.com')
-ON CONFLICT (username) ON CONSTRAINT
+ON CONFLICT ON CONSTRAINT
 DO UPDATE
       SET email = EXCLUDED.email
           , created_at = CURRENT_TIMESTAMP 

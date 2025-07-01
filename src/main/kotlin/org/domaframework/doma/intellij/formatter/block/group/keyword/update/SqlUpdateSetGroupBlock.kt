@@ -31,8 +31,6 @@ open class SqlUpdateSetGroupBlock(
         IndentType.SECOND,
         context,
     ) {
-    val updateColumnRaws: MutableList<SqlBlock> = mutableListOf()
-
     // A block used for bulk updates.
     // It contains a **column group**, an **equals sign (`=`)**, and a **value group block**.
     var columnDefinitionGroupBlock: SqlUpdateColumnGroupBlock? = null
@@ -55,17 +53,13 @@ open class SqlUpdateSetGroupBlock(
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
     override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int =
-        if (!isAdjustIndentOnEnter()) {
-            parentBlock?.let { parent ->
-                if (parent.indent.indentLevel == IndentType.SUB) {
-                    parent.indent.groupIndentLen.plus(1)
-                } else {
-                    val parentTextLen = parent.getNodeText().length
-                    val diffTextLen = parentTextLen.minus(getNodeText().length)
-                    parent.indent.indentLen.plus(diffTextLen)
-                }
-            } ?: 0
-        } else {
+        if (isAdjustIndentOnEnter()) {
             0
+        } else {
+            parentBlock?.let { parent ->
+                val parentTextLen = parent.getNodeText().length
+                val diffTextLen = parentTextLen.minus(getNodeText().length)
+                parent.indent.indentLen.plus(diffTextLen)
+            } ?: 0
         }
 }
