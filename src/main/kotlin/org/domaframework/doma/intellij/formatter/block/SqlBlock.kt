@@ -43,6 +43,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSe
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
@@ -204,7 +205,6 @@ open class SqlBlock(
                 SqlInsertColumnGroupBlock::class,
                 SqlColumnDefinitionRawGroupBlock::class,
                 SqlCreateTableColumnDefinitionGroupBlock::class,
-                SqlUpdateColumnAssignmentSymbolBlock::class,
                 SqlUpdateColumnAssignmentSymbolBlock::class,
             )
 
@@ -414,10 +414,14 @@ open class SqlBlock(
                 return blockUtil.getSubGroupBlock(lastGroup, child)
             }
 
-            SqlTypes.OTHER -> return SqlOtherBlock(
-                child,
-                defaultFormatCtx,
-            )
+            SqlTypes.OTHER -> return if (lastGroup is SqlUpdateSetGroupBlock) {
+                SqlUpdateColumnAssignmentSymbolBlock(child, defaultFormatCtx)
+            } else {
+                SqlOtherBlock(
+                    child,
+                    defaultFormatCtx,
+                )
+            }
 
             SqlTypes.RIGHT_PAREN -> return SqlRightPatternBlock(
                 child,
