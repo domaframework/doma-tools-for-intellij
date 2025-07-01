@@ -84,6 +84,14 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("Delete.sql", "Delete_format.sql")
     }
 
+    fun testInsertConflictUpdateFormatter() {
+        formatSqlFile("InsertConflictUpdate.sql", "InsertConflictUpdate_format.sql")
+    }
+
+    fun testInsertConflictNothingFormatter() {
+        formatSqlFile("InsertConflictNothing.sql", "InsertConflictNothing_format.sql")
+    }
+
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,
