@@ -31,8 +31,6 @@ import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
-import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
-import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElSymbolBlock
@@ -207,15 +205,12 @@ open class SqlBlock(
                 SqlColumnDefinitionRawGroupBlock::class,
                 SqlCreateTableColumnDefinitionGroupBlock::class,
                 SqlUpdateColumnAssignmentSymbolBlock::class,
-                SqlDoGroupBlock::class,
                 SqlUpdateColumnAssignmentSymbolBlock::class,
             )
 
         if (isExpectedClassType(expectedClassTypes, childBlock)) return true
 
         if (isNewLineSqlComment(child, childBlock)) return true
-
-        if (lastGroup is SqlConflictClauseBlock) return false
 
         return (
             isNewLineGroupBlockAfterRegistrationChild(childBlock, lastGroup) ||

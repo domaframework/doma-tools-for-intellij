@@ -31,15 +31,12 @@ import org.domaframework.doma.intellij.formatter.block.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
-import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
-import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
@@ -123,13 +120,6 @@ class SqlBlockUtil(
                 }
             }
 
-            IndentType.CONFLICT -> {
-                if (lastGroupBlock is SqlConflictClauseBlock) {
-                    return SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
-                }
-                return SqlConflictClauseBlock(child, sqlBlockFormattingCtx)
-            }
-
             else -> return SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
         }
         return SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
@@ -140,10 +130,10 @@ class SqlBlockUtil(
         keywordText: String,
         child: ASTNode,
         lastGroupBlock: SqlBlock?,
-    ): SqlBlock {
+    ): SqlBlock =
         when (indentLevel) {
             IndentType.JOIN -> {
-                return JoinGroupUtil.getJoinKeywordGroupBlock(
+                JoinGroupUtil.getJoinKeywordGroupBlock(
                     lastGroupBlock,
                     keywordText,
                     child,
@@ -152,14 +142,14 @@ class SqlBlockUtil(
             }
 
             IndentType.INLINE_SECOND -> {
-                return SqlInlineSecondGroupBlock(
+                SqlInlineSecondGroupBlock(
                     child,
                     sqlBlockFormattingCtx,
                 )
             }
 
             IndentType.TOP -> {
-                return when (keywordText) {
+                when (keywordText) {
                     "select" ->
                         SqlSelectQueryGroupBlock(
                             child,
@@ -174,12 +164,6 @@ class SqlBlockUtil(
 
                     "insert" ->
                         SqlInsertQueryGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-
-                    "do" ->
-                        SqlDoGroupBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
@@ -200,7 +184,7 @@ class SqlBlockUtil(
             }
 
             IndentType.SECOND -> {
-                return if (keywordText == "set") {
+                if (keywordText == "set") {
                     SqlUpdateSetGroupBlock(
                         child,
                         sqlBlockFormattingCtx,
@@ -215,12 +199,7 @@ class SqlBlockUtil(
             }
 
             IndentType.SECOND_OPTION -> {
-                return if (keywordText == "on" && lastGroupBlock !is SqlJoinGroupBlock) {
-                    SqlConflictClauseBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
-                } else if (SqlKeywordUtil.isConditionKeyword(keywordText)) {
+                if (SqlKeywordUtil.isConditionKeyword(keywordText)) {
                     SqlConditionKeywordGroupBlock(
                         child,
                         sqlBlockFormattingCtx,
@@ -234,31 +213,14 @@ class SqlBlockUtil(
                 }
             }
 
-            IndentType.CONFLICT -> {
-                return if (lastGroupBlock is SqlConflictClauseBlock) {
-                    SqlKeywordBlock(
-                        child,
-                        indentLevel,
-                        sqlBlockFormattingCtx,
-                    )
-                } else {
-                    SqlKeywordGroupBlock(
-                        child,
-                        indentLevel,
-                        sqlBlockFormattingCtx,
-                    )
-                }
-            }
-
             else -> {
-                return SqlKeywordGroupBlock(
+                SqlKeywordGroupBlock(
                     child,
                     indentLevel,
                     sqlBlockFormattingCtx,
                 )
             }
         }
-    }
 
     fun getSubGroupBlock(
         lastGroup: SqlBlock?,

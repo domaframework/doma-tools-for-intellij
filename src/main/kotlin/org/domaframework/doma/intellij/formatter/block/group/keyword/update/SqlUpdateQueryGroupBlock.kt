@@ -17,7 +17,6 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.update
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -63,9 +62,6 @@ class SqlUpdateQueryGroupBlock(
                 return preChildBlock.indent.indentLen.minus(diffPretextLen)
             }
         } else {
-            if (preChildBlock is SqlDoGroupBlock && getNodeText() == "update") {
-                preChildBlock.doQueryBlock = this
-            }
             return createBlockIndentLen(preChildBlock)
         }
     }
