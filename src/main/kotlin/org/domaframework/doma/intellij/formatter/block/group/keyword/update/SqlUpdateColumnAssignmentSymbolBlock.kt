@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.subgroup
+package org.domaframework.doma.intellij.formatter.block.group.keyword.update
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
@@ -35,9 +35,11 @@ class SqlUpdateColumnAssignmentSymbolBlock(
         indent.groupIndentLen = indent.groupIndentLen.plus(1)
     }
 
-//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-//        (lastGroup as? SqlUpdateSetGroupBlock)?.assignmentSymbol = this
-//    }
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (lastGroup is SqlUpdateSetGroupBlock && lastGroup.columnDefinitionGroupBlock != null) {
+            lastGroup.assignmentSymbol = this
+        }
+    }
 
     private fun createIndentLen(): Int {
         parentBlock?.let { parent -> return parent.indent.groupIndentLen.plus(1) }

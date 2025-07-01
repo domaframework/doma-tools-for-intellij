@@ -41,9 +41,9 @@ class SqlUpdateValueGroupBlock(
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-//        (lastGroup as? SqlUpdateSetGroupBlock)?.valueGroupBlock = this
-//    }
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        (lastGroup as? SqlUpdateSetGroupBlock)?.valueGroupBlock = this
+    }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 

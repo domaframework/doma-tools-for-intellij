@@ -43,6 +43,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSe
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnAssignmentSymbolBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
@@ -50,7 +51,6 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctio
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnAssignmentSymbolBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.processor.SqlSetParentGroupProcessor
@@ -109,7 +109,10 @@ open class SqlBlock(
     open fun setParentGroupBlock(lastGroup: SqlBlock?) {
         parentBlock = lastGroup
         parentBlock?.addChildBlock(this)
+        setParentPropertyBlock(lastGroup)
     }
+
+    open fun setParentPropertyBlock(lastGroup: SqlBlock?) {}
 
     open val isNeedWhiteSpace: Boolean = true
 
@@ -414,7 +417,9 @@ open class SqlBlock(
                 return blockUtil.getSubGroupBlock(lastGroup, child)
             }
 
-            SqlTypes.OTHER -> return if (lastGroup is SqlUpdateSetGroupBlock) {
+            SqlTypes.OTHER -> return if (lastGroup is SqlUpdateSetGroupBlock &&
+                lastGroup.columnDefinitionGroupBlock != null
+            ) {
                 SqlUpdateColumnAssignmentSymbolBlock(child, defaultFormatCtx)
             } else {
                 SqlOtherBlock(

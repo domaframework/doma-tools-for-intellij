@@ -43,9 +43,9 @@ class SqlUpdateColumnGroupBlock(
         updateParentGroupIndentLen()
     }
 
-//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-//        (lastGroup as? SqlUpdateSetGroupBlock)?.columnDefinitionGroupBlock = this
-//    }
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        (lastGroup as? SqlUpdateSetGroupBlock)?.columnDefinitionGroupBlock = this
+    }
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->

@@ -17,6 +17,8 @@ package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.util.CreateQueryType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 class SqlTableBlock(
@@ -32,11 +34,11 @@ class SqlTableBlock(
         super.setParentGroupBlock(lastGroup)
     }
 
-//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-//        if (lastGroup is SqlCreateKeywordGroupBlock && lastGroup.createType == CreateQueryType.TABLE) {
-//            lastGroup.tableBlock = this
-//        }
-//    }
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (lastGroup is SqlCreateKeywordGroupBlock && lastGroup.createType == CreateQueryType.TABLE) {
+            lastGroup.tableBlock = this
+        }
+    }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 }

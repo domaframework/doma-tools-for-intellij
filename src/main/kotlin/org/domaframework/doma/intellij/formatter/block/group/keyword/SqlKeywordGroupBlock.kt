@@ -21,6 +21,7 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
@@ -50,17 +51,17 @@ open class SqlKeywordGroupBlock(
         createGroupIndentLen()
     }
 
-//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-//        if (lastGroup is SqlSelectKeywordGroupBlock &&
-//            SqlKeywordUtil.isSelectSecondOptionKeyword(getNodeText())
-//        ) {
-//            lastGroup.secondGroupBlocks.add(this)
-//        }
-//
-//        if (getNodeText() == "values" && lastGroup is SqlInsertQueryGroupBlock) {
-//            lastGroup.valueKeywordBlock = this
-//        }
-//    }
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (lastGroup is SqlSelectKeywordGroupBlock &&
+            SqlKeywordUtil.isSelectSecondOptionKeyword(getNodeText())
+        ) {
+            lastGroup.secondGroupBlocks.add(this)
+        }
+
+        if (getNodeText() == "values" && lastGroup is SqlInsertQueryGroupBlock) {
+            lastGroup.valueKeywordBlock = this
+        }
+    }
 
     open fun getBaseIndentLen(
         preChildBlock: SqlBlock?,

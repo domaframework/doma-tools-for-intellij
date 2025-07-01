@@ -45,9 +45,9 @@ class SqlColumnBlock(
         indent.groupIndentLen = 0
     }
 
-//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-//        (lastGroup as? SqlColumnDefinitionRawGroupBlock)?.columnBlock = this
-//    }
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        (lastGroup as? SqlColumnDefinitionRawGroupBlock)?.columnBlock = this
+    }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 

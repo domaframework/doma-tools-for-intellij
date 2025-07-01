@@ -29,9 +29,9 @@ object UpdateClauseUtil {
         sqlBlockFormattingCtx: SqlBlockFormattingContext,
     ): SqlBlock? =
         if (lastGroup is SqlUpdateSetGroupBlock) {
-            if (lastGroup.childBlocks.firstOrNull { it is SqlUpdateColumnGroupBlock } == null) {
+            if (lastGroup.assignmentSymbol == null) {
                 SqlUpdateColumnGroupBlock(child, sqlBlockFormattingCtx)
-            } else if (lastGroup.childBlocks.lastOrNull { it is SqlUpdateColumnGroupBlock } != null) {
+            } else if (lastGroup.columnDefinitionGroupBlock != null) {
                 SqlUpdateValueGroupBlock(child, sqlBlockFormattingCtx)
             } else {
                 SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)

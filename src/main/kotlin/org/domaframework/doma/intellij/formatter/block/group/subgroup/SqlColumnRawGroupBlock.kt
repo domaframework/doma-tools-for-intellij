@@ -19,6 +19,8 @@ import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlSelectKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -46,13 +48,13 @@ class SqlColumnRawGroupBlock(
             if (isFirstColumnGroup) indent.indentLen else indent.indentLen.plus(1)
     }
 
-//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-//        when (lastGroup) {
-//            is SqlSelectKeywordGroupBlock -> lastGroup.selectionColumns.add(this)
-//            is SqlUpdateColumnGroupBlock -> lastGroup.columnRawGroupBlocks.add(this)
-//        }
-//        (lastGroup as? SqlSelectKeywordGroupBlock)?.selectionColumns?.add(this)
-//    }
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        when (lastGroup) {
+            is SqlSelectKeywordGroupBlock -> lastGroup.selectionColumns.add(this)
+            is SqlUpdateColumnGroupBlock -> lastGroup.columnRawGroupBlocks.add(this)
+        }
+        (lastGroup as? SqlSelectKeywordGroupBlock)?.selectionColumns?.add(this)
+    }
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->

@@ -25,7 +25,7 @@ class SqlSelectKeywordGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(node, IndentType.TOP, context) {
-    // val secondGroupBlocks: MutableList<SqlKeywordGroupBlock> = mutableListOf()
+    val secondGroupBlocks: MutableList<SqlKeywordGroupBlock> = mutableListOf()
     val selectionColumns: MutableList<SqlBlock> = mutableListOf()
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {

@@ -55,13 +55,13 @@ class SqlCreateTableColumnDefinitionRawGroupBlock(
         indent.groupIndentLen = indent.indentLen
     }
 
-//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-//        (lastGroup as? SqlCreateTableColumnDefinitionGroupBlock)
-//            ?.columnRawGroupBlocks
-//            ?.add(
-//                this,
-//            )
-//    }
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        (lastGroup as? SqlCreateTableColumnDefinitionGroupBlock)
+            ?.columnRawGroupBlocks
+            ?.add(
+                this,
+            )
+    }
 
     override fun createBlockIndentLen(): Int =
         (parentBlock as? SqlCreateTableColumnDefinitionGroupBlock)

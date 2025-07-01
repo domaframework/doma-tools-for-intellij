@@ -20,7 +20,6 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnAssignmentSymbolBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -48,9 +47,9 @@ open class SqlUpdateSetGroupBlock(
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 
-//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-//        (lastGroup as? SqlUpdateQueryGroupBlock)?.setQueryGroupBlock = this
-//    }
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        (lastGroup as? SqlUpdateQueryGroupBlock)?.setQueryGroupBlock = this
+    }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 

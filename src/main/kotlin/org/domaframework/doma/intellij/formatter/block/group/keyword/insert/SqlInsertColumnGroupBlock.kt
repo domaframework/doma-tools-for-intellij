@@ -57,9 +57,9 @@ class SqlInsertColumnGroupBlock(
         updateParentGroupIndentLen()
     }
 
-//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-//        (lastGroup as? SqlInsertQueryGroupBlock)?.columnDefinitionGroupBlock = this
-//    }
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        (lastGroup as? SqlInsertQueryGroupBlock)?.columnDefinitionGroupBlock = this
+    }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
