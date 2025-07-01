@@ -13,33 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block
+package org.domaframework.doma.intellij.formatter.block.comment
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlLineCommentBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlCommentBlock(
         node,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLen = createBlockIndentLen()
     }
 
@@ -48,16 +38,16 @@ open class SqlLineCommentBlock(
     override fun isLeaf(): Boolean = true
 
     override fun createBlockIndentLen(): Int {
-        parentBlock?.let {
-            if (it is SqlSubQueryGroupBlock) {
-                if (it.childBlocks.dropLast(1).isEmpty()) {
+        parentBlock?.let { parent ->
+            if (parent is SqlSubQueryGroupBlock) {
+                if (parent.childBlocks.dropLast(1).isEmpty()) {
                     return 1
                 }
-                if (it.isFirstLineComment) {
-                    return it.indent.groupIndentLen.minus(2)
+                if (parent.isFirstLineComment) {
+                    return parent.indent.groupIndentLen.minus(2)
                 }
             }
-            return it.indent.indentLen
+            return parent.indent.indentLen
         }
         return 1
     }

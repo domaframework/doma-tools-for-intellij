@@ -15,65 +15,58 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 /**
- * Group blocks when generating columns with subqueries
+ * Group blocks when generating columns with subqueries.
+ * Represents a group consisting of a single column row.
+ * For Example:
+ * SELECT id     -- "id" is [SqlColumnRawGroupBlock](isFirstColumnGroup = true)
+ *        , name -- "," is [SqlColumnRawGroupBlock]
  */
-class SqlColumnGroupBlock(
+class SqlColumnRawGroupBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
-) : SqlSubGroupBlock(
+    context: SqlBlockFormattingContext,
+) : SqlRawGroupBlock(
         node,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
     var isFirstColumnGroup = getNodeText() != ","
 
-    override val indent =
-        ElementIndent(
-            IndentType.COLUMN,
-            0,
-            0,
-        )
-
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.COLUMN
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen =
             if (isFirstColumnGroup) indent.indentLen else indent.indentLen.plus(1)
     }
 
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
+//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+//        when (lastGroup) {
+//            is SqlSelectKeywordGroupBlock -> lastGroup.selectionColumns.add(this)
+//            is SqlUpdateColumnGroupBlock -> lastGroup.columnRawGroupBlocks.add(this)
+//        }
+//        (lastGroup as? SqlSelectKeywordGroupBlock)?.selectionColumns?.add(this)
+//    }
 
     override fun createBlockIndentLen(): Int =
-        parentBlock?.let {
-            if (it is SqlKeywordGroupBlock) {
-                val parentIndentLen = it.indent.indentLen.plus(it.getNodeText().length)
-                val subGroup = it.parentBlock as? SqlSubGroupBlock
+        parentBlock?.let { parent ->
+            if (parent is SqlKeywordGroupBlock) {
+                val parentIndentLen = parent.indent.indentLen.plus(parent.getNodeText().length)
+
+                val subGroup = parent.parentBlock as? SqlSubGroupBlock
                 if (subGroup is SqlSubGroupBlock && !subGroup.isFirstLineComment) {
                     parentIndentLen.plus(3)
                 } else {
                     parentIndentLen.plus(1)
                 }
             } else {
-                it.indent.groupIndentLen.plus(1)
+                parent.indent.groupIndentLen.plus(1)
             }
         } ?: 1
 }

@@ -15,31 +15,20 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.keyword
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Indent
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlJoinGroupBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(
         node,
         IndentType.JOIN,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
     override val indent =
         ElementIndent(
@@ -48,11 +37,11 @@ open class SqlJoinGroupBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        parentBlock = block
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        parentBlock = lastGroup
         parentBlock?.childBlocks?.add(this)
         indent.indentLevel = IndentType.JOIN
-        indent.indentLen = createBlockIndentLen()
+        indent.indentLen = createBlockIndentLen(null)
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 
@@ -65,7 +54,7 @@ open class SqlJoinGroupBlock(
             Indent.getSpaceIndent(indent.indentLen)
         }
 
-    override fun createBlockIndentLen(): Int =
+    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int =
         parentBlock
             ?.indent
             ?.groupIndentLen

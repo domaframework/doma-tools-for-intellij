@@ -13,39 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword
+package org.domaframework.doma.intellij.formatter.block.group.keyword.create
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Indent
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.CreateQueryType
-import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlTableBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.util.CreateQueryType
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlCreateKeywordGroupBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(
         node,
         IndentType.TOP,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
     var createType: CreateQueryType = CreateQueryType.NONE
+    var tableBlock: SqlTableBlock? = null
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.TOP
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
@@ -60,7 +52,7 @@ open class SqlCreateKeywordGroupBlock(
         return Indent.getNoneIndent()
     }
 
-    override fun createBlockIndentLen(): Int =
+    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int =
         parentBlock?.let {
             if (it.indent.indentLevel == IndentType.SUB) {
                 it.indent.groupIndentLen.plus(1)
@@ -70,6 +62,6 @@ open class SqlCreateKeywordGroupBlock(
         } ?: 0
 
     fun setCreateQueryType(nextKeyword: String) {
-        createType = CreateQueryType.getCreateTableType(nextKeyword)
+        createType = CreateQueryType.Companion.getCreateTableType(nextKeyword)
     }
 }

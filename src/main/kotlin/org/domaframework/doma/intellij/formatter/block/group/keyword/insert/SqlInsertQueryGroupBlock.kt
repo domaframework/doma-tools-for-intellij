@@ -13,36 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword
+package org.domaframework.doma.intellij.formatter.block.group.keyword.insert
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Indent
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-open class SqlInsertKeywordGroupBlock(
+open class SqlInsertQueryGroupBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(
         node,
         IndentType.TOP,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    var columnDefinitionGroupBlock: SqlInsertColumnGroupBlock? = null
+    var valueKeywordBlock: SqlKeywordGroupBlock? = null
+    var valueGroupBlock: SqlSubGroupBlock? = null
+
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.TOP
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
@@ -52,7 +47,7 @@ open class SqlInsertKeywordGroupBlock(
 
     override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
 
-    override fun createBlockIndentLen(): Int =
+    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int =
         if (!isAdjustIndentOnEnter()) {
             parentBlock?.let {
                 if (it.indent.indentLevel == IndentType.SUB) {

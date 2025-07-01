@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter
+package org.domaframework.doma.intellij.formatter.processor
 
 import com.intellij.lang.ASTNode
 import com.intellij.openapi.editor.Document
@@ -21,17 +21,15 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.TokenType
 import com.intellij.psi.impl.source.codeStyle.PreFormatProcessor
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeafs
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
-import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
-import org.domaframework.doma.intellij.psi.SqlBlockComment
-import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
+import org.domaframework.doma.intellij.formatter.util.CreateQueryType
+import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
+import org.domaframework.doma.intellij.formatter.visitor.SqlFormatVisitor
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
@@ -128,10 +126,10 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                         removeSpacesAroundNewline(document, it.textRange)
                     } else {
                         val isNewLineGroup =
-                            SqlKeywordUtil.getIndentType(nextElement.text ?: "").isNewLineGroup()
+                            SqlKeywordUtil.Companion.getIndentType(nextElement.text ?: "").isNewLineGroup()
                         val isSetLineKeyword =
                             if (keywordIndex > 0) {
-                                SqlKeywordUtil.isSetLineKeyword(
+                                SqlKeywordUtil.Companion.isSetLineKeyword(
                                     nextElement.text,
                                     replaceKeywordList[keywordIndex - 1].text,
                                 )
@@ -180,9 +178,9 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             getNewLineString(element.prevSibling, getUpperText(element))
         } else if (isSubGroupFirstElement(element)) {
             getUpperText(element)
-        } else if (SqlKeywordUtil.getIndentType(element.text).isNewLineGroup()) {
+        } else if (SqlKeywordUtil.Companion.getIndentType(element.text).isNewLineGroup()) {
             if (index > 0 &&
-                SqlKeywordUtil.isSetLineKeyword(
+                SqlKeywordUtil.Companion.isSetLineKeyword(
                     element.text,
                     keywordList[index - 1].text,
                 )
@@ -274,12 +272,12 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                 it.elementType == SqlTypes.KEYWORD
             }.asReversed()
             .forEach { key ->
-                if (SqlKeywordUtil.isTopKeyword(key.text)) {
+                if (SqlKeywordUtil.Companion.isTopKeyword(key.text)) {
                     topLastKeyWord = key
                     return@forEach
                 }
-                if (SqlKeywordUtil.isAttachedKeyword(key.text)) {
-                    attachmentKeywordType = CreateQueryType.getCreateTableType(key.text)
+                if (SqlKeywordUtil.Companion.isAttachedKeyword(key.text)) {
+                    attachmentKeywordType = CreateQueryType.Companion.getCreateTableType(key.text)
                 }
             }
         val prevKeywordText = topLastKeyWord?.text?.lowercase()
@@ -323,64 +321,11 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             .findLast { it !is PsiWhiteSpace } == null
 
     private fun logging() {
-        PluginLoggerUtil.countLogging(
+        PluginLoggerUtil.Companion.countLogging(
             this::class.java.simpleName,
             "SqlFormat",
             "Format",
             System.nanoTime(),
         )
-    }
-}
-
-private class SqlFormatVisitor : PsiRecursiveElementVisitor() {
-    val replaces = mutableListOf<PsiElement>()
-    var lastElement: PsiElement? = null
-
-    override fun visitElement(element: PsiElement) {
-        super.visitElement(element)
-        if (element !is PsiFile && element.nextSibling == null) {
-            lastElement = element
-        }
-
-        if (PsiTreeUtil.getParentOfType(element, SqlBlockComment::class.java) == null) {
-            when (element.elementType) {
-                SqlTypes.KEYWORD, SqlTypes.COMMA, SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN, SqlTypes.WORD -> {
-                    replaces.add(element)
-                }
-
-                SqlTypes.OTHER -> {
-                    if (element.text == "=") {
-                        val updateSetKeyword =
-                            replaces
-                                .lastOrNull { it.elementType == SqlTypes.KEYWORD }
-                        if (updateSetKeyword?.text?.lowercase() == "set") {
-                            replaces.add(element)
-                        }
-                    }
-                }
-
-                SqlTypes.BLOCK_COMMENT ->
-                    if (
-                        element is SqlCustomElCommentExpr &&
-                        element.isConditionOrLoopDirective()
-                    ) {
-                        replaces.add(element)
-                    }
-            }
-        }
-    }
-
-    override fun visitWhiteSpace(space: PsiWhiteSpace) {
-        super.visitWhiteSpace(space)
-        val nextElement = space.nextSibling
-        if (nextElement != null &&
-            (
-                space.text.contains("\n") ||
-                    nextElement.elementType == SqlTypes.LINE_COMMENT ||
-                    nextElement.elementType == SqlTypes.BLOCK_COMMENT
-            )
-        ) {
-            replaces.add(space)
-        }
     }
 }

@@ -15,14 +15,11 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlUpdateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 /**
  * In an UPDATE statement using the row value constructor,
@@ -30,46 +27,44 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlUpdateKe
  */
 class SqlUpdateValueGroupBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlSubGroupBlock(
         node,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    // TODO:Customize indentation
+    private val offset = 2
+
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
+
+//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+//        (lastGroup as? SqlUpdateSetGroupBlock)?.valueGroupBlock = this
+//    }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            if (parent is SqlUpdateKeywordGroupBlock) {
+            if (parent is SqlUpdateSetGroupBlock) {
                 return parent.indent.indentLen
                     .plus(parent.getNodeText().length)
                     .plus(3)
             }
-            // TODO:Customize indentation
-            return 2
-        } ?: return 2
+            return offset
+        } ?: return offset
     }
 
     private fun createGroupIndentLen(): Int {
         parentBlock?.let { parent ->
-            if (parent is SqlUpdateKeywordGroupBlock) {
+            if (parent is SqlUpdateSetGroupBlock) {
                 val parentGroupIndent = parent.indent.groupIndentLen
                 return parentGroupIndent.plus(4)
             }
-        } ?: return 2
-        return 2
+        } ?: return offset
+        return offset
     }
 }

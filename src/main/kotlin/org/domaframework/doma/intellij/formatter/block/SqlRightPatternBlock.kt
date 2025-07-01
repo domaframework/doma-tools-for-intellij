@@ -13,55 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlUpdateKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnDefinitionGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlInsertColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 /**
  * Parent is always a subclass of a subgroup
  */
 open class SqlRightPatternBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlBlock(
         node,
-        wrap,
-        alignment,
+        context.wrap,
+        context.alignment,
         null,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context.spacingBuilder,
+        context.enableFormat,
+        context.formatMode,
     ) {
     var preSpaceRight = false
 
+    /**
+     * Configures whether to add a space to the right side when the group ends.
+     */
     fun enableLastRight() {
         parentBlock?.let { parent ->
-            // TODO:Customize indentation
-            if (parent is SqlFunctionParamBlock) {
-                preSpaceRight = false
-                return
-            }
-            if (parent is SqlInsertColumnGroupBlock) {
+            // TODO:Customize spacing
+            val notInsertSpaceClassList =
+                listOf(
+                    SqlFunctionParamBlock::class,
+                    SqlInsertColumnGroupBlock::class,
+                )
+            if (isExpectedClassType(notInsertSpaceClassList, parent)) {
                 preSpaceRight = false
                 return
             }
@@ -80,7 +76,7 @@ open class SqlRightPatternBlock(
             parent.parentBlock?.let { grand ->
                 preSpaceRight = (
                     grand.indent.indentLevel <= IndentType.SECOND &&
-                        grand.parentBlock !is SqlInsertKeywordGroupBlock
+                        grand.parentBlock !is SqlInsertQueryGroupBlock
                 ) ||
                     grand.indent.indentLevel == IndentType.JOIN
                 return
@@ -96,12 +92,13 @@ open class SqlRightPatternBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
         enableLastRight()
+        (lastGroup as? SqlSubGroupBlock)?.endPatternBlock = this
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -116,9 +113,9 @@ open class SqlRightPatternBlock(
     override fun isLeaf(): Boolean = true
 
     fun isNewLine(lastGroup: SqlBlock?): Boolean =
-        lastGroup is SqlColumnDefinitionGroupBlock ||
+        lastGroup is SqlCreateTableColumnDefinitionGroupBlock ||
             lastGroup is SqlColumnDefinitionRawGroupBlock ||
-            lastGroup?.parentBlock is SqlUpdateKeywordGroupBlock ||
+            lastGroup?.parentBlock is SqlUpdateSetGroupBlock ||
             lastGroup?.parentBlock is SqlUpdateColumnGroupBlock ||
             lastGroup is SqlUpdateColumnGroupBlock ||
             lastGroup is SqlUpdateValueGroupBlock ||

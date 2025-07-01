@@ -15,37 +15,30 @@
  */
 package org.domaframework.doma.intellij.formatter.block
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlCreateKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlCommaBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlBlock(
         node,
-        wrap,
-        alignment,
+        context.wrap,
+        context.alignment,
         null,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context.spacingBuilder,
+        context.enableFormat,
+        context.formatMode,
     ) {
     override val indent =
         ElementIndent(
@@ -54,8 +47,8 @@ open class SqlCommaBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.COMMA
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
@@ -81,10 +74,10 @@ open class SqlCommaBlock(
                         val grandIndentLen = grand.indent.groupIndentLen
                         return grandIndentLen.plus(parentIndentLen).minus(1)
                     }
-                    if (grand is SqlInsertKeywordGroupBlock) {
+                    if (grand is SqlInsertQueryGroupBlock) {
                         return parentIndentLen
                     }
-                    if (grand is SqlColumnGroupBlock) {
+                    if (grand is SqlColumnRawGroupBlock) {
                         val grandIndentLen = grand.indent.groupIndentLen
                         var prevTextLen = 1
                         parent.prevChildren?.dropLast(1)?.forEach { prev -> prevTextLen = prevTextLen.plus(prev.getNodeText().length) }

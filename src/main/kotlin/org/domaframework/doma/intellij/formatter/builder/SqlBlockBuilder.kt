@@ -13,26 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter
+package org.domaframework.doma.intellij.formatter.builder
 
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
 
 open class SqlBlockBuilder {
-    private val groupTopNodeIndexHistory = mutableListOf<Pair<Int, SqlBlock>>()
+    private val groupTopNodeIndexHistory = mutableListOf<SqlBlock>()
 
     private val commentBlocks = mutableListOf<SqlCommentBlock>()
 
     private val conditionOrLoopBlocks = mutableListOf<SqlElConditionLoopCommentBlock>()
 
-    fun getGroupTopNodeIndexHistory(): List<Pair<Int, SqlBlock>> = groupTopNodeIndexHistory
+    fun getGroupTopNodeIndexHistory(): List<SqlBlock> = groupTopNodeIndexHistory
 
-    fun getLastGroup(): SqlBlock? = groupTopNodeIndexHistory.lastOrNull()?.second
-
-    fun addGroupTopNodeIndexHistory(block: Pair<Int, SqlBlock>) {
+    fun addGroupTopNodeIndexHistory(block: SqlBlock) {
         groupTopNodeIndexHistory.add(block)
     }
 
@@ -69,7 +68,7 @@ open class SqlBlockBuilder {
         }
     }
 
-    fun getLastGroupTopNodeIndexHistory(): Pair<Int, SqlBlock>? = groupTopNodeIndexHistory.lastOrNull()
+    fun getLastGroupTopNodeIndexHistory(): SqlBlock? = groupTopNodeIndexHistory.lastOrNull()
 
     fun removeLastGroupTopNodeIndexHistory() {
         if (groupTopNodeIndexHistory.isNotEmpty()) {
@@ -87,7 +86,7 @@ open class SqlBlockBuilder {
 
     fun getGroupTopNodeIndex(condition: (SqlBlock) -> Boolean): Int =
         groupTopNodeIndexHistory.indexOfLast {
-            condition(it.second)
+            condition(it)
         }
 
     fun getConditionOrLoopBlocksLast(): SqlElConditionLoopCommentBlock? = conditionOrLoopBlocks.lastOrNull()
