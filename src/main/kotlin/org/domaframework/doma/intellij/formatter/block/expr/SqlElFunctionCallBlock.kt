@@ -19,14 +19,12 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElFunctionCallBlock(
     node: ASTNode,
     private val context: SqlBlockFormattingContext,
-    customSpacingBuilder: SqlCustomSpacingBuilder?,
 ) : SqlExprBlock(
         node,
         context,
@@ -53,7 +51,7 @@ class SqlElFunctionCallBlock(
                 SqlElIdentifierBlock(child, context)
 
             SqlTypes.EL_PARAMETERS ->
-                SqlElParametersBlock(child, context, createSpacingBuilder())
+                SqlElParametersBlock(child, context)
 
             else ->
                 SqlBlock(

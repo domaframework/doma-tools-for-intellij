@@ -59,7 +59,7 @@ class SqlElFieldAccessBlock(
                 SqlElIdentifierBlock(child, context)
 
             SqlTypes.EL_PARAMETERS ->
-                SqlElParametersBlock(child, context, customSpacingBuilder)
+                SqlElParametersBlock(child, context)
 
             else ->
                 SqlBlock(

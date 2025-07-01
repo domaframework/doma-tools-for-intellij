@@ -21,8 +21,8 @@ import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 abstract class SqlTopQueryGroupBlock(
-    private val node: ASTNode,
-    private val context: SqlBlockFormattingContext,
+    node: ASTNode,
+    context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(
         node,
         IndentType.TOP,

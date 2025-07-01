@@ -133,7 +133,6 @@ class SqlElConditionLoopCommentBlock(
                 SqlElFunctionCallBlock(
                     child,
                     context,
-                    createSpacingBuilder(),
                 )
 
             SqlTypes.BLOCK_COMMENT_CONTENT ->
@@ -150,26 +149,6 @@ class SqlElConditionLoopCommentBlock(
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(
                 SqlTypes.DOT,
-                SqlTypes.EL_IDENTIFIER,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_IDENTIFIER,
-                SqlTypes.DOT,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_IDENTIFIER,
-                SqlTypes.EL_PARAMETERS,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            )
-
-    private fun createStaticFieldSpacingBuilder(): SqlCustomSpacingBuilder =
-        SqlCustomSpacingBuilder()
-            .withSpacing(
-                SqlTypes.AT_SIGN,
-                SqlTypes.EL_CLASS,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.AT_SIGN,
                 SqlTypes.EL_IDENTIFIER,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(

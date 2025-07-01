@@ -40,16 +40,6 @@ class SqlInsertColumnGroupBlock(
     // TODO:Customize indentation
     private val offset = 2
 
-    /**
-     * A list of row blocks representing the target columns in an `INSERT` statement,
-     * distinct from the column line group.
-     * This list may include:
-     *  **Column row blocks**
-     *  **Subgroup blocks**
-     *  **Conditional or rule directives**
-     */
-    val columnRaws: MutableList<SqlBlock> = mutableListOf()
-
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLen = createBlockIndentLen()
