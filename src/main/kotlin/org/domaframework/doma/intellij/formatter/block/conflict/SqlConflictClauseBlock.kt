@@ -13,18 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.subgroup
+package org.domaframework.doma.intellij.formatter.block.conflict
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-abstract class SqlColumnSelectionGroupBlock(
+class SqlConflictClauseBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlSubGroupBlock(
+) : SqlKeywordGroupBlock(
         node,
+        IndentType.TOP,
         context,
     ) {
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
+    var conflictType: OnConflictKeywordType = OnConflictKeywordType.CONFLICT
+    var doBlock: SqlDoGroupBlock? = null
+
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
+        indent.indentLevel = IndentType.CONFLICT
+        indent.indentLen = createBlockIndentLen()
+        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
+    }
 }

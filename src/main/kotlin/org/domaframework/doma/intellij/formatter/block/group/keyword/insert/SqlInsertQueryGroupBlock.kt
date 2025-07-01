@@ -20,7 +20,6 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -34,7 +33,7 @@ open class SqlInsertQueryGroupBlock(
     ) {
     var columnDefinitionGroupBlock: SqlInsertColumnGroupBlock? = null
     var valueKeywordBlock: SqlKeywordGroupBlock? = null
-    var valueGroupBlock: SqlSubGroupBlock? = null
+    var valueGroupBlock: SqlInsertValueGroupBlock? = null
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)

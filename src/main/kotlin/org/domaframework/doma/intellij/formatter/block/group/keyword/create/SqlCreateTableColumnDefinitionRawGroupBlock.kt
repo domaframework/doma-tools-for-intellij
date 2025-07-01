@@ -31,6 +31,9 @@ class SqlCreateTableColumnDefinitionRawGroupBlock(
     ) {
     var columnDataTypeBlock: SqlDataTypeBlock? = null
 
+    // TODO:Customize indentation within an inline group
+    override val defaultOffset = 5
+
     override var parentBlock: SqlBlock?
         get() = super.parentBlock as? SqlCreateTableColumnDefinitionGroupBlock
         set(value) {

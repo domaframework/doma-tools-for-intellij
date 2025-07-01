@@ -31,12 +31,15 @@ import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
+import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
+import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElSymbolBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlDataTypeBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
@@ -45,7 +48,6 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlC
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnAssignmentSymbolBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
@@ -112,7 +114,9 @@ open class SqlBlock(
         setParentPropertyBlock(lastGroup)
     }
 
-    open fun setParentPropertyBlock(lastGroup: SqlBlock?) {}
+    open fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        // This method can be overridden to set additional properties on the parent block if needed.
+    }
 
     open val isNeedWhiteSpace: Boolean = true
 
@@ -209,11 +213,17 @@ open class SqlBlock(
                 SqlColumnDefinitionRawGroupBlock::class,
                 SqlCreateTableColumnDefinitionGroupBlock::class,
                 SqlUpdateColumnAssignmentSymbolBlock::class,
+                SqlDoGroupBlock::class,
             )
 
         if (isExpectedClassType(expectedClassTypes, childBlock)) return true
 
         if (isNewLineSqlComment(child, childBlock)) return true
+
+        if (lastGroup is SqlConflictClauseBlock) return false
+        if (childBlock is SqlColumnRawGroupBlock) {
+            return !childBlock.isFirstColumnGroup
+        }
 
         return (
             isNewLineGroupBlockAfterRegistrationChild(childBlock, lastGroup) ||
@@ -417,15 +427,20 @@ open class SqlBlock(
                 return blockUtil.getSubGroupBlock(lastGroup, child)
             }
 
-            SqlTypes.OTHER -> return if (lastGroup is SqlUpdateSetGroupBlock &&
-                lastGroup.columnDefinitionGroupBlock != null
-            ) {
-                SqlUpdateColumnAssignmentSymbolBlock(child, defaultFormatCtx)
-            } else {
-                SqlOtherBlock(
-                    child,
-                    defaultFormatCtx,
-                )
+            SqlTypes.OTHER -> {
+                return if (lastGroup is SqlUpdateSetGroupBlock &&
+                    lastGroup.columnDefinitionGroupBlock != null
+                ) {
+                    SqlUpdateColumnAssignmentSymbolBlock(
+                        child,
+                        defaultFormatCtx,
+                    )
+                } else {
+                    SqlOtherBlock(
+                        child,
+                        defaultFormatCtx,
+                    )
+                }
             }
 
             SqlTypes.RIGHT_PAREN -> return SqlRightPatternBlock(

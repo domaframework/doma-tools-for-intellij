@@ -26,10 +26,10 @@ import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDef
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlRightPatternBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
 
 class SqlCustomSpacingBuilder {
     companion object {

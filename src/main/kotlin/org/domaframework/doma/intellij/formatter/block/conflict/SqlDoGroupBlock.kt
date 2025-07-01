@@ -13,41 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.column
+package org.domaframework.doma.intellij.formatter.block.conflict
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import org.domaframework.doma.intellij.psi.SqlTypes
 
-/**
- * Column definition group block in the column list group attached to Create Table
- * The parent must be SqlCreateTableColumnDefinitionGroupBlock
- */
-open class SqlColumnDefinitionRawGroupBlock(
+class SqlDoGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlRawGroupBlock(
+) : SqlKeywordGroupBlock(
         node,
+        IndentType.CONFLICT,
         context,
     ) {
-    // TODO:Customize indentation within an inline group
-    val defaultOffset = 5
-    val isFirstColumnRaw = node.elementType != SqlTypes.COMMA
-
-    open var columnBlock: SqlBlock? = if (isFirstColumnRaw) this else null
+    /**
+     *  **NOTHING** or **UPDATE**
+     */
+    var doQueryBlock: SqlBlock? = null
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen
+        indent.indentLen = 0
+        indent.groupIndentLen = getNodeText().length
     }
 
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    /**
-     * Right-justify the longest column name in the column definition.
-     */
-    override fun createBlockIndentLen(): Int = if (isFirstColumnRaw) 1 else defaultOffset
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (lastGroup is SqlConflictClauseBlock) {
+            lastGroup.doBlock = this
+        }
+    }
 }

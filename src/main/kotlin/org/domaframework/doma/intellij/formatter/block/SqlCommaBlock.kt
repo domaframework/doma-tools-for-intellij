@@ -17,13 +17,13 @@ package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes

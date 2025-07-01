@@ -15,41 +15,17 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.column
 
-import com.intellij.formatting.Block
-import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-abstract class SqlRawGroupBlock(
+abstract class SqlColumnSelectionGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlBlock(
+) : SqlSubGroupBlock(
         node,
-        context.wrap,
-        context.alignment,
-        null,
-        context.spacingBuilder,
-        context.enableFormat,
-        context.formatMode,
+        context,
     ) {
-    var isFirstColumnGroup = getNodeText() != ","
-
-    override val indent =
-        ElementIndent(
-            IndentType.COLUMN,
-            0,
-            0,
-        )
-
-    override fun getSpacing(
-        p0: Block?,
-        p1: Block,
-    ): Spacing? = null
-
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun isLeaf(): Boolean = true
 }

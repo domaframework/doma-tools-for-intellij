@@ -20,6 +20,7 @@ enum class IndentType(
     private val group: Boolean = false,
 ) {
     FILE(0, true),
+    CONFLICT(1, true),
     TOP(1, true),
     SECOND(2, true),
     JOIN(3, true),

@@ -19,8 +19,8 @@ import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
 
 object UpdateClauseUtil {
     fun getUpdateClauseSubGroup(
