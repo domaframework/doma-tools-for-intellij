@@ -40,6 +40,7 @@ import org.domaframework.doma.intellij.extension.getContentRoot
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.getModule
 import org.jetbrains.kotlin.idea.base.util.module
+import java.nio.file.Paths
 
 /**
  * Get DAO method corresponding to SQL file
@@ -147,7 +148,7 @@ private fun searchDaoFile(
     val pathParams = module?.let { CommonPathParameterUtil.getModulePaths(it) } ?: return null
     val moduleBaseName =
         pathParams.moduleBasePaths
-            .find { baseName -> contentRootPath.contains(baseName.path) }
+            .find { baseName -> Paths.get(contentRootPath).startsWith(Paths.get(baseName.path)) }
             ?.nameWithoutExtension ?: ""
     // TODO: Add Support Kotlin
     val relativeDaoFilePaths =
@@ -218,19 +219,20 @@ fun getRelativeSqlFilePathFromDaoFilePath(
 ): String {
     if (module == null) return ""
     val extension = daoFile.fileType.defaultExtension
+    val daoFilePath = daoFile.path
     val pathParams = CommonPathParameterUtil.getModulePaths(module)
     val containsModuleBaseName =
         pathParams.moduleBasePaths
-            .find { basePath -> daoFile.path.contains("${basePath.path}/") }
+            .find { basePath -> daoFilePath.contains("${basePath.path}/") }
             ?.path ?: return ""
     var relativeSqlFilePath =
-        daoFile.path
+        daoFilePath
             .replaceFirst(containsModuleBaseName, "")
             .replace(".$extension", "")
     val sources = CommonPathParameterUtil.getSources(module, daoFile)
     sources
         .find {
-            daoFile.path
+            daoFilePath
                 .startsWith(containsModuleBaseName.plus("/${it.nameWithoutExtension}/"))
         }?.let { source ->
             val startSourceName = "/${source.nameWithoutExtension}"

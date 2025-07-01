@@ -140,13 +140,15 @@ class PsiDaoMethod(
                 sqlFile = jarRoot?.findFileByRelativePath(sqlFilePath)
                 return
             } else {
-                if (sqlFilePath.isNotEmpty()) {
-                    sqlFile =
+                sqlFile =
+                    if (sqlFilePath.isNotEmpty()) {
                         module.getResourcesSQLFile(
                             sqlFilePath,
                             isTest,
                         )
-                }
+                    } else {
+                        null
+                    }
                 return
             }
         }
