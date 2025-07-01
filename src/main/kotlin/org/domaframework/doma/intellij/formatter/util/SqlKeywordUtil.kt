@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter
+package org.domaframework.doma.intellij.formatter.util
 
 enum class IndentType(
     private val level: Int,
@@ -75,6 +75,8 @@ class SqlKeywordUtil {
                 "truncate",
                 "rename",
                 "union",
+                "with",
+                "do",
             )
 
         fun isTopKeyword(keyword: String): Boolean = TOP_KEYWORDS.contains(keyword.lowercase())
@@ -89,6 +91,7 @@ class SqlKeywordUtil {
                 "having",
                 "limit",
                 "values",
+                "lateral",
             )
 
         fun isSecondKeyword(keyword: String): Boolean = SECOND_KEYWORD.contains(keyword.lowercase())
@@ -100,6 +103,14 @@ class SqlKeywordUtil {
                 "on",
             )
 
+        private val CONDITION_KEYWORD =
+            setOf(
+                "and",
+                "or",
+            )
+
+        fun isConditionKeyword(keyword: String): Boolean = CONDITION_KEYWORD.contains(keyword.lowercase())
+
         fun isSecondOptionKeyword(keyword: String): Boolean = SECOND_OPTION_KEYWORD.contains(keyword.lowercase())
 
         private val BEFORE_TABLE_KEYWORD =
@@ -109,6 +120,17 @@ class SqlKeywordUtil {
                 "drop",
                 "table",
             )
+
+        private val SELECT_SECOND_OPTION_KEYWORD =
+            setOf(
+                "from",
+                "where",
+                "group",
+                "having",
+                "order",
+            )
+
+        fun isSelectSecondOptionKeyword(keyword: String): Boolean = SELECT_SECOND_OPTION_KEYWORD.contains(keyword.lowercase())
 
         fun isBeforeTableKeyword(keyword: String): Boolean = BEFORE_TABLE_KEYWORD.contains(keyword.lowercase())
 
@@ -202,7 +224,6 @@ class SqlKeywordUtil {
                 "unique",
                 "primary",
                 "foreign",
-                "constraint",
             )
 
         fun isAttributeKeyword(keyword: String): Boolean = ATTRIBUTE_KEYWORD.contains(keyword.lowercase())
@@ -244,6 +265,14 @@ class SqlKeywordUtil {
 
         fun isOptionSqlKeyword(keyword: String): Boolean = OPTION_SQL_KEYWORDS.contains(keyword.lowercase())
 
+        private val CONFLICT_ATTACHED_KEYWORDS =
+            setOf(
+                "conflict",
+                "constraint",
+            )
+
+        fun isConflictAttachedKeyword(keyword: String): Boolean = CONFLICT_ATTACHED_KEYWORDS.contains(keyword.lowercase())
+
         private val SET_LINE_KEYWORDS =
             mapOf(
                 "into" to setOf("insert"),
@@ -259,6 +288,10 @@ class SqlKeywordUtil {
                 "by" to setOf("group", "order"),
                 "and" to setOf("between"),
                 "if" to setOf("table", "create"),
+                "conflict" to setOf("on"),
+                "nothing" to setOf("do"),
+                "constraint" to setOf("on"),
+                "update" to setOf("do"),
             )
 
         fun isSetLineKeyword(
@@ -266,12 +299,14 @@ class SqlKeywordUtil {
             prevKeyword: String,
         ): Boolean = SET_LINE_KEYWORDS[keyword.lowercase()]?.contains(prevKeyword.lowercase()) == true
 
+        fun isComma(keyword: String): Boolean = keyword == ","
+
         fun getIndentType(keywordText: String): IndentType {
             val keyword = keywordText.lowercase()
             return when {
                 isTopKeyword(keyword) -> IndentType.TOP
-                isSecondKeyword(keyword) -> IndentType.SECOND
-                isSecondOptionKeyword(keyword) -> IndentType.SECOND_OPTION
+                isSecondKeyword(keyword) || isSelectSecondOptionKeyword(keyword) -> IndentType.SECOND
+                isSecondOptionKeyword(keyword) || isConditionKeyword(keyword) -> IndentType.SECOND_OPTION
                 isJoinKeyword(keyword) -> IndentType.JOIN
                 isJoinAttachedKeyword(keyword) -> IndentType.JOIN
                 isAttachedKeyword(keyword) -> IndentType.ATTACHED
@@ -282,7 +317,8 @@ class SqlKeywordUtil {
                 isLiteralKeyword(keyword) -> IndentType.LITERAL
                 isOptionSqlKeyword(keyword) -> IndentType.OPTIONS
                 isColumnTypeKeyword(keyword) -> IndentType.COLUMN
-                keyword == "," -> IndentType.COMMA
+                isConflictAttachedKeyword(keyword) -> IndentType.ATTACHED
+                isComma(keyword) -> IndentType.COMMA
                 else -> IndentType.NONE
             }
         }

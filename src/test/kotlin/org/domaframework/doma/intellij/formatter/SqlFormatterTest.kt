@@ -49,39 +49,39 @@ class SqlFormatterTest : BasePlatformTestCase() {
     }
 
     fun testSelectFormatter() {
-        formatSqlFile("Select.sql", "FormattedSelect.sql")
+        formatSqlFile("Select.sql", "Select_format.sql")
     }
 
     fun testCreateTableFormatter() {
-        formatSqlFile("CreateTable.sql", "FormattedCreateTable.sql")
+        formatSqlFile("CreateTable.sql", "CreateTable_format.sql")
     }
 
     fun testCreateViewFormatter() {
-        formatSqlFile("CreateView.sql", "FormattedCreateView.sql")
+        formatSqlFile("CreateView.sql", "CreateView_format.sql")
     }
 
     fun testInsertFormatter() {
-        formatSqlFile("Insert.sql", "FormattedInsert.sql")
+        formatSqlFile("Insert.sql", "Insert_format.sql")
     }
 
     fun testInsertWithBindVariableFormatter() {
-        formatSqlFile("InsertWithBindVariable.sql", "FormattedInsertWithBindVariable.sql")
+        formatSqlFile("InsertWithBindVariable.sql", "InsertWithBindVariable_format.sql")
     }
 
     fun testUpdateFormatter() {
-        formatSqlFile("Update.sql", "FormattedUpdate.sql")
+        formatSqlFile("Update.sql", "Update_format.sql")
     }
 
     fun testUpdateBindVariableFormatter() {
-        formatSqlFile("UpdateBindVariable.sql", "FormattedUpdateBindVariable.sql")
+        formatSqlFile("UpdateBindVariable.sql", "UpdateBindVariable_format.sql")
     }
 
     fun testUpdateTupleAssignmentFormatter() {
-        formatSqlFile("UpdateTupleAssignment.sql", "FormattedUpdateTupleAssignment.sql")
+        formatSqlFile("UpdateTupleAssignment.sql", "UpdateTupleAssignment_format.sql")
     }
 
     fun testDeleteFormatter() {
-        formatSqlFile("Delete.sql", "FormattedDelete.sql")
+        formatSqlFile("Delete.sql", "Delete_format.sql")
     }
 
     private fun formatSqlFile(

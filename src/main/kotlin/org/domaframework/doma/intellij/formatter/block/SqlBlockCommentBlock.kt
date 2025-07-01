@@ -13,26 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block
+package org.domaframework.doma.intellij.formatter.block.comment
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlBlockCommentBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlCommentBlock(
         node,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     )

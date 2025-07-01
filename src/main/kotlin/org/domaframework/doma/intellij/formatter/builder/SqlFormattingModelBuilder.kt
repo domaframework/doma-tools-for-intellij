@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter
+package org.domaframework.doma.intellij.formatter.builder
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.FormattingContext

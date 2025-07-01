@@ -13,32 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block
+package org.domaframework.doma.intellij.formatter.block.comment
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 abstract class SqlCommentBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlBlock(
         node,
-        wrap,
-        alignment,
+        context.wrap,
+        context.alignment,
         null,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context.spacingBuilder,
+        context.enableFormat,
+        context.formatMode,
     ) {
     override val indent =
         ElementIndent(
@@ -47,8 +41,8 @@ abstract class SqlCommentBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = 0

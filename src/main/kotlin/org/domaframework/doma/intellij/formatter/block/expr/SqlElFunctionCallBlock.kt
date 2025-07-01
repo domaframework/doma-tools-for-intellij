@@ -15,33 +15,21 @@
  */
 package org.domaframework.doma.intellij.formatter.block.expr
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElFunctionCallBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
+    private val context: SqlBlockFormattingContext,
     customSpacingBuilder: SqlCustomSpacingBuilder?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    private val formatMode: FormattingMode,
-) : SqlBlock(
+) : SqlExprBlock(
         node,
-        wrap,
-        alignment,
-        customSpacingBuilder,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
     override fun buildChildren(): MutableList<AbstractBlock> {
         val blocks = mutableListOf<AbstractBlock>()
@@ -59,15 +47,24 @@ class SqlElFunctionCallBlock(
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
             SqlTypes.AT_SIGN ->
-                SqlElAtSignBlock(child, wrap, alignment, createSpacingBuilder(), spacingBuilder, isEnableFormat(), formatMode)
+                SqlElAtSignBlock(child, context, createSpacingBuilder())
 
             SqlTypes.EL_IDENTIFIER ->
-                SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+                SqlElIdentifierBlock(child, context)
 
             SqlTypes.EL_PARAMETERS ->
-                SqlElParametersBlock(child, wrap, alignment, createSpacingBuilder(), spacingBuilder, isEnableFormat(), formatMode)
+                SqlElParametersBlock(child, context, createSpacingBuilder())
 
-            else -> SqlBlock(child, wrap, alignment, createSpacingBuilder(), spacingBuilder, isEnableFormat(), formatMode)
+            else ->
+                SqlBlock(
+                    child,
+                    wrap,
+                    alignment,
+                    createSpacingBuilder(),
+                    spacingBuilder,
+                    context.enableFormat,
+                    context.formatMode,
+                )
         }
 
     override fun isLeaf(): Boolean = false

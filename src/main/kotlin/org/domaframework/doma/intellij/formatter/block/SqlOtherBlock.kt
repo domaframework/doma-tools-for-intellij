@@ -15,34 +15,23 @@
  */
 package org.domaframework.doma.intellij.formatter.block
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlOtherBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    lastGroup: SqlBlock? = null,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlBlock(
         node,
-        wrap,
-        alignment,
+        context.wrap,
+        context.alignment,
         null,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context.spacingBuilder,
+        context.enableFormat,
+        context.formatMode,
     ) {
-    var isUpdateColumnSubstitutions = isBeforeUpdateValuesBlock(lastGroup)
-
     override val indent =
         ElementIndent(
             IndentType.NONE,
@@ -50,8 +39,10 @@ open class SqlOtherBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override val isNeedWhiteSpace: Boolean = false
+
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createIndentLen()
         indent.groupIndentLen = 0
@@ -59,17 +50,7 @@ open class SqlOtherBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    private fun createIndentLen(): Int {
-        if (isUpdateColumnSubstitutions) {
-            parentBlock?.let { return it.indent.groupIndentLen.plus(1) }
-                ?: return indent.indentLen
-        } else {
-            return 1
-        }
-    }
-
-    fun isBeforeUpdateValuesBlock(lastGroupBlock: SqlBlock?): Boolean =
-        lastGroupBlock?.childBlocks?.lastOrNull() is SqlUpdateColumnGroupBlock
+    private fun createIndentLen(): Int = 1
 
     override fun isLeaf(): Boolean = true
 }

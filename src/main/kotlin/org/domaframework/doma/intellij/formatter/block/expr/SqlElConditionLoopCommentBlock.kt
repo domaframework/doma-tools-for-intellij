@@ -15,30 +15,27 @@
  */
 package org.domaframework.doma.intellij.formatter.block.expr
 
-import com.intellij.formatting.Alignment
 import com.intellij.formatting.Block
-import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Spacing
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
-import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlCreateKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIfDirective
@@ -46,20 +43,12 @@ import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElConditionLoopCommentBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
+    private val context: SqlBlockFormattingContext,
     override val customSpacingBuilder: SqlCustomSpacingBuilder?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    private val formatMode: FormattingMode,
 ) : SqlElBlockCommentBlock(
         node,
-        wrap,
-        alignment,
+        context,
         customSpacingBuilder,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
     ) {
     enum class SqlConditionLoopCommentBlockType {
         CONDITION,
@@ -100,8 +89,8 @@ class SqlElConditionLoopCommentBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = 0
@@ -125,45 +114,32 @@ class SqlElConditionLoopCommentBlock(
             SqlTypes.GE, SqlTypes.LE, SqlTypes.GT, SqlTypes.LT, SqlTypes.EL_EQ, SqlTypes.EL_NE,
             SqlTypes.PLUS, SqlTypes.MINUS, SqlTypes.ASTERISK, SqlTypes.SLASH, SqlTypes.AT_SIGN,
             ->
-                SqlOperationBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+                SqlOperationBlock(child, context)
 
             SqlTypes.EL_FIELD_ACCESS_EXPR ->
                 SqlElFieldAccessBlock(
                     child,
-                    wrap,
-                    alignment,
+                    context,
                     createFieldAccessSpacingBuilder(),
-                    spacingBuilder,
-                    isEnableFormat(),
-                    formatMode,
                 )
 
             SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR ->
                 SqlElStaticFieldAccessBlock(
                     child,
-                    wrap,
-                    alignment,
-                    createStaticFieldSpacingBuilder(),
-                    spacingBuilder,
-                    isEnableFormat(),
-                    formatMode,
+                    context,
                 )
 
             SqlTypes.EL_FUNCTION_CALL_EXPR ->
                 SqlElFunctionCallBlock(
                     child,
-                    wrap,
-                    alignment,
+                    context,
                     createSpacingBuilder(),
-                    spacingBuilder,
-                    isEnableFormat(),
-                    formatMode,
                 )
 
             SqlTypes.BLOCK_COMMENT_CONTENT ->
-                SqlBlockCommentBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+                SqlBlockCommentBlock(child, context)
 
-            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+            else -> SqlUnknownBlock(child, context)
         }
 
     private fun createFieldAccessSpacingBuilder(): SqlCustomSpacingBuilder =
@@ -229,10 +205,10 @@ class SqlElConditionLoopCommentBlock(
                             val grandIndentLen = grand.indent.groupIndentLen
                             return grandIndentLen.plus(parentGroupIndentLen).minus(1)
                         }
-                        if (grand is SqlInsertKeywordGroupBlock) {
+                        if (grand is SqlInsertQueryGroupBlock) {
                             return parentGroupIndentLen
                         }
-                        if (grand is SqlColumnGroupBlock) {
+                        if (grand is SqlColumnRawGroupBlock) {
                             val grandIndentLen = grand.indent.groupIndentLen
                             var prevTextLen = 1
                             parent.prevChildren?.dropLast(1)?.forEach { prev ->

@@ -15,32 +15,18 @@
  */
 package org.domaframework.doma.intellij.formatter.block
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Indent
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlKeywordBlock(
     node: ASTNode,
     val indentLevel: IndentType = IndentType.ATTACHED,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
-) : SqlNewGroupBlock(
-        node,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
-    ) {
+    context: SqlBlockFormattingContext,
+) : SqlNewGroupBlock(node, context) {
     override val indent =
         ElementIndent(
             indentLevel,
@@ -48,13 +34,19 @@ open class SqlKeywordBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
 
         indent.indentLevel = indentLevel
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
+
+//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+//        if (getNodeText() == "nothing" && lastGroup is SqlDoGroupBlock) {
+//            lastGroup.doQueryBlock = this
+//        }
+//    }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 

@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter
+package org.domaframework.doma.intellij.formatter.builder
 
 import com.intellij.formatting.ASTBlock
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.psi.tree.IElementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlColumnBlock
-import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
 
 class SqlCustomSpacingBuilder {
@@ -124,7 +124,7 @@ class SqlCustomSpacingBuilder {
 
     fun getSpacingRightPattern(block: SqlRightPatternBlock): Spacing? {
         return when {
-            block.parentBlock is SqlColumnDefinitionGroupBlock ||
+            block.parentBlock is SqlCreateTableColumnDefinitionGroupBlock ||
                 block.parentBlock is SqlUpdateColumnGroupBlock ||
                 block.parentBlock is SqlUpdateValueGroupBlock -> {
                 return getSpacing(block)

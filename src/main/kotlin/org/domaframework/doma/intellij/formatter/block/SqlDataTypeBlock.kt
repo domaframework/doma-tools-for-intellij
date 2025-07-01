@@ -13,31 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block
+package org.domaframework.doma.intellij.formatter.block.group.column
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlDataTypeBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlBlock(
         node,
-        wrap,
-        alignment,
+        context.wrap,
+        context.alignment,
         null,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context.spacingBuilder,
+        context.enableFormat,
+        context.formatMode,
     ) {
     override val indent =
         ElementIndent(
@@ -46,11 +41,15 @@ open class SqlDataTypeBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroupBlock: SqlBlock?) {
+        super.setParentGroupBlock(lastGroupBlock)
         indent.indentLevel = IndentType.NONE
         indent.indentLen = 1
         indent.groupIndentLen = indent.indentLen
+
+        if (lastGroupBlock is SqlCreateTableColumnDefinitionRawGroupBlock) {
+            lastGroupBlock.columnDataTypeBlock = this
+        }
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()

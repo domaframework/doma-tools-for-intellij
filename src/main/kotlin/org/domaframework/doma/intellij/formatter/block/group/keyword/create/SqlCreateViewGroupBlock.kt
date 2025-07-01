@@ -13,34 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.subgroup
+package org.domaframework.doma.intellij.formatter.block.group.keyword.create
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Indent
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-open class SqlViewGroupBlock(
+open class SqlCreateViewGroupBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(
         node,
         IndentType.SECOND,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
     override val indent =
         ElementIndent(
@@ -49,8 +38,8 @@ open class SqlViewGroupBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.SUB
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = getNodeText().length
@@ -65,7 +54,7 @@ open class SqlViewGroupBlock(
             Indent.getSpaceIndent(indent.indentLen)
         }
 
-    override fun createBlockIndentLen(): Int = parentBlock?.indent?.indentLen ?: 0
+    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int = parentBlock?.indent?.indentLen ?: 0
 
     override fun isLeaf(): Boolean = true
 }

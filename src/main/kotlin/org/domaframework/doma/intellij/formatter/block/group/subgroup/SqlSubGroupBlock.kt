@@ -15,34 +15,26 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
+import com.intellij.formatting.Block
+import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 abstract class SqlSubGroupBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlNewGroupBlock(
         node,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
     var isFirstLineComment = false
     var prevChildren: List<SqlBlock>? = emptyList<SqlBlock>()
+    var endPatternBlock: SqlRightPatternBlock? = null
 
     override val indent =
         ElementIndent(
@@ -51,12 +43,14 @@ abstract class SqlSubGroupBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         prevChildren = parentBlock?.childBlocks?.toList()
         indent.indentLevel = indent.indentLevel
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
+        indent.groupIndentLen = parentBlock?.let { parent ->
+            parent.indent.indentLen.plus(parent.getNodeText().length.plus(1))
+        } ?: indent.indentLen.plus(getNodeText().length)
     }
 
     override fun addChildBlock(childBlock: SqlBlock) {
@@ -67,4 +61,13 @@ abstract class SqlSubGroupBlock(
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
+
+    override fun getSpacing(
+        p0: Block?,
+        p1: Block,
+    ): Spacing? = null
+
+    override fun isLeaf(): Boolean = true
+
+    open fun endGroup() {}
 }

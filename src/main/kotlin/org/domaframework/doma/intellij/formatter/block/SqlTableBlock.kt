@@ -15,27 +15,30 @@
  */
 package org.domaframework.doma.intellij.formatter.block
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.util.CreateQueryType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 class SqlTableBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlWordBlock(
         node,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
+    override val isNeedWhiteSpace = false
+
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
+    }
+
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (lastGroup is SqlCreateKeywordGroupBlock && lastGroup.createType == CreateQueryType.TABLE) {
+            lastGroup.tableBlock = this
+        }
+    }
+
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 }

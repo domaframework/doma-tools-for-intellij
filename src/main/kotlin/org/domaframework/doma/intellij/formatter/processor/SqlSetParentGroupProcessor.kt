@@ -1,0 +1,316 @@
+/*
+ * Copyright Doma Tools Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.domaframework.doma.intellij.formatter.processor
+
+import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlRightPatternBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
+import org.domaframework.doma.intellij.psi.SqlTypes
+
+class SqlSetParentGroupProcessor(
+    private val blockBuilder: SqlBlockBuilder,
+) {
+    data class SetParentContext(
+        val childBlock: SqlBlock,
+        val blockBuilder: SqlBlockBuilder,
+    )
+
+    /**
+     * Sets the parent of the latest group block and registers itself as a child element.
+     */
+    fun updateGroupBlockParentAndAddGroup(childBlock: SqlBlock) {
+        val context =
+            SetParentContext(
+                childBlock,
+                blockBuilder,
+            )
+        setParentGroups(context) { history ->
+            return@setParentGroups history.last()
+        }
+    }
+
+    /**
+     * Does not set a parent.
+     */
+    fun updateGroupBlockAddGroup(childBlock: SqlBlock) {
+        setParentGroups(
+            SetParentContext(
+                childBlock,
+                blockBuilder,
+            ),
+        ) { history ->
+            return@setParentGroups null
+        }
+    }
+
+    /**
+     * Registers itself as a child element in the same block as the parent of the last group at the time of processing.
+     */
+    fun updateGroupBlockLastGroupParentAddGroup(
+        lastGroupBlock: SqlBlock,
+        childBlock: SqlBlock,
+    ) {
+        setParentGroups(
+            SetParentContext(
+                childBlock,
+                blockBuilder,
+            ),
+        ) { history ->
+            return@setParentGroups lastGroupBlock.parentBlock
+        }
+    }
+
+    fun updateKeywordGroupBlockParentAndAddGroup(
+        lastGroupBlock: SqlBlock,
+        lastIndentLevel: IndentType,
+        childBlock: SqlKeywordGroupBlock,
+    ) {
+        val context =
+            SetParentContext(
+                childBlock,
+                blockBuilder,
+            )
+
+        if (lastGroupBlock.indent.indentLevel == IndentType.SUB) {
+            setParentGroups(context) { history ->
+                return@setParentGroups lastGroupBlock
+            }
+        } else if (lastIndentLevel == childBlock.indent.indentLevel) {
+            blockBuilder.removeLastGroupTopNodeIndexHistory()
+            updateGroupBlockLastGroupParentAddGroup(
+                lastGroupBlock,
+                childBlock,
+            )
+        } else if (lastIndentLevel < childBlock.indent.indentLevel) {
+            updateGroupBlockParentAndAddGroup(
+                childBlock,
+            )
+        } else {
+            if (lastIndentLevel == IndentType.JOIN &&
+                SqlKeywordUtil.Companion.isSecondOptionKeyword(childBlock.getNodeText())
+            ) {
+                // left,right < inner,outer < join
+                updateGroupBlockParentAndAddGroup(
+                    childBlock,
+                )
+                return
+            }
+
+            setParentGroups(context) { history ->
+                return@setParentGroups history
+                    .lastOrNull { it.indent.indentLevel < childBlock.indent.indentLevel }
+            }
+        }
+    }
+
+    fun updateColumnDefinitionRawGroupBlockParentAndAddGroup(
+        lastGroupBlock: SqlBlock,
+        lastIndentLevel: IndentType,
+        childBlock: SqlColumnDefinitionRawGroupBlock,
+    ) {
+        when (lastIndentLevel) {
+            childBlock.indent.indentLevel -> {
+                blockBuilder.removeLastGroupTopNodeIndexHistory()
+                updateGroupBlockLastGroupParentAddGroup(
+                    lastGroupBlock,
+                    childBlock,
+                )
+            }
+
+            else -> {
+                updateGroupBlockParentAndAddGroup(childBlock)
+            }
+        }
+    }
+
+    fun updateColumnRawGroupBlockParentAndAddGroup(
+        lastGroupBlock: SqlBlock,
+        childBlock: SqlColumnRawGroupBlock,
+    ) {
+        if (lastGroupBlock is SqlColumnRawGroupBlock) {
+            blockBuilder.removeLastGroupTopNodeIndexHistory()
+        }
+        updateGroupBlockParentAndAddGroup(childBlock)
+    }
+
+    fun updateInlineSecondGroupBlockParentAndAddGroup(
+        lastGroupBlock: SqlBlock,
+        lastIndentLevel: IndentType,
+        childBlock: SqlInlineSecondGroupBlock,
+    ) {
+        val context =
+            SetParentContext(
+                childBlock,
+                blockBuilder,
+            )
+        if (childBlock.isEndCase) {
+            val inlineIndex =
+                blockBuilder.getGroupTopNodeIndex { block ->
+                    block.indent.indentLevel == IndentType.INLINE
+                }
+            if (inlineIndex >= 0) {
+                setParentGroups(
+                    context,
+                ) { history ->
+                    return@setParentGroups history[inlineIndex]
+                }
+                blockBuilder.clearSubListGroupTopNodeIndexHistory(inlineIndex)
+            }
+            return
+        }
+        if (lastIndentLevel == IndentType.INLINE_SECOND) {
+            blockBuilder.removeLastGroupTopNodeIndexHistory()
+            updateGroupBlockLastGroupParentAddGroup(
+                lastGroupBlock,
+                childBlock,
+            )
+            return
+        }
+        updateGroupBlockParentAndAddGroup(
+            childBlock,
+        )
+    }
+
+    fun updateConditionLoopCommentBlockParent(
+        lastGroupBlock: SqlBlock,
+        childBlock: SqlElConditionLoopCommentBlock,
+    ) {
+        if (lastGroupBlock is SqlCommaBlock || lastGroupBlock is SqlElConditionLoopCommentBlock) {
+            blockBuilder.removeLastGroupTopNodeIndexHistory()
+        }
+        setParentGroups(
+            SetParentContext(
+                childBlock,
+                blockBuilder,
+            ),
+        ) { history ->
+            if (childBlock.conditionType.isEnd()) {
+                val lastConditionLoopCommentBlock =
+                    blockBuilder.getConditionOrLoopBlocksLast()
+                blockBuilder.removeConditionOrLoopBlockLast()
+                return@setParentGroups lastConditionLoopCommentBlock
+            }
+            return@setParentGroups null
+        }
+    }
+
+    fun updateSqlRightPatternBlockParent(childBlock: SqlRightPatternBlock) {
+        val paramIndex =
+            blockBuilder.getGroupTopNodeIndex { block ->
+                block is SqlSubGroupBlock
+            }
+        if (paramIndex >= 0) {
+            val context =
+                SetParentContext(
+                    childBlock,
+                    blockBuilder,
+                )
+            setParentGroups(context) { history ->
+                return@setParentGroups history[paramIndex]
+            }
+
+            if (childBlock.parentBlock is SqlSubGroupBlock) {
+                (childBlock.parentBlock as SqlSubGroupBlock).endGroup()
+            }
+            blockBuilder.clearSubListGroupTopNodeIndexHistory(paramIndex)
+        }
+    }
+
+    /**
+     * Determines its parent group and, if conditions are met, registers itself as a new group block in the list.
+     */
+    private fun setParentGroups(
+        context: SetParentContext,
+        getParentGroup: (MutableList<SqlBlock>) -> SqlBlock?,
+    ) {
+        val parentGroup =
+            getParentGroup(context.blockBuilder.getGroupTopNodeIndexHistory() as MutableList<SqlBlock>)
+
+        // // The parent block for SqlElConditionLoopCommentBlock will be set later
+        if (context.childBlock !is SqlElConditionLoopCommentBlock ||
+            context.childBlock.conditionType.isEnd()
+        ) {
+            context.childBlock.setParentGroupBlock(parentGroup)
+        }
+
+        val expectedClassTypes =
+            listOf(
+                SqlSubGroupBlock::class,
+                SqlCreateViewGroupBlock::class,
+                SqlInlineGroupBlock::class,
+                SqlInlineSecondGroupBlock::class,
+                SqlColumnDefinitionRawGroupBlock::class,
+            )
+        if (isNewGroup(context.childBlock, context.blockBuilder) || isExpectedClassType(expectedClassTypes, context.childBlock)) {
+            context.blockBuilder.addGroupTopNodeIndexHistory(context.childBlock)
+            // Set parent-child relationship and indent for preceding comment at beginning of block group
+            context.blockBuilder.updateCommentBlockIndent(context.childBlock)
+        }
+    }
+
+    /**
+     * Determines whether it is a group that requires a line break or a specific combination of keywords that does not require a line break.
+     */
+    private fun isNewGroup(
+        childBlock: SqlBlock,
+        blockBuilder: SqlBlockBuilder,
+    ): Boolean {
+        val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
+        return isNewGroupAndNotSetLineKeywords(childBlock, lastGroup)
+    }
+
+    fun isNewGroupAndNotSetLineKeywords(
+        childBlock: SqlBlock,
+        lastGroup: SqlBlock?,
+    ): Boolean {
+        val isNewGroupType = childBlock.indent.indentLevel.isNewLineGroup()
+        val lastKeywordText =
+            if (lastGroup?.indent?.indentLevel == IndentType.JOIN) {
+                lastGroup.getNodeText()
+            } else {
+                getLastGroupKeywordText(lastGroup)
+            }
+
+        val isSetLineGroup =
+            SqlKeywordUtil.Companion.isSetLineKeyword(
+                childBlock.getNodeText(),
+                lastKeywordText,
+            )
+        return isNewGroupType && !isSetLineGroup
+    }
+
+    /**
+     * Searches for a keyword element in the most recent group block and returns its text.
+     * If not found, returns the text of the group block itself.
+     */
+    fun getLastGroupKeywordText(lastGroup: SqlBlock?): String =
+        lastGroup
+            ?.childBlocks
+            ?.lastOrNull { it.node.elementType == SqlTypes.KEYWORD }
+            ?.getNodeText() ?: lastGroup?.getNodeText() ?: ""
+}
