@@ -27,7 +27,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlC
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 object CreateTableUtil {
-    fun getColumnDefinitionGroup(
+    fun getCreateTableClauseSubGroup(
         lastGroup: SqlBlock,
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,

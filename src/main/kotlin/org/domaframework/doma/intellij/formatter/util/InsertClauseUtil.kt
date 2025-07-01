@@ -21,7 +21,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlI
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 
 object InsertClauseUtil {
-    fun getColumnGroup(
+    fun getInsertClauseSubGroup(
         lastGroup: SqlBlock,
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,

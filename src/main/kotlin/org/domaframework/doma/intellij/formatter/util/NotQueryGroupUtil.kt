@@ -20,7 +20,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 
 object NotQueryGroupUtil {
-    fun getOtherGroup(
+    fun getSubGroup(
         lastGroup: SqlBlock,
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,

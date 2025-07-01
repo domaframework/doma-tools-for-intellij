@@ -23,7 +23,7 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQuer
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
 
 object UpdateClauseUtil {
-    fun getUpdateClauseGroup(
+    fun getUpdateClauseSubGroup(
         lastGroup: SqlBlock,
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,

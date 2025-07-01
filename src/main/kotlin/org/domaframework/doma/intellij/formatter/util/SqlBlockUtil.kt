@@ -234,19 +234,19 @@ class SqlBlockUtil(
             is SqlKeywordGroupBlock -> {
                 // List-type test data for IN clause
                 NotQueryGroupUtil
-                    .getOtherGroup(lastGroup, child, sqlBlockFormattingCtx)
+                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx)
                     ?.let { return it }
 
                 CreateTableUtil
-                    .getColumnDefinitionGroup(lastGroup, child, sqlBlockFormattingCtx)
+                    .getCreateTableClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
                     ?.let { return it }
 
                 InsertClauseUtil
-                    .getColumnGroup(lastGroup, child, sqlBlockFormattingCtx)
+                    .getInsertClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
                     ?.let { return it }
 
                 UpdateClauseUtil
-                    .getUpdateClauseGroup(
+                    .getUpdateClauseSubGroup(
                         lastGroup,
                         child,
                         sqlBlockFormattingCtx,
