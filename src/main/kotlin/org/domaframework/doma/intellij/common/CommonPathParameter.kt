@@ -15,7 +15,9 @@
  */
 package org.domaframework.doma.intellij.common
 
+import com.intellij.compiler.CompilerConfiguration
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import org.domaframework.doma.intellij.common.CommonPathParameterUtil.refreshModulePaths
@@ -60,6 +62,25 @@ object CommonPathParameterUtil {
     fun getModulePaths(module: Module): ModulePaths = modulePathCache[module.hashCode()] ?: refreshModulePaths(module)
 
     /**
+     * Checks if a given path is a generated directory based on annotation processor settings.
+     *
+     * @param module The module to check.
+     * @param path The path to check.
+     * @return True if the path is a generated directory, false otherwise.
+     */
+    private fun isGeneratedDirectory(
+        module: Module,
+        path: String,
+    ): Boolean {
+        val project: Project = module.project
+        val compilerConfiguration = CompilerConfiguration.getInstance(project).getAnnotationProcessingConfiguration(module)
+        val annotationProcessingConfiguration = compilerConfiguration.getGeneratedSourcesDirectoryName(false)
+
+        // Check if the path matches any of the generated source directories
+        return path.contains("/build/$annotationProcessingConfiguration/")
+    }
+
+    /**
      * Refreshes the directory information for the specified module and updates the cache.
      * Call this method when the module's directory structure changes.
      *
@@ -75,7 +96,8 @@ object CommonPathParameterUtil {
 
         val moduleManager = ModuleRootManager.getInstance(module)
         moduleManager.contentEntries.forEach { entry ->
-            if (entry.file != null && entry.file?.path?.contains("/build/") != true) {
+            val entryFile = entry.file
+            if (entryFile != null && !isGeneratedDirectory(module, entryFile.path)) {
                 entry.file?.let { basePath.add(it) }
                 entry.sourceFolders.forEach { folder ->
                     val file = folder.file
@@ -83,30 +105,21 @@ object CommonPathParameterUtil {
                         when (folder.rootType) {
                             JavaSourceRootType.SOURCE ->
                                 if (!sourceDirs.contains(file)) {
-                                    sourceDirs.add(
-                                        file,
-                                    )
+                                    sourceDirs.add(file)
                                 }
 
                             JavaSourceRootType.TEST_SOURCE ->
                                 if (!testSourceDirs.contains(file)) {
-                                    testSourceDirs.add(
-                                        file,
-                                    )
+                                    testSourceDirs.add(file)
                                 }
 
                             JavaResourceRootType.RESOURCE ->
                                 if (!resourceDirs.contains(file)) {
-                                    resourceDirs.add(
-                                        file,
-                                    )
+                                    resourceDirs.add(file)
                                 }
 
                             JavaResourceRootType.TEST_RESOURCE ->
-                                if (!testResourceDirs.contains(
-                                        file,
-                                    )
-                                ) {
+                                if (!testResourceDirs.contains(file)) {
                                     testResourceDirs.add(file)
                                 }
                         }
