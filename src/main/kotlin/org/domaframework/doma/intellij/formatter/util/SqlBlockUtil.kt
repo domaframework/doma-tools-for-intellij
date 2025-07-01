@@ -126,20 +126,16 @@ class SqlBlockUtil(
 
             IndentType.CONFLICT -> {
                 if (lastGroupBlock is SqlConflictClauseBlock) {
-                    when (keywordText) {
-                        "conflict" -> {
-                            lastGroupBlock.conflictType = OnConflictKeywordType.CONFLICT
+                    lastGroupBlock.conflictType =
+                        when (keywordText) {
+                            "conflict" -> OnConflictKeywordType.CONFLICT
+                            "constraint" -> OnConflictKeywordType.CONSTRAINT
+                            else -> OnConflictKeywordType.UNKNOWN
                         }
-                        "constraint" -> {
-                            lastGroupBlock.conflictType = OnConflictKeywordType.CONSTRAINT
-                        }
-                        else -> {
-                            lastGroupBlock.conflictType = OnConflictKeywordType.UNKNOWN
-                        }
-                    }
                     return SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
+                } else {
+                    return SqlConflictClauseBlock(child, sqlBlockFormattingCtx)
                 }
-                return SqlConflictClauseBlock(child, sqlBlockFormattingCtx)
             }
 
             else -> return SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
