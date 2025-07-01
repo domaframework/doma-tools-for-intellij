@@ -140,11 +140,13 @@ class PsiDaoMethod(
                 sqlFile = jarRoot?.findFileByRelativePath(sqlFilePath)
                 return
             } else {
-                sqlFile =
-                    module.getResourcesSQLFile(
-                        sqlFilePath,
-                        isTest,
-                    )
+                if (sqlFilePath.isNotEmpty()) {
+                    sqlFile =
+                        module.getResourcesSQLFile(
+                            sqlFilePath,
+                            isTest,
+                        )
+                }
                 return
             }
         }
@@ -172,6 +174,7 @@ class PsiDaoMethod(
 
     fun generateSqlFile() {
         ApplicationManager.getApplication().runReadAction {
+            if (sqlFilePath.isEmpty()) return@runReadAction
             val rootDir = psiProject.getContentRoot(daoFile) ?: return@runReadAction
             val sqlFile = File(sqlFilePath)
             val sqlFileName = sqlFile.name

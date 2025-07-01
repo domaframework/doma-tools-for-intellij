@@ -145,7 +145,10 @@ private fun searchDaoFile(
 ): VirtualFile? {
     val contentRootPath = contentRoot?.path ?: return null
     val pathParams = module?.let { CommonPathParameterUtil.getModulePaths(it) } ?: return null
-    val moduleBaseName = pathParams.moduleBasePath?.nameWithoutExtension ?: ""
+    val moduleBaseName =
+        pathParams.moduleBasePaths
+            .find { baseName -> contentRootPath.contains(baseName.path) }
+            ?.nameWithoutExtension ?: ""
     // TODO: Add Support Kotlin
     val relativeDaoFilePaths =
         getDaoPathFromSqlFilePath(sqlFile, contentRoot.path)
@@ -194,8 +197,8 @@ private fun getDaoPathFromSqlFilePath(
             ?: emptyList()
 
     return resources
-        .firstOrNull { resource ->
-            relativeFilePath.startsWith("/" + resource.nameWithoutExtension)
+        .find { resource ->
+            relativeFilePath.startsWith("/${resource.nameWithoutExtension}/")
         }?.let { resource ->
             relativeFilePath
                 .replace("${resource.nameWithoutExtension}/$RESOURCES_META_INF_PATH/", "")
@@ -216,17 +219,28 @@ fun getRelativeSqlFilePathFromDaoFilePath(
     if (module == null) return ""
     val extension = daoFile.fileType.defaultExtension
     val pathParams = CommonPathParameterUtil.getModulePaths(module)
+    val containsModuleBaseName =
+        pathParams.moduleBasePaths
+            .find { basePath -> daoFile.path.contains("${basePath.path}/") }
+            ?.path ?: return ""
     var relativeSqlFilePath =
         daoFile.path
-            .replaceFirst(pathParams.moduleBasePath?.path ?: "", "")
+            .replaceFirst(containsModuleBaseName, "")
             .replace(".$extension", "")
     val sources = CommonPathParameterUtil.getSources(module, daoFile)
-    sources.forEach { source ->
-        relativeSqlFilePath =
-            relativeSqlFilePath.replaceFirst(
-                "/" + source.nameWithoutExtension,
-                RESOURCES_META_INF_PATH,
-            )
-    }
+    sources
+        .find {
+            daoFile.path
+                .startsWith(containsModuleBaseName.plus("/${it.nameWithoutExtension}/"))
+        }?.let { source ->
+            val startSourceName = "/${source.nameWithoutExtension}"
+            if (relativeSqlFilePath.startsWith("$startSourceName/")) {
+                relativeSqlFilePath =
+                    relativeSqlFilePath.replaceFirst(
+                        startSourceName,
+                        RESOURCES_META_INF_PATH,
+                    )
+            }
+        }
     return relativeSqlFilePath
 }

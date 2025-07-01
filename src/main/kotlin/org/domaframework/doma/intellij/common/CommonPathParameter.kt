@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.common
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.VirtualFile
+import org.domaframework.doma.intellij.common.CommonPathParameterUtil.refreshModulePaths
 import org.jetbrains.jps.model.java.JavaResourceRootType
 import org.jetbrains.jps.model.java.JavaSourceRootType
 import java.util.concurrent.ConcurrentHashMap
@@ -32,14 +33,14 @@ object CommonPathParameterUtil {
     /**
      * Holds directory information for a module.
      *
-     * @property moduleBasePath The base path of the module.
+     * @property moduleBasePaths The base path of the module.
      * @property moduleSourceDirectories List of source directories.
      * @property moduleResourceDirectories List of resource directories.
      * @property moduleTestSourceDirectories List of test source directories.
      * @property moduleTestResourceDirectories List of test resource directories.
      */
     data class ModulePaths(
-        val moduleBasePath: VirtualFile?,
+        val moduleBasePaths: List<VirtualFile>,
         val moduleSourceDirectories: List<VirtualFile>,
         val moduleResourceDirectories: List<VirtualFile>,
         val moduleTestSourceDirectories: List<VirtualFile>,
@@ -47,7 +48,7 @@ object CommonPathParameterUtil {
     )
 
     // Cache for each module's directory information.
-    private val modulePathCache = ConcurrentHashMap<Module, ModulePaths>()
+    private val modulePathCache = ConcurrentHashMap<Int, ModulePaths>()
 
     /**
      * Returns the directory information for the specified module (uses cache if available).
@@ -56,7 +57,7 @@ object CommonPathParameterUtil {
      * @param module The module to retrieve directory information for.
      * @return The cached or newly computed ModulePaths.
      */
-    fun getModulePaths(module: Module): ModulePaths = modulePathCache[module] ?: refreshModulePaths(module)
+    fun getModulePaths(module: Module): ModulePaths = modulePathCache[module.hashCode()] ?: refreshModulePaths(module)
 
     /**
      * Refreshes the directory information for the specified module and updates the cache.
@@ -66,27 +67,54 @@ object CommonPathParameterUtil {
      * @return The updated ModulePaths.
      */
     fun refreshModulePaths(module: Module): ModulePaths {
-        var basePath: VirtualFile? = null
+        var basePath = mutableListOf<VirtualFile>()
         val sourceDirs = mutableListOf<VirtualFile>()
         val resourceDirs = mutableListOf<VirtualFile>()
         val testSourceDirs = mutableListOf<VirtualFile>()
         val testResourceDirs = mutableListOf<VirtualFile>()
 
         val moduleManager = ModuleRootManager.getInstance(module)
-        moduleManager.contentEntries.firstOrNull()?.let { entry ->
-            basePath = entry.file
-            entry.sourceFolders.forEach { folder ->
-                val file = folder.file
-                if (file != null) {
-                    when (folder.rootType) {
-                        JavaSourceRootType.SOURCE -> sourceDirs.add(file)
-                        JavaSourceRootType.TEST_SOURCE -> testSourceDirs.add(file)
-                        JavaResourceRootType.RESOURCE -> resourceDirs.add(file)
-                        JavaResourceRootType.TEST_RESOURCE -> testResourceDirs.add(file)
+        moduleManager.contentEntries.forEach { entry ->
+            if (entry.file != null && entry.file?.path?.contains("/build/") != true) {
+                entry.file?.let { basePath.add(it) }
+                entry.sourceFolders.forEach { folder ->
+                    val file = folder.file
+                    if (file != null) {
+                        when (folder.rootType) {
+                            JavaSourceRootType.SOURCE ->
+                                if (!sourceDirs.contains(file)) {
+                                    sourceDirs.add(
+                                        file,
+                                    )
+                                }
+
+                            JavaSourceRootType.TEST_SOURCE ->
+                                if (!testSourceDirs.contains(file)) {
+                                    testSourceDirs.add(
+                                        file,
+                                    )
+                                }
+
+                            JavaResourceRootType.RESOURCE ->
+                                if (!resourceDirs.contains(file)) {
+                                    resourceDirs.add(
+                                        file,
+                                    )
+                                }
+
+                            JavaResourceRootType.TEST_RESOURCE ->
+                                if (!testResourceDirs.contains(
+                                        file,
+                                    )
+                                ) {
+                                    testResourceDirs.add(file)
+                                }
+                        }
                     }
                 }
             }
         }
+
         val paths =
             ModulePaths(
                 basePath,
@@ -95,7 +123,7 @@ object CommonPathParameterUtil {
                 testSourceDirs,
                 testResourceDirs,
             )
-        modulePathCache[module] = paths
+        modulePathCache[module.hashCode()] = paths
         return paths
     }
 
