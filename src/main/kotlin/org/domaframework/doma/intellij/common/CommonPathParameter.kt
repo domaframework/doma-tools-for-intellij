@@ -47,7 +47,7 @@ object CommonPathParameterUtil {
     )
 
     // Cache for each module's directory information.
-    private val modulePathCache = ConcurrentHashMap<String, ModulePaths>()
+    private val modulePathCache = ConcurrentHashMap<Module, ModulePaths>()
 
     /**
      * Returns the directory information for the specified module (uses cache if available).
@@ -55,7 +55,7 @@ object CommonPathParameterUtil {
      * @param module The module to retrieve directory information for.
      * @return The cached or newly computed ModulePaths.
      */
-    fun getModulePaths(module: Module): ModulePaths? = modulePathCache[module.name]
+    fun getModulePaths(module: Module): ModulePaths? = modulePathCache[module]
 
     /**
      * Checks if a given path is a generated directory based on annotation processor settings.
@@ -129,7 +129,7 @@ object CommonPathParameterUtil {
                 testSourceDirs,
                 testResourceDirs,
             )
-        modulePathCache[module.name] = paths
+        modulePathCache[module] = paths
     }
 
     /**
