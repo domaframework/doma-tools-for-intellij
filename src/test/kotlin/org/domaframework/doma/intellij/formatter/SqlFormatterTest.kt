@@ -27,6 +27,8 @@ class SqlFormatterTest : BasePlatformTestCase() {
 
     override fun getTestDataPath(): String? = "src/test/testData/sql/formatter"
 
+    private val formatDataPrefix = "_format"
+
     override fun setUp() {
         super.setUp()
         settingSqlFormat(true)
@@ -49,39 +51,51 @@ class SqlFormatterTest : BasePlatformTestCase() {
     }
 
     fun testSelectFormatter() {
-        formatSqlFile("Select.sql", "Select_format.sql")
+        formatSqlFile("Select.sql", "Select$formatDataPrefix.sql")
     }
 
     fun testCreateTableFormatter() {
-        formatSqlFile("CreateTable.sql", "CreateTable_format.sql")
+        formatSqlFile("CreateTable.sql", "CreateTable$formatDataPrefix.sql")
     }
 
     fun testCreateViewFormatter() {
-        formatSqlFile("CreateView.sql", "CreateView_format.sql")
+        formatSqlFile("CreateView.sql", "CreateView$formatDataPrefix.sql")
     }
 
     fun testInsertFormatter() {
-        formatSqlFile("Insert.sql", "Insert_format.sql")
+        formatSqlFile("Insert.sql", "Insert$formatDataPrefix.sql")
     }
 
     fun testInsertWithBindVariableFormatter() {
-        formatSqlFile("InsertWithBindVariable.sql", "InsertWithBindVariable_format.sql")
+        formatSqlFile("InsertWithBindVariable.sql", "InsertWithBindVariable$formatDataPrefix.sql")
     }
 
     fun testUpdateFormatter() {
-        formatSqlFile("Update.sql", "Update_format.sql")
+        formatSqlFile("Update.sql", "Update$formatDataPrefix.sql")
     }
 
     fun testUpdateBindVariableFormatter() {
-        formatSqlFile("UpdateBindVariable.sql", "UpdateBindVariable_format.sql")
+        formatSqlFile("UpdateBindVariable.sql", "UpdateBindVariable$formatDataPrefix.sql")
     }
 
     fun testUpdateTupleAssignmentFormatter() {
-        formatSqlFile("UpdateTupleAssignment.sql", "UpdateTupleAssignment_format.sql")
+        formatSqlFile("UpdateTupleAssignment.sql", "UpdateTupleAssignment$formatDataPrefix.sql")
     }
 
     fun testDeleteFormatter() {
-        formatSqlFile("Delete.sql", "Delete_format.sql")
+        formatSqlFile("Delete.sql", "Delete$formatDataPrefix.sql")
+    }
+
+    fun testInsertConflictUpdateFormatter() {
+        formatSqlFile("InsertConflictUpdate.sql", "InsertConflictUpdate$formatDataPrefix.sql")
+    }
+
+    fun testInsertConflictNothingFormatter() {
+        formatSqlFile("InsertConflictNothing.sql", "InsertConflictNothing$formatDataPrefix.sql")
+    }
+
+    fun testInsertConflictUpdateWithOutTableFormatter() {
+        formatSqlFile("InsertConflictUpdateWithOutTable.sql", "InsertConflictUpdateWithOutTable$formatDataPrefix.sql")
     }
 
     private fun formatSqlFile(

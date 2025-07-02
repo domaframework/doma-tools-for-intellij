@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.subgroup
+package org.domaframework.doma.intellij.formatter.block.group.keyword.update
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 /**
@@ -49,6 +49,7 @@ class SqlUpdateValueGroupBlock(
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
+            // TODO Update Values用のクラスを作る
             if (parent is SqlUpdateSetGroupBlock) {
                 return parent.indent.indentLen
                     .plus(parent.getNodeText().length)

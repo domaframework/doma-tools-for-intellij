@@ -33,7 +33,7 @@ open class SqlColumnDefinitionRawGroupBlock(
         context,
     ) {
     // TODO:Customize indentation within an inline group
-    val defaultOffset = 5
+    open val defaultOffset = 0
     val isFirstColumnRaw = node.elementType != SqlTypes.COMMA
 
     open var columnBlock: SqlBlock? = if (isFirstColumnRaw) this else null

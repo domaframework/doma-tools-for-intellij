@@ -35,6 +35,8 @@ abstract class SqlRawGroupBlock(
         context.enableFormat,
         context.formatMode,
     ) {
+    var isFirstColumnGroup = getNodeText() != ","
+
     override val indent =
         ElementIndent(
             IndentType.COLUMN,

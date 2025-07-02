@@ -19,6 +19,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
@@ -26,6 +27,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlI
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -58,6 +60,11 @@ open class SqlRightPatternBlock(
                     SqlInsertColumnGroupBlock::class,
                 )
             if (isExpectedClassType(notInsertSpaceClassList, parent)) {
+                preSpaceRight = false
+                return
+            }
+
+            if (parent.parentBlock is SqlConflictClauseBlock) {
                 preSpaceRight = false
                 return
             }

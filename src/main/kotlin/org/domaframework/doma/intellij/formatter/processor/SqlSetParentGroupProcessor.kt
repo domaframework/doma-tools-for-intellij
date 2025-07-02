@@ -20,11 +20,11 @@ import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder

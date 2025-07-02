@@ -28,10 +28,10 @@ import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
@@ -133,7 +133,6 @@ class SqlElConditionLoopCommentBlock(
                 SqlElFunctionCallBlock(
                     child,
                     context,
-                    createSpacingBuilder(),
                 )
 
             SqlTypes.BLOCK_COMMENT_CONTENT ->
@@ -150,26 +149,6 @@ class SqlElConditionLoopCommentBlock(
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(
                 SqlTypes.DOT,
-                SqlTypes.EL_IDENTIFIER,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_IDENTIFIER,
-                SqlTypes.DOT,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_IDENTIFIER,
-                SqlTypes.EL_PARAMETERS,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            )
-
-    private fun createStaticFieldSpacingBuilder(): SqlCustomSpacingBuilder =
-        SqlCustomSpacingBuilder()
-            .withSpacing(
-                SqlTypes.AT_SIGN,
-                SqlTypes.EL_CLASS,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.AT_SIGN,
                 SqlTypes.EL_IDENTIFIER,
                 Spacing.createSpacing(0, 0, 0, false, 0),
             ).withSpacing(

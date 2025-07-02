@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block
 import com.intellij.formatting.Indent
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -42,11 +43,11 @@ open class SqlKeywordBlock(
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 
-//    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-//        if (getNodeText() == "nothing" && lastGroup is SqlDoGroupBlock) {
-//            lastGroup.doQueryBlock = this
-//        }
-//    }
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (getNodeText() == "nothing" && lastGroup is SqlDoGroupBlock) {
+            lastGroup.doQueryBlock = this
+        }
+    }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 

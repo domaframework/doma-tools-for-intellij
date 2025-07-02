@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.subgroup
+package org.domaframework.doma.intellij.formatter.block.group.column
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.column.SqlRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlSelectKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -38,8 +38,6 @@ class SqlColumnRawGroupBlock(
         node,
         context,
     ) {
-    var isFirstColumnGroup = getNodeText() != ","
-
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.COLUMN

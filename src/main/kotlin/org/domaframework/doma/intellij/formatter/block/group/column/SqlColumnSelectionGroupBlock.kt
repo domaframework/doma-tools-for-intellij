@@ -13,25 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.function
+package org.domaframework.doma.intellij.formatter.block.group.column
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-/**
- * Function call group
- *
- * For Example:
- * -- FUNC is [SqlFunctionGroupBlock]
- * SELECT FUNC(index -- "(" that after FUNC is [SqlParamGroupBlock]
- *             , (SELECT number -- "index" and "," is [SqlParamBlock]
- *                  FROM demo)
- *             , (num1 + num2))
- */
-class SqlFunctionGroupBlock(
+abstract class SqlColumnSelectionGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlSubGroupBlock(node, context) {
-    val parameterGroupBlock: SqlParamGroupBlock? = null
+) : SqlSubGroupBlock(
+        node,
+        context,
+    ) {
+    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 }

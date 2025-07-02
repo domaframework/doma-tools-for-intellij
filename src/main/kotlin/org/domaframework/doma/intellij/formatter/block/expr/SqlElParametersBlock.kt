@@ -18,14 +18,12 @@ package org.domaframework.doma.intellij.formatter.block.expr
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
-import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElParametersBlock(
     node: ASTNode,
     private val context: SqlBlockFormattingContext,
-    customSpacingBuilder: SqlCustomSpacingBuilder?,
 ) : SqlExprBlock(
         node,
         context,

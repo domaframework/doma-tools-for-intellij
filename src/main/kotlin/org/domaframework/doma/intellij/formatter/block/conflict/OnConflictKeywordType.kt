@@ -13,18 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword.top
+package org.domaframework.doma.intellij.formatter.block.conflict
 
-import com.intellij.lang.ASTNode
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
-import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-
-abstract class SqlTopQueryGroupBlock(
-    node: ASTNode,
-    context: SqlBlockFormattingContext,
-) : SqlKeywordGroupBlock(
-        node,
-        IndentType.TOP,
-        context,
-    )
+enum class OnConflictKeywordType {
+    CONFLICT,
+    CONSTRAINT,
+    UNKNOWN,
+}
