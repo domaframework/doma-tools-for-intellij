@@ -33,7 +33,7 @@ import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
-import org.domaframework.doma.intellij.extension.getResourcesSQLFile
+import org.domaframework.doma.intellij.extension.getResourcesFile
 import org.jetbrains.kotlin.idea.base.util.module
 import java.io.IOException
 
@@ -149,7 +149,7 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
                         try {
                             val newDir = VfsUtil.createDirectories(newPath)
                             val oldResourcePath =
-                                module.getResourcesSQLFile(
+                                module.getResourcesFile(
                                     RESOURCES_META_INF_PATH + "/" + oldQualifiedName.replace(".", "/"),
                                     isTest,
                                 )

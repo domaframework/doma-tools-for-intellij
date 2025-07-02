@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.setting
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ModuleRootListener
 import com.intellij.openapi.startup.ProjectActivity
 import org.domaframework.doma.intellij.common.util.PluginUtil
 
@@ -36,6 +37,9 @@ class DomaToolStartupActivity : ProjectActivity {
     }
 
     private fun registerModuleRootListener(project: Project) {
-        DomaToolsModuleRootListener.updateModuleDirectoryCache(project)
+        project.messageBus.connect().subscribe(
+            ModuleRootListener.TOPIC,
+            DomaToolsModuleRootListener(project),
+        )
     }
 }

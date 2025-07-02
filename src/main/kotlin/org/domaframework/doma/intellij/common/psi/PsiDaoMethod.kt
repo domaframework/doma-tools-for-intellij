@@ -39,7 +39,7 @@ import org.domaframework.doma.intellij.common.getExtension
 import org.domaframework.doma.intellij.extension.findFile
 import org.domaframework.doma.intellij.extension.getContentRoot
 import org.domaframework.doma.intellij.extension.getModule
-import org.domaframework.doma.intellij.extension.getResourcesSQLFile
+import org.domaframework.doma.intellij.extension.getResourcesFile
 import org.domaframework.doma.intellij.extension.getSourceRootDir
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 import org.domaframework.doma.intellij.setting.SqlLanguage
@@ -142,14 +142,10 @@ class PsiDaoMethod(
                 return
             } else {
                 sqlFile =
-                    if (sqlFilePath.isNotEmpty()) {
-                        module.getResourcesSQLFile(
-                            sqlFilePath,
-                            isTest,
-                        )
-                    } else {
-                        null
-                    }
+                    module.getResourcesFile(
+                        sqlFilePath,
+                        isTest,
+                    )
                 return
             }
         }
@@ -185,7 +181,7 @@ class PsiDaoMethod(
             val isTest = CommonPathParameterUtil.isTest(module, daoFile)
 
             val sqlDir = sqlFilePath.replace("/$sqlFileName", "")
-            val existSqlDir = module.getResourcesSQLFile("$RESOURCES_META_INF_PATH/$sqlDir", isTest)
+            val existSqlDir = module.getResourcesFile(sqlDir, isTest)
             val resourceDir = existSqlDir ?.let { psiProject.getSourceRootDir(it) }
             val resourcesDirPath = resourceDir?.nameWithoutExtension ?: "resources"
 

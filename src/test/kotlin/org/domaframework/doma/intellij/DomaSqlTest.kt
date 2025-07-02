@@ -30,7 +30,7 @@ import com.intellij.testFramework.PsiTestUtil
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
-import org.domaframework.doma.intellij.extension.getResourcesSQLFile
+import org.domaframework.doma.intellij.extension.getResourcesFile
 import org.jetbrains.jps.model.java.JavaResourceRootType
 import org.jetbrains.jps.model.java.JavaSourceRootType
 import org.junit.Ignore
@@ -231,7 +231,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
     ): VirtualFile? {
         val module = myFixture.module
         val sqlFileName = "$RESOURCES_META_INF_PATH/$packageName/dao/$sqlName"
-        return module?.getResourcesSQLFile(
+        return module?.getResourcesFile(
             sqlFileName,
             false,
         )

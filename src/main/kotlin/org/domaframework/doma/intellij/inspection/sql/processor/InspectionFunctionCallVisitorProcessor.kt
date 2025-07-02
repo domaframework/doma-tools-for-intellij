@@ -34,15 +34,13 @@ class InspectionFunctionCallVisitorProcessor(
 ) : InspectionVisitorProcessor(shortName) {
     fun check(holder: ProblemsHolder) {
         val project = element.project
+        val module = element.module ?: return
         val expressionHelper = ExpressionFunctionsHelper
         val expressionFunctionalInterface = expressionHelper.setExpressionFunctionsInterface(project)
         val functionName = element.elIdExpr
 
-        val resources =
-            element.module
-                ?.let { CommonPathParameterUtil.getResources(it, element.containingFile.virtualFile) }
-                ?: emptyList()
-        val customFunctionClassName = DomaCompileConfigUtil.getConfigValue(project, resources, "doma.expr.functions")
+        val isTest = CommonPathParameterUtil.isTest(module, element.containingFile.virtualFile)
+        val customFunctionClassName = DomaCompileConfigUtil.getConfigValue(module, isTest, "doma.expr.functions")
 
         var result: ValidationResult =
             ValidationInvalidFunctionCallResult(

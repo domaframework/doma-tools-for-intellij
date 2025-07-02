@@ -21,9 +21,10 @@ import com.intellij.openapi.roots.ModuleRootEvent
 import com.intellij.openapi.roots.ModuleRootListener
 import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 
-object DomaToolsModuleRootListener : ModuleRootListener {
+class DomaToolsModuleRootListener(
+    private val project: Project,
+) : ModuleRootListener {
     override fun rootsChanged(event: ModuleRootEvent) {
-        val project = event.source as? Project ?: return
         updateModuleDirectoryCache(project)
     }
 
