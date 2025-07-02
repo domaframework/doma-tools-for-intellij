@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.extension
 
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.JavaPsiFacade
@@ -51,3 +52,5 @@ fun Project.getJavaClazz(fqdn: String): PsiClass? {
             GlobalSearchScope.allScope(this),
         )
 }
+
+fun Project.getSourceRootDir(file: VirtualFile): VirtualFile? = ProjectFileIndex.getInstance(this).getSourceRootForFile(file)

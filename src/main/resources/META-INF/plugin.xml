@@ -93,6 +93,11 @@
     <supportsKotlinPluginMode supportsK2="true"/>
   </extensions>
 
+  <projectListeners>
+    <listener class="org.domaframework.doma.intellij.setting.DomaToolsModuleRootListener"
+      topic="com.intellij.openapi.roots.ModuleRootListener" />
+  </projectListeners>
+
   <!-- Action -->
   <actions>
     <group

@@ -20,7 +20,6 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.VirtualFile
-import org.domaframework.doma.intellij.common.CommonPathParameterUtil.refreshModulePaths
 import org.jetbrains.jps.model.java.JavaResourceRootType
 import org.jetbrains.jps.model.java.JavaSourceRootType
 import java.util.concurrent.ConcurrentHashMap
@@ -35,14 +34,12 @@ object CommonPathParameterUtil {
     /**
      * Holds directory information for a module.
      *
-     * @property moduleBasePaths The base path of the module.
      * @property moduleSourceDirectories List of source directories.
      * @property moduleResourceDirectories List of resource directories.
      * @property moduleTestSourceDirectories List of test source directories.
      * @property moduleTestResourceDirectories List of test resource directories.
      */
     data class ModulePaths(
-        val moduleBasePaths: List<VirtualFile>,
         val moduleSourceDirectories: List<VirtualFile>,
         val moduleResourceDirectories: List<VirtualFile>,
         val moduleTestSourceDirectories: List<VirtualFile>,
@@ -50,16 +47,15 @@ object CommonPathParameterUtil {
     )
 
     // Cache for each module's directory information.
-    private val modulePathCache = ConcurrentHashMap<Int, ModulePaths>()
+    private val modulePathCache = ConcurrentHashMap<String, ModulePaths>()
 
     /**
      * Returns the directory information for the specified module (uses cache if available).
-     * If the module's directory structure has changed, call [refreshModulePaths] to update the cache.
      *
      * @param module The module to retrieve directory information for.
      * @return The cached or newly computed ModulePaths.
      */
-    fun getModulePaths(module: Module): ModulePaths = modulePathCache[module.hashCode()] ?: refreshModulePaths(module)
+    fun getModulePaths(module: Module): ModulePaths? = modulePathCache[module.name]
 
     /**
      * Checks if a given path is a generated directory based on annotation processor settings.
@@ -87,8 +83,7 @@ object CommonPathParameterUtil {
      * @param module The module to refresh.
      * @return The updated ModulePaths.
      */
-    fun refreshModulePaths(module: Module): ModulePaths {
-        var basePath = mutableListOf<VirtualFile>()
+    fun refreshModulePaths(module: Module) {
         val sourceDirs = mutableListOf<VirtualFile>()
         val resourceDirs = mutableListOf<VirtualFile>()
         val testSourceDirs = mutableListOf<VirtualFile>()
@@ -98,7 +93,6 @@ object CommonPathParameterUtil {
         moduleManager.contentEntries.forEach { entry ->
             val entryFile = entry.file
             if (entryFile != null && !isGeneratedDirectory(module, entryFile.path)) {
-                entry.file?.let { basePath.add(it) }
                 entry.sourceFolders.forEach { folder ->
                     val file = folder.file
                     if (file != null) {
@@ -130,14 +124,12 @@ object CommonPathParameterUtil {
 
         val paths =
             ModulePaths(
-                basePath,
                 sourceDirs,
                 resourceDirs,
                 testSourceDirs,
                 testResourceDirs,
             )
-        modulePathCache[module.hashCode()] = paths
-        return paths
+        modulePathCache[module.name] = paths
     }
 
     /**
@@ -151,7 +143,7 @@ object CommonPathParameterUtil {
         module: Module,
         file: VirtualFile,
     ): Boolean {
-        val paths = getModulePaths(module)
+        val paths = getModulePaths(module) ?: return false
         if (paths.moduleTestSourceDirectories.any { file.path.contains(it.path) }) return true
         if (paths.moduleTestResourceDirectories.any { file.path.contains(it.path) }) return true
         return false
@@ -168,30 +160,14 @@ object CommonPathParameterUtil {
     fun getResources(
         module: Module,
         file: VirtualFile,
-    ): List<VirtualFile> =
-        if (isTest(module, file)) {
-            getModulePaths(module).moduleTestResourceDirectories
+    ): List<VirtualFile> {
+        val modulePaths = getModulePaths(module) ?: return emptyList()
+        return if (isTest(module, file)) {
+            modulePaths.moduleTestResourceDirectories
         } else {
-            getModulePaths(module).moduleResourceDirectories
+            modulePaths.moduleResourceDirectories
         }
-
-    /**
-     * Returns the source directories for the given file in the specified module.
-     * If the file is in a test directory, test source directories are returned.
-     *
-     * @param module The module to check.
-     * @param file The file to check.
-     * @return List of source directories.
-     */
-    fun getSources(
-        module: Module,
-        file: VirtualFile,
-    ): List<VirtualFile> =
-        if (isTest(module, file)) {
-            getModulePaths(module).moduleTestSourceDirectories
-        } else {
-            getModulePaths(module).moduleSourceDirectories
-        }
+    }
 
     /**
      * Clears the module directory cache. Call this if the module structure changes.
