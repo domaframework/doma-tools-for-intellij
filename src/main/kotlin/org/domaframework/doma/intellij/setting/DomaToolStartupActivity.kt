@@ -17,14 +17,12 @@ package org.domaframework.doma.intellij.setting
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ModuleRootListener
 import com.intellij.openapi.startup.ProjectActivity
 import org.domaframework.doma.intellij.common.util.PluginUtil
 
 class DomaToolStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
         setProperty()
-        registerModuleRootListener(project)
     }
 
     private fun setProperty() {
@@ -34,12 +32,5 @@ class DomaToolStartupActivity : ProjectActivity {
             PluginUtil.getVersion(),
         )
         println("PluginVersion: ${System.getProperty("org.domaframework.doma.intellij.plugin.version")} ")
-    }
-
-    private fun registerModuleRootListener(project: Project) {
-        project.messageBus.connect().subscribe(
-            ModuleRootListener.TOPIC,
-            DomaToolsModuleRootListener(project),
-        )
     }
 }
