@@ -34,7 +34,7 @@ fun Module.getPackagePathFromDaoPath(daoFile: VirtualFile): VirtualFile? {
             getRelativeSqlFilePathFromDaoFilePath(daoFile, this)
         } ?: ""
     val isTest = CommonPathParameterUtil.isTest(this, daoFile)
-    return this.getResourcesSQLFile(
+    return this.getResourcesFile(
         packagePath,
         isTest,
     )
@@ -57,7 +57,7 @@ fun Module.getJavaClazz(
  * @param includeTest true: test source, false: main source
  * @return SQL file
  */
-fun Module.getResourcesSQLFile(
+fun Module.getResourcesFile(
     relativePath: String,
     includeTest: Boolean,
 ): VirtualFile? =

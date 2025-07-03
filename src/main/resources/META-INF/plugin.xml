@@ -15,6 +15,12 @@
   <resource-bundle>messages.DomaToolsBundle</resource-bundle>
   <resource-bundle>messages.LLMInstallerBundle</resource-bundle>
 
+  <projectListeners>
+    <listener
+      class="org.domaframework.doma.intellij.setting.DomaToolsModuleRootListener"
+      topic="com.intellij.openapi.roots.ModuleRootListener"/>
+  </projectListeners>
+
   <extensions defaultExtensionNs="com.intellij">
     <postStartupActivity implementation="org.domaframework.doma.intellij.setting.DomaToolStartupActivity"/>
 

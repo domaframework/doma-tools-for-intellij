@@ -15,9 +15,8 @@
  */
 package org.domaframework.doma.intellij.common.config
 
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VirtualFile
-import org.domaframework.doma.intellij.common.CommonPathParameterUtil
+import com.intellij.openapi.module.Module
+import org.domaframework.doma.intellij.extension.getResourcesFile
 import java.util.concurrent.ConcurrentHashMap
 
 object DomaCompileConfigUtil {
@@ -30,40 +29,34 @@ object DomaCompileConfigUtil {
 
     /**
      * Get the value of the specified key from doma.compile.config
-     * @param project active project
-     * @param resourcePaths the path to the resource directories
+     * @param module the module to retrieve the configuration from
+     * @param isTest true if the configuration is for test sources, false for main sources
      * @param key the key to retrieve the value for
      * @return the value associated with the key, or null if not found
      */
     fun getConfigValue(
-        project: Project,
-        resourcePaths: List<VirtualFile>,
+        module: Module,
+        isTest: Boolean,
         key: String,
     ): String? {
-        resourcePaths.forEach { resourcePath ->
-            if (resourcePath.isValid) {
-                val configVFile = resourcePath.findChild("doma.compile.config")
-                val cacheKey = "${project.basePath}/${resourcePath.path}/doma.compile.config"
-                val lastModified = configVFile?.timeStamp ?: 0L
-                val cached = configCache[cacheKey]
+        val settingFileName = "doma.compile.config"
+        val settingFile = module.getResourcesFile(settingFileName, isTest)
+        val cacheKey = "${settingFile?.path}/$settingFileName"
+        val lastModified = settingFile?.timeStamp ?: 0L
+        val cached = configCache[cacheKey]
 
-                val props =
-                    if (cached == null || cached.second != lastModified) {
-                        val loadedProps =
-                            configVFile?.inputStream?.use { input ->
-                                java.util.Properties().apply { load(input) }
-                            } ?: java.util.Properties()
-                        configCache[cacheKey] = loadedProps to lastModified
-                        loadedProps
-                    } else {
-                        cached.first
-                    }
-                val propProperty = props.getProperty(key)
-                if (propProperty != null) return propProperty
+        val props =
+            if (cached == null || cached.second != lastModified) {
+                val loadedProps =
+                    settingFile?.inputStream?.use { input ->
+                        java.util.Properties().apply { load(input) }
+                    } ?: java.util.Properties()
+                configCache[cacheKey] = loadedProps to lastModified
+                loadedProps
             } else {
-                CommonPathParameterUtil.clearCache()
+                cached.first
             }
-        }
-        return null
+        val propProperty = props.getProperty(key)
+        return propProperty
     }
 }

@@ -37,22 +37,20 @@ class SqlElFunctionCallExprReference(
         val variableName = functionCallExpr.elIdExpr.text ?: ""
 
         val project = element.project
-        val module = file.module
+        val module = file.module ?: return null
         val expressionFunctionsInterface =
             ExpressionFunctionsHelper.setExpressionFunctionsInterface(project)
                 ?: return null
 
-        val resourcePaths =
-            module?.let {
-                CommonPathParameterUtil
-                    .getResources(it, file.virtualFile)
-            } ?: emptyList()
-
-        val customFunctionClassName = DomaCompileConfigUtil.getConfigValue(project, resourcePaths, "doma.expr.functions")
+        val isTest =
+            CommonPathParameterUtil
+                .isTest(module, file.virtualFile)
+        val customFunctionClassName = DomaCompileConfigUtil.getConfigValue(module, isTest, "doma.expr.functions")
 
         val implementsClass =
             if (customFunctionClassName != null) {
-                val expressionFunction = project.getJavaClazz(customFunctionClassName)
+                val customFunctionClass = customFunctionClassName
+                val expressionFunction = project.getJavaClazz(customFunctionClass)
                 if (ExpressionFunctionsHelper.isInheritor(expressionFunction)) {
                     expressionFunction
                 } else {

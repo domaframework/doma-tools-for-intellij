@@ -39,7 +39,8 @@ import org.domaframework.doma.intellij.common.getExtension
 import org.domaframework.doma.intellij.extension.findFile
 import org.domaframework.doma.intellij.extension.getContentRoot
 import org.domaframework.doma.intellij.extension.getModule
-import org.domaframework.doma.intellij.extension.getResourcesSQLFile
+import org.domaframework.doma.intellij.extension.getResourcesFile
+import org.domaframework.doma.intellij.extension.getSourceRootDir
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 import org.domaframework.doma.intellij.setting.SqlLanguage
 import org.jetbrains.kotlin.idea.base.util.module
@@ -141,7 +142,7 @@ class PsiDaoMethod(
                 return
             } else {
                 sqlFile =
-                    module.getResourcesSQLFile(
+                    module.getResourcesFile(
                         sqlFilePath,
                         isTest,
                     )
@@ -172,14 +173,19 @@ class PsiDaoMethod(
 
     fun generateSqlFile() {
         ApplicationManager.getApplication().runReadAction {
+            if (sqlFilePath.isEmpty()) return@runReadAction
             val rootDir = psiProject.getContentRoot(daoFile) ?: return@runReadAction
             val sqlFile = File(sqlFilePath)
             val sqlFileName = sqlFile.name
-            val resourceDir =
-                psiMethod.module
-                    ?.let { CommonPathParameterUtil.getResources(it, daoFile).firstOrNull() }
-                    ?: return@runReadAction
-            val parentDir = "${resourceDir.nameWithoutExtension}/${sqlFile.parent?.replace("\\", "/")}"
+            val module = psiMethod.module ?: return@runReadAction
+            val isTest = CommonPathParameterUtil.isTest(module, daoFile)
+
+            val sqlDir = sqlFilePath.replace("/$sqlFileName", "")
+            val existSqlDir = module.getResourcesFile(sqlDir, isTest)
+            val resourceDir = existSqlDir ?.let { psiProject.getSourceRootDir(it) }
+            val resourcesDirPath = resourceDir?.nameWithoutExtension ?: "resources"
+
+            val parentDir = "$resourcesDirPath/${sqlFile.parent?.replace("\\", "/")}"
             val parenDirPathSpirit = parentDir.split("/").toTypedArray()
 
             WriteCommandAction.runWriteCommandAction(psiProject) {

@@ -22,12 +22,15 @@ import org.domaframework.doma.intellij.common.util.PluginUtil
 
 class DomaToolStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
+        setProperty()
+    }
+
+    private fun setProperty() {
         System.setProperty("org.domaframework.doma.intellij.log.path", PathManager.getLogPath())
         System.setProperty(
             "org.domaframework.doma.intellij.plugin.version",
             PluginUtil.getVersion(),
         )
-
         println("PluginVersion: ${System.getProperty("org.domaframework.doma.intellij.plugin.version")} ")
     }
 }

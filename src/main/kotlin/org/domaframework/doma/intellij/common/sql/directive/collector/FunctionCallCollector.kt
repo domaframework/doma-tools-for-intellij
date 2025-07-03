@@ -36,23 +36,15 @@ class FunctionCallCollector(
     public override fun collect(): List<LookupElement>? {
         var functions = mutableSetOf<PsiMethod>()
         val project = file?.project
-        val module = file?.module
-        val resourcePaths =
-            if (file?.virtualFile != null && module != null) {
-                CommonPathParameterUtil
-                    .getResources(module, file.virtualFile)
-            } else {
-                emptyList()
-            }
+        val module = file?.module ?: return null
+        val isTest = CommonPathParameterUtil.isTest(module, file.virtualFile)
 
         val customFunctionClassName =
-            project?.let {
-                DomaCompileConfigUtil.getConfigValue(
-                    it,
-                    resourcePaths,
-                    "doma.expr.functions",
-                )
-            }
+            DomaCompileConfigUtil.getConfigValue(
+                module,
+                isTest,
+                "doma.expr.functions",
+            )
 
         val expressionFunctionInterface =
             project?.let { ExpressionFunctionsHelper.setExpressionFunctionsInterface(it) }
