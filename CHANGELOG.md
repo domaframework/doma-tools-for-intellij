@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [1.1.1] - 2025-07-03
+
+### Bug Fixes
+
+- Enable SQL File Generation in Multi-Module Projects ([#292])
+- Ensure Correct SQL File Path Generation When Package Name Matches Source Directory ([#286])
+
+[#292]:https://github.com/domaframework/doma-tools-for-intellij/pull/292
+[#286]:https://github.com/domaframework/doma-tools-for-intellij/pull/286
+
+
 ## [1.1.0] - 2025-06-25
 
 ### New Features
@@ -393,3 +404,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[1.1.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/1.1.0...1.1.1
