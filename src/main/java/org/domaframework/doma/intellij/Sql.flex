@@ -29,6 +29,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "as",
       "asc",
       "between",
+      "breadth",
       "by",
       "case",
       "change",
@@ -39,6 +40,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "comment",
       "create",
       "cross",
+      "cycle",
       "database",
       "default",
       "delete",
@@ -72,6 +74,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "not",
       "nothing",
       "null",
+      "materialized",
       "modify",
       "offset",
       "on",
@@ -81,7 +84,10 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "primary",
       "references",
       "rename",
+      "returning",
+      "recursive",
       "right",
+      "search",
       "select",
       "set",
       "table",
@@ -92,10 +98,12 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "union",
       "unique",
       "update",
+      "using",
       "values",
       "view",
       "when",
-      "where"
+      "where",
+      "with"
   );
 
   // COLUMN DataTypes
@@ -128,6 +136,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
    );
 
   private static boolean isKeyword(CharSequence word) {
+    // TODO Reads plugin settings and allows users to register arbitrary keywords
       return KEYWORDS.contains(word.toString().toLowerCase());
   }
 
