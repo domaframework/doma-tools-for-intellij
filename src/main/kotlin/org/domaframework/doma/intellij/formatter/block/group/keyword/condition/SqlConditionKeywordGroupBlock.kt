@@ -17,8 +17,8 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.condition
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlSecondOptionKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 /**
@@ -27,17 +27,46 @@ import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 class SqlConditionKeywordGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlKeywordGroupBlock(
+) : SqlSecondOptionKeywordGroupBlock(
         node,
-        IndentType.SECOND_OPTION,
         context,
     ) {
     var conditionalExpressionGroupBlock: SqlConditionalExpressionGroupBlock? = null
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
+        indent.indentLen = createBlockIndentLen()
+        indent.groupIndentLen = createGroupIndentLen()
+    }
+
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
         if (lastGroup is SqlConditionalExpressionGroupBlock) {
             lastGroup.conditionKeywordGroupBlocks.add(this)
         }
+    }
+
+    // TODO　If AND appears after OR, change it so that it is right-justified.
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            val groupLen = parent.indent.groupIndentLen
+            return if (parent is SqlSubGroupBlock) {
+                if (getNodeText() == "and") {
+                    groupLen
+                } else {
+                    groupLen.plus(1)
+                }
+            } else {
+                val orBlock =
+                    parentBlock
+                        ?.childBlocks
+                        ?.dropLast(1)
+                        ?.findLast { it is SqlConditionKeywordGroupBlock && it.getNodeText() == "or" }
+                if (getNodeText() == "and" && orBlock != null) {
+                    groupLen.plus(1)
+                } else {
+                    return parent.indent.groupIndentLen.minus(getNodeText().length)
+                }
+            }
+        } ?: return 1
     }
 }

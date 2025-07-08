@@ -33,7 +33,7 @@ class SqlUpdateColumnGroupBlock(
         context,
     ) {
     // TODO:Customize indentation
-    private val offset = 2
+    override val offset = 2
     val columnRawGroupBlocks: MutableList<SqlColumnRawGroupBlock> = mutableListOf()
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {

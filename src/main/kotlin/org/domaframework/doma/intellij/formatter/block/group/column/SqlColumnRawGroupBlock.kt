@@ -17,10 +17,9 @@ package org.domaframework.doma.intellij.formatter.block.group.column
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlSelectKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -38,6 +37,8 @@ class SqlColumnRawGroupBlock(
         node,
         context,
     ) {
+    private val offset = 1
+
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.COLUMN
@@ -48,25 +49,23 @@ class SqlColumnRawGroupBlock(
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
         when (lastGroup) {
-            is SqlSelectKeywordGroupBlock -> lastGroup.selectionColumns.add(this)
+            is SqlSelectQueryGroupBlock -> lastGroup.selectionColumns.add(this)
             is SqlUpdateColumnGroupBlock -> lastGroup.columnRawGroupBlocks.add(this)
         }
-        (lastGroup as? SqlSelectKeywordGroupBlock)?.selectionColumns?.add(this)
+        (lastGroup as? SqlSelectQueryGroupBlock)?.selectionColumns?.add(this)
     }
 
     override fun createBlockIndentLen(): Int =
-        parentBlock?.let { parent ->
-            if (parent is SqlKeywordGroupBlock) {
-                val parentIndentLen = parent.indent.indentLen.plus(parent.getNodeText().length)
+        if (parentBlock is SqlWithQueryGroupBlock) {
+            parentBlock
+                ?.childBlocks
+                ?.dropLast(1)
+                ?.lastOrNull()
+                ?.indent
+                ?.indentLen ?: offset
+        } else {
+            parentBlock?.indent?.groupIndentLen?.plus(1) ?: offset
+        }
 
-                val subGroup = parent.parentBlock as? SqlSubGroupBlock
-                if (subGroup is SqlSubGroupBlock && !subGroup.isFirstLineComment) {
-                    parentIndentLen.plus(3)
-                } else {
-                    parentIndentLen.plus(1)
-                }
-            } else {
-                parent.indent.groupIndentLen.plus(1)
-            }
-        } ?: 1
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = !isFirstColumnGroup
 }

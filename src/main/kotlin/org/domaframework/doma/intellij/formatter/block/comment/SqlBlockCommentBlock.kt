@@ -16,6 +16,8 @@
 package org.domaframework.doma.intellij.formatter.block.comment
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.util.PsiTreeUtil
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlBlockCommentBlock(
@@ -24,4 +26,6 @@ open class SqlBlockCommentBlock(
 ) : SqlCommentBlock(
         node,
         context,
-    )
+    ) {
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = PsiTreeUtil.prevLeaf(node.psi)?.text?.contains("\n") == true
+}

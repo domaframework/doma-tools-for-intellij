@@ -131,13 +131,13 @@ open class SqlElBlockCommentBlock(
         parentBlock?.let {
             if (it is SqlSubQueryGroupBlock) {
                 if (it.childBlocks.dropLast(1).isEmpty()) {
-                    return 1
+                    return 0
                 }
                 if (it.isFirstLineComment) {
                     return it.indent.groupIndentLen.minus(2)
                 }
             }
         }
-        return 1
+        return 0
     }
 }

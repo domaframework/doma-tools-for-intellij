@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.processor
 import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
@@ -25,11 +26,14 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGr
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlRightPatternBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
+import org.domaframework.doma.intellij.formatter.util.UpdateClauseUtil
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlSetParentGroupProcessor(
@@ -44,12 +48,12 @@ class SqlSetParentGroupProcessor(
      * Sets the parent of the latest group block and registers itself as a child element.
      */
     fun updateGroupBlockParentAndAddGroup(childBlock: SqlBlock) {
-        val context =
+        setParentGroups(
             SetParentContext(
                 childBlock,
                 blockBuilder,
-            )
-        setParentGroups(context) { history ->
+            ),
+        ) { history ->
             return@setParentGroups history.last()
         }
     }
@@ -96,31 +100,79 @@ class SqlSetParentGroupProcessor(
                 blockBuilder,
             )
 
+        val currentIndentLevel = childBlock.indent.indentLevel
+        if (currentIndentLevel == IndentType.TOP) {
+            var parentBlock: SqlBlock? = null
+            val exceptionalTypes =
+                listOf(
+                    SqlSubGroupBlock::class,
+                    SqlCreateViewGroupBlock::class,
+                )
+            if (isExpectedClassType(exceptionalTypes, lastGroupBlock)) {
+                parentBlock = lastGroupBlock
+            } else {
+                when (childBlock) {
+                    is SqlUpdateQueryGroupBlock -> {
+                        UpdateClauseUtil
+                            .getParentGroupBlock(blockBuilder, childBlock)
+                            ?.let { parentBlock = it }
+                    }
+
+                    else -> {
+                        val topKeywordIndex =
+                            blockBuilder.getGroupTopNodeIndex { block ->
+                                block.indent.indentLevel == IndentType.TOP
+                            }
+                        val subGroupIndex =
+                            blockBuilder.getGroupTopNodeIndex { block ->
+                                block is SqlSubGroupBlock
+                            }
+
+                        var deleteIndex = topKeywordIndex
+                        if (topKeywordIndex >= 0 && subGroupIndex < 0) {
+                            val copyParentBlock =
+                                blockBuilder.getGroupTopNodeIndexHistory()[topKeywordIndex]
+                            parentBlock = copyParentBlock.parentBlock
+                        } else if (topKeywordIndex > subGroupIndex) {
+                            val copyParentBlock =
+                                blockBuilder.getGroupTopNodeIndexHistory()[subGroupIndex]
+                            parentBlock = copyParentBlock
+                        }
+                        if (deleteIndex >= 0) {
+                            blockBuilder.clearSubListGroupTopNodeIndexHistory(deleteIndex)
+                        }
+                    }
+                }
+            }
+            setParentGroups(context) { history ->
+                return@setParentGroups parentBlock
+            }
+            return
+        }
+
         if (lastGroupBlock.indent.indentLevel == IndentType.SUB) {
             setParentGroups(context) { history ->
                 return@setParentGroups lastGroupBlock
             }
-        } else if (lastIndentLevel == childBlock.indent.indentLevel) {
+        } else if (lastIndentLevel == currentIndentLevel) {
             blockBuilder.removeLastGroupTopNodeIndexHistory()
             updateGroupBlockLastGroupParentAddGroup(
                 lastGroupBlock,
                 childBlock,
             )
-        } else if (lastIndentLevel < childBlock.indent.indentLevel) {
+        } else if (lastIndentLevel < currentIndentLevel) {
             updateGroupBlockParentAndAddGroup(
                 childBlock,
             )
+        } else if (lastIndentLevel == IndentType.JOIN &&
+            SqlKeywordUtil.isSecondOptionKeyword(childBlock.getNodeText())
+        ) {
+            // left,right < inner,outer < join
+            updateGroupBlockParentAndAddGroup(
+                childBlock,
+            )
+            return
         } else {
-            if (lastIndentLevel == IndentType.JOIN &&
-                SqlKeywordUtil.Companion.isSecondOptionKeyword(childBlock.getNodeText())
-            ) {
-                // left,right < inner,outer < join
-                updateGroupBlockParentAndAddGroup(
-                    childBlock,
-                )
-                return
-            }
-
             setParentGroups(context) { history ->
                 return@setParentGroups history
                     .lastOrNull { it.indent.indentLevel < childBlock.indent.indentLevel }
@@ -152,10 +204,22 @@ class SqlSetParentGroupProcessor(
         lastGroupBlock: SqlBlock,
         childBlock: SqlColumnRawGroupBlock,
     ) {
-        if (lastGroupBlock is SqlColumnRawGroupBlock) {
+        val exceptionTypes =
+            listOf(
+                SqlColumnRawGroupBlock::class,
+            )
+        if (isExpectedClassType(exceptionTypes, lastGroupBlock)) {
             blockBuilder.removeLastGroupTopNodeIndexHistory()
         }
-        updateGroupBlockParentAndAddGroup(childBlock)
+        setParentGroups(
+            SetParentContext(
+                childBlock,
+                blockBuilder,
+            ),
+        ) { history ->
+            return@setParentGroups history
+                .lastOrNull { it.indent.indentLevel < childBlock.indent.indentLevel }
+        }
     }
 
     fun updateInlineSecondGroupBlockParentAndAddGroup(
@@ -200,7 +264,12 @@ class SqlSetParentGroupProcessor(
         lastGroupBlock: SqlBlock,
         childBlock: SqlElConditionLoopCommentBlock,
     ) {
-        if (lastGroupBlock is SqlCommaBlock || lastGroupBlock is SqlElConditionLoopCommentBlock) {
+        val exceptionalTypes =
+            listOf(
+                SqlCommaBlock::class,
+                SqlElConditionLoopCommentBlock::class,
+            )
+        if (isExpectedClassType(exceptionalTypes, lastGroupBlock)) {
             blockBuilder.removeLastGroupTopNodeIndexHistory()
         }
         setParentGroups(
@@ -237,8 +306,23 @@ class SqlSetParentGroupProcessor(
             if (childBlock.parentBlock is SqlSubGroupBlock) {
                 (childBlock.parentBlock as SqlSubGroupBlock).endGroup()
             }
-            blockBuilder.clearSubListGroupTopNodeIndexHistory(paramIndex)
+
+            if (blockBuilder.getGroupTopNodeIndexHistory()[paramIndex] is SqlWithQuerySubGroupBlock) {
+                val withCommonBlockIndex =
+                    blockBuilder.getGroupTopNodeIndex { block ->
+                        block is SqlWithCommonTableGroupBlock
+                    }
+                if (withCommonBlockIndex >= 0) {
+                    blockBuilder.clearSubListGroupTopNodeIndexHistory(withCommonBlockIndex)
+                }
+            } else {
+                blockBuilder.clearSubListGroupTopNodeIndexHistory(paramIndex)
+            }
         }
+    }
+
+    fun updateSubGroupBlockParent(childBlock: SqlSubGroupBlock) {
+        updateGroupBlockParentAndAddGroup(childBlock)
     }
 
     /**
@@ -251,7 +335,7 @@ class SqlSetParentGroupProcessor(
         val parentGroup =
             getParentGroup(context.blockBuilder.getGroupTopNodeIndexHistory() as MutableList<SqlBlock>)
 
-        // // The parent block for SqlElConditionLoopCommentBlock will be set later
+        // The parent block for SqlElConditionLoopCommentBlock will be set later
         if (context.childBlock !is SqlElConditionLoopCommentBlock ||
             context.childBlock.conditionType.isEnd()
         ) {

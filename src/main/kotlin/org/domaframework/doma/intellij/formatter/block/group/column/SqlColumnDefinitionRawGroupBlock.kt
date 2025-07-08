@@ -50,4 +50,6 @@ open class SqlColumnDefinitionRawGroupBlock(
      * Right-justify the longest column name in the column definition.
      */
     override fun createBlockIndentLen(): Int = if (isFirstColumnRaw) 1 else defaultOffset
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

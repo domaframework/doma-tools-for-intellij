@@ -19,10 +19,15 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
@@ -67,12 +72,22 @@ open class SqlCommaBlock(
                 val parentIndentSyncBlockTypes =
                     listOf(
                         SqlUpdateColumnGroupBlock::class,
-                        SqlUpdateValueGroupBlock::class,
                         SqlInsertColumnGroupBlock::class,
+                        SqlWithColumnGroupBlock::class,
                     )
                 val parentIndentLen = parent.indent.groupIndentLen
                 if (TypeUtil.isExpectedClassType(parentIndentSyncBlockTypes, parent)) {
                     return parentIndentLen
+                }
+
+                // TODO Indent each comma in a value group so that it aligns with the position of the first value row.
+                val parentIndentSingleSpaceTypes =
+                    listOf(
+                        SqlInsertValueGroupBlock::class,
+                        SqlUpdateValueGroupBlock::class,
+                    )
+                if (TypeUtil.isExpectedClassType(parentIndentSingleSpaceTypes, parent)) {
+                    return parentIndentLen.plus(1)
                 }
 
                 val grand = parent.parentBlock
@@ -82,12 +97,13 @@ open class SqlCommaBlock(
                         return grandIndentLen.plus(parentIndentLen).minus(1)
                     }
 
+                    val grandIndent = grand.indent.indentLen
+                    val groupIndent = parentBlock?.indent?.groupIndentLen ?: 0
+
                     if (grand is SqlColumnRawGroupBlock) {
-                        val grandIndentLen = grand.indent.groupIndentLen
-                        var prevTextLen = 1
-                        parent.prevChildren?.dropLast(1)?.forEach { prev -> prevTextLen = prevTextLen.plus(prev.getNodeText().length) }
-                        return grandIndentLen.plus(prevTextLen).plus(1)
+                        return groupIndent.plus(grandIndent)
                     }
+                    return groupIndent.plus(grandIndent).minus(1)
                 }
                 return parentIndentLen.plus(1)
             } else {
@@ -104,10 +120,24 @@ open class SqlCommaBlock(
                             )
                     }
                 return parent.indent.groupIndentLen
-                    .plus(prevLen)
                     .plus(1)
             }
         }
         return 1
+    }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        val exceptionTypes =
+            listOf(
+                SqlInsertColumnGroupBlock::class,
+                SqlInsertValueGroupBlock::class,
+                SqlUpdateSetGroupBlock::class,
+                SqlUpdateColumnGroupBlock::class,
+                SqlUpdateValueGroupBlock::class,
+                SqlFunctionParamBlock::class,
+                SqlWithColumnGroupBlock::class,
+                SqlKeywordGroupBlock::class,
+            )
+        return TypeUtil.isExpectedClassType(exceptionTypes, parentBlock)
     }
 }

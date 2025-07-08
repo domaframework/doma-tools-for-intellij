@@ -66,6 +66,7 @@ class SqlKeywordUtil {
     companion object {
         private val TOP_KEYWORDS: Set<String> =
             setOf(
+                "with",
                 "select",
                 "update",
                 "insert",
@@ -76,7 +77,8 @@ class SqlKeywordUtil {
                 "truncate",
                 "rename",
                 "union",
-                "with",
+                "intersect",
+                "except",
                 "do",
             )
 
@@ -93,6 +95,7 @@ class SqlKeywordUtil {
                 "limit",
                 "values",
                 "lateral",
+                "returning",
             )
 
         fun isSecondKeyword(keyword: String): Boolean = SECOND_KEYWORD.contains(keyword.lowercase())
@@ -249,6 +252,8 @@ class SqlKeywordUtil {
         private val OPTION_SQL_KEYWORDS =
             setOf(
                 "as",
+                "not",
+                "materialized",
                 "by",
                 "to",
                 "asc",
@@ -262,6 +267,12 @@ class SqlKeywordUtil {
                 "offset",
                 "then",
                 "in",
+                "recursive",
+                "breadth",
+                "depth",
+                "first",
+                "to",
+                "using",
             )
 
         fun isOptionSqlKeyword(keyword: String): Boolean = OPTION_SQL_KEYWORDS.contains(keyword.lowercase())
@@ -273,6 +284,14 @@ class SqlKeywordUtil {
             )
 
         fun isConflictAttachedKeyword(keyword: String): Boolean = CONFLICT_ATTACHED_KEYWORDS.contains(keyword.lowercase())
+
+        private val WITH_OPTION_KEYWORDS =
+            setOf(
+                "search",
+                "cycle",
+            )
+
+        fun isWithOptionKeyword(keyword: String): Boolean = WITH_OPTION_KEYWORDS.contains(keyword.lowercase())
 
         private val SET_LINE_KEYWORDS =
             mapOf(
@@ -286,13 +305,14 @@ class SqlKeywordUtil {
                 "join" to setOf("outer", "inner", "left", "right"),
                 "outer" to setOf("left", "right"),
                 "inner" to setOf("left", "right"),
-                "by" to setOf("group", "order"),
+                "by" to setOf("group", "order", "first"),
                 "and" to setOf("between"),
                 "if" to setOf("table", "create"),
                 "conflict" to setOf("on"),
                 "nothing" to setOf("do"),
                 "constraint" to setOf("on"),
                 "update" to setOf("do"),
+                "set" to setOf("by", "cycle"),
             )
 
         fun isSetLineKeyword(
@@ -306,10 +326,9 @@ class SqlKeywordUtil {
             val keyword = keywordText.lowercase()
             return when {
                 isTopKeyword(keyword) -> IndentType.TOP
-                isSecondKeyword(keyword) || isSelectSecondOptionKeyword(keyword) -> IndentType.SECOND
+                isSecondKeyword(keyword) || isSelectSecondOptionKeyword(keyword) || isWithOptionKeyword(keyword) -> IndentType.SECOND
                 isSecondOptionKeyword(keyword) || isConditionKeyword(keyword) -> IndentType.SECOND_OPTION
-                isJoinKeyword(keyword) -> IndentType.JOIN
-                isJoinAttachedKeyword(keyword) -> IndentType.JOIN
+                isJoinKeyword(keyword) || isJoinAttachedKeyword(keyword) -> IndentType.JOIN
                 isAttachedKeyword(keyword) -> IndentType.ATTACHED
                 isThirdKeyword(keyword) -> IndentType.TIRD
                 isInlineParentSqlKeyword(keyword) -> IndentType.INLINE

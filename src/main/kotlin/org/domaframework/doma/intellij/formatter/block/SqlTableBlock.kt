@@ -28,8 +28,6 @@ class SqlTableBlock(
         node,
         context,
     ) {
-    override val isNeedWhiteSpace = false
-
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
     }

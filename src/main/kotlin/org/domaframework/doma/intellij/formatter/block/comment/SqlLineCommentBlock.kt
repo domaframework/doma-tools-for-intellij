@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.block.comment
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -41,7 +42,7 @@ open class SqlLineCommentBlock(
         parentBlock?.let { parent ->
             if (parent is SqlSubQueryGroupBlock) {
                 if (parent.childBlocks.dropLast(1).isEmpty()) {
-                    return 1
+                    return 0
                 }
                 if (parent.isFirstLineComment) {
                     return parent.indent.groupIndentLen.minus(2)
@@ -49,6 +50,8 @@ open class SqlLineCommentBlock(
             }
             return parent.indent.indentLen
         }
-        return 1
+        return 0
     }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?) = PsiTreeUtil.prevLeaf(node.psi)?.text?.contains("\n") == true
 }

@@ -17,10 +17,13 @@ package org.domaframework.doma.intellij.formatter.util
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
 
 object UpdateClauseUtil {
     fun getUpdateClauseSubGroup(
@@ -39,4 +42,25 @@ object UpdateClauseUtil {
         } else {
             null
         }
+
+    fun getParentGroupBlock(
+        blockBuilder: SqlBlockBuilder,
+        childBlock: SqlUpdateQueryGroupBlock,
+    ): SqlBlock? {
+        var parentBlock: SqlBlock? = null
+        val topKeywordIndex =
+            blockBuilder.getGroupTopNodeIndex { block ->
+                block.indent.indentLevel == IndentType.TOP || block is SqlDoGroupBlock
+            }
+        if (topKeywordIndex >= 0) {
+            val copyParentBlock =
+                blockBuilder.getGroupTopNodeIndexHistory()[topKeywordIndex]
+            parentBlock =
+                copyParentBlock as? SqlDoGroupBlock ?: copyParentBlock.parentBlock
+            if (copyParentBlock.indent.indentLevel == childBlock.indent.indentLevel) {
+                blockBuilder.clearSubListGroupTopNodeIndexHistory(topKeywordIndex)
+            }
+        }
+        return parentBlock
+    }
 }

@@ -16,7 +16,6 @@
 package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.lang.ASTNode
-import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -40,7 +39,17 @@ class SqlParallelListBlock(
             0,
         )
 
-    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            return parent.childBlocks
+                .dropLast(1)
+                .sumOf { it.getNodeText().length.plus(1) }
+                .plus(parent.indent.indentLen)
+                .plus(parent.getNodeText().length)
+                .plus(1)
+        }
+        return 0
     }
+
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(1)
 }

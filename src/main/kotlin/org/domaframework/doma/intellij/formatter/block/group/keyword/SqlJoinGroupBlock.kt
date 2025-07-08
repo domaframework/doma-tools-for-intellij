@@ -42,7 +42,7 @@ open class SqlJoinGroupBlock(
         parentBlock?.childBlocks?.add(this)
         indent.indentLevel = IndentType.JOIN
         indent.indentLen = createBlockIndentLen(null)
-        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
+        indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -59,4 +59,6 @@ open class SqlJoinGroupBlock(
             ?.indent
             ?.groupIndentLen
             ?.plus(1) ?: 1
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

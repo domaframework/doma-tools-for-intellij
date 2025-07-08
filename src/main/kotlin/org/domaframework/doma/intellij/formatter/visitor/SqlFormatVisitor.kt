@@ -66,6 +66,11 @@ class SqlFormatVisitor : PsiRecursiveElementVisitor() {
 
     override fun visitWhiteSpace(space: PsiWhiteSpace) {
         super.visitWhiteSpace(space)
+        if (PsiTreeUtil.getParentOfType(space, SqlBlockComment::class.java) == null) {
+            replaces.add(space)
+        }
+        return
+
         val nextElement = space.nextSibling
         if (nextElement != null &&
             (

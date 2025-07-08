@@ -34,7 +34,7 @@ abstract class SqlExprBlock(
         context.formatMode,
     ) {
     override fun getSpacing(
-        p0: Block?,
-        p1: Block,
+        child1: Block?,
+        child2: Block,
     ): Spacing? = null
 }

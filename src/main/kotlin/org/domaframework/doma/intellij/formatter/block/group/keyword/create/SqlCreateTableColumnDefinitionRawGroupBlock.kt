@@ -17,8 +17,8 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.create
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlDataTypeBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.column.SqlDataTypeBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
@@ -30,9 +30,6 @@ class SqlCreateTableColumnDefinitionRawGroupBlock(
         context,
     ) {
     var columnDataTypeBlock: SqlDataTypeBlock? = null
-
-    // TODO:Customize indentation within an inline group
-    override val defaultOffset = 5
 
     override var parentBlock: SqlBlock?
         get() = super.parentBlock as? SqlCreateTableColumnDefinitionGroupBlock
@@ -79,7 +76,6 @@ class SqlCreateTableColumnDefinitionRawGroupBlock(
     private fun getColumnRawNewIndent(groupRawBlock: SqlCreateTableColumnDefinitionGroupBlock): Int {
         val groupMaxAlimentLen = groupRawBlock.getMaxColumnNameLength()
         val diffColumnName = groupMaxAlimentLen.minus(getNodeText().length)
-        val newSpaces = defaultOffset.plus(diffColumnName)
-        return newSpaces.plus(2)
+        return diffColumnName.plus(2)
     }
 }

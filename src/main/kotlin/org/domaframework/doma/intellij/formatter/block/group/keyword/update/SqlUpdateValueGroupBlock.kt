@@ -33,7 +33,7 @@ class SqlUpdateValueGroupBlock(
         context,
     ) {
     // TODO:Customize indentation
-    private val offset = 2
+    override val offset = 2
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
@@ -49,7 +49,6 @@ class SqlUpdateValueGroupBlock(
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            // TODO Update Values用のクラスを作る
             if (parent is SqlUpdateSetGroupBlock) {
                 return parent.indent.indentLen
                     .plus(parent.getNodeText().length)
@@ -59,11 +58,11 @@ class SqlUpdateValueGroupBlock(
         } ?: return offset
     }
 
-    private fun createGroupIndentLen(): Int {
+    override fun createGroupIndentLen(): Int {
         parentBlock?.let { parent ->
             if (parent is SqlUpdateSetGroupBlock) {
                 val parentGroupIndent = parent.indent.groupIndentLen
-                return parentGroupIndent.plus(4)
+                return parentGroupIndent.plus(3)
             }
         } ?: return offset
         return offset

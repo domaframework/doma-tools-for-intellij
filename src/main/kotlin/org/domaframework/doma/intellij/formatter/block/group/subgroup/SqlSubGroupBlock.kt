@@ -19,10 +19,17 @@ import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinQueriesGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -33,6 +40,10 @@ abstract class SqlSubGroupBlock(
         node,
         context,
     ) {
+    open val offset = 1
+
+    // TODO Even if the first element of a subgroup is a comment,
+    //  the indentation of subsequent elements is now aligned.
     var isFirstLineComment = false
     var prevChildren: List<SqlBlock>? = emptyList<SqlBlock>()
     var endPatternBlock: SqlRightPatternBlock? = null
@@ -59,20 +70,45 @@ abstract class SqlSubGroupBlock(
     }
 
     override fun addChildBlock(childBlock: SqlBlock) {
-        childBlocks.add(childBlock)
-        if (!isFirstLineComment) {
+        if (childBlocks.isEmpty()) {
             isFirstLineComment = childBlock is SqlCommentBlock
         }
+        childBlocks.add(childBlock)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getSpacing(
-        p0: Block?,
-        p1: Block,
+        child1: Block?,
+        child2: Block,
     ): Spacing? = null
 
     override fun isLeaf(): Boolean = true
 
     open fun endGroup() {}
+
+    override fun createBlockIndentLen(): Int = offset
+
+    override fun createGroupIndentLen(): Int {
+        parentBlock?.let { parent ->
+            // The parent groupIndent includes the number of characters in the group itself.
+            val baseGroupLen = parent.indent.groupIndentLen
+            return if (parent is SqlSubGroupBlock) baseGroupLen.plus(2) else baseGroupLen
+        } ?: return 1
+    }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        lastGroup?.let { lastBlock ->
+            if (lastBlock is SqlJoinQueriesGroupBlock) return true
+            val exceptionalParentTypes =
+                listOf(
+                    SqlWithQueryGroupBlock::class,
+                    SqlWithCommonTableGroupBlock::class,
+                    SqlWithColumnGroupBlock::class,
+                    SqlCreateViewGroupBlock::class,
+                )
+            return TypeUtil.isExpectedClassType(exceptionalParentTypes, lastBlock.parentBlock)
+        }
+        return false
+    }
 }

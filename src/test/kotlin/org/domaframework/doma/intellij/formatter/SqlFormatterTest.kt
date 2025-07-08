@@ -98,6 +98,34 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("InsertConflictUpdateWithOutTable.sql", "InsertConflictUpdateWithOutTable$formatDataPrefix.sql")
     }
 
+    fun testWithSelect() {
+        formatSqlFile("WithSelect.sql", "WithSelect$formatDataPrefix.sql")
+    }
+
+    fun testWithMultiQuery() {
+        formatSqlFile("WithMultiQuery.sql", "WithMultiQuery$formatDataPrefix.sql")
+    }
+
+    fun testWithRecursive() {
+        formatSqlFile("WithRecursive.sql", "WithRecursive$formatDataPrefix.sql")
+    }
+
+    fun testWithUnionAll() {
+        formatSqlFile("WithUnionAll.sql", "WithUnionAll$formatDataPrefix.sql")
+    }
+
+    fun testWithInsert() {
+        formatSqlFile("WithInsert.sql", "WithInsert$formatDataPrefix.sql")
+    }
+
+    fun testWithUpdate() {
+        formatSqlFile("WithUpdate.sql", "WithUpdate$formatDataPrefix.sql")
+    }
+
+    fun testWithDelete() {
+        formatSqlFile("WithDelete.sql", "WithDelete$formatDataPrefix.sql")
+    }
+
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,
