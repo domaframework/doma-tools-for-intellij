@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.processor
 import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
@@ -25,11 +26,14 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGr
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlRightPatternBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
+import org.domaframework.doma.intellij.formatter.util.UpdateClauseUtil
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlSetParentGroupProcessor(
@@ -44,12 +48,12 @@ class SqlSetParentGroupProcessor(
      * Sets the parent of the latest group block and registers itself as a child element.
      */
     fun updateGroupBlockParentAndAddGroup(childBlock: SqlBlock) {
-        val context =
+        setParentGroups(
             SetParentContext(
                 childBlock,
                 blockBuilder,
-            )
-        setParentGroups(context) { history ->
+            ),
+        ) { history ->
             return@setParentGroups history.last()
         }
     }
@@ -207,7 +211,15 @@ class SqlSetParentGroupProcessor(
         if (isExpectedClassType(exceptionTypes, lastGroupBlock)) {
             blockBuilder.removeLastGroupTopNodeIndexHistory()
         }
-        updateGroupBlockParentAndAddGroup(childBlock)
+        setParentGroups(
+            SetParentContext(
+                childBlock,
+                blockBuilder,
+            ),
+        ) { history ->
+            return@setParentGroups history
+                .lastOrNull { it.indent.indentLevel < childBlock.indent.indentLevel }
+        }
     }
 
     fun updateInlineSecondGroupBlockParentAndAddGroup(
@@ -294,8 +306,23 @@ class SqlSetParentGroupProcessor(
             if (childBlock.parentBlock is SqlSubGroupBlock) {
                 (childBlock.parentBlock as SqlSubGroupBlock).endGroup()
             }
-            blockBuilder.clearSubListGroupTopNodeIndexHistory(paramIndex)
+
+            if (blockBuilder.getGroupTopNodeIndexHistory()[paramIndex] is SqlWithQuerySubGroupBlock) {
+                val withCommonBlockIndex =
+                    blockBuilder.getGroupTopNodeIndex { block ->
+                        block is SqlWithCommonTableGroupBlock
+                    }
+                if (withCommonBlockIndex >= 0) {
+                    blockBuilder.clearSubListGroupTopNodeIndexHistory(withCommonBlockIndex)
+                }
+            } else {
+                blockBuilder.clearSubListGroupTopNodeIndexHistory(paramIndex)
+            }
         }
+    }
+
+    fun updateSubGroupBlockParent(childBlock: SqlSubGroupBlock) {
+        updateGroupBlockParentAndAddGroup(childBlock)
     }
 
     /**

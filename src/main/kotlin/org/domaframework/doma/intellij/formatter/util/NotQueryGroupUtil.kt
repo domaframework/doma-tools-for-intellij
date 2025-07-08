@@ -16,8 +16,14 @@
 package org.domaframework.doma.intellij.formatter.util
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 object NotQueryGroupUtil {
     fun getSubGroup(
@@ -31,6 +37,18 @@ object NotQueryGroupUtil {
         if (lastKeyword != null && lastKeyword.getNodeText().lowercase() == "in") {
             return SqlParallelListBlock(child, sqlBlockFormattingCtx)
         }
+
+        if (PsiTreeUtil.prevLeaf(child.psi)?.elementType == SqlTypes.WORD) {
+            return SqlFunctionParamBlock(child, sqlBlockFormattingCtx)
+        }
+
+        if (lastGroup is SqlConditionKeywordGroupBlock) {
+            return SqlConditionalExpressionGroupBlock(
+                child,
+                sqlBlockFormattingCtx,
+            )
+        }
+
         return null
     }
 }

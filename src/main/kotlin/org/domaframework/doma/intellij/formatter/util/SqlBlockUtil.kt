@@ -42,19 +42,26 @@ import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRaw
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinQueriesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlSecondKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlSecondOptionKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlDeleteQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
@@ -168,6 +175,12 @@ class SqlBlockUtil(
 
             IndentType.TOP -> {
                 return when (keywordText) {
+                    "with" ->
+                        SqlWithQueryGroupBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+
                     "select" ->
                         SqlSelectQueryGroupBlock(
                             child,
@@ -198,6 +211,17 @@ class SqlBlockUtil(
                             sqlBlockFormattingCtx,
                         )
 
+                    "delete" ->
+                        SqlDeleteQueryGroupBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+                    "union", "intersect", "except" ->
+                        SqlJoinQueriesGroupBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+
                     else ->
                         SqlKeywordGroupBlock(
                             child,
@@ -208,17 +232,39 @@ class SqlBlockUtil(
             }
 
             IndentType.SECOND -> {
-                return if (keywordText == "set") {
-                    SqlUpdateSetGroupBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
-                } else {
-                    SqlKeywordGroupBlock(
-                        child,
-                        indentLevel,
-                        sqlBlockFormattingCtx,
-                    )
+                return when (keywordText) {
+                    "set" -> {
+                        if (lastGroupBlock is SqlUpdateQueryGroupBlock) {
+                            SqlUpdateSetGroupBlock(
+                                child,
+                                sqlBlockFormattingCtx,
+                            )
+                        } else {
+                            WithClauseUtil
+                                .getWithClauseKeywordGroup(lastGroupBlock, child, sqlBlockFormattingCtx)
+                                ?.let { return it }
+                            return SqlSecondKeywordBlock(
+                                child,
+                                sqlBlockFormattingCtx,
+                            )
+                        }
+                    }
+
+                    "values" ->
+                        SqlValuesGroupBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+
+                    else -> {
+                        WithClauseUtil
+                            .getWithClauseKeywordGroup(lastGroupBlock, child, sqlBlockFormattingCtx)
+                            ?.let { return it }
+                        SqlSecondKeywordBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+                    }
                 }
             }
 
@@ -234,9 +280,8 @@ class SqlBlockUtil(
                         sqlBlockFormattingCtx,
                     )
                 } else {
-                    SqlKeywordGroupBlock(
+                    SqlSecondOptionKeywordGroupBlock(
                         child,
-                        indentLevel,
                         sqlBlockFormattingCtx,
                     )
                 }
@@ -272,19 +317,14 @@ class SqlBlockUtil(
         lastGroup: SqlBlock?,
         child: ASTNode,
     ): SqlBlock {
-        if (PsiTreeUtil.prevLeaf(child.psi)?.elementType == SqlTypes.WORD) {
-            return SqlFunctionParamBlock(child, sqlBlockFormattingCtx)
-        }
-
         when (lastGroup) {
             is SqlKeywordGroupBlock -> {
-                // List-type test data for IN clause
-                NotQueryGroupUtil
-                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx)
-                    ?.let { return it }
-
                 CreateTableUtil
                     .getCreateTableClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+                    ?.let { return it }
+
+                WithClauseUtil
+                    .getWithClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
                     ?.let { return it }
 
                 InsertClauseUtil
@@ -298,12 +338,10 @@ class SqlBlockUtil(
                         sqlBlockFormattingCtx,
                     )?.let { return it }
 
-                if (lastGroup is SqlConditionKeywordGroupBlock) {
-                    return SqlConditionalExpressionGroupBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
-                }
+                // List-type test data for IN clause
+                NotQueryGroupUtil
+                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+                    ?.let { return it }
 
                 return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
             }
@@ -311,8 +349,19 @@ class SqlBlockUtil(
             is SqlColumnDefinitionRawGroupBlock ->
                 return SqlDataTypeParamBlock(child, sqlBlockFormattingCtx)
 
-            else ->
+            else -> {
+                if (lastGroup is SqlSubGroupBlock) {
+                    WithClauseUtil
+                        .getWithClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+                        ?.let { return it }
+                }
+
+                if (PsiTreeUtil.prevLeaf(child.psi)?.elementType == SqlTypes.WORD) {
+                    return SqlFunctionParamBlock(child, sqlBlockFormattingCtx)
+                }
+
                 return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
+            }
         }
     }
 
@@ -333,6 +382,8 @@ class SqlBlockUtil(
                 }
             }
 
+            is SqlWithCommonTableGroupBlock -> SqlWithCommonTableGroupBlock(child, sqlBlockFormattingCtx)
+
             else -> SqlCommaBlock(child, sqlBlockFormattingCtx)
         }
     }
@@ -350,6 +401,8 @@ class SqlBlockUtil(
                             sqlBlockFormattingCtx,
                         )
                     }
+
+                    lastGroup is SqlWithQueryGroupBlock -> SqlWithCommonTableGroupBlock(child, sqlBlockFormattingCtx)
 
                     else -> SqlWordBlock(child, sqlBlockFormattingCtx)
                 }
