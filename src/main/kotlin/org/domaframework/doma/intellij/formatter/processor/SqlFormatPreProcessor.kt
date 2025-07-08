@@ -24,8 +24,8 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.TokenType
 import com.intellij.psi.impl.source.codeStyle.PreFormatProcessor
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
-import com.intellij.psi.util.prevLeafs
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.formatter.util.CreateQueryType
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
@@ -35,6 +35,19 @@ import org.domaframework.doma.intellij.setting.SqlLanguage
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 
 class SqlFormatPreProcessor : PreFormatProcessor {
+    private val targetElementTypes =
+        listOf(
+            SqlTypes.KEYWORD,
+            SqlTypes.LEFT_PAREN,
+            SqlTypes.RIGHT_PAREN,
+            SqlTypes.BLOCK_COMMENT,
+            SqlTypes.LINE_COMMENT,
+            SqlTypes.WORD,
+            SqlTypes.COMMA,
+            SqlTypes.BLOCK_COMMENT,
+            SqlTypes.OTHER,
+        )
+
     override fun process(
         node: ASTNode,
         rangeToReformat: TextRange,
@@ -71,7 +84,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                 when (it.elementType) {
                     SqlTypes.KEYWORD -> {
                         keywordIndex--
-                        newKeyword = getKeywordNewText(index, it, createQueryType, keywordList)
+                        newKeyword = getKeywordNewText(it)
                     }
 
                     SqlTypes.LEFT_PAREN -> {
@@ -79,9 +92,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                             if (createQueryType == CreateQueryType.TABLE) {
                                 getNewLineString(it.prevSibling, getUpperText(it))
                             } else if (keywordIndex > 0) {
-                                if (replaceKeywordList[keywordIndex - 1].text.lowercase() == "insert" ||
-                                    replaceKeywordList[keywordIndex - 1].text.lowercase() == "into"
-                                ) {
+                                if (listOf("insert", "into", "all").contains(replaceKeywordList[keywordIndex - 1].text.lowercase())) {
                                     getNewLineString(it.prevSibling, getUpperText(it))
                                 } else {
                                     getUpperText(it)
@@ -93,12 +104,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
 
                     SqlTypes.RIGHT_PAREN -> {
                         newKeyword =
-                            getRightPatternNewText(
-                                it,
-                                newKeyword,
-                                replaceKeywordList[keywordIndex - 1],
-                                createQueryType,
-                            )
+                            getRightPatternNewText(it)
                     }
 
                     SqlTypes.WORD -> {
@@ -112,40 +118,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                 document.deleteString(textRangeStart, textRangeEnd)
                 document.insertString(textRangeStart, newKeyword)
             } else {
-                // Remove spaces after newlines to reset indentation
-                val nextSibling = it.nextSibling
-                if (nextSibling.elementType == SqlTypes.BLOCK_COMMENT) {
-                    removeSpacesAroundNewline(document, it.textRange)
-                } else if (keywordIndex < replaceKeywordList.size) {
-                    val nextElement = replaceKeywordList[keywordIndex]
-                    if (isNewLineOnlyCreateTable(nextSibling) && createQueryType == CreateQueryType.TABLE) {
-                        removeSpacesAroundNewline(document, it.textRange)
-                    } else if (isSubGroupFirstElement(nextElement)) {
-                        document.deleteString(textRangeStart, textRangeEnd)
-                    } else if (isCreateViewAs(replaceKeywordList[keywordIndex], createQueryType)) {
-                        removeSpacesAroundNewline(document, it.textRange)
-                    } else {
-                        val isNewLineGroup =
-                            SqlKeywordUtil.Companion.getIndentType(nextElement.text ?: "").isNewLineGroup()
-                        val isSetLineKeyword =
-                            if (keywordIndex > 0) {
-                                SqlKeywordUtil.Companion.isSetLineKeyword(
-                                    nextElement.text,
-                                    replaceKeywordList[keywordIndex - 1].text,
-                                )
-                            } else {
-                                false
-                            }
-
-                        if (isNewLineGroup && !isSetLineKeyword || keywordList[index].elementType == SqlTypes.COMMA) {
-                            removeSpacesAroundNewline(document, it.textRange)
-                        } else {
-                            document.replaceString(textRangeStart, textRangeEnd, " ")
-                        }
-                    }
-                } else {
-                    removeSpacesAroundNewline(document, it.textRange)
-                }
+                removeSpacesAroundNewline(document, it as PsiWhiteSpace)
             }
         }
 
@@ -156,68 +129,62 @@ class SqlFormatPreProcessor : PreFormatProcessor {
 
     private fun removeSpacesAroundNewline(
         document: Document,
-        range: TextRange,
+        element: PsiWhiteSpace,
     ) {
+        val singleSpace = " "
+        val newLine = "\n"
+        val range = element.textRange
         val originalText = document.getText(range)
-        val newText = originalText.replace(Regex("\\s*\\n\\s*"), "\n")
+        val nextElement = element.nextSibling
+        val nextElementText = nextElement?.let { document.getText(it.textRange) } ?: ""
+
+        var newText = ""
+        if (!targetElementTypes.contains(nextElement?.elementType)) {
+            newText = originalText.replace(originalText, singleSpace)
+        } else {
+            newText =
+                when (nextElement.elementType) {
+                    SqlTypes.LINE_COMMENT -> {
+                        if (nextElementText.startsWith(newLine)) {
+                            originalText.replace(originalText, singleSpace)
+                        } else if (originalText.contains(newLine)) {
+                            originalText.replace(Regex("\\s*\\n\\s*"), newLine)
+                        } else {
+                            originalText.replace(originalText, singleSpace)
+                        }
+                    }
+
+                    else -> {
+                        if (nextElementText.contains(newLine) == true) {
+                            originalText.replace(originalText, singleSpace)
+                        } else if (originalText.contains(newLine)) {
+                            originalText.replace(Regex("\\s*\\n\\s*"), newLine)
+                        } else {
+                            originalText.replace(originalText, newLine)
+                        }
+                    }
+                }
+        }
         document.replaceString(range.startOffset, range.endOffset, newText)
     }
 
     /**
      * Checks for special case keyword elements and specific combinations of keywords with line breaks and capitalization only
      */
-    private fun getKeywordNewText(
-        index: Int,
-        element: PsiElement,
-        createQueryType: CreateQueryType,
-        keywordList: List<PsiElement>,
-    ): String =
-        if (element.text.lowercase() == "end") {
-            getNewLineString(element.prevSibling, getUpperText(element))
-        } else if (isCreateViewAs(element, createQueryType)) {
-            getNewLineString(element.prevSibling, getUpperText(element))
-        } else if (isSubGroupFirstElement(element)) {
-            getUpperText(element)
-        } else if (SqlKeywordUtil.Companion.getIndentType(element.text).isNewLineGroup()) {
-            if (index > 0 &&
-                SqlKeywordUtil.Companion.isSetLineKeyword(
-                    element.text,
-                    keywordList[index - 1].text,
-                )
-            ) {
-                getUpperText(element)
-            } else {
-                getNewLineString(element.prevSibling, getUpperText(element))
-            }
+    private fun getKeywordNewText(element: PsiElement): String {
+        val keywordText = element.text.lowercase()
+        val upperText = getUpperText(element)
+        return if (SqlKeywordUtil.getIndentType(keywordText).isNewLineGroup()) {
+            val prevElement = PsiTreeUtil.prevLeaf(element)
+            getNewLineString(prevElement, upperText)
         } else {
-            getUpperText(element)
+            upperText
         }
+    }
 
-    private fun getRightPatternNewText(
-        element: PsiElement,
-        keyword: String,
-        nextKeyword: PsiElement,
-        createQueryType: CreateQueryType,
-    ): String {
-        var newKeyword = keyword
+    private fun getRightPatternNewText(element: PsiElement): String {
         val elementText = element.text
-        if (createQueryType == CreateQueryType.TABLE) {
-            val prefixElements =
-                getElementsBeforeKeyword(element.prevLeafs.toList()) { it.elementType == SqlTypes.LEFT_PAREN }
-            val containsColumnRaw =
-                prefixElements.findLast { isColumnDefinedRawElementType(it) } != null
-            newKeyword =
-                if (containsColumnRaw) {
-                    getNewLineString(element.prevSibling, elementText)
-                } else {
-                    elementText
-                }
-        } else if (nextKeyword.text.lowercase() == "set") {
-            newKeyword = getNewLineString(element.prevSibling, elementText)
-        } else {
-            newKeyword = elementText
-        }
-        return newKeyword
+        return getNewLineString(element.prevSibling, elementText)
     }
 
     private fun getWordNewText(
@@ -248,18 +215,6 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         }
     }
 
-    private fun isCreateViewAs(
-        element: PsiElement,
-        createQueryType: CreateQueryType,
-    ): Boolean =
-        element.text.lowercase() == "as" &&
-            createQueryType == CreateQueryType.VIEW
-
-    private fun isColumnDefinedRawElementType(element: PsiElement): Boolean =
-        element.elementType == SqlTypes.WORD ||
-            element.elementType == SqlTypes.KEYWORD ||
-            element.elementType == SqlTypes.COMMA
-
     private fun getCreateQueryGroup(
         keywordList: List<PsiElement>,
         index: Int,
@@ -286,19 +241,6 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         return attachmentKeywordType
     }
 
-    /**
-     * The column definition elements of Create Table, "(", "WORD", and ")" must be line breaks
-     */
-    private fun isNewLineOnlyCreateTable(nextElement: PsiElement): Boolean =
-        nextElement.elementType == SqlTypes.LEFT_PAREN ||
-            nextElement.elementType == SqlTypes.RIGHT_PAREN ||
-            nextElement.elementType == SqlTypes.WORD
-
-    fun <T> getElementsBeforeKeyword(
-        elements: List<T>,
-        isLeft: (T) -> Boolean,
-    ): List<T> = elements.takeWhile { element -> !isLeft(element) }
-
     private fun getNewLineString(
         prevElement: PsiElement?,
         text: String,
@@ -315,10 +257,6 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         } else {
             element.text
         }
-
-    private fun isSubGroupFirstElement(element: PsiElement): Boolean =
-        getElementsBeforeKeyword(element.prevLeafs.toList()) { it.elementType == SqlTypes.LEFT_PAREN }
-            .findLast { it !is PsiWhiteSpace } == null
 
     private fun logging() {
         PluginLoggerUtil.Companion.countLogging(
