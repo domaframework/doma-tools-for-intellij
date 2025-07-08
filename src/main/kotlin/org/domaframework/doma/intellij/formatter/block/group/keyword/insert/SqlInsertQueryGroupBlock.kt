@@ -15,47 +15,21 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.keyword.insert
 
-import com.intellij.formatting.Indent
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlValuesGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlInsertQueryGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlKeywordGroupBlock(
+) : SqlTopQueryGroupBlock(
         node,
-        IndentType.TOP,
         context,
     ) {
     var columnDefinitionGroupBlock: SqlInsertColumnGroupBlock? = null
-    var valueKeywordBlock: SqlKeywordGroupBlock? = null
+    var valueKeywordBlock: SqlValuesGroupBlock? = null
     var valueGroupBlock: SqlInsertValueGroupBlock? = null
 
-    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
-        indent.indentLevel = IndentType.TOP
-        indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
-    }
-
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
-
-    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int =
-        if (!isAdjustIndentOnEnter()) {
-            parentBlock?.let {
-                if (it.indent.indentLevel == IndentType.SUB) {
-                    it.indent.groupIndentLen.plus(1)
-                } else {
-                    0
-                }
-            } ?: 0
-        } else {
-            0
-        }
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
 }

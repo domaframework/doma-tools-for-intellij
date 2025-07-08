@@ -45,4 +45,6 @@ class SqlDoGroupBlock(
             lastGroup.doBlock = this
         }
     }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?) = true
 }

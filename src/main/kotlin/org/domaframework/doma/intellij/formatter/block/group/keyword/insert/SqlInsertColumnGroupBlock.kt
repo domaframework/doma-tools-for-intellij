@@ -38,7 +38,7 @@ class SqlInsertColumnGroupBlock(
         context,
     ) {
     // TODO:Customize indentation
-    private val offset = 2
+    override val offset = 2
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
@@ -69,6 +69,7 @@ class SqlInsertColumnGroupBlock(
      */
     private fun updateParentGroupIndentLen() {
         parentBlock?.let { parent ->
+            // TODO Indentation is adjusted on the parent class side
             val parentBaseLen = getParentInsertKeywordsIndentLength(parent)
             parent.indent.groupIndentLen = parentBaseLen
         }
@@ -83,4 +84,6 @@ class SqlInsertColumnGroupBlock(
         }
         return parent.indent.groupIndentLen
     }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

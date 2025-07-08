@@ -38,4 +38,6 @@ class SqlConflictClauseBlock(
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = lastGroup !is SqlConflictClauseBlock
 }

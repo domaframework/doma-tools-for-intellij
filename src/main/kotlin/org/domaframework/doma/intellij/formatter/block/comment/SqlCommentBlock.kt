@@ -60,6 +60,6 @@ abstract class SqlCommentBlock(
                 return parent.indent.indentLen
             }
         }
-        return 1
+        return 0
     }
 }

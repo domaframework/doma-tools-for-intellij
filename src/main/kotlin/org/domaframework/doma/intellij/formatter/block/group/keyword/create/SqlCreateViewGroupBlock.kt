@@ -54,7 +54,11 @@ open class SqlCreateViewGroupBlock(
             Indent.getSpaceIndent(indent.indentLen)
         }
 
-    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int = parentBlock?.indent?.indentLen ?: 0
+    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int = 0
+
+    override fun createGroupIndentLen(): Int = getNodeText().length
 
     override fun isLeaf(): Boolean = true
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

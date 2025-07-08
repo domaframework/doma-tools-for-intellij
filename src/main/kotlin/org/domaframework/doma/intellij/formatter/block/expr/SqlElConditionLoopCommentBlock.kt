@@ -173,6 +173,8 @@ class SqlElConditionLoopCommentBlock(
 
     override fun isLeaf(): Boolean = false
 
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
+
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             when (parent) {
@@ -209,6 +211,6 @@ class SqlElConditionLoopCommentBlock(
                 }
             }
         }
-        return 1
+        return 0
     }
 }

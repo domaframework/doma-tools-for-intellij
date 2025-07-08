@@ -20,10 +20,9 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
@@ -33,6 +32,13 @@ open class SqlKeywordGroupBlock(
     val indentLevel: IndentType = IndentType.TOP,
     context: SqlBlockFormattingContext,
 ) : SqlNewGroupBlock(node, context) {
+    val topKeywordBlocks: MutableList<SqlBlock> = mutableListOf(this)
+
+    fun updateTopKeywordBlocks(block: SqlBlock) {
+        topKeywordBlocks.add(block)
+        indent.groupIndentLen = createGroupIndentLen()
+    }
+
     override val indent =
         ElementIndent(
             indentLevel,
@@ -42,24 +48,28 @@ open class SqlKeywordGroupBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        val preChildBlock = lastGroup?.childBlocks?.dropLast(1)?.lastOrNull()
+        val preChildBlock =
+            if (lastGroup?.indent?.indentLevel == IndentType.FILE) {
+                null
+            } else {
+                lastGroup?.childBlocks?.dropLast(1)?.lastOrNull()
+            }
         indent.indentLevel = indentLevel
 
         val baseIndentLen = getBaseIndentLen(preChildBlock, lastGroup)
-        indent.groupIndentLen = baseIndentLen.plus(getNodeText().length)
+        indent.groupIndentLen = createGroupIndentLen()
         indent.indentLen = adjustIndentIfFirstChildIsLineComment(baseIndentLen)
-        createGroupIndentLen()
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-        if (lastGroup is SqlSelectKeywordGroupBlock &&
+        if (lastGroup is SqlSelectQueryGroupBlock &&
             SqlKeywordUtil.isSelectSecondOptionKeyword(getNodeText())
         ) {
             lastGroup.secondGroupBlocks.add(this)
         }
 
-        if (getNodeText() == "values" && lastGroup is SqlInsertQueryGroupBlock) {
-            lastGroup.valueKeywordBlock = this
+        if (lastGroup is SqlWithCommonTableGroupBlock) {
+            lastGroup.queryGroupBlock.add(this)
         }
     }
 
@@ -135,58 +145,6 @@ open class SqlKeywordGroupBlock(
                 } ?: return 0
             }
 
-            IndentType.SECOND -> {
-                parentBlock?.let { parent ->
-                    val groupLen = parent.indent.groupIndentLen
-
-                    if (parent.indent.indentLevel == IndentType.FILE) {
-                        return 0
-                    } else {
-                        parent.parentBlock?.let { grand ->
-                            return if (grand is SqlCreateViewGroupBlock) {
-                                groupLen.minus(this.getNodeText().length)
-                            } else if (grand is SqlSubGroupBlock) {
-                                groupLen.minus(getNodeText().length).plus(1)
-                            } else {
-                                groupLen.minus(this.getNodeText().length)
-                            }
-                        } ?: return groupLen.minus(this.getNodeText().length)
-                    }
-                } ?: return 1
-            }
-
-            IndentType.SECOND_OPTION -> {
-                parentBlock?.let { parent ->
-                    val groupLen = parent.indent.groupIndentLen
-                    if (parent.indent.indentLevel == IndentType.FILE) {
-                        return 0
-                    }
-                    val subGroupBlock = parent.parentBlock as? SqlSubGroupBlock
-                    val newIndent =
-                        if (parent is SqlSubQueryGroupBlock) {
-                            return if (getNodeText() == "and") {
-                                groupLen
-                            } else {
-                                groupLen.plus(1)
-                            }
-                        } else if (getNodeText() == "and" && parent.getNodeText() == "or") {
-                            return groupLen.plus(1)
-                        } else if (parent is SqlKeywordGroupBlock && subGroupBlock != null && subGroupBlock.isFirstLineComment) {
-                            groupLen
-                        } else {
-                            val removeStartOffsetLess =
-                                parent.childBlocks.dropLast(1).filter {
-                                    it.node.startOffset >
-                                        parent.node.startOffset
-                                }
-                            val parentLen = getKeywordNameLength(removeStartOffsetLess, 0)
-                            val parentTextLen = parent.indent.groupIndentLen.plus(parentLen)
-                            return parentTextLen.minus(getNodeText().length)
-                        }
-                    return newIndent
-                } ?: 1
-            }
-
             IndentType.INLINE_SECOND -> {
                 parentBlock?.let {
                     if (it.indent.indentLevel == IndentType.FILE) 0
@@ -200,15 +158,10 @@ open class SqlKeywordGroupBlock(
         return 1
     }
 
-    protected open fun createGroupIndentLen(): Int {
-        parentBlock?.let { parent ->
-            if (indent.indentLevel == IndentType.SECOND_OPTION) {
-                val parentLen = getKeywordNameLength(parent.childBlocks, 1)
-                parent.indent.groupIndentLen
-                    .plus(parentLen)
-                    .minus(getNodeText().length)
-            }
-        } ?: 1
-        return 1
-    }
+    override fun createGroupIndentLen(): Int =
+        indent.indentLen
+            .plus(topKeywordBlocks.drop(1).sumOf { it.getNodeText().length.plus(1) })
+            .plus(getNodeText().length)
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

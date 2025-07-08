@@ -16,6 +16,11 @@
 package org.domaframework.doma.intellij.formatter.block.group.keyword.top
 
 import com.intellij.lang.ASTNode
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 class SqlSelectQueryGroupBlock(
@@ -24,4 +29,44 @@ class SqlSelectQueryGroupBlock(
 ) : SqlTopQueryGroupBlock(
         node,
         context,
-    )
+    ) {
+    val secondGroupBlocks: MutableList<SqlKeywordGroupBlock> = mutableListOf()
+    val selectionColumns: MutableList<SqlBlock> = mutableListOf()
+
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        parentBlock = lastGroup
+        parentBlock?.addChildBlock(this)
+        setParentPropertyBlock(lastGroup)
+        indent.indentLevel = indentLevel
+        indent.indentLen = createBlockIndentLen()
+        indent.groupIndentLen = createGroupIndentLen()
+    }
+
+    override fun getBaseIndentLen(
+        preChildBlock: SqlBlock?,
+        lastGroup: SqlBlock?,
+    ): Int {
+        if (parentBlock is SqlSubGroupBlock) {
+            return parentBlock?.indent?.groupIndentLen
+                ?: createBlockIndentLen(preChildBlock)
+        }
+        return createBlockIndentLen(preChildBlock)
+    }
+
+    override fun createGroupIndentLen(): Int {
+        parentBlock?.let { parent ->
+            if (parent is SqlSubQueryGroupBlock) {
+                return indent.indentLen.plus(getNodeText().length)
+            }
+        }
+        return indent.indentLen.plus(getNodeText().length)
+    }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        lastGroup?.let { lastBlock ->
+            if (lastGroup is SqlWithQuerySubGroupBlock) return true
+            if (lastBlock is SqlSubGroupBlock) return lastBlock.childBlocks.dropLast(1).isNotEmpty()
+        }
+        return true
+    }
+}

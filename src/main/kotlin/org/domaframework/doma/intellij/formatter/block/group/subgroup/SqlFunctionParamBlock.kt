@@ -19,6 +19,7 @@ import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlFunctionParamBlock(
     node: ASTNode,
@@ -38,7 +39,19 @@ class SqlFunctionParamBlock(
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.PARAM
         indent.indentLen = 0
-        indent.groupIndentLen = 0
+        indent.groupIndentLen = createGroupIndentLen()
+    }
+
+    override fun createGroupIndentLen(): Int {
+        prevChildren?.let { prevList ->
+            return prevList
+                .dropLast(1)
+                .sumOf { it.getNodeText().length.plus(1) }
+                .plus(getNodeText().length)
+                .minus(prevList.count { it.node.elementType == SqlTypes.DOT } * 2)
+                .plus(1)
+        }
+        return getNodeText().length
     }
 
     override fun createBlockIndentLen(): Int = 0

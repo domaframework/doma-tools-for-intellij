@@ -38,7 +38,6 @@ class SqlUpdateQueryGroupBlock(
         val baseIndentLen = getBaseIndentLen(preChildBlock, lastGroup)
         indent.groupIndentLen = baseIndentLen.plus(getNodeText().length)
         indent.indentLen = baseIndentLen
-        createGroupIndentLen()
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
@@ -49,9 +48,7 @@ class SqlUpdateQueryGroupBlock(
         preChildBlock: SqlBlock?,
         lastGroup: SqlBlock?,
     ): Int {
-        if (lastGroup == null) {
-            return createBlockIndentLen(preChildBlock)
-        }
+        if (lastGroup == null) return 0
 
         return if (lastGroup is SqlDoGroupBlock) {
             lastGroup.getNodeText().length.plus(1)
@@ -59,4 +56,6 @@ class SqlUpdateQueryGroupBlock(
             createBlockIndentLen(preChildBlock)
         }
     }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = parentBlock !is SqlDoGroupBlock
 }

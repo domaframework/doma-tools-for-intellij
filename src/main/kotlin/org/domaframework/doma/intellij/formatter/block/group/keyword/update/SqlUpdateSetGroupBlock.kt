@@ -50,16 +50,19 @@ open class SqlUpdateSetGroupBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun getIndent(): Indent? = Indent.getSpaceIndent(indent.indentLen)
+    override fun getIndent(): Indent? =
+        if (isAdjustIndentOnEnter()) {
+            Indent.getSpaceIndent(indent.indentLen)
+        } else {
+            Indent.getNoneIndent()
+        }
 
     override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int =
         if (isAdjustIndentOnEnter()) {
             0
         } else {
-            parentBlock?.let { parent ->
-                val parentTextLen = parent.getNodeText().length
-                val diffTextLen = parentTextLen.minus(getNodeText().length)
-                parent.indent.indentLen.plus(diffTextLen)
-            } ?: 0
+            parentBlock?.indent?.groupIndentLen?.minus(getNodeText().length) ?: 0
         }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

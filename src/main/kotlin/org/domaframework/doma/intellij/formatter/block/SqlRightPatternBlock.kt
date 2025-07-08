@@ -13,21 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.subgroup
+package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
-import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -58,6 +60,7 @@ open class SqlRightPatternBlock(
                 listOf(
                     SqlFunctionParamBlock::class,
                     SqlInsertColumnGroupBlock::class,
+                    SqlWithQuerySubGroupBlock::class,
                 )
             if (isExpectedClassType(notInsertSpaceClassList, parent)) {
                 preSpaceRight = false
@@ -81,11 +84,7 @@ open class SqlRightPatternBlock(
             }
 
             parent.parentBlock?.let { grand ->
-                preSpaceRight = (
-                    grand.indent.indentLevel <= IndentType.SECOND &&
-                        grand.parentBlock !is SqlInsertQueryGroupBlock
-                ) ||
-                    grand.indent.indentLevel == IndentType.JOIN
+                preSpaceRight = grand.childBlocks.find { it is SqlKeywordGroupBlock } != null
                 return
             }
         }
@@ -110,21 +109,39 @@ open class SqlRightPatternBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createBlockIndentLen(): Int =
-        if (parentBlock is SqlUpdateColumnGroupBlock || parentBlock is SqlUpdateValueGroupBlock) {
-            parentBlock?.indent?.indentLen ?: 1
-        } else {
-            parentBlock?.indent?.groupIndentLen ?: 1
-        }
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            if (parent is SqlWithQuerySubGroupBlock) return 0
+            val exceptionalTypes =
+                listOf(
+                    SqlUpdateColumnGroupBlock::class,
+                    SqlUpdateValueGroupBlock::class,
+                    SqlCreateTableColumnDefinitionGroupBlock::class,
+                )
+            if (isExpectedClassType(exceptionalTypes, parent)) return parent.indent.indentLen
+            return parent.indent.groupIndentLen
+        } ?: return 0
+    }
 
     override fun isLeaf(): Boolean = true
 
-    fun isNewLine(lastGroup: SqlBlock?): Boolean =
-        lastGroup is SqlCreateTableColumnDefinitionGroupBlock ||
-            lastGroup is SqlColumnDefinitionRawGroupBlock ||
-            lastGroup?.parentBlock is SqlUpdateSetGroupBlock ||
-            lastGroup?.parentBlock is SqlUpdateColumnGroupBlock ||
-            lastGroup is SqlUpdateColumnGroupBlock ||
-            lastGroup is SqlUpdateValueGroupBlock ||
-            lastGroup?.parentBlock is SqlUpdateValueGroupBlock
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        val exceptionalTypes =
+            listOf(
+                SqlCreateTableColumnDefinitionGroupBlock::class,
+                SqlColumnDefinitionRawGroupBlock::class,
+                SqlUpdateColumnGroupBlock::class,
+                SqlUpdateValueGroupBlock::class,
+                SqlWithQuerySubGroupBlock::class,
+            )
+        if (isExpectedClassType(exceptionalTypes, parentBlock)) return true
+
+        val parentExceptionalTypes =
+            listOf(
+                SqlUpdateSetGroupBlock::class,
+                SqlUpdateColumnGroupBlock::class,
+                SqlUpdateValueGroupBlock::class,
+            )
+        return isExpectedClassType(parentExceptionalTypes, parentBlock?.parentBlock)
+    }
 }

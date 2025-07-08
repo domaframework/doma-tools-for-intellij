@@ -35,26 +35,17 @@ class SqlConditionalExpressionGroupBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
+        indent.indentLen = createBlockIndentLen()
+        indent.groupIndentLen = createGroupIndentLen()
+    }
+
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
         if (lastGroup is SqlConditionKeywordGroupBlock) {
             lastGroup.conditionalExpressionGroupBlock = this
         }
     }
 
-    /**
-     * Processing applied to the entire group when group processing ends.
-     * If there are AND or OR group blocks, set the indentation so that the keywords are right-aligned.
-     */
-    override fun endGroup() {
-        val thisGroupIndent = indent.groupIndentLen
-        if (conditionKeywordGroupBlocks.isNotEmpty()) {
-            conditionKeywordGroupBlocks.forEach { conditionBlock ->
-                conditionBlock.indent.indentLen =
-                    when (conditionBlock.getNodeText()) {
-                        "and" -> thisGroupIndent.plus(1)
-                        "or" -> thisGroupIndent.plus(2)
-                        else -> conditionBlock.indent.indentLen
-                    }
-            }
-        }
-    }
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(1)
 }

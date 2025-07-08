@@ -27,8 +27,6 @@ class SqlUpdateColumnAssignmentSymbolBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlOtherBlock(node, context) {
-    override val isNeedWhiteSpace: Boolean = true
-
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLen = createIndentLen()
@@ -45,4 +43,6 @@ class SqlUpdateColumnAssignmentSymbolBlock(
         parentBlock?.let { parent -> return parent.indent.groupIndentLen.plus(1) }
             ?: return 0
     }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }
