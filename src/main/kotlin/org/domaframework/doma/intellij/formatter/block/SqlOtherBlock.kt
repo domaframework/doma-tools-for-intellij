@@ -39,8 +39,6 @@ open class SqlOtherBlock(
             0,
         )
 
-    override val isNeedWhiteSpace: Boolean = false
-
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.NONE

@@ -79,8 +79,8 @@ abstract class SqlSubGroupBlock(
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun getSpacing(
-        p0: Block?,
-        p1: Block,
+        child1: Block?,
+        child2: Block,
     ): Spacing? = null
 
     override fun isLeaf(): Boolean = true

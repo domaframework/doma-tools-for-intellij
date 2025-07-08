@@ -102,7 +102,7 @@ object TypeUtil {
      */
     fun isExpectedClassType(
         expectedClasses: List<KClass<*>>,
-        childBlock: SqlBlock,
+        childBlock: SqlBlock?,
     ): Boolean =
         expectedClasses.any { clazz ->
             clazz.isInstance(childBlock)

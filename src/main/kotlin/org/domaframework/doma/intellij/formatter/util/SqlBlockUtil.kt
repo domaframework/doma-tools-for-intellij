@@ -114,7 +114,7 @@ class SqlBlockUtil(
             }
 
             IndentType.OPTIONS -> {
-                if (child.text.lowercase() == "as") {
+                if (keywordText == "as") {
                     val parentCreateBlock =
                         lastGroupBlock as? SqlCreateKeywordGroupBlock
                             ?: lastGroupBlock?.parentBlock as? SqlCreateKeywordGroupBlock

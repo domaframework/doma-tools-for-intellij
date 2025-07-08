@@ -75,9 +75,9 @@ open class SqlKeywordGroupBlock(
 
     open fun getBaseIndentLen(
         preChildBlock: SqlBlock?,
-        block: SqlBlock?,
+        lastGroup: SqlBlock?,
     ): Int {
-        if (block == null) {
+        if (lastGroup == null) {
             return createBlockIndentLen(preChildBlock)
         }
         if (preChildBlock == null) return createBlockIndentLen(preChildBlock)
@@ -130,17 +130,16 @@ open class SqlKeywordGroupBlock(
     open fun createBlockIndentLen(preChildBlock: SqlBlock?): Int {
         when (indentLevel) {
             IndentType.TOP -> {
-                parentBlock?.let {
-                    val groupLen = it.indent.groupIndentLen
+                parentBlock?.let { parent ->
                     if (SqlKeywordUtil.isSetLineKeyword(getNodeText(), preChildBlock?.getNodeText() ?: "")) {
                         val prevBlockIndent = preChildBlock?.indent?.indentLen ?: 0
                         val prevBlockLen = preChildBlock?.getNodeText()?.length ?: 0
                         return prevBlockIndent.plus(prevBlockLen).plus(1)
                     }
-                    return if (it.indent.indentLevel == IndentType.FILE) {
+                    return if (parent.indent.indentLevel == IndentType.FILE) {
                         0
                     } else {
-                        groupLen
+                        parent.indent.groupIndentLen
                     }
                 } ?: return 0
             }

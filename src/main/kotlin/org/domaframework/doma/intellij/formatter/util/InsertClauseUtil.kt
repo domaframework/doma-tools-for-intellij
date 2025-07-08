@@ -17,7 +17,7 @@ package org.domaframework.doma.intellij.formatter.util
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
@@ -32,7 +32,7 @@ object InsertClauseUtil {
         if (lastGroup is SqlInsertQueryGroupBlock) {
             return SqlInsertColumnGroupBlock(child, sqlBlockFormattingCtx)
         }
-        if (lastGroup is SqlKeywordGroupBlock && lastGroup.getNodeText() == "values") {
+        if (lastGroup is SqlValuesGroupBlock) {
             return SqlInsertValueGroupBlock(child, sqlBlockFormattingCtx)
         }
         return null
