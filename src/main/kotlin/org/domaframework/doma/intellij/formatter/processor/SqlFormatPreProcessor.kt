@@ -44,7 +44,6 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             SqlTypes.LINE_COMMENT,
             SqlTypes.WORD,
             SqlTypes.COMMA,
-            SqlTypes.BLOCK_COMMENT,
             SqlTypes.OTHER,
         )
 

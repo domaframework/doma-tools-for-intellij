@@ -79,7 +79,6 @@ class SqlKeywordUtil {
                 "union",
                 "intersect",
                 "except",
-                "with",
                 "do",
             )
 
