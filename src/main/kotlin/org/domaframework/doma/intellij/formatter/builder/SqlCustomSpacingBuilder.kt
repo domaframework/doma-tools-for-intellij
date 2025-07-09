@@ -127,7 +127,7 @@ class SqlCustomSpacingBuilder {
         return when {
             paramBlock is SqlCreateTableColumnDefinitionGroupBlock ||
                 paramBlock is SqlUpdateColumnGroupBlock ||
-                (paramBlock is SqlUpdateValueGroupBlock && !paramBlock.subQueryValue) -> {
+                (paramBlock is SqlUpdateValueGroupBlock) -> {
                 return getSpacing(block)
             }
 

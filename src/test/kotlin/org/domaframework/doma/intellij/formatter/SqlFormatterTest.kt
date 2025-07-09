@@ -90,10 +90,6 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("UpdateTupleAssignment.sql", "UpdateTupleAssignment$formatDataPrefix.sql")
     }
 
-    fun testUpdateTupleSubUseQueryRowFormatter() {
-        formatSqlFile("UpdateTupleSubUseQueryRow.sql", "UpdateTupleSubUseQueryRow$formatDataPrefix.sql")
-    }
-
     fun testDeleteFormatter() {
         formatSqlFile("Delete.sql", "Delete$formatDataPrefix.sql")
     }
