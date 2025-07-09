@@ -132,7 +132,7 @@ class SqlCustomSpacingBuilder {
             }
 
             paramBlock is SqlParallelListBlock -> {
-                val lastKeywordGroup = paramBlock.childBlocks.dropLast(1).lastOrNull()
+                val lastKeywordGroup = paramBlock.getChildBlocksDropLast().lastOrNull()
                 return if (lastKeywordGroup is SqlKeywordGroupBlock) {
                     normalSpacing
                 } else {

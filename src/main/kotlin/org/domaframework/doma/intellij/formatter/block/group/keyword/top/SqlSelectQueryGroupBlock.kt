@@ -65,7 +65,7 @@ class SqlSelectQueryGroupBlock(
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         lastGroup?.let { lastBlock ->
             if (lastGroup is SqlWithQuerySubGroupBlock) return true
-            if (lastBlock is SqlSubGroupBlock) return lastBlock.childBlocks.dropLast(1).isNotEmpty()
+            if (lastBlock is SqlSubGroupBlock) return lastBlock.getChildBlocksDropLast().isNotEmpty()
         }
         return true
     }

@@ -56,7 +56,7 @@ class SqlWithCommonTableGroupBlock(
     private fun findWithQueryChildBlocks(): SqlBlock? {
         parentBlock?.let { parent ->
             if (parent is SqlWithQueryGroupBlock) {
-                return parent.childBlocks.dropLast(1).find { it is SqlWithCommonTableGroupBlock }
+                return parent.getChildBlocksDropLast().find { it is SqlWithCommonTableGroupBlock }
             }
         }
         return null
@@ -75,7 +75,7 @@ class SqlWithCommonTableGroupBlock(
 
     override fun createGroupIndentLen(): Int {
         parentBlock?.let { parent ->
-            childBlocks.dropLast(1).sumOf { it.getNodeText().length.plus(1) }
+            getChildBlocksDropLast().sumOf { it.getNodeText().length.plus(1) }
         }
         return offset
     }

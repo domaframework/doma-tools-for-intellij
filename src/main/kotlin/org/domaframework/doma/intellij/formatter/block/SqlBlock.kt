@@ -89,6 +89,8 @@ open class SqlBlock(
     open var parentBlock: SqlBlock? = null
     open val childBlocks = mutableListOf<SqlBlock>()
 
+    fun getChildBlocksDropLast(dropIndex: Int = 1): List<SqlBlock> = childBlocks.dropLast(dropIndex)
+
     open val indent: ElementIndent =
         ElementIndent(
             IndentType.FILE,
