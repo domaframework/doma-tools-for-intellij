@@ -16,7 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block.group.keyword.insert
 
 import com.intellij.lang.ASTNode
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlValuesGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 

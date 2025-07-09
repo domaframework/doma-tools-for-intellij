@@ -4,12 +4,12 @@ WITH new_user AS (
                  , email)
          VALUES ('Alice Example'
                  , 'alice@example.com')
-      RETURNING id
+    RETURNING id
+              , name
 )
 INSERT INTO user_profiles
             (user_id
              , bio)
 SELECT id
-       , 'This is Alice'
-       , profile
+       , name
   FROM new_user 

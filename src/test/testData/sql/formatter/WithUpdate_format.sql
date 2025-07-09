@@ -9,7 +9,7 @@ WITH recent_activity AS (
        SET last_login_at = ra.last_login
       FROM recent_activity ra
      WHERE u.id = ra.user_id
- RETURNING id
+    RETURNING id
 )
 SELECT *
   FROM updated_users 
