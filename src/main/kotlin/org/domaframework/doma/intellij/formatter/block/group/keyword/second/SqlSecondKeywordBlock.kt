@@ -49,7 +49,7 @@ open class SqlSecondKeywordBlock(
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         lastGroup?.let { last ->
-            val prevKeyword = last.childBlocks.dropLast(1).findLast { it is SqlKeywordBlock }
+            val prevKeyword = last.childBlocks.findLast { it is SqlKeywordBlock }
             prevKeyword?.let { prev ->
                 return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), prev.getNodeText())
             }

@@ -9,6 +9,7 @@ SELECT name
 ON CONFLICT (id)
 DO UPDATE
       SET name = EXCLUDED.name
+          , email = DEFAULT
     WHERE employees.name IS DISTINCT
      FROM EXCLUDED.name
 RETURNING id

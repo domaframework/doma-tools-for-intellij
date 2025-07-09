@@ -29,6 +29,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSe
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
@@ -174,7 +175,7 @@ class SqlSetParentGroupProcessor(
                 // Since `DO UPDATE` does not include a `RETURNING` clause, it should be registered as a child of the parent `INSERT` query.
                 // The `DO` keyword should align with the `INSERT` query, and therefore it will serve as the **indentation anchor** for the following update block.
                 setParentGroups(context) { history ->
-                    val lastGroup = history.lastOrNull()
+                    val lastGroup = history.findLast { it is SqlTopQueryGroupBlock }
                     return@setParentGroups if (lastGroup is SqlUpdateQueryGroupBlock && lastGroup.parentBlock is SqlDoGroupBlock) {
                         lastGroup.parentBlock
                     } else {
