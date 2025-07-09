@@ -13,23 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword.insert
+package org.domaframework.doma.intellij.formatter.block.group.keyword.second
 
 import com.intellij.lang.ASTNode
-import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-open class SqlInsertQueryGroupBlock(
+class SqlValuesGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlTopQueryGroupBlock(
-        node,
-        context,
-    ) {
-    var columnDefinitionGroupBlock: SqlInsertColumnGroupBlock? = null
-    var valueKeywordBlock: SqlValuesGroupBlock? = null
-    var valueGroupBlock: SqlInsertValueGroupBlock? = null
+) : SqlSecondKeywordBlock(node, context) {
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (lastGroup is SqlInsertQueryGroupBlock) {
+            lastGroup.valueKeywordBlock = this
+        }
+    }
 
-    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = parentBlock is SqlInsertQueryGroupBlock
 }

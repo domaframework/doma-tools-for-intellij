@@ -37,6 +37,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "conflict",
       "constraint",
       "column",
+      "collate",
       "comment",
       "create",
       "cross",

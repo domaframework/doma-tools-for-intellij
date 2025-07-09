@@ -13,19 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword
+package org.domaframework.doma.intellij.formatter.block.group.keyword.top
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 
-open class SqlSecondKeywordBlock(
+/**
+ *  Join Queries Keyword Group Block
+ *  [UNION, INTERSECT, EXCEPT]
+ */
+class SqlJoinQueriesGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlKeywordGroupBlock(node, IndentType.SECOND, context) {
-    private val offset = 0
+) : SqlKeywordGroupBlock(node, IndentType.TOP, context) {
+    // TODO Customize offset
+    val offset = 0
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
@@ -35,20 +41,18 @@ open class SqlSecondKeywordBlock(
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            val groupLen = parent.indent.groupIndentLen
-            return if (parent.indent.indentLevel == IndentType.FILE) {
-                offset
-            } else {
-                groupLen.minus(this.getNodeText().length)
+            if (parent is SqlWithQuerySubGroupBlock) {
+                return parent.indent.groupIndentLen
             }
+            return parent.indent.groupIndentLen.plus(1)
         }
         return offset
     }
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        lastGroup?.let {
-            return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), lastGroup.getNodeText())
-        }
-        return true
-    }
+    override fun createGroupIndentLen(): Int =
+        topKeywordBlocks
+            .sumOf { it.getNodeText().length.plus(1) }
+            .plus(indent.indentLen)
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

@@ -41,7 +41,7 @@ open class SqlLineCommentBlock(
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             if (parent is SqlSubQueryGroupBlock) {
-                if (parent.childBlocks.dropLast(1).isEmpty()) {
+                if (parent.getChildBlocksDropLast().isEmpty()) {
                     return 0
                 }
                 if (parent.isFirstLineComment) {

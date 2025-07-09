@@ -21,6 +21,7 @@ import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -49,6 +50,17 @@ object NotQueryGroupUtil {
             )
         }
 
+        return null
+    }
+
+    fun getKeywordGroup(
+        child: ASTNode,
+        sqlBlockFormattingCtx: SqlBlockFormattingContext,
+    ): SqlBlock? {
+        val keyword = child.text.lowercase()
+        if (keyword == "returning") {
+            return SqlReturningGroupBlock(child, sqlBlockFormattingCtx)
+        }
         return null
     }
 }

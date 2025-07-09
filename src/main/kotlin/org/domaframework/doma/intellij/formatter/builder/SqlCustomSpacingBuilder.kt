@@ -123,25 +123,24 @@ class SqlCustomSpacingBuilder {
     }
 
     fun getSpacingRightPattern(block: SqlRightPatternBlock): Spacing? {
+        val paramBlock = block.parentBlock
         return when {
-            block.parentBlock is SqlCreateTableColumnDefinitionGroupBlock ||
-                block.parentBlock is SqlUpdateColumnGroupBlock ||
-                block.parentBlock is SqlUpdateValueGroupBlock -> {
+            paramBlock is SqlCreateTableColumnDefinitionGroupBlock ||
+                paramBlock is SqlUpdateColumnGroupBlock ||
+                (paramBlock is SqlUpdateValueGroupBlock) -> {
                 return getSpacing(block)
             }
 
-            block.parentBlock is SqlParallelListBlock -> {
-                if (block.parentBlock
-                        ?.childBlocks
-                        ?.dropLast(1)
-                        ?.lastOrNull() is SqlKeywordGroupBlock
-                ) {
-                    return normalSpacing
+            paramBlock is SqlParallelListBlock -> {
+                val lastKeywordGroup = paramBlock.getChildBlocksDropLast().lastOrNull()
+                return if (lastKeywordGroup is SqlKeywordGroupBlock) {
+                    normalSpacing
+                } else {
+                    nonSpacing
                 }
-                return nonSpacing
             }
 
-            block.parentBlock is SqlDataTypeParamBlock -> nonSpacing
+            paramBlock is SqlDataTypeParamBlock -> nonSpacing
 
             block.preSpaceRight -> normalSpacing
             else -> nonSpacing
