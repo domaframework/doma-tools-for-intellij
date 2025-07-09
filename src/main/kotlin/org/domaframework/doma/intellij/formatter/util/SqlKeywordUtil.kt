@@ -296,7 +296,7 @@ class SqlKeywordUtil {
         private val SET_LINE_KEYWORDS =
             mapOf(
                 "into" to setOf("insert"),
-                "from" to setOf("delete"),
+                "from" to setOf("delete", "distinct"),
                 "distinct" to setOf("select"),
                 "table" to setOf("create", "alter", "rename", "truncate", "drop"),
                 "index" to setOf("create", "alter", "rename", "truncate", "drop"),

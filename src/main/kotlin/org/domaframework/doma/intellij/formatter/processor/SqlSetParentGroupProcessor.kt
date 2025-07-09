@@ -155,6 +155,17 @@ class SqlSetParentGroupProcessor(
                 return@setParentGroups lastGroupBlock
             }
         } else if (lastIndentLevel == currentIndentLevel) {
+            val prevKeyword = lastGroupBlock.childBlocks.findLast { it is SqlKeywordBlock }
+            prevKeyword?.let { prev ->
+                if (SqlKeywordUtil.isSetLineKeyword(childBlock.getNodeText(), prev.getNodeText())) {
+                    updateGroupBlockLastGroupParentAddGroup(
+                        lastGroupBlock,
+                        childBlock,
+                    )
+                    return
+                }
+            }
+
             blockBuilder.removeLastGroupTopNodeIndexHistory()
             updateGroupBlockLastGroupParentAddGroup(
                 lastGroupBlock,

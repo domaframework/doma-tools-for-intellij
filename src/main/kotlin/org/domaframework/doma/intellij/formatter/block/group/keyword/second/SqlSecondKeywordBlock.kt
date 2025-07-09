@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword
+package org.domaframework.doma.intellij.formatter.block.group.keyword.second
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
@@ -46,8 +48,12 @@ open class SqlSecondKeywordBlock(
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        lastGroup?.let {
-            return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), lastGroup.getNodeText())
+        lastGroup?.let { last ->
+            val prevKeyword = last.childBlocks.dropLast(1).findLast { it is SqlKeywordBlock }
+            prevKeyword?.let { prev ->
+                return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), prev.getNodeText())
+            }
+            return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), last.getNodeText())
         }
         return true
     }

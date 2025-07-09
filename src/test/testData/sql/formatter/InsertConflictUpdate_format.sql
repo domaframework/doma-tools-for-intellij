@@ -1,9 +1,16 @@
-INSERT INTO users
-            (username
-             , email)
-     VALUES ('user'
-             , 'user@example.com')
-ON CONFLICT (username) ON CONSTRAINT
+INSERT INTO employees
+            (name
+             , manager_id)
+SELECT name
+       , user_id
+  FROM user_settings
+ WHERE user_id = /*employee.id*/0
+   AND name = /*employee.name*/'name'
+ON CONFLICT (id)
 DO UPDATE
-      SET email = EXCLUDED.email
-          , created_at = CURRENT_TIMESTAMP 
+      SET name = EXCLUDED.name
+    WHERE employees.name IS DISTINCT
+     FROM EXCLUDED.name
+RETURNING id
+          , manager_id
+          , name 
