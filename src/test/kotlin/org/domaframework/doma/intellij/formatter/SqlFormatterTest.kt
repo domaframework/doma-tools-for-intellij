@@ -66,12 +66,20 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("Insert.sql", "Insert$formatDataPrefix.sql")
     }
 
+    fun testInsertReturningFormatter() {
+        formatSqlFile("InsertReturning.sql", "InsertReturning$formatDataPrefix.sql")
+    }
+
     fun testInsertWithBindVariableFormatter() {
         formatSqlFile("InsertWithBindVariable.sql", "InsertWithBindVariable$formatDataPrefix.sql")
     }
 
     fun testUpdateFormatter() {
         formatSqlFile("Update.sql", "Update$formatDataPrefix.sql")
+    }
+
+    fun testUpdateReturningFormatter() {
+        formatSqlFile("UpdateReturning.sql", "UpdateReturning$formatDataPrefix.sql")
     }
 
     fun testUpdateBindVariableFormatter() {
@@ -82,8 +90,20 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("UpdateTupleAssignment.sql", "UpdateTupleAssignment$formatDataPrefix.sql")
     }
 
+    fun testUpdateTupleAssignmentSubQueryFormatter() {
+        formatSqlFile("UpdateTupleAssignmentSubQuery.sql", "UpdateTupleAssignmentSubQuery$formatDataPrefix.sql")
+    }
+
+    fun testUpdateTupleSubUseQueryRowFormatter() {
+        formatSqlFile("UpdateTupleSubUseQueryRow.sql", "UpdateTupleSubUseQueryRow$formatDataPrefix.sql")
+    }
+
     fun testDeleteFormatter() {
         formatSqlFile("Delete.sql", "Delete$formatDataPrefix.sql")
+    }
+
+    fun testDeleteReturningFormatter() {
+        formatSqlFile("DeleteReturning.sql", "DeleteReturning$formatDataPrefix.sql")
     }
 
     fun testInsertConflictUpdateFormatter() {

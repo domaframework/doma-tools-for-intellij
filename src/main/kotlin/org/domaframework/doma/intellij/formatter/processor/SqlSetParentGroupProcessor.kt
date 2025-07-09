@@ -179,7 +179,7 @@ class SqlSetParentGroupProcessor(
                     return@setParentGroups if (lastGroup is SqlUpdateQueryGroupBlock && lastGroup.parentBlock is SqlDoGroupBlock) {
                         lastGroup.parentBlock
                     } else {
-                        history.lastOrNull()
+                        lastGroup
                     }
                 }
                 return

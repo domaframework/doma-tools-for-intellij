@@ -3,5 +3,5 @@ INSERT INTO employee
              , username)
      VALUES ( /* employees.id */0
              , /* employees.name */'name')
-ON CONFLICT (username)
+ON CONFLICT (username) ON CONSTRAINT
 DO NOTHING 
