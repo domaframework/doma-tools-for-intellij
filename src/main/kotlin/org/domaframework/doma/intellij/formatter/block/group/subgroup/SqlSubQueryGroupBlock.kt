@@ -18,6 +18,8 @@ package org.domaframework.doma.intellij.formatter.block.group.subgroup
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlJoinQueriesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -52,7 +54,13 @@ open class SqlSubQueryGroupBlock(
             } else if (parent is SqlWithQuerySubGroupBlock) {
                 parent.indent.groupIndentLen
             } else {
-                parent.indent.groupIndentLen.plus(1)
+                parent.indent.indentLen
+                    .plus(
+                        parent
+                            .getChildBlocksDropLast()
+                            .filter { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
+                            .sumOf { it.getNodeText().length.plus(1) },
+                    ).plus(parent.getNodeText().length.plus(1))
             }
         } ?: offset
 

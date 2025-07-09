@@ -69,6 +69,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
       "is",
       "join",
       "key",
+      "lateral",
       "left",
       "like",
       "limit",

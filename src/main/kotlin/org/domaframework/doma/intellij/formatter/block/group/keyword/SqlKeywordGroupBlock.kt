@@ -85,13 +85,8 @@ open class SqlKeywordGroupBlock(
         if (preChildBlock.indent.indentLevel == this.indent.indentLevel &&
             !SqlKeywordUtil.isSetLineKeyword(getNodeText(), preChildBlock.getNodeText())
         ) {
-            if (indent.indentLevel == IndentType.SECOND) {
-                val diffPreBlockTextLen = getNodeText().length.minus(preChildBlock.getNodeText().length)
-                return preChildBlock.indent.indentLen.minus(diffPreBlockTextLen)
-            } else {
-                val diffPretextLen = getNodeText().length.minus(preChildBlock.getNodeText().length)
-                return preChildBlock.indent.indentLen.minus(diffPretextLen)
-            }
+            val diffPretextLen = getNodeText().length.minus(preChildBlock.getNodeText().length)
+            return preChildBlock.indent.indentLen.minus(diffPretextLen)
         } else {
             return createBlockIndentLen(preChildBlock)
         }

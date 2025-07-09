@@ -94,7 +94,6 @@ class SqlKeywordUtil {
                 "having",
                 "limit",
                 "values",
-                "lateral",
                 "returning",
             )
 
@@ -273,6 +272,7 @@ class SqlKeywordUtil {
                 "first",
                 "to",
                 "using",
+                "lateral",
             )
 
         fun isOptionSqlKeyword(keyword: String): Boolean = OPTION_SQL_KEYWORDS.contains(keyword.lowercase())

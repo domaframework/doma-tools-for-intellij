@@ -60,5 +60,14 @@ open class SqlJoinGroupBlock(
             ?.groupIndentLen
             ?.plus(1) ?: 1
 
+    override fun createGroupIndentLen(): Int =
+        indent.indentLen
+            .plus(
+                topKeywordBlocks
+                    .drop(1)
+                    .filter { it.getNodeText() != "lateral" }
+                    .sumOf { it.getNodeText().length.plus(1) },
+            ).plus(getNodeText().length)
+
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }
