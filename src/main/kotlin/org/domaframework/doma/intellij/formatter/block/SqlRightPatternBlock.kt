@@ -57,7 +57,7 @@ open class SqlRightPatternBlock(
      */
     private fun enableLastRight() {
         parentBlock?.let { parent ->
-            // TODO:Customize spacing
+            // Check if parent is in the notInsertSpaceClassList
             val notInsertSpaceClassList =
                 listOf(
                     SqlFunctionParamBlock::class,
@@ -70,30 +70,25 @@ open class SqlRightPatternBlock(
                 return
             }
 
+            // Check if parent is SqlSubQueryGroupBlock
             if (parent is SqlSubQueryGroupBlock) {
-                val prevKeywordBlocks =
+                val prevKeywordBlock =
                     parent.childBlocks
                         .filter { it.node.startOffset < node.startOffset }
                         .find { it is SqlKeywordGroupBlock }
 
-                when (prevKeywordBlocks?.indent?.indentLevel) {
-                    IndentType.TOP -> {
-                        preSpaceRight = true
-                        return
-                    }
-
-                    else -> {
-                        preSpaceRight = false
-                        return
-                    }
-                }
+                preSpaceRight = prevKeywordBlock?.indent?.indentLevel == IndentType.TOP
+                return
             }
 
-            parent.parentBlock?.let { grand ->
-                preSpaceRight = grand.childBlocks.find { it is SqlKeywordGroupBlock } != null
+            // Check grandparent for SqlKeywordGroupBlock
+            parent.parentBlock?.let { grandParent ->
+                preSpaceRight = grandParent.childBlocks.any { it is SqlKeywordGroupBlock }
                 return
             }
         }
+
+        // Default case
         preSpaceRight = false
     }
 
