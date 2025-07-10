@@ -18,7 +18,11 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword
 import com.intellij.formatting.Indent
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -33,9 +37,24 @@ open class SqlKeywordGroupBlock(
     context: SqlBlockFormattingContext,
 ) : SqlNewGroupBlock(node, context) {
     val topKeywordBlocks: MutableList<SqlBlock> = mutableListOf(this)
+    var canAddTopKeyword = true
 
     fun updateTopKeywordBlocks(block: SqlBlock) {
-        topKeywordBlocks.add(block)
+        val lastChild =
+            getChildBlocksDropLast()
+                .findLast { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
+        val topKeywordTypes =
+            listOf(
+                SqlKeywordBlock::class,
+                SqlKeywordGroupBlock::class,
+            )
+
+        if (lastChild == null || TypeUtil.isExpectedClassType(topKeywordTypes, lastChild) && canAddTopKeyword) {
+            topKeywordBlocks.add(block)
+        } else {
+            canAddTopKeyword = false
+        }
+
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -152,10 +171,7 @@ open class SqlKeywordGroupBlock(
         return 1
     }
 
-    override fun createGroupIndentLen(): Int =
-        indent.indentLen
-            .plus(topKeywordBlocks.drop(1).sumOf { it.getNodeText().length.plus(1) })
-            .plus(getNodeText().length)
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.minus(1))
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

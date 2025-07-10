@@ -56,16 +56,7 @@ class SqlConditionKeywordGroupBlock(
                     groupLen.plus(1)
                 }
             } else {
-                val orBlock =
-                    parentBlock
-                        ?.childBlocks
-                        ?.dropLast(1)
-                        ?.findLast { it is SqlConditionKeywordGroupBlock && it.getNodeText() == "or" }
-                if (getNodeText() == "and" && orBlock != null) {
-                    groupLen.plus(1)
-                } else {
-                    return parent.indent.groupIndentLen.minus(getNodeText().length)
-                }
+                return parent.indent.groupIndentLen.minus(getNodeText().length)
             }
         } ?: return 1
     }

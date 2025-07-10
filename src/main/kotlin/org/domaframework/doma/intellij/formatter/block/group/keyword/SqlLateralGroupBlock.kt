@@ -15,59 +15,36 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.keyword
 
-import com.intellij.formatting.Indent
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-open class SqlJoinGroupBlock(
+class SqlLateralGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(
         node,
-        IndentType.JOIN,
+        IndentType.OPTIONS,
         context,
     ) {
-    override val indent =
-        ElementIndent(
-            IndentType.JOIN,
-            0,
-            0,
-        )
+    var subQueryGroupBlock: SqlSubGroupBlock? = null
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        parentBlock = lastGroup
-        parentBlock?.childBlocks?.add(this)
-        indent.indentLevel = IndentType.JOIN
+        super.setParentGroupBlock(lastGroup)
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun getIndent(): Indent? =
-        if (isAdjustIndentOnEnter()) {
-            null
-        } else {
-            Indent.getSpaceIndent(indent.indentLen)
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            return parent.indent.groupIndentLen.plus(1)
         }
+        return 0
+    }
 
-    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int =
-        parentBlock
-            ?.indent
-            ?.groupIndentLen
-            ?.plus(1) ?: 1
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
 
-    override fun createGroupIndentLen(): Int =
-        indent.indentLen
-            .plus(
-                topKeywordBlocks
-                    .drop(1)
-                    .filter { it !is SqlLateralGroupBlock }
-                    .sumOf { it.getNodeText().length.plus(1) },
-            ).plus(getNodeText().length)
-
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
 }

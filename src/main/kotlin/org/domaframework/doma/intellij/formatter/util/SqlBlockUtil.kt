@@ -43,6 +43,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGr
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
@@ -128,6 +129,9 @@ class SqlBlockUtil(
                     if (parentCreateBlock != null && parentCreateBlock.createType == CreateQueryType.VIEW) {
                         return SqlCreateViewGroupBlock(child, sqlBlockFormattingCtx)
                     }
+                }
+                if (keywordText == "lateral") {
+                    return SqlLateralGroupBlock(child, sqlBlockFormattingCtx)
                 }
             }
 
@@ -276,7 +280,10 @@ class SqlBlockUtil(
             }
 
             IndentType.SECOND_OPTION -> {
-                return if (keywordText == "on" && lastGroupBlock !is SqlJoinGroupBlock) {
+                return if (keywordText == "on" &&
+                    lastGroupBlock !is SqlJoinGroupBlock &&
+                    lastGroupBlock?.parentBlock !is SqlJoinGroupBlock
+                ) {
                     SqlConflictClauseBlock(
                         child,
                         sqlBlockFormattingCtx,

@@ -1,7 +1,8 @@
 SELECT u.name
        , tag
-  FROM users u
-       , LATERAL ( SELECT *
-                     FROM post
-                    WHERE content = 'XXX' ) AS tag
+  FROM LATERAL ( SELECT *
+                   FROM users ) AS u
+       , ( SELECT tag
+             FROM post
+            WHERE u.usr_id = auther ) AS tag
        , employee 
