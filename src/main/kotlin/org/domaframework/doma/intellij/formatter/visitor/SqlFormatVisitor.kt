@@ -65,8 +65,6 @@ class SqlFormatVisitor : PsiRecursiveElementVisitor() {
                     ) {
                         replaces.add(element)
                     }
-
-                SqlTypes.BLOCK_COMMENT_START -> replaces.add(element)
             }
         }
     }
