@@ -40,6 +40,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             SqlTypes.KEYWORD,
             SqlTypes.LEFT_PAREN,
             SqlTypes.RIGHT_PAREN,
+            SqlTypes.BLOCK_COMMENT_START,
             SqlTypes.BLOCK_COMMENT,
             SqlTypes.LINE_COMMENT,
             SqlTypes.WORD,
@@ -91,7 +92,12 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                             if (createQueryType == CreateQueryType.TABLE) {
                                 getNewLineString(it.prevSibling, getUpperText(it))
                             } else if (keywordIndex > 0) {
-                                if (listOf("insert", "into", "all").contains(replaceKeywordList[keywordIndex - 1].text.lowercase())) {
+                                if (listOf(
+                                        "insert",
+                                        "into",
+                                        "all",
+                                    ).contains(replaceKeywordList[keywordIndex - 1].text.lowercase())
+                                ) {
                                     getNewLineString(it.prevSibling, getUpperText(it))
                                 } else {
                                     getUpperText(it)
@@ -110,8 +116,22 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                         newKeyword = getWordNewText(it, newKeyword, createQueryType)
                     }
 
-                    SqlTypes.COMMA, SqlTypes.BLOCK_COMMENT, SqlTypes.OTHER -> {
+                    SqlTypes.COMMA, SqlTypes.OTHER -> {
                         newKeyword = getNewLineString(it.prevSibling, getUpperText(it))
+                    }
+
+                    SqlTypes.BLOCK_COMMENT_START -> {
+                        val lastKeyword =
+                            if (keywordIndex > 0) {
+                                replaceKeywordList[keywordIndex - 1]
+                            } else {
+                                null
+                            }
+
+                        if (lastKeyword != null && lastKeyword.text.lowercase() == "values") {
+                            newKeyword =
+                                getNewLineString(PsiTreeUtil.prevLeaf(it), getUpperText(it))
+                        }
                     }
                 }
                 document.deleteString(textRangeStart, textRangeEnd)

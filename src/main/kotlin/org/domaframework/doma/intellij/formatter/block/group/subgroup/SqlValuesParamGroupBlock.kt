@@ -13,30 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.util.CreateQueryType
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-class SqlTableBlock(
+open class SqlValuesParamGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlWordBlock(
-        node,
-        context,
-    ) {
-    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
-    }
-
+) : SqlSubGroupBlock(node, context) {
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-        if (lastGroup is SqlCreateKeywordGroupBlock && lastGroup.createType == CreateQueryType.TABLE) {
-            lastGroup.tableBlock = this
-        }
+        (lastGroup as? SqlValuesGroupBlock)?.valueGroupBlocks?.add(this)
     }
 
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            return parent.indent.indentLen
+        }
+
+        return offset
+    }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = parentBlock is SqlValuesGroupBlock
 }

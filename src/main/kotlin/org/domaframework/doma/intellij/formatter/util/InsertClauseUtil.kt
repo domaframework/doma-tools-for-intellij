@@ -32,7 +32,7 @@ object InsertClauseUtil {
         if (lastGroup is SqlInsertQueryGroupBlock) {
             return SqlInsertColumnGroupBlock(child, sqlBlockFormattingCtx)
         }
-        if (lastGroup is SqlValuesGroupBlock) {
+        if (lastGroup is SqlValuesGroupBlock && lastGroup.parentBlock is SqlInsertQueryGroupBlock) {
             return SqlInsertValueGroupBlock(child, sqlBlockFormattingCtx)
         }
         return null

@@ -16,8 +16,6 @@
 package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.lang.ASTNode
-import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -44,8 +42,7 @@ class SqlParallelListBlock(
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             return parent
-                .getChildBlocksDropLast()
-                .filter { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
+                .getChildBlocksDropLast(skipCommentBlock = true)
                 .sumOf { it.getNodeText().length.plus(1) }
                 .plus(parent.indent.indentLen)
                 .plus(parent.getNodeText().length)

@@ -16,31 +16,33 @@
 package org.domaframework.doma.intellij.formatter.util
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
+import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictExpressionSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
-import org.domaframework.doma.intellij.psi.SqlTypes
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlValuesParamGroupBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 
 object NotQueryGroupUtil {
     fun getSubGroup(
-        lastGroup: SqlBlock,
+        lastGroup: SqlBlock?,
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,
     ): SqlBlock? {
         val lastKeyword =
-            lastGroup.childBlocks
-                .lastOrNull { SqlKeywordUtil.isOptionSqlKeyword(it.getNodeText()) }
+            lastGroup
+                ?.childBlocks
+                ?.lastOrNull { SqlKeywordUtil.isOptionSqlKeyword(it.getNodeText()) }
         if (lastKeyword != null && lastKeyword.getNodeText().lowercase() == "in") {
             return SqlParallelListBlock(child, sqlBlockFormattingCtx)
-        }
-
-        if (PsiTreeUtil.prevLeaf(child.psi)?.elementType == SqlTypes.WORD) {
-            return SqlFunctionParamBlock(child, sqlBlockFormattingCtx)
         }
 
         if (lastGroup is SqlConditionKeywordGroupBlock) {
@@ -48,6 +50,24 @@ object NotQueryGroupUtil {
                 child,
                 sqlBlockFormattingCtx,
             )
+        }
+
+        val prevChild = lastGroup?.childBlocks?.lastOrNull()
+        if (prevChild is SqlWordBlock) {
+            if (prevChild is SqlAliasBlock || prevChild is SqlTableBlock) {
+                return SqlValuesParamGroupBlock(child, sqlBlockFormattingCtx)
+            }
+            return SqlFunctionParamBlock(child, sqlBlockFormattingCtx)
+        }
+
+        if (lastGroup is SqlConflictClauseBlock) {
+            return SqlConflictExpressionSubGroupBlock(child, sqlBlockFormattingCtx)
+        }
+
+        if (lastGroup is SqlValuesGroupBlock ||
+            (lastGroup is SqlCommaBlock && lastGroup.parentBlock is SqlValuesGroupBlock)
+        ) {
+            return SqlValuesParamGroupBlock(child, sqlBlockFormattingCtx)
         }
 
         return null

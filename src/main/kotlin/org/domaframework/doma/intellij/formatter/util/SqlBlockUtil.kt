@@ -22,13 +22,10 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiComment
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
-import org.domaframework.doma.intellij.formatter.block.SqlTableBlock
-import org.domaframework.doma.intellij.formatter.block.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.OnConflictKeywordType
@@ -51,6 +48,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlC
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlSecondKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlDeleteQueryGroupBlock
@@ -61,12 +59,13 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlU
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
-import org.domaframework.doma.intellij.psi.SqlTypes
 
 data class SqlBlockFormattingContext(
     val wrap: Wrap?,
@@ -253,6 +252,12 @@ class SqlBlockUtil(
                             )
                         }
                     }
+                    "from" -> {
+                        SqlFromGroupBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+                    }
 
                     "values" ->
                         SqlValuesGroupBlock(
@@ -370,9 +375,9 @@ class SqlBlockUtil(
                         ?.let { return it }
                 }
 
-                if (PsiTreeUtil.prevLeaf(child.psi)?.elementType == SqlTypes.WORD) {
-                    return SqlFunctionParamBlock(child, sqlBlockFormattingCtx)
-                }
+                NotQueryGroupUtil
+                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+                    ?.let { return it }
 
                 return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
             }
@@ -405,26 +410,27 @@ class SqlBlockUtil(
     fun getWordBlock(
         lastGroup: SqlBlock?,
         child: ASTNode,
-    ): SqlBlock =
+    ): SqlBlock {
         when (lastGroup) {
             is SqlKeywordGroupBlock -> {
                 when {
                     SqlKeywordUtil.isBeforeTableKeyword(lastGroup.getNodeText()) -> {
-                        SqlTableBlock(
+                        return SqlTableBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
                     }
 
-                    lastGroup is SqlWithQueryGroupBlock -> SqlWithCommonTableGroupBlock(child, sqlBlockFormattingCtx)
-
-                    else -> SqlWordBlock(child, sqlBlockFormattingCtx)
+                    lastGroup is SqlWithQueryGroupBlock -> return SqlWithCommonTableGroupBlock(
+                        child,
+                        sqlBlockFormattingCtx,
+                    )
                 }
             }
 
             is SqlCreateTableColumnDefinitionGroupBlock -> {
                 // Top Column Definition Group Block
-                SqlCreateTableColumnDefinitionRawGroupBlock(
+                return SqlCreateTableColumnDefinitionRawGroupBlock(
                     child,
                     sqlBlockFormattingCtx,
                 )
@@ -432,17 +438,18 @@ class SqlBlockUtil(
 
             is SqlColumnDefinitionRawGroupBlock -> {
                 if (lastGroup.columnBlock == null) {
-                    SqlColumnBlock(
+                    return SqlColumnBlock(
                         child,
                         sqlBlockFormattingCtx,
                     )
-                } else {
-                    SqlWordBlock(child, sqlBlockFormattingCtx)
                 }
             }
-
-            else -> SqlWordBlock(child, sqlBlockFormattingCtx)
         }
+        if (lastGroup is SqlFromGroupBlock || lastGroup?.parentBlock is SqlFromGroupBlock) {
+            return SqlAliasBlock(child, sqlBlockFormattingCtx)
+        }
+        return SqlWordBlock(child, sqlBlockFormattingCtx)
+    }
 
     fun getBlockCommentBlock(
         child: ASTNode,

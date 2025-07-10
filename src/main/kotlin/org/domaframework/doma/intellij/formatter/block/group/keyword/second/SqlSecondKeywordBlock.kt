@@ -19,6 +19,7 @@ import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
@@ -40,6 +41,8 @@ open class SqlSecondKeywordBlock(
             val groupLen = parent.indent.groupIndentLen
             return if (parent.indent.indentLevel == IndentType.FILE) {
                 offset
+            } else if (parent is SqlSubGroupBlock) {
+                groupLen.plus(1)
             } else {
                 groupLen.minus(this.getNodeText().length)
             }

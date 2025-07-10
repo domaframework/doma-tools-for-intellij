@@ -17,21 +17,19 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.second
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlValuesParamGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlDeleteQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-class SqlValuesGroupBlock(
+class SqlFromGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlSecondKeywordBlock(node, context) {
-    val valueGroupBlocks: MutableList<SqlValuesParamGroupBlock> = mutableListOf()
+    val tableBlocks: MutableList<SqlBlock> = mutableListOf()
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-        if (lastGroup is SqlInsertQueryGroupBlock) {
-            lastGroup.valueKeywordBlock = this
-        }
+        (lastGroup as? SqlSelectQueryGroupBlock)?.secondGroupBlocks?.add(this)
     }
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = parentBlock is SqlInsertQueryGroupBlock
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = parentBlock !is SqlDeleteQueryGroupBlock && super.isSaveSpace(lastGroup)
 }

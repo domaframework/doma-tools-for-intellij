@@ -18,9 +18,9 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.with
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 class SqlWithCommonTableGroupBlock(

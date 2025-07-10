@@ -48,6 +48,7 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTyp
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.processor.SqlSetParentGroupProcessor
@@ -89,7 +90,16 @@ open class SqlBlock(
     open var parentBlock: SqlBlock? = null
     open val childBlocks = mutableListOf<SqlBlock>()
 
-    fun getChildBlocksDropLast(dropIndex: Int = 1): List<SqlBlock> = childBlocks.dropLast(dropIndex)
+    fun getChildBlocksDropLast(
+        dropIndex: Int = 1,
+        skipCommentBlock: Boolean = false,
+    ): List<SqlBlock> {
+        val children = childBlocks.dropLast(dropIndex)
+        if (skipCommentBlock) {
+            return children.filter { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
+        }
+        return children
+    }
 
     open val indent: ElementIndent =
         ElementIndent(
