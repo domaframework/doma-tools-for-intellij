@@ -15,7 +15,6 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.keyword.update
 
-import com.intellij.formatting.Indent
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
@@ -50,19 +49,7 @@ open class SqlUpdateSetGroupBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun getIndent(): Indent? =
-        if (isAdjustIndentOnEnter()) {
-            Indent.getSpaceIndent(indent.indentLen)
-        } else {
-            Indent.getNoneIndent()
-        }
-
-    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int =
-        if (isAdjustIndentOnEnter()) {
-            0
-        } else {
-            parentBlock?.indent?.groupIndentLen?.minus(getNodeText().length) ?: 0
-        }
+    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int = parentBlock?.indent?.groupIndentLen?.minus(getNodeText().length) ?: 0
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

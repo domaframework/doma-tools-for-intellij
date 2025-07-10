@@ -22,8 +22,7 @@ import org.jetbrains.jps.model.java.JavaResourceRootType
 import org.jetbrains.jps.model.java.JavaSourceRootType
 import java.util.concurrent.ConcurrentHashMap
 
-val RESOURCES_META_INF_PATH: String
-    get() = "META-INF"
+const val RESOURCES_META_INF_PATH: String = "META-INF"
 
 /**
  * A utility for caching directory information on a per-module basis.

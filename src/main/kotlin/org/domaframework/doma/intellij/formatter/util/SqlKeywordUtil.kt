@@ -32,8 +32,8 @@ enum class IndentType(
     SUB(90),
     ATTRIBUTE(91),
     LITERAL(92),
-    OPTIONS(93),
-    COMMA(94),
+    COMMA(93),
+    OPTIONS(94),
     PARAM(95),
     INLINE(96),
     NONE(99),
@@ -94,7 +94,6 @@ class SqlKeywordUtil {
                 "having",
                 "limit",
                 "values",
-                "lateral",
                 "returning",
             )
 
@@ -255,7 +254,6 @@ class SqlKeywordUtil {
                 "not",
                 "materialized",
                 "by",
-                "to",
                 "asc",
                 "desc",
                 "all",
@@ -273,6 +271,7 @@ class SqlKeywordUtil {
                 "first",
                 "to",
                 "using",
+                "lateral",
             )
 
         fun isOptionSqlKeyword(keyword: String): Boolean = OPTION_SQL_KEYWORDS.contains(keyword.lowercase())

@@ -15,10 +15,13 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.keyword
 
-import com.intellij.formatting.Indent
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -33,9 +36,24 @@ open class SqlKeywordGroupBlock(
     context: SqlBlockFormattingContext,
 ) : SqlNewGroupBlock(node, context) {
     val topKeywordBlocks: MutableList<SqlBlock> = mutableListOf(this)
+    var canAddTopKeyword = true
 
     fun updateTopKeywordBlocks(block: SqlBlock) {
-        topKeywordBlocks.add(block)
+        val lastChild =
+            getChildBlocksDropLast()
+                .findLast { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
+        val topKeywordTypes =
+            listOf(
+                SqlKeywordBlock::class,
+                SqlKeywordGroupBlock::class,
+            )
+
+        if (lastChild == null || TypeUtil.isExpectedClassType(topKeywordTypes, lastChild) && canAddTopKeyword) {
+            topKeywordBlocks.add(block)
+        } else {
+            canAddTopKeyword = false
+        }
+
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -85,26 +103,14 @@ open class SqlKeywordGroupBlock(
         if (preChildBlock.indent.indentLevel == this.indent.indentLevel &&
             !SqlKeywordUtil.isSetLineKeyword(getNodeText(), preChildBlock.getNodeText())
         ) {
-            if (indent.indentLevel == IndentType.SECOND) {
-                val diffPreBlockTextLen = getNodeText().length.minus(preChildBlock.getNodeText().length)
-                return preChildBlock.indent.indentLen.minus(diffPreBlockTextLen)
-            } else {
-                val diffPretextLen = getNodeText().length.minus(preChildBlock.getNodeText().length)
-                return preChildBlock.indent.indentLen.minus(diffPretextLen)
-            }
+            val diffPretextLen = getNodeText().length.minus(preChildBlock.getNodeText().length)
+            return preChildBlock.indent.indentLen.minus(diffPretextLen)
         } else {
             return createBlockIndentLen(preChildBlock)
         }
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun getIndent(): Indent? {
-        if (!isAdjustIndentOnEnter() && parentBlock?.indent?.indentLevel == IndentType.SUB) {
-            return Indent.getSpaceIndent(0)
-        }
-        return Indent.getNoneIndent()
-    }
 
     /**
      * Adjust the indent position of the subgroup block element itself if it has a comment
@@ -157,10 +163,7 @@ open class SqlKeywordGroupBlock(
         return 1
     }
 
-    override fun createGroupIndentLen(): Int =
-        indent.indentLen
-            .plus(topKeywordBlocks.drop(1).sumOf { it.getNodeText().length.plus(1) })
-            .plus(getNodeText().length)
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.minus(1))
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

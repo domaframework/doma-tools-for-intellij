@@ -13,47 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword.create
+package org.domaframework.doma.intellij.formatter.block.group.keyword
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlTableBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.util.CreateQueryType
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-open class SqlCreateKeywordGroupBlock(
+class SqlLateralGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(
         node,
-        IndentType.TOP,
+        IndentType.OPTIONS,
         context,
     ) {
-    var createType: CreateQueryType = CreateQueryType.NONE
-    var tableBlock: SqlTableBlock? = null
+    var subQueryGroupBlock: SqlSubGroupBlock? = null
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLevel = IndentType.TOP
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
+        indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int =
-        parentBlock?.let {
-            if (it.indent.indentLevel == IndentType.SUB) {
-                it.indent.groupIndentLen.plus(1)
-            } else {
-                0
-            }
-        } ?: 0
-
-    fun setCreateQueryType(nextKeyword: String) {
-        createType = CreateQueryType.Companion.getCreateTableType(nextKeyword)
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            return parent.indent.groupIndentLen.plus(1)
+        }
+        return 0
     }
+
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
 }

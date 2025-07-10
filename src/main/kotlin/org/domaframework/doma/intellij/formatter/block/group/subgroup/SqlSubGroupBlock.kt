@@ -25,6 +25,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlJoinQueriesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithColumnGroupBlock
@@ -67,6 +68,7 @@ abstract class SqlSubGroupBlock(
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
         (lastGroup as? SqlDoGroupBlock)?.doQueryBlock = this
+        (lastGroup as? SqlLateralGroupBlock)?.subQueryGroupBlock = this
     }
 
     override fun addChildBlock(childBlock: SqlBlock) {
@@ -100,14 +102,14 @@ abstract class SqlSubGroupBlock(
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         lastGroup?.let { lastBlock ->
             if (lastBlock is SqlJoinQueriesGroupBlock) return true
-            val exceptionalParentTypes =
+            val expectedTypes =
                 listOf(
                     SqlWithQueryGroupBlock::class,
                     SqlWithCommonTableGroupBlock::class,
                     SqlWithColumnGroupBlock::class,
                     SqlCreateViewGroupBlock::class,
                 )
-            return TypeUtil.isExpectedClassType(exceptionalParentTypes, lastBlock.parentBlock)
+            return TypeUtil.isExpectedClassType(expectedTypes, lastBlock.parentBlock)
         }
         return false
     }

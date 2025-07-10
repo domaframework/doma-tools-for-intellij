@@ -42,17 +42,6 @@ class SqlSelectQueryGroupBlock(
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun getBaseIndentLen(
-        preChildBlock: SqlBlock?,
-        lastGroup: SqlBlock?,
-    ): Int {
-        if (parentBlock is SqlSubGroupBlock) {
-            return parentBlock?.indent?.groupIndentLen
-                ?: createBlockIndentLen(preChildBlock)
-        }
-        return createBlockIndentLen(preChildBlock)
-    }
-
     override fun createGroupIndentLen(): Int {
         parentBlock?.let { parent ->
             if (parent is SqlSubQueryGroupBlock) {

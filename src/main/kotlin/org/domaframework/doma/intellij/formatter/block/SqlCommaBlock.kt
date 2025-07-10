@@ -32,7 +32,6 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParalle
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlCommaBlock(
     node: ASTNode,
@@ -107,27 +106,14 @@ open class SqlCommaBlock(
                 }
                 return parentIndentLen.plus(1)
             } else {
-                var prevLen = 0
-                parent.childBlocks
-                    .filter { it.node.elementType == SqlTypes.KEYWORD }
-                    .forEach { prev ->
-                        prevLen =
-                            prevLen.plus(
-                                prev
-                                    .getNodeText()
-                                    .length
-                                    .plus(1),
-                            )
-                    }
-                return parent.indent.groupIndentLen
-                    .plus(1)
+                return parent.indent.groupIndentLen.plus(1)
             }
         }
         return 1
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        val exceptionTypes =
+        val expectedTypes =
             listOf(
                 SqlInsertColumnGroupBlock::class,
                 SqlInsertValueGroupBlock::class,
@@ -138,6 +124,6 @@ open class SqlCommaBlock(
                 SqlWithColumnGroupBlock::class,
                 SqlKeywordGroupBlock::class,
             )
-        return TypeUtil.isExpectedClassType(exceptionTypes, parentBlock)
+        return TypeUtil.isExpectedClassType(expectedTypes, parentBlock)
     }
 }

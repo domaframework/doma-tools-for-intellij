@@ -54,6 +54,18 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("Select.sql", "Select$formatDataPrefix.sql")
     }
 
+    fun testSelectFromLateralFormatter() {
+        formatSqlFile("SelectFromLateral.sql", "SelectFromLateral$formatDataPrefix.sql")
+    }
+
+    fun testSelectFromLateralSecondFormatter() {
+        formatSqlFile("SelectFromLateralSecond.sql", "SelectFromLateralSecond$formatDataPrefix.sql")
+    }
+
+    fun testSelectJoinLateralFormatter() {
+        formatSqlFile("SelectJoinLateral.sql", "SelectJoinLateral$formatDataPrefix.sql")
+    }
+
     fun testCreateTableFormatter() {
         formatSqlFile("CreateTable.sql", "CreateTable$formatDataPrefix.sql")
     }

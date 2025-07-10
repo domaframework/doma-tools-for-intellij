@@ -27,6 +27,7 @@ import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRaw
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
@@ -107,12 +108,12 @@ class SqlSetParentGroupProcessor(
         val currentIndentLevel = childBlock.indent.indentLevel
         if (currentIndentLevel == IndentType.TOP) {
             var parentBlock: SqlBlock? = null
-            val exceptionalTypes =
+            val expectedTypes =
                 listOf(
                     SqlSubGroupBlock::class,
                     SqlCreateViewGroupBlock::class,
                 )
-            if (isExpectedClassType(exceptionalTypes, lastGroupBlock)) {
+            if (isExpectedClassType(expectedTypes, lastGroupBlock)) {
                 parentBlock = lastGroupBlock
             } else {
                 when (childBlock) {
@@ -232,11 +233,11 @@ class SqlSetParentGroupProcessor(
         lastGroupBlock: SqlBlock,
         childBlock: SqlColumnRawGroupBlock,
     ) {
-        val exceptionTypes =
+        val expectedTypes =
             listOf(
                 SqlColumnRawGroupBlock::class,
             )
-        if (isExpectedClassType(exceptionTypes, lastGroupBlock)) {
+        if (isExpectedClassType(expectedTypes, lastGroupBlock)) {
             blockBuilder.removeLastGroupTopNodeIndexHistory()
         }
         setParentGroups(
@@ -292,12 +293,12 @@ class SqlSetParentGroupProcessor(
         lastGroupBlock: SqlBlock,
         childBlock: SqlElConditionLoopCommentBlock,
     ) {
-        val exceptionalTypes =
+        val expectedTypes =
             listOf(
                 SqlCommaBlock::class,
                 SqlElConditionLoopCommentBlock::class,
             )
-        if (isExpectedClassType(exceptionalTypes, lastGroupBlock)) {
+        if (isExpectedClassType(expectedTypes, lastGroupBlock)) {
             blockBuilder.removeLastGroupTopNodeIndexHistory()
         }
         setParentGroups(
@@ -370,15 +371,16 @@ class SqlSetParentGroupProcessor(
             context.childBlock.setParentGroupBlock(parentGroup)
         }
 
-        val expectedClassTypes =
+        val expectedTypes =
             listOf(
                 SqlSubGroupBlock::class,
                 SqlCreateViewGroupBlock::class,
                 SqlInlineGroupBlock::class,
                 SqlInlineSecondGroupBlock::class,
                 SqlColumnDefinitionRawGroupBlock::class,
+                SqlLateralGroupBlock::class,
             )
-        if (isNewGroup(context.childBlock, context.blockBuilder) || isExpectedClassType(expectedClassTypes, context.childBlock)) {
+        if (isNewGroup(context.childBlock, context.blockBuilder) || isExpectedClassType(expectedTypes, context.childBlock)) {
             context.blockBuilder.addGroupTopNodeIndexHistory(context.childBlock)
             // Set parent-child relationship and indent for preceding comment at beginning of block group
             context.blockBuilder.updateCommentBlockIndent(context.childBlock)

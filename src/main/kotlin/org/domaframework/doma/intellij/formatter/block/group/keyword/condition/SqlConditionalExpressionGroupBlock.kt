@@ -22,7 +22,7 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGrou
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 /**
- * A grouped conditional expression following keywords such as AND or OR
+ * A grouped conditional expression following keywords such as `AND` or `OR`
  */
 class SqlConditionalExpressionGroupBlock(
     node: ASTNode,

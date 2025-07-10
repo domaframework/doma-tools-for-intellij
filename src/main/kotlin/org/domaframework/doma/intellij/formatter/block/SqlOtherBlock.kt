@@ -42,13 +42,11 @@ open class SqlOtherBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.NONE
-        indent.indentLen = createIndentLen()
+        indent.indentLen = 1
         indent.groupIndentLen = 0
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    private fun createIndentLen(): Int = 1
 
     override fun isLeaf(): Boolean = true
 }
