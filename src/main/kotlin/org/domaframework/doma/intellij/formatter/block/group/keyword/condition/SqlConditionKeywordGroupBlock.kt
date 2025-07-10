@@ -22,7 +22,7 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGrou
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 /**
- * Keywords representing conditions such as AND or OR
+ * Keywords representing conditions such as `AND` or `OR`
  */
 class SqlConditionKeywordGroupBlock(
     node: ASTNode,

@@ -15,7 +15,6 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.keyword.top
 
-import com.intellij.formatting.Indent
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil
@@ -42,13 +41,6 @@ abstract class SqlTopQueryGroupBlock(
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun getIndent(): Indent? =
-        if (isAdjustIndentOnEnter()) {
-            Indent.getSpaceIndent(indent.indentLen)
-        } else {
-            null
-        }
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->

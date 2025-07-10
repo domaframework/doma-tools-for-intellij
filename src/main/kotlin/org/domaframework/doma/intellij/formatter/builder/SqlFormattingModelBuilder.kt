@@ -33,7 +33,7 @@ import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettin
 /***
  * Because the code formatter (which runs only when explicitly invoked by the user) is enabled by default,
  * the block-generation routine for formatting should always run.
- * Automatic indentation on line breaks, however, is executed only when the corresponding configuration flag is set.
+ * Automatic indentation on Line breaks, however, is executed only when the corresponding configuration flag is set.
  */
 class SqlFormattingModelBuilder : FormattingModelBuilder {
     override fun createModel(formattingContext: FormattingContext): FormattingModel {

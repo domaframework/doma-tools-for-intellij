@@ -44,12 +44,12 @@ class SqlWithCommonTableGroupBlock(
 
     private fun getCommonTableName(): SqlBlock? {
         if (getNodeText() == ",") return null
-        val exceptionalTypes =
+        val expectedTypes =
             listOf(
                 SqlBlockCommentBlock::class,
                 SqlWordBlock::class,
             )
-        if (TypeUtil.isExpectedClassType(exceptionalTypes, this)) return this
+        if (TypeUtil.isExpectedClassType(expectedTypes, this)) return this
         return null
     }
 

@@ -15,7 +15,6 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.keyword.create
 
-import com.intellij.formatting.Indent
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
@@ -44,13 +43,6 @@ open class SqlCreateKeywordGroupBlock(
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun getIndent(): Indent? {
-        if (!isAdjustIndentOnEnter() && parentBlock?.indent?.indentLevel == IndentType.SUB) {
-            return Indent.getSpaceIndent(0)
-        }
-        return Indent.getNoneIndent()
-    }
 
     override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int =
         parentBlock?.let {
