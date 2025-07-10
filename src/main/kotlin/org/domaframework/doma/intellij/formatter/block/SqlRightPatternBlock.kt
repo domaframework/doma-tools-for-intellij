@@ -18,15 +18,17 @@ package org.domaframework.doma.intellij.formatter.block
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
-import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
+import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictExpressionSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
@@ -53,7 +55,7 @@ open class SqlRightPatternBlock(
     /**
      * Configures whether to add a space to the right side when the group ends.
      */
-    fun enableLastRight() {
+    private fun enableLastRight() {
         parentBlock?.let { parent ->
             // TODO:Customize spacing
             val notInsertSpaceClassList =
@@ -61,25 +63,29 @@ open class SqlRightPatternBlock(
                     SqlFunctionParamBlock::class,
                     SqlInsertColumnGroupBlock::class,
                     SqlWithQuerySubGroupBlock::class,
+                    SqlConflictExpressionSubGroupBlock::class,
                 )
             if (isExpectedClassType(notInsertSpaceClassList, parent)) {
                 preSpaceRight = false
                 return
             }
 
-            if (parent.parentBlock is SqlConflictClauseBlock) {
-                preSpaceRight = false
-                return
-            }
-
             if (parent is SqlSubQueryGroupBlock) {
-                val prevKeywordBlock =
+                val prevKeywordBlocks =
                     parent.childBlocks
                         .filter { it.node.startOffset < node.startOffset }
-                        .find { it is SqlKeywordGroupBlock && it.indent.indentLevel == IndentType.TOP }
-                if (prevKeywordBlock != null) {
-                    preSpaceRight = true
-                    return
+                        .find { it is SqlKeywordGroupBlock }
+
+                when (prevKeywordBlocks?.indent?.indentLevel) {
+                    IndentType.TOP -> {
+                        preSpaceRight = true
+                        return
+                    }
+
+                    else -> {
+                        preSpaceRight = false
+                        return
+                    }
                 }
             }
 
@@ -100,16 +106,21 @@ open class SqlRightPatternBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
+        enableLastRight()
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
-        enableLastRight()
+    }
+
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
         (lastGroup as? SqlSubGroupBlock)?.endPatternBlock = this
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun createBlockIndentLen(): Int {
+        if (preSpaceRight) return 1
+
         parentBlock?.let { parent ->
             if (parent is SqlWithQuerySubGroupBlock) return 0
             val exceptionalTypes =
@@ -119,29 +130,51 @@ open class SqlRightPatternBlock(
                     SqlCreateTableColumnDefinitionGroupBlock::class,
                 )
             if (isExpectedClassType(exceptionalTypes, parent)) return parent.indent.indentLen
-            return parent.indent.groupIndentLen
+            return parent.indent.indentLen
         } ?: return 0
     }
 
     override fun isLeaf(): Boolean = true
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        val exceptionalTypes =
-            listOf(
-                SqlCreateTableColumnDefinitionGroupBlock::class,
-                SqlColumnDefinitionRawGroupBlock::class,
-                SqlUpdateColumnGroupBlock::class,
-                SqlUpdateValueGroupBlock::class,
-                SqlWithQuerySubGroupBlock::class,
-            )
-        if (isExpectedClassType(exceptionalTypes, parentBlock)) return true
+        if (preSpaceRight) return false
 
-        val parentExceptionalTypes =
-            listOf(
-                SqlUpdateSetGroupBlock::class,
-                SqlUpdateColumnGroupBlock::class,
-                SqlUpdateValueGroupBlock::class,
-            )
-        return isExpectedClassType(parentExceptionalTypes, parentBlock?.parentBlock)
+        parentBlock?.let { parent ->
+            val exceptionalTypes =
+                listOf(
+                    SqlCreateTableColumnDefinitionGroupBlock::class,
+                    SqlColumnDefinitionRawGroupBlock::class,
+                    SqlUpdateSetGroupBlock::class,
+                    SqlUpdateColumnGroupBlock::class,
+                    SqlUpdateValueGroupBlock::class,
+                    SqlWithQuerySubGroupBlock::class,
+                )
+
+            val excludeTypes =
+                listOf(
+                    SqlDataTypeParamBlock::class,
+                    SqlConditionalExpressionGroupBlock::class,
+                    SqlConflictExpressionSubGroupBlock::class,
+                    SqlFunctionParamBlock::class,
+                )
+
+            if ((
+                    isExpectedClassType(exceptionalTypes, parent) ||
+                        isExpectedClassType(exceptionalTypes, parent.parentBlock)
+                ) &&
+                !isExpectedClassType(excludeTypes, parent)
+            ) {
+                return true
+            }
+
+            if (parent is SqlSubGroupBlock) {
+                val firstChild =
+                    parent.getChildBlocksDropLast(skipCommentBlock = true).firstOrNull()
+                if (firstChild is SqlKeywordGroupBlock) {
+                    return firstChild.indent.indentLevel != IndentType.TOP
+                }
+            }
+        }
+        return false
     }
 }

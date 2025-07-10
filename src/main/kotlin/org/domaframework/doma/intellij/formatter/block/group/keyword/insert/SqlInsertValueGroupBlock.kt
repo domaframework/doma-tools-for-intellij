@@ -17,13 +17,13 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.insert
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlValuesParamGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 class SqlInsertValueGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlSubGroupBlock(
+) : SqlValuesParamGroupBlock(
         node,
         context,
     ) {
@@ -41,4 +41,6 @@ class SqlInsertValueGroupBlock(
             return parent.indent.groupIndentLen.plus(1)
         } ?: return 1
     }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
 }

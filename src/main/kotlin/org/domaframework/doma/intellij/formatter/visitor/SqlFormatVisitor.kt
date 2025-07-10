@@ -36,6 +36,11 @@ class SqlFormatVisitor : PsiRecursiveElementVisitor() {
             lastElement = element
         }
 
+        if (element.elementType == SqlTypes.BLOCK_COMMENT_START) {
+            replaces.add(element)
+            return
+        }
+
         if (PsiTreeUtil.getParentOfType(element, SqlBlockComment::class.java) == null) {
             when (element.elementType) {
                 SqlTypes.KEYWORD, SqlTypes.COMMA, SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN, SqlTypes.WORD -> {
@@ -60,6 +65,8 @@ class SqlFormatVisitor : PsiRecursiveElementVisitor() {
                     ) {
                         replaces.add(element)
                     }
+
+                SqlTypes.BLOCK_COMMENT_START -> replaces.add(element)
             }
         }
     }
@@ -67,18 +74,6 @@ class SqlFormatVisitor : PsiRecursiveElementVisitor() {
     override fun visitWhiteSpace(space: PsiWhiteSpace) {
         super.visitWhiteSpace(space)
         if (PsiTreeUtil.getParentOfType(space, SqlBlockComment::class.java) == null) {
-            replaces.add(space)
-        }
-        return
-
-        val nextElement = space.nextSibling
-        if (nextElement != null &&
-            (
-                space.text.contains("\n") ||
-                    nextElement.elementType == SqlTypes.LINE_COMMENT ||
-                    nextElement.elementType == SqlTypes.BLOCK_COMMENT
-            )
-        ) {
             replaces.add(space)
         }
     }

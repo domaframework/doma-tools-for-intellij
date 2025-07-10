@@ -13,45 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword
+package org.domaframework.doma.intellij.formatter.block.word
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.CreateQueryType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-class SqlLateralGroupBlock(
+class SqlTableBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlKeywordGroupBlock(
+) : SqlWordBlock(
         node,
-        IndentType.OPTIONS,
         context,
     ) {
-    var subQueryGroupBlock: SqlSubGroupBlock? = null
-
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (lastGroup is SqlCreateKeywordGroupBlock && lastGroup.createType == CreateQueryType.TABLE) {
+            lastGroup.tableBlock = this
+        }
         if (lastGroup is SqlFromGroupBlock) {
             if (lastGroup.tableBlocks.isEmpty()) lastGroup.tableBlocks.add(this)
         }
     }
 
-    override fun createBlockIndentLen(): Int {
-        parentBlock?.let { parent ->
-            return parent.indent.groupIndentLen.plus(1)
-        }
-        return 0
-    }
-
-    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
-
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
+    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 }

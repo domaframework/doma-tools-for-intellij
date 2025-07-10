@@ -27,6 +27,7 @@ import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlJoinQueriesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -69,6 +70,9 @@ abstract class SqlSubGroupBlock(
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
         (lastGroup as? SqlDoGroupBlock)?.doQueryBlock = this
         (lastGroup as? SqlLateralGroupBlock)?.subQueryGroupBlock = this
+        if (lastGroup is SqlFromGroupBlock) {
+            if (lastGroup.tableBlocks.isEmpty()) lastGroup.tableBlocks.add(this)
+        }
     }
 
     override fun addChildBlock(childBlock: SqlBlock) {

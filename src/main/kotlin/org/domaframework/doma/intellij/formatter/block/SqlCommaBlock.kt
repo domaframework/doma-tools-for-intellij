@@ -23,6 +23,8 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordG
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
@@ -30,6 +32,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWit
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlValuesParamGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -57,6 +60,12 @@ open class SqlCommaBlock(
         indent.indentLevel = IndentType.COMMA
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
+    }
+
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (lastGroup is SqlFromGroupBlock) {
+            if (lastGroup.tableBlocks.isNotEmpty()) lastGroup.tableBlocks.add(this)
+        }
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -89,6 +98,8 @@ open class SqlCommaBlock(
                     return parentIndentLen.plus(1)
                 }
 
+                if (parent is SqlValuesParamGroupBlock) return 0
+
                 val grand = parent.parentBlock
                 grand?.let { grand ->
                     if (grand is SqlCreateKeywordGroupBlock) {
@@ -106,6 +117,7 @@ open class SqlCommaBlock(
                 }
                 return parentIndentLen.plus(1)
             } else {
+                if (parent is SqlValuesGroupBlock) return parent.indent.indentLen
                 return parent.indent.groupIndentLen.plus(1)
             }
         }

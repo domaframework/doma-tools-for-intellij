@@ -25,6 +25,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
@@ -128,16 +129,21 @@ open class SqlElBlockCommentBlock(
     override fun isLeaf(): Boolean = false
 
     override fun createBlockIndentLen(): Int {
-        parentBlock?.let {
-            if (it is SqlSubQueryGroupBlock) {
-                if (it.getChildBlocksDropLast().isEmpty()) {
+        parentBlock?.let { parent ->
+            if (parent is SqlSubQueryGroupBlock) {
+                if (parent.getChildBlocksDropLast().isEmpty()) {
                     return 0
                 }
-                if (it.isFirstLineComment) {
-                    return it.indent.groupIndentLen.minus(2)
+                if (parent.isFirstLineComment) {
+                    return parent.indent.groupIndentLen.minus(2)
                 }
+            }
+            if (parent is SqlValuesGroupBlock) {
+                return parent.indent.indentLen
             }
         }
         return 0
     }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = parentBlock is SqlValuesGroupBlock
 }
