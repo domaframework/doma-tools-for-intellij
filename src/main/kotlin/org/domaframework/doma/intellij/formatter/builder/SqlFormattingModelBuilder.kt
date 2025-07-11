@@ -25,7 +25,7 @@ import com.intellij.formatting.Wrap
 import com.intellij.formatting.WrapType
 import com.intellij.psi.TokenType
 import com.intellij.psi.codeStyle.CodeStyleSettings
-import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlFileBlock
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
 import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
@@ -47,7 +47,7 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
         return FormattingModelProvider
             .createFormattingModelForPsiFile(
                 formattingContext.containingFile,
-                SqlBlock(
+                SqlFileBlock(
                     formattingContext.node,
                     Wrap.createWrap(WrapType.NONE, false),
                     Alignment.createAlignment(),
@@ -62,6 +62,8 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
 
     private fun createSpaceBuilder(settings: CodeStyleSettings): SpacingBuilder =
         SpacingBuilder(settings, SqlLanguage.INSTANCE)
+            .before(SqlTypes.OTHER)
+            .spacing(1, 1, 0, false, 0)
             .around(SqlTypes.DOT)
             .spacing(0, 0, 0, false, 0)
             .after(SqlTypes.COMMA)
@@ -90,10 +92,20 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
             .spacing(1, 1, 0, false, 0)
             .before(SqlTypes.LEFT_PAREN)
             .spacing(1, 1, 0, false, 0)
+            .before(SqlTypes.FUNCTION_NAME)
+            .spacing(1, 1, 0, false, 0)
 
     private fun createCustomSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()
             .withSpacing(
+                SqlTypes.OTHER,
+                SqlTypes.FUNCTION_NAME,
+                SqlCustomSpacingBuilder.nonSpacing,
+            ).withSpacing(
+                SqlTypes.FUNCTION_NAME,
+                SqlTypes.OTHER,
+                SqlCustomSpacingBuilder.nonSpacing,
+            ).withSpacing(
                 SqlTypes.NUMBER,
                 SqlTypes.COMMA,
                 SqlCustomSpacingBuilder.nonSpacing,
@@ -116,6 +128,10 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
             ).withSpacing(
                 SqlTypes.ASTERISK,
                 TokenType.WHITE_SPACE,
+                SqlCustomSpacingBuilder.nonSpacing,
+            ).withSpacing(
+                SqlTypes.FUNCTION_NAME,
+                SqlTypes.LEFT_PAREN,
                 SqlCustomSpacingBuilder.nonSpacing,
             )
             // Table And Column Rules

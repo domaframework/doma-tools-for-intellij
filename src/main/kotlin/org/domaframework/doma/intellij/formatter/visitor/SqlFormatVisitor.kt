@@ -43,7 +43,7 @@ class SqlFormatVisitor : PsiRecursiveElementVisitor() {
 
         if (PsiTreeUtil.getParentOfType(element, SqlBlockComment::class.java) == null) {
             when (element.elementType) {
-                SqlTypes.KEYWORD, SqlTypes.COMMA, SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN, SqlTypes.WORD -> {
+                SqlTypes.KEYWORD, SqlTypes.COMMA, SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN, SqlTypes.WORD, SqlTypes.FUNCTION_NAME -> {
                     replaces.add(element)
                 }
 
