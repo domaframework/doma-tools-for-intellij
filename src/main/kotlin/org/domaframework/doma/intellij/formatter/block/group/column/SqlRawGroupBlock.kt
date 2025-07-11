@@ -15,8 +15,6 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group.column
 
-import com.intellij.formatting.Block
-import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
@@ -43,11 +41,6 @@ abstract class SqlRawGroupBlock(
             0,
             0,
         )
-
-    override fun getSpacing(
-        p0: Block?,
-        p1: Block,
-    ): Spacing? = null
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
