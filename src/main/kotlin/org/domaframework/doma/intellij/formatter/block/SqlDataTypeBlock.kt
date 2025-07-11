@@ -40,14 +40,14 @@ open class SqlDataTypeBlock(
             0,
         )
 
-    override fun setParentGroupBlock(lastGroupBlock: SqlBlock?) {
-        super.setParentGroupBlock(lastGroupBlock)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.NONE
         indent.indentLen = 1
         indent.groupIndentLen = indent.indentLen
 
-        if (lastGroupBlock is SqlCreateTableColumnDefinitionRawGroupBlock) {
-            lastGroupBlock.columnDataTypeBlock = this
+        if (lastGroup is SqlCreateTableColumnDefinitionRawGroupBlock) {
+            lastGroup.columnDataTypeBlock = this
         }
     }
 

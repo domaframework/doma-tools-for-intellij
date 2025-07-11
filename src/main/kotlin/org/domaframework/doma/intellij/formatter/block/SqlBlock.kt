@@ -36,9 +36,9 @@ import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnAssignmentSymbolBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithColumnGroupBlock
@@ -257,8 +257,6 @@ open class SqlBlock(
 
             is SqlInlineSecondGroupBlock -> {
                 parentSetProcessor.updateInlineSecondGroupBlockParentAndAddGroup(
-                    lastGroupBlock,
-                    lastIndentLevel,
                     childBlock,
                 )
             }

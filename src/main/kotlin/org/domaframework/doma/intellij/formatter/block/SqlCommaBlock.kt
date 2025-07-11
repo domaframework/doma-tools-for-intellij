@@ -20,6 +20,7 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
@@ -48,6 +49,20 @@ open class SqlCommaBlock(
         context.enableFormat,
         context.formatMode,
     ) {
+    companion object {
+        private val EXPECTED_TYPES =
+            listOf(
+                SqlInsertColumnGroupBlock::class,
+                SqlInsertValueGroupBlock::class,
+                SqlUpdateSetGroupBlock::class,
+                SqlUpdateColumnGroupBlock::class,
+                SqlUpdateValueGroupBlock::class,
+                SqlFunctionParamBlock::class,
+                SqlWithColumnGroupBlock::class,
+                SqlKeywordGroupBlock::class,
+            )
+    }
+
     override val indent =
         ElementIndent(
             IndentType.COMMA,
@@ -125,17 +140,7 @@ open class SqlCommaBlock(
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        val expectedTypes =
-            listOf(
-                SqlInsertColumnGroupBlock::class,
-                SqlInsertValueGroupBlock::class,
-                SqlUpdateSetGroupBlock::class,
-                SqlUpdateColumnGroupBlock::class,
-                SqlUpdateValueGroupBlock::class,
-                SqlFunctionParamBlock::class,
-                SqlWithColumnGroupBlock::class,
-                SqlKeywordGroupBlock::class,
-            )
-        return TypeUtil.isExpectedClassType(expectedTypes, parentBlock)
+        if (parentBlock is SqlConditionalExpressionGroupBlock) return false
+        return TypeUtil.isExpectedClassType(EXPECTED_TYPES, parentBlock)
     }
 }

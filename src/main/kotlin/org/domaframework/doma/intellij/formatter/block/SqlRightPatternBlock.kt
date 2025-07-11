@@ -52,20 +52,48 @@ open class SqlRightPatternBlock(
     ) {
     var preSpaceRight = false
 
+    companion object {
+        private val NOT_INSERT_SPACE_TYPES =
+            listOf(
+                SqlFunctionParamBlock::class,
+                SqlInsertColumnGroupBlock::class,
+                SqlWithQuerySubGroupBlock::class,
+                SqlConflictExpressionSubGroupBlock::class,
+            )
+
+        private val INDENT_EXPECTED_TYPES =
+            listOf(
+                SqlUpdateColumnGroupBlock::class,
+                SqlUpdateValueGroupBlock::class,
+                SqlCreateTableColumnDefinitionGroupBlock::class,
+            )
+
+        private val NEW_LINE_EXPECTED_TYPES =
+            listOf(
+                SqlUpdateColumnGroupBlock::class,
+                SqlUpdateValueGroupBlock::class,
+                SqlCreateTableColumnDefinitionGroupBlock::class,
+                SqlColumnDefinitionRawGroupBlock::class,
+                SqlUpdateSetGroupBlock::class,
+                SqlWithQuerySubGroupBlock::class,
+            )
+
+        private val NEW_LINE_EXCLUDE_TYPES =
+            listOf(
+                SqlDataTypeParamBlock::class,
+                SqlConditionalExpressionGroupBlock::class,
+                SqlConflictExpressionSubGroupBlock::class,
+                SqlFunctionParamBlock::class,
+            )
+    }
+
     /**
      * Configures whether to add a space to the right side when the group ends.
      */
     private fun enableLastRight() {
         parentBlock?.let { parent ->
             // Check if parent is in the notInsertSpaceClassList
-            val notInsertSpaceClassList =
-                listOf(
-                    SqlFunctionParamBlock::class,
-                    SqlInsertColumnGroupBlock::class,
-                    SqlWithQuerySubGroupBlock::class,
-                    SqlConflictExpressionSubGroupBlock::class,
-                )
-            if (isExpectedClassType(notInsertSpaceClassList, parent)) {
+            if (isExpectedClassType(NOT_INSERT_SPACE_TYPES, parent)) {
                 preSpaceRight = false
                 return
             }
@@ -118,13 +146,7 @@ open class SqlRightPatternBlock(
 
         parentBlock?.let { parent ->
             if (parent is SqlWithQuerySubGroupBlock) return 0
-            val exceptionalTypes =
-                listOf(
-                    SqlUpdateColumnGroupBlock::class,
-                    SqlUpdateValueGroupBlock::class,
-                    SqlCreateTableColumnDefinitionGroupBlock::class,
-                )
-            if (isExpectedClassType(exceptionalTypes, parent)) return parent.indent.indentLen
+            if (isExpectedClassType(INDENT_EXPECTED_TYPES, parent)) return parent.indent.indentLen
             return parent.indent.indentLen
         } ?: return 0
     }
@@ -135,29 +157,11 @@ open class SqlRightPatternBlock(
         if (preSpaceRight) return false
 
         parentBlock?.let { parent ->
-            val exceptionalTypes =
-                listOf(
-                    SqlCreateTableColumnDefinitionGroupBlock::class,
-                    SqlColumnDefinitionRawGroupBlock::class,
-                    SqlUpdateSetGroupBlock::class,
-                    SqlUpdateColumnGroupBlock::class,
-                    SqlUpdateValueGroupBlock::class,
-                    SqlWithQuerySubGroupBlock::class,
-                )
-
-            val excludeTypes =
-                listOf(
-                    SqlDataTypeParamBlock::class,
-                    SqlConditionalExpressionGroupBlock::class,
-                    SqlConflictExpressionSubGroupBlock::class,
-                    SqlFunctionParamBlock::class,
-                )
-
             if ((
-                    isExpectedClassType(exceptionalTypes, parent) ||
-                        isExpectedClassType(exceptionalTypes, parent.parentBlock)
+                    isExpectedClassType(NEW_LINE_EXPECTED_TYPES, parent) ||
+                        isExpectedClassType(NEW_LINE_EXPECTED_TYPES, parent.parentBlock)
                 ) &&
-                !isExpectedClassType(excludeTypes, parent)
+                !isExpectedClassType(NEW_LINE_EXCLUDE_TYPES, parent)
             ) {
                 return true
             }
