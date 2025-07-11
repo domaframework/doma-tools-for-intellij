@@ -50,7 +50,7 @@ open class SqlCommaBlock(
         context.formatMode,
     ) {
     companion object {
-        private val expectedTypes =
+        private val EXPECTED_TYPES =
             listOf(
                 SqlInsertColumnGroupBlock::class,
                 SqlInsertValueGroupBlock::class,
@@ -141,6 +141,6 @@ open class SqlCommaBlock(
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         if (parentBlock is SqlConditionalExpressionGroupBlock) return false
-        return TypeUtil.isExpectedClassType(expectedTypes, parentBlock)
+        return TypeUtil.isExpectedClassType(EXPECTED_TYPES, parentBlock)
     }
 }
