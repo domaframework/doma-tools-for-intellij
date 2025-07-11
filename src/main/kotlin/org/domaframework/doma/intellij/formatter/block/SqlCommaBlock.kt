@@ -20,6 +20,7 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
@@ -125,6 +126,12 @@ open class SqlCommaBlock(
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        val excludeTypes =
+            listOf(
+                SqlConditionalExpressionGroupBlock::class,
+            )
+        if (TypeUtil.isExpectedClassType(excludeTypes, parentBlock)) return false
+
         val expectedTypes =
             listOf(
                 SqlInsertColumnGroupBlock::class,

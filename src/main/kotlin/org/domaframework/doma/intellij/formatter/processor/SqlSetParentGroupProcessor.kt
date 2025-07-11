@@ -24,11 +24,11 @@ import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
@@ -251,11 +251,7 @@ class SqlSetParentGroupProcessor(
         }
     }
 
-    fun updateInlineSecondGroupBlockParentAndAddGroup(
-        lastGroupBlock: SqlBlock,
-        lastIndentLevel: IndentType,
-        childBlock: SqlInlineSecondGroupBlock,
-    ) {
+    fun updateInlineSecondGroupBlockParentAndAddGroup(childBlock: SqlInlineSecondGroupBlock) {
         val context =
             SetParentContext(
                 childBlock,
@@ -276,13 +272,12 @@ class SqlSetParentGroupProcessor(
             }
             return
         }
-        if (lastIndentLevel == IndentType.INLINE_SECOND) {
-            blockBuilder.removeLastGroupTopNodeIndexHistory()
-            updateGroupBlockLastGroupParentAddGroup(
-                lastGroupBlock,
-                childBlock,
-            )
-            return
+        val inlineSecondIndex =
+            blockBuilder.getGroupTopNodeIndex { block ->
+                block.indent.indentLevel == IndentType.INLINE_SECOND
+            }
+        if (inlineSecondIndex >= 0) {
+            blockBuilder.clearSubListGroupTopNodeIndexHistory(inlineSecondIndex)
         }
         updateGroupBlockParentAndAddGroup(
             childBlock,

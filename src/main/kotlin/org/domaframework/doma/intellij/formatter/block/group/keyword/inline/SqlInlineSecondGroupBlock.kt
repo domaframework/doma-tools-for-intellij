@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword
+package org.domaframework.doma.intellij.formatter.block.group.keyword.inline
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
@@ -29,7 +29,7 @@ open class SqlInlineSecondGroupBlock(
         node,
         context,
     ) {
-    val isEndCase = getNodeText().lowercase() == "end"
+    val isEndCase = getNodeText() == "end"
 
     override val indent =
         ElementIndent(
@@ -42,19 +42,28 @@ open class SqlInlineSecondGroupBlock(
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.INLINE_SECOND
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen
+        indent.groupIndentLen = createGroupIndentLen()
+    }
+
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        (lastGroup as? SqlInlineGroupBlock)?.inlineConditions?.add(this)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun createBlockIndentLen(): Int =
-        parentBlock?.let {
+        parentBlock?.let { parent ->
             // TODO:Customize indentation within an inline group
             if (isEndCase) {
-                it.indent.indentLen
+                val diff = parent.getNodeText().length.minus(getNodeText().length)
+                parent.indent.indentLen.plus(diff)
             } else {
-                it.indent.groupIndentLen
-                    .plus(it.getNodeText().length)
+                parent.indent.groupIndentLen.plus(1)
             }
         } ?: 1
+
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
+        (parentBlock as? SqlInlineGroupBlock)?.inlineConditions?.dropLast(1)?.isEmpty() != true
 }

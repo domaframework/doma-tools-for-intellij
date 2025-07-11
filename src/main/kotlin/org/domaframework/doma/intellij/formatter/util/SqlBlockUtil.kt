@@ -36,8 +36,6 @@ import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCo
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
@@ -47,6 +45,8 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlC
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlSecondKeywordBlock
@@ -244,8 +244,11 @@ class SqlBlockUtil(
                             )
                         } else {
                             WithClauseUtil
-                                .getWithClauseKeywordGroup(lastGroupBlock, child, sqlBlockFormattingCtx)
-                                ?.let { return it }
+                                .getWithClauseKeywordGroup(
+                                    lastGroupBlock,
+                                    child,
+                                    sqlBlockFormattingCtx,
+                                )?.let { return it }
                             return SqlSecondKeywordBlock(
                                 child,
                                 sqlBlockFormattingCtx,

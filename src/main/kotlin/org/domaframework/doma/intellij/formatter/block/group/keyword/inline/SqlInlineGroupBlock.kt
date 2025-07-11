@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword
+package org.domaframework.doma.intellij.formatter.block.group.keyword.inline
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
@@ -29,6 +29,8 @@ open class SqlInlineGroupBlock(
         node,
         context,
     ) {
+    val inlineConditions: MutableList<SqlInlineSecondGroupBlock> = mutableListOf()
+
     override val indent =
         ElementIndent(
             IndentType.INLINE,
@@ -40,15 +42,12 @@ open class SqlInlineGroupBlock(
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.INLINE
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
+        indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createBlockIndentLen(): Int =
-        parentBlock?.let {
-            it.indent.groupIndentLen
-                .plus(it.getNodeText().length)
-                .plus(1)
-        } ?: 1
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
 }
