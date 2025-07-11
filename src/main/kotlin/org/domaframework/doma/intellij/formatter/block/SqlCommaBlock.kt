@@ -49,6 +49,20 @@ open class SqlCommaBlock(
         context.enableFormat,
         context.formatMode,
     ) {
+    companion object {
+        private val expectedTypes =
+            listOf(
+                SqlInsertColumnGroupBlock::class,
+                SqlInsertValueGroupBlock::class,
+                SqlUpdateSetGroupBlock::class,
+                SqlUpdateColumnGroupBlock::class,
+                SqlUpdateValueGroupBlock::class,
+                SqlFunctionParamBlock::class,
+                SqlWithColumnGroupBlock::class,
+                SqlKeywordGroupBlock::class,
+            )
+    }
+
     override val indent =
         ElementIndent(
             IndentType.COMMA,
@@ -126,23 +140,7 @@ open class SqlCommaBlock(
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        val excludeTypes =
-            listOf(
-                SqlConditionalExpressionGroupBlock::class,
-            )
-        if (TypeUtil.isExpectedClassType(excludeTypes, parentBlock)) return false
-
-        val expectedTypes =
-            listOf(
-                SqlInsertColumnGroupBlock::class,
-                SqlInsertValueGroupBlock::class,
-                SqlUpdateSetGroupBlock::class,
-                SqlUpdateColumnGroupBlock::class,
-                SqlUpdateValueGroupBlock::class,
-                SqlFunctionParamBlock::class,
-                SqlWithColumnGroupBlock::class,
-                SqlKeywordGroupBlock::class,
-            )
+        if (parentBlock is SqlConditionalExpressionGroupBlock) return false
         return TypeUtil.isExpectedClassType(expectedTypes, parentBlock)
     }
 }

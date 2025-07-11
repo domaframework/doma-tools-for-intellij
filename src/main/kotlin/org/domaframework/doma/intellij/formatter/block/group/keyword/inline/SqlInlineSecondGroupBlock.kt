@@ -55,8 +55,8 @@ open class SqlInlineSecondGroupBlock(
         parentBlock?.let { parent ->
             // TODO:Customize indentation within an inline group
             if (isEndCase) {
-                val diff = parent.getNodeText().length.minus(getNodeText().length)
-                parent.indent.indentLen.plus(diff)
+                val diffTextLength = parent.getNodeText().length.minus(getNodeText().length)
+                parent.indent.indentLen.plus(diffTextLength)
             } else {
                 parent.indent.groupIndentLen.plus(1)
             }
