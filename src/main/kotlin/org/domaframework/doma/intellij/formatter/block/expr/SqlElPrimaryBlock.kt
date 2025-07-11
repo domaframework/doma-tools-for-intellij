@@ -15,30 +15,17 @@
  */
 package org.domaframework.doma.intellij.formatter.block.expr
 
-import com.intellij.formatting.Alignment
 import com.intellij.formatting.Block
-import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Spacing
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
-import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 class SqlElPrimaryBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
-) : SqlBlock(
+    context: SqlBlockFormattingContext,
+) : SqlExprBlock(
         node,
-        wrap,
-        alignment,
-        null,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
     override fun getSpacing(
         child1: Block?,

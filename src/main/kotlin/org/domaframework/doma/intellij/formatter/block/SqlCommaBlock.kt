@@ -15,38 +15,54 @@
  */
 package org.domaframework.doma.intellij.formatter.block
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlCreateKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnGroupBlock
+import org.domaframework.doma.intellij.common.util.TypeUtil
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
-import org.domaframework.doma.intellij.psi.SqlTypes
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlValuesParamGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlCommaBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlBlock(
         node,
-        wrap,
-        alignment,
+        context.wrap,
+        context.alignment,
         null,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context.spacingBuilder,
+        context.enableFormat,
+        context.formatMode,
     ) {
+    companion object {
+        private val EXPECTED_TYPES =
+            listOf(
+                SqlInsertColumnGroupBlock::class,
+                SqlInsertValueGroupBlock::class,
+                SqlUpdateSetGroupBlock::class,
+                SqlUpdateColumnGroupBlock::class,
+                SqlUpdateValueGroupBlock::class,
+                SqlFunctionParamBlock::class,
+                SqlWithColumnGroupBlock::class,
+                SqlKeywordGroupBlock::class,
+            )
+    }
+
     override val indent =
         ElementIndent(
             IndentType.COMMA,
@@ -54,11 +70,17 @@ open class SqlCommaBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.COMMA
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
+    }
+
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (lastGroup is SqlFromGroupBlock) {
+            if (lastGroup.tableBlocks.isNotEmpty()) lastGroup.tableBlocks.add(this)
+        }
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -70,10 +92,28 @@ open class SqlCommaBlock(
                     return 0
                 }
 
+                val parentIndentSyncBlockTypes =
+                    listOf(
+                        SqlUpdateColumnGroupBlock::class,
+                        SqlInsertColumnGroupBlock::class,
+                        SqlWithColumnGroupBlock::class,
+                    )
                 val parentIndentLen = parent.indent.groupIndentLen
-                if (parent is SqlUpdateColumnGroupBlock || parent is SqlUpdateValueGroupBlock) {
+                if (TypeUtil.isExpectedClassType(parentIndentSyncBlockTypes, parent)) {
                     return parentIndentLen
                 }
+
+                // TODO Indent each comma in a value group so that it aligns with the position of the first value row.
+                val parentIndentSingleSpaceTypes =
+                    listOf(
+                        SqlInsertValueGroupBlock::class,
+                        SqlUpdateValueGroupBlock::class,
+                    )
+                if (TypeUtil.isExpectedClassType(parentIndentSingleSpaceTypes, parent)) {
+                    return parentIndentLen.plus(1)
+                }
+
+                if (parent is SqlValuesParamGroupBlock) return 0
 
                 val grand = parent.parentBlock
                 grand?.let { grand ->
@@ -81,35 +121,26 @@ open class SqlCommaBlock(
                         val grandIndentLen = grand.indent.groupIndentLen
                         return grandIndentLen.plus(parentIndentLen).minus(1)
                     }
-                    if (grand is SqlInsertKeywordGroupBlock) {
-                        return parentIndentLen
+
+                    val grandIndent = grand.indent.indentLen
+                    val groupIndent = parentBlock?.indent?.groupIndentLen ?: 0
+
+                    if (grand is SqlColumnRawGroupBlock) {
+                        return groupIndent.plus(grandIndent)
                     }
-                    if (grand is SqlColumnGroupBlock) {
-                        val grandIndentLen = grand.indent.groupIndentLen
-                        var prevTextLen = 1
-                        parent.prevChildren?.dropLast(1)?.forEach { prev -> prevTextLen = prevTextLen.plus(prev.getNodeText().length) }
-                        return grandIndentLen.plus(prevTextLen).plus(1)
-                    }
+                    return groupIndent.plus(grandIndent).minus(1)
                 }
-                return parentIndentLen
+                return parentIndentLen.plus(1)
             } else {
-                var prevLen = 0
-                parent.childBlocks
-                    .filter { it.node.elementType == SqlTypes.KEYWORD }
-                    .forEach { prev ->
-                        prevLen =
-                            prevLen.plus(
-                                prev
-                                    .getNodeText()
-                                    .length
-                                    .plus(1),
-                            )
-                    }
-                return parent.indent.groupIndentLen
-                    .plus(prevLen)
-                    .plus(1)
+                if (parent is SqlValuesGroupBlock) return parent.indent.indentLen
+                return parent.indent.groupIndentLen.plus(1)
             }
         }
         return 1
+    }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        if (parentBlock is SqlConditionalExpressionGroupBlock) return false
+        return TypeUtil.isExpectedClassType(EXPECTED_TYPES, parentBlock)
     }
 }

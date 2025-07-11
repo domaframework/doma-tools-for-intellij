@@ -15,26 +15,35 @@
  */
 package org.domaframework.doma.intellij.formatter.block.group
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 abstract class SqlNewGroupBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlBlock(
         node,
-        wrap,
-        alignment,
+        context.wrap,
+        context.alignment,
         null,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
-    )
+        context.spacingBuilder,
+        context.enableFormat,
+        context.formatMode,
+    ) {
+    protected fun getKeywordNameLength(
+        blocks: List<SqlBlock>,
+        dropLast: Int = 0,
+    ): Int {
+        val keywords =
+            blocks
+                .dropLast(dropLast)
+                .takeWhile { it.node.elementType == SqlTypes.KEYWORD }
+        val parentLen =
+            keywords.sumOf { keyword ->
+                keyword.getNodeText().length.plus(1)
+            }
+        return parentLen
+    }
+}
