@@ -17,6 +17,9 @@ package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -38,21 +41,59 @@ class SqlFunctionParamBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.PARAM
-        indent.indentLen = 0
+        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun createGroupIndentLen(): Int {
-        prevChildren?.let { prevList ->
-            return prevList
-                .dropLast(1)
-                .sumOf { it.getNodeText().length.plus(1) }
-                .plus(getNodeText().length)
-                .minus(prevList.count { it.node.elementType == SqlTypes.DOT } * 2)
-                .plus(1)
-        }
-        return getNodeText().length
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        (lastGroup as? SqlFunctionGroupBlock)?.parameterGroupBlock = this
     }
 
-    override fun createBlockIndentLen(): Int = 0
+    override fun createGroupIndentLen(): Int {
+        val parentFunctionName = parentBlock as? SqlFunctionGroupBlock
+        parentFunctionName?.let { parent ->
+            return parent.indent.groupIndentLen
+                .plus(getNodeText().length)
+        }
+
+        val prevChildrenDropLast =
+            prevChildren?.dropLast(1)?.filter {
+                it !is SqlLineCommentBlock &&
+                    it !is SqlBlockCommentBlock &&
+                    it.node.elementType != SqlTypes.DOT
+            }
+                ?: emptyList()
+        val prevLength =
+            prevChildrenDropLast
+                .sumOf { it.getNodeText().length }
+                .plus(getNodeText().length)
+        return prevLength.plus(prevChildrenDropLast.count()).plus(1)
+    }
+
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            if (parent !is SqlSubGroupBlock) {
+                return if (parent is SqlFunctionGroupBlock) {
+                    parent.indent.groupIndentLen
+                } else {
+                    parent.indent.groupIndentLen.plus(1)
+                }
+            }
+
+            val children =
+                prevChildren?.dropLast(1)?.filter {
+                    it !is SqlLineCommentBlock &&
+                        it !is SqlBlockCommentBlock &&
+                        it.node != SqlTypes.DOT
+                }
+            children?.let { prevList ->
+                return prevList
+                    .sumOf { it.getNodeText().length.plus(1) }
+                    .plus(parent.indent.groupIndentLen)
+                    .plus(getNodeText().length)
+                    .plus(1)
+            }
+        }
+        return 0
+    }
 }

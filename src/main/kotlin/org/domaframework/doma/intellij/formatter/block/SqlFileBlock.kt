@@ -48,6 +48,8 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTyp
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.other.SqlEscapeBlock
+import org.domaframework.doma.intellij.formatter.block.other.SqlOtherBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
@@ -160,10 +162,18 @@ class SqlFileBlock(
                         defaultFormatCtx,
                     )
                 } else {
-                    SqlOtherBlock(
-                        child,
-                        defaultFormatCtx,
-                    )
+                    val escapeStrings = listOf("\"", "`", "[", "]")
+                    if (escapeStrings.contains(child.text)) {
+                        SqlEscapeBlock(
+                            child,
+                            defaultFormatCtx,
+                        )
+                    } else {
+                        SqlOtherBlock(
+                            child,
+                            defaultFormatCtx,
+                        )
+                    }
                 }
             }
 
@@ -422,64 +432,77 @@ class SqlFileBlock(
         child2: Block,
     ): Spacing? {
         if (isAdjustIndentOnEnter()) return null
+        val childBlock1: SqlBlock? = child1 as? SqlBlock
+        val childBlock2: SqlBlock = child2 as SqlBlock
 
         // The end of a line comment element is a newline, so just add a space for the indent.
-        if (child1 is SqlLineCommentBlock && child2 is SqlBlock) {
-            return SqlCustomSpacingBuilder().getSpacing(child2)
+        if (childBlock1 is SqlLineCommentBlock) {
+            return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
-        if (child2 is SqlWithColumnGroupBlock) {
+        if (childBlock2 is SqlWithColumnGroupBlock) {
             return SqlCustomSpacingBuilder.normalSpacing
         }
 
-        if (child1 is SqlSubGroupBlock && child2 is SqlSubGroupBlock) {
+        if (childBlock1 is SqlSubGroupBlock && childBlock2 is SqlSubGroupBlock) {
             return SqlCustomSpacingBuilder.nonSpacing
         }
 
         // Do not leave a space after the comment block of the bind variable
-        if (child1 is SqlElBlockCommentBlock && child1 !is SqlElConditionLoopCommentBlock && child2 !is SqlCommentBlock) {
+        if (childBlock1 is SqlElBlockCommentBlock && childBlock1 !is SqlElConditionLoopCommentBlock && childBlock2 !is SqlCommentBlock) {
             return SqlCustomSpacingBuilder.nonSpacing
         }
 
-        if (child2 is SqlElBlockCommentBlock) {
-            return when (child1) {
+        if (childBlock2 is SqlElBlockCommentBlock) {
+            return when (childBlock1) {
                 is SqlElBlockCommentBlock, is SqlWhitespaceBlock -> {
-                    SqlCustomSpacingBuilder().getSpacing(child2)
+                    SqlCustomSpacingBuilder().getSpacing(childBlock2)
                 }
 
                 else -> SqlCustomSpacingBuilder.normalSpacing
             }
         }
 
-        if (child1 is SqlFunctionParamBlock) {
+        if (childBlock1?.node?.elementType == SqlTypes.DOT ||
+            childBlock2.node.elementType == SqlTypes.DOT
+        ) {
             return SqlCustomSpacingBuilder.nonSpacing
         }
 
-        if (child2 is SqlOtherBlock) {
-            if (child1 is SqlFunctionGroupBlock) {
-                val reservedWordEscapeSymbolList = listOf("\"", "[", "`")
-                if (reservedWordEscapeSymbolList.contains(child2.getNodeText())) {
-                    return SqlCustomSpacingBuilder.nonSpacing
-                }
-            }
-            return SqlCustomSpacingBuilder().getSpacing(child2)
-        }
-
-        if (child1 is SqlWhitespaceBlock) {
-            when (child2) {
-                is SqlBlockCommentBlock, is SqlLineCommentBlock, is SqlNewGroupBlock -> {
-                    return SqlCustomSpacingBuilder().getSpacing(child2)
-                }
+        if (childBlock1 is SqlEscapeBlock) {
+            return if (!childBlock1.isEndEscape) {
+                SqlCustomSpacingBuilder.nonSpacing
+            } else {
+                SqlCustomSpacingBuilder.normalSpacing
             }
         }
 
-        if (child2 is SqlNewGroupBlock) {
-            if (child1 is SqlSubGroupBlock && child2.indent.indentLevel == IndentType.ATTACHED) {
+        if (childBlock2 is SqlEscapeBlock) {
+            if (childBlock2.isEndEscape) {
                 return SqlCustomSpacingBuilder.nonSpacing
             }
-            when (child2) {
+            return SqlCustomSpacingBuilder().getSpacing(childBlock2)
+        }
+
+        if (childBlock2 is SqlOtherBlock) {
+            return SqlCustomSpacingBuilder().getSpacing(childBlock2)
+        }
+
+        if (childBlock1 is SqlWhitespaceBlock) {
+            when (childBlock2) {
+                is SqlBlockCommentBlock, is SqlLineCommentBlock, is SqlNewGroupBlock -> {
+                    return SqlCustomSpacingBuilder().getSpacing(childBlock2)
+                }
+            }
+        }
+
+        if (childBlock2 is SqlNewGroupBlock) {
+            if (childBlock1 is SqlSubGroupBlock && childBlock2.indent.indentLevel == IndentType.ATTACHED) {
+                return SqlCustomSpacingBuilder.nonSpacing
+            }
+            when (childBlock2) {
                 is SqlSubQueryGroupBlock -> {
-                    if (child1 is SqlNewGroupBlock) {
+                    if (childBlock1 is SqlNewGroupBlock) {
                         return SqlCustomSpacingBuilder.normalSpacing
                     }
                 }
@@ -491,31 +514,31 @@ class SqlFileBlock(
         }
 
         // Create Table Column Definition Raw Group Block
-        CreateTableUtil.getColumnDefinitionRawGroupSpacing(child1, child2)?.let { return it }
+        CreateTableUtil.getColumnDefinitionRawGroupSpacing(childBlock1, childBlock2)?.let { return it }
 
-        when (child2) {
+        when (childBlock2) {
             is SqlColumnDefinitionRawGroupBlock ->
                 SqlCustomSpacingBuilder()
                     .getSpacingColumnDefinitionRaw(
-                        child2,
+                        childBlock2,
                     )?.let { return it }
 
             is SqlRightPatternBlock -> return SqlCustomSpacingBuilder().getSpacingRightPattern(
-                child2,
+                childBlock2,
             )
 
             is SqlColumnBlock ->
                 SqlCustomSpacingBuilder()
-                    .getSpacingColumnDefinition(child2)
+                    .getSpacingColumnDefinition(childBlock2)
                     ?.let { return it }
         }
 
-        if (child1 is SqlBlock && (child2 is SqlCommaBlock || child2 is SqlColumnRawGroupBlock)) {
-            SqlCustomSpacingBuilder().getSpacingWithIndentComma(child1, child2)?.let { return it }
+        if (childBlock1 is SqlBlock && (childBlock2 is SqlCommaBlock || childBlock2 is SqlColumnRawGroupBlock)) {
+            SqlCustomSpacingBuilder().getSpacingWithIndentComma(childBlock1, childBlock2)?.let { return it }
         }
 
-        val spacing: Spacing? = customSpacingBuilder?.getCustomSpacing(child1, child2)
-        return spacing ?: spacingBuilder.getSpacing(this, child1, child2)
+        val spacing: Spacing? = customSpacingBuilder?.getCustomSpacing(childBlock1, childBlock2)
+        return spacing ?: spacingBuilder.getSpacing(this, childBlock1, childBlock2)
     }
 
     override fun isLeaf(): Boolean = false

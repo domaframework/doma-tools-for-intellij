@@ -30,7 +30,6 @@ open class SqlWordBlock(
         node,
         context.wrap,
         context.alignment,
-        null,
         context.spacingBuilder,
         context.enableFormat,
         context.formatMode,
@@ -57,11 +56,11 @@ open class SqlWordBlock(
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun createBlockIndentLen(): Int {
-        parentBlock?.let {
-            when (it) {
+        parentBlock?.let { parent ->
+            when (parent) {
                 is SqlSubQueryGroupBlock -> {
-                    val parentIndentLen = it.indent.groupIndentLen
-                    val grand = it.parentBlock
+                    val parentIndentLen = parent.indent.groupIndentLen
+                    val grand = parent.parentBlock
                     if (grand != null && grand.getNodeText().lowercase() == "create") {
                         val grandIndentLen = grand.indent.groupIndentLen
                         return grandIndentLen.plus(parentIndentLen).plus(1)
@@ -70,8 +69,7 @@ open class SqlWordBlock(
                 }
 
                 else -> {
-                    val parentLen = it.getNodeText().length
-                    return it.indent.groupIndentLen.plus(parentLen.plus(1))
+                    return parent.indent.groupIndentLen.plus(1)
                 }
             }
         }

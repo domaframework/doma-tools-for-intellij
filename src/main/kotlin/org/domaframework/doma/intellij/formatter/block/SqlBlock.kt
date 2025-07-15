@@ -28,6 +28,7 @@ import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBl
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlBlock(
     node: ASTNode,
@@ -58,6 +59,24 @@ open class SqlBlock(
 
     open var parentBlock: SqlBlock? = null
     open val childBlocks = mutableListOf<SqlBlock>()
+
+    fun getChildrenTextLen(): Int =
+        childBlocks.sumOf { child ->
+            val children =
+                child.childBlocks.filter { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
+            if (children.isNotEmpty()) {
+                child
+                    .getChildrenTextLen()
+                    .plus(child.getNodeText().length)
+            } else if (child.node.elementType == SqlTypes.DOT ||
+                child.node.elementType == SqlTypes.RIGHT_PAREN
+            ) {
+                // Since elements do not include surrounding spaces, they should be excluded from the character count.
+                0
+            } else {
+                child.getNodeText().length.plus(1)
+            }
+        }
 
     fun getChildBlocksDropLast(
         dropIndex: Int = 1,

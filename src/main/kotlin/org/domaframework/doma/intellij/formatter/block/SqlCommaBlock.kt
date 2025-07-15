@@ -21,7 +21,6 @@ import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
@@ -44,7 +43,6 @@ open class SqlCommaBlock(
         node,
         context.wrap,
         context.alignment,
-        null,
         context.spacingBuilder,
         context.enableFormat,
         context.formatMode,
@@ -60,6 +58,14 @@ open class SqlCommaBlock(
                 SqlFunctionParamBlock::class,
                 SqlWithColumnGroupBlock::class,
                 SqlKeywordGroupBlock::class,
+            )
+
+        private val PARENT_INDENT_SYNC_TYPES =
+            listOf(
+                SqlUpdateColumnGroupBlock::class,
+                SqlInsertColumnGroupBlock::class,
+                SqlWithColumnGroupBlock::class,
+                SqlFunctionParamBlock::class,
             )
     }
 
@@ -92,14 +98,8 @@ open class SqlCommaBlock(
                     return 0
                 }
 
-                val parentIndentSyncBlockTypes =
-                    listOf(
-                        SqlUpdateColumnGroupBlock::class,
-                        SqlInsertColumnGroupBlock::class,
-                        SqlWithColumnGroupBlock::class,
-                    )
                 val parentIndentLen = parent.indent.groupIndentLen
-                if (TypeUtil.isExpectedClassType(parentIndentSyncBlockTypes, parent)) {
+                if (TypeUtil.isExpectedClassType(PARENT_INDENT_SYNC_TYPES, parent)) {
                     return parentIndentLen
                 }
 
@@ -113,21 +113,22 @@ open class SqlCommaBlock(
                     return parentIndentLen.plus(1)
                 }
 
-                if (parent is SqlValuesParamGroupBlock) return 0
+                val notNewLineTypes =
+                    listOf(
+                        SqlValuesParamGroupBlock::class,
+                        SqlConditionalExpressionGroupBlock::class,
+                    )
+                if (TypeUtil.isExpectedClassType(notNewLineTypes, parent)) return 0
 
                 val grand = parent.parentBlock
                 grand?.let { grand ->
-                    if (grand is SqlCreateKeywordGroupBlock) {
-                        val grandIndentLen = grand.indent.groupIndentLen
-                        return grandIndentLen.plus(parentIndentLen).minus(1)
-                    }
-
                     val grandIndent = grand.indent.indentLen
                     val groupIndent = parentBlock?.indent?.groupIndentLen ?: 0
 
                     if (grand is SqlColumnRawGroupBlock) {
                         return groupIndent.plus(grandIndent)
                     }
+
                     return groupIndent.plus(grandIndent).minus(1)
                 }
                 return parentIndentLen.plus(1)

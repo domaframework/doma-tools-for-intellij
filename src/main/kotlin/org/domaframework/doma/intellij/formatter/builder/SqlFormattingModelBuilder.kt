@@ -62,8 +62,6 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
 
     private fun createSpaceBuilder(settings: CodeStyleSettings): SpacingBuilder =
         SpacingBuilder(settings, SqlLanguage.INSTANCE)
-            .before(SqlTypes.OTHER)
-            .spacing(1, 1, 0, false, 0)
             .around(SqlTypes.DOT)
             .spacing(0, 0, 0, false, 0)
             .after(SqlTypes.COMMA)
@@ -84,13 +82,15 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
             .spacing(1, 1, 0, false, 0)
             .before(SqlTypes.RIGHT_PAREN)
             .spacing(0, 0, 0, false, 0)
+            .after(SqlTypes.RIGHT_PAREN)
+            .spacing(1, 1, 0, false, 0)
             .around(SqlTypes.PLUS)
             .spacing(1, 1, 0, false, 0)
             .around(SqlTypes.MINUS)
             .spacing(1, 1, 0, false, 0)
             .around(SqlTypes.ASTERISK)
             .spacing(1, 1, 0, false, 0)
-            .before(SqlTypes.LEFT_PAREN)
+            .around(SqlTypes.SLASH)
             .spacing(1, 1, 0, false, 0)
             .before(SqlTypes.FUNCTION_NAME)
             .spacing(1, 1, 0, false, 0)
@@ -98,13 +98,13 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
     private fun createCustomSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()
             .withSpacing(
-                SqlTypes.OTHER,
                 SqlTypes.FUNCTION_NAME,
+                SqlTypes.LEFT_PAREN,
                 SqlCustomSpacingBuilder.nonSpacing,
             ).withSpacing(
                 SqlTypes.FUNCTION_NAME,
                 SqlTypes.OTHER,
-                SqlCustomSpacingBuilder.nonSpacing,
+                SqlCustomSpacingBuilder.normalSpacing,
             ).withSpacing(
                 SqlTypes.NUMBER,
                 SqlTypes.COMMA,
@@ -143,6 +143,10 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
             ).withSpacing(
                 SqlTypes.OTHER,
                 SqlTypes.OTHER,
+                SqlCustomSpacingBuilder.normalSpacing,
+            ).withSpacing(
+                SqlTypes.OTHER,
+                SqlTypes.WORD,
                 SqlCustomSpacingBuilder.normalSpacing,
             )
 }

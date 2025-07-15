@@ -66,7 +66,6 @@ class SqlElFieldAccessBlock(
                     child,
                     context.wrap,
                     context.alignment,
-                    customSpacingBuilder,
                     context.spacingBuilder,
                     context.enableFormat,
                     context.formatMode,

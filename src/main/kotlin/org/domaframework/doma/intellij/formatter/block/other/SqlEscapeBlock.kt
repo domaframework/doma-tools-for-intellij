@@ -13,32 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block
+package org.domaframework.doma.intellij.formatter.block.other
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-class SqlUnknownBlock(
+class SqlEscapeBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlBlock(
-        node,
-        context.wrap,
-        context.alignment,
-        context.spacingBuilder,
-        context.enableFormat,
-        context.formatMode,
-    ) {
-    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
-        indent.indentLevel = IndentType.NONE
-        indent.indentLen = 0
-        indent.groupIndentLen = 0
+) : SqlOtherBlock(node, context) {
+    var isEndEscape = false
+
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        super.setParentPropertyBlock(lastGroup)
+        // If the number of escape characters, including itself, is even
+        isEndEscape = lastGroup?.childBlocks?.count { it is SqlEscapeBlock }?.let { it % 2 == 0 } == true
     }
 
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun isLeaf(): Boolean = true
+    override fun createBlockIndentLen(): Int =
+        if (isEndEscape) {
+            0
+        } else {
+            1
+        }
 }

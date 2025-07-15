@@ -35,6 +35,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlU
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
@@ -345,7 +346,22 @@ class SqlSetParentGroupProcessor(
         }
     }
 
-    fun updateSubGroupBlockParent(childBlock: SqlSubGroupBlock) {
+    fun updateSubGroupBlockParent(
+        lastGroupBlock: SqlBlock,
+        childBlock: SqlSubGroupBlock,
+    ) {
+        val prevBlock = lastGroupBlock.childBlocks.lastOrNull()
+        if (prevBlock is SqlFunctionGroupBlock) {
+            setParentGroups(
+                SetParentContext(
+                    childBlock,
+                    blockBuilder,
+                ),
+            ) { history ->
+                return@setParentGroups prevBlock
+            }
+            return
+        }
         updateGroupBlockParentAndAddGroup(childBlock)
     }
 

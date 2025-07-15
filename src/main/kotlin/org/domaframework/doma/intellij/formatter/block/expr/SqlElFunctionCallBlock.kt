@@ -58,7 +58,6 @@ class SqlElFunctionCallBlock(
                     child,
                     wrap,
                     alignment,
-                    createSpacingBuilder(),
                     spacingBuilder,
                     context.enableFormat,
                     context.formatMode,

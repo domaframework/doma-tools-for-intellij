@@ -34,7 +34,6 @@ class SqlWhitespaceBlock(
         node,
         wrap,
         alignment,
-        null,
         spacingBuilder,
         false,
         FormattingMode.ADJUST_INDENT_ON_ENTER,

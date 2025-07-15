@@ -312,6 +312,7 @@ class SqlKeywordUtil {
                 "constraint" to setOf("on"),
                 "update" to setOf("do"),
                 "set" to setOf("by", "cycle"),
+                "order" to setOf("partition", "by"),
             )
 
         fun isSetLineKeyword(
