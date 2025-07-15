@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## [1.1.2] - 2025-07-15
+
+### Bug Fixes
+
+- Update Japanese localization for DAO parameter inspection messages ([#317])
+
+### Dependency Updates
+
+- Update dependency com.pinterest.ktlint:ktlint-cli to v1.7.0 ([#315])
+- Update dependency com.google.googlejavaformat:google-java-format to v1.28.0 ([#309])
+- Update plugin spotless to v7.1.0 ([#299])
+
+[#317]:https://github.com/domaframework/doma-tools-for-intellij/pull/317
+[#315]:https://github.com/domaframework/doma-tools-for-intellij/pull/315
+[#309]:https://github.com/domaframework/doma-tools-for-intellij/pull/309
+[#299]:https://github.com/domaframework/doma-tools-for-intellij/pull/299
+
+
 ## [1.1.1] - 2025-07-03
 
 ### Bug Fixes
@@ -403,3 +421,4 @@
 [#95]: https://github.com/domaframework/doma-tools-for-intellij/pull/95
 [#96]: https://github.com/domaframework/doma-tools-for-intellij/pull/96
 [#99]: https://github.com/domaframework/doma-tools-for-intellij/pull/99
+[1.1.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/1.1.1...1.1.2
