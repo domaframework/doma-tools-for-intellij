@@ -129,10 +129,6 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
                 SqlTypes.ASTERISK,
                 TokenType.WHITE_SPACE,
                 SqlCustomSpacingBuilder.nonSpacing,
-            ).withSpacing(
-                SqlTypes.FUNCTION_NAME,
-                SqlTypes.LEFT_PAREN,
-                SqlCustomSpacingBuilder.nonSpacing,
             )
             // Table And Column Rules
             // WORD And OTHER Rules

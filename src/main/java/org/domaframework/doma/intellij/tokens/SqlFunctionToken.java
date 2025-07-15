@@ -34,7 +34,6 @@ public class SqlFunctionToken {
             "max",
             "min",
             "log",
-            "subset",
             "substring",
             "trim",
             "ltrim",

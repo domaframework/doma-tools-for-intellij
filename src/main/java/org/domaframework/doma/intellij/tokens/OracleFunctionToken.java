@@ -25,17 +25,7 @@ public class OracleFunctionToken {
   static {
     // Mathematical Functions
     {
-      TOKENS.addAll(
-          Set.of(
-              "abs",
-              "ceil",
-              "floor",
-              "mod",
-              "power",
-              "sqrt",
-              "sign",
-              "trunc"
-          ));
+      TOKENS.addAll(Set.of("abs", "ceil", "floor", "mod", "power", "sqrt", "sign", "trunc"));
     }
     // Conversion Functions
     {
@@ -54,41 +44,19 @@ public class OracleFunctionToken {
               "to_char",
               "to_date",
               "to_number",
-              "unistr"
-          ));
+              "unistr"));
     }
     // String Functions
     {
-      TOKENS.addAll(
-          Set.of(
-              "substr",
-              "substrb",
-              "substr4"
-          ));
+      TOKENS.addAll(Set.of("substr", "substrb", "substr4"));
     }
     // Lob Functions
     {
-      TOKENS.addAll(
-          Set.of(
-              "empty_blob",
-              "empty_clob",
-              "to_blob",
-              "to_clob",
-              "to_lob",
-              "to_nclob"
-          ));
+      TOKENS.addAll(Set.of("empty_blob", "empty_clob", "to_blob", "to_clob", "to_lob", "to_nclob"));
     }
     // Comparison functions
     {
-      TOKENS.addAll(
-          Set.of(
-              "decode",
-              "greatest",
-              "least",
-              "coalesce",
-              "nullif",
-              "nvl"
-          ));
+      TOKENS.addAll(Set.of("decode", "greatest", "least", "coalesce", "nullif", "nvl"));
     }
     // Date/Time Functions
     {
@@ -102,8 +70,7 @@ public class OracleFunctionToken {
               "getdate",
               "timestampadd",
               "timestampdiff",
-              "to_date"
-          ));
+              "to_date"));
     }
   }
 

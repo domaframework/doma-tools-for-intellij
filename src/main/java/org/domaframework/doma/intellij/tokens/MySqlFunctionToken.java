@@ -98,7 +98,7 @@ public class MySqlFunctionToken {
               "atan",
               "atan2",
               "ceil",
-              "celing",
+              "ceiling",
               "conv",
               "cos",
               "cot",
