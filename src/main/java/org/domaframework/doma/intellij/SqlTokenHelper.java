@@ -26,22 +26,36 @@ import org.domaframework.doma.intellij.tokens.SqlKeywordTokenUtil;
 
 public class SqlTokenHelper {
 
-  public static Set<String> getKeyword() {
-    return SqlKeywordTokenUtil.getTokens();
+  static final Set<String> KEYWORD_TOKENS = new HashSet<>();
+  static final Set<String> DATA_TYPE_TOKENS = new HashSet<>();
+  static final Set<String> FUNCTION_TOKENS = new HashSet<>();
+
+  static {
+    // Initialize keyword tokens
+    KEYWORD_TOKENS.addAll(SqlKeywordTokenUtil.getTokens());
+
+    // Initialize DataType tokens
+    DATA_TYPE_TOKENS.addAll(SqlDataTypeTokenUtil.getTokens());
+
+    // Initialize function tokens
+    FUNCTION_TOKENS.addAll(SqlFunctionToken.getTokens());
+    FUNCTION_TOKENS.addAll(PostgresSqlFunctionToken.getTokens());
+    FUNCTION_TOKENS.addAll(MySqlFunctionToken.getTokens());
+    FUNCTION_TOKENS.addAll(OracleFunctionToken.getTokens());
   }
 
+  // Keywords
+  public static Set<String> getKeyword() {
+    return KEYWORD_TOKENS;
+  }
+
+  // Data Types
   public static Set<String> getDataTypeTokens() {
-    return SqlDataTypeTokenUtil.getTokens();
+    return DATA_TYPE_TOKENS;
   }
 
   // Functions
   public static Set<String> getFunctionTokens() {
-    Set<String> tokens = new HashSet<>(SqlFunctionToken.getTokens());
-    tokens.addAll(SqlFunctionToken.getTokens());
-    tokens.addAll(PostgresSqlFunctionToken.getTokens());
-    tokens.addAll(MySqlFunctionToken.getTokens());
-    tokens.addAll(OracleFunctionToken.getTokens());
-
-    return tokens;
+    return FUNCTION_TOKENS;
   }
 }

@@ -23,22 +23,88 @@ public class OracleFunctionToken {
   static final Set<String> TOKENS = new HashSet<>();
 
   static {
-    TOKENS.addAll(
-        Set.of(
-            "abs",
-            "ceil",
-            "floor",
-            "round",
-            "power",
-            "sqrt",
-            "exp",
-            "log",
-            "to_char",
-            "to_date",
-            "to_number",
-            "current_date",
-            "current_timestamp",
-            "sysdate"));
+    // Mathematical Functions
+    {
+      TOKENS.addAll(
+          Set.of(
+              "abs",
+              "ceil",
+              "floor",
+              "mod",
+              "power",
+              "sqrt",
+              "sign",
+              "trunc"
+          ));
+    }
+    // Conversion Functions
+    {
+      TOKENS.addAll(
+          Set.of(
+              "asciistr",
+              "instr",
+              "instrb",
+              "instr4",
+              "length",
+              "lengthb",
+              "length4",
+              "cast",
+              "numtodsinterval",
+              "numtoyminterval",
+              "to_char",
+              "to_date",
+              "to_number",
+              "unistr"
+          ));
+    }
+    // String Functions
+    {
+      TOKENS.addAll(
+          Set.of(
+              "substr",
+              "substrb",
+              "substr4"
+          ));
+    }
+    // Lob Functions
+    {
+      TOKENS.addAll(
+          Set.of(
+              "empty_blob",
+              "empty_clob",
+              "to_blob",
+              "to_clob",
+              "to_lob",
+              "to_nclob"
+          ));
+    }
+    // Comparison functions
+    {
+      TOKENS.addAll(
+          Set.of(
+              "decode",
+              "greatest",
+              "least",
+              "coalesce",
+              "nullif",
+              "nvl"
+          ));
+    }
+    // Date/Time Functions
+    {
+      TOKENS.addAll(
+          Set.of(
+              "add_months",
+              "extract",
+              "months_between",
+              "round",
+              "sysdate",
+              "getdate",
+              "timestampadd",
+              "timestampdiff",
+              "to_date"
+          ));
+    }
   }
 
   public static Set<String> getTokens() {
