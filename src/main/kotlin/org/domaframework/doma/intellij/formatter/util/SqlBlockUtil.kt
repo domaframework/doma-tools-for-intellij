@@ -62,6 +62,7 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTyp
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
@@ -278,7 +279,9 @@ class SqlBlockUtil(
                                 child,
                                 sqlBlockFormattingCtx,
                             )?.let { return it }
-
+                        if (lastGroupBlock is SqlFunctionGroupBlock) {
+                            return SqlKeywordBlock(child, IndentType.NONE, sqlBlockFormattingCtx)
+                        }
                         SqlSecondKeywordBlock(
                             child,
                             sqlBlockFormattingCtx,

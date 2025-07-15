@@ -39,17 +39,5 @@ class SqlParallelListBlock(
             0,
         )
 
-    override fun createBlockIndentLen(): Int {
-        parentBlock?.let { parent ->
-            return parent
-                .getChildBlocksDropLast(skipCommentBlock = true)
-                .sumOf { it.getNodeText().length.plus(1) }
-                .plus(parent.indent.indentLen)
-                .plus(parent.getNodeText().length)
-                .plus(1)
-        }
-        return 0
-    }
-
-    override fun createGroupIndentLen(): Int = indent.indentLen.plus(1)
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
 }

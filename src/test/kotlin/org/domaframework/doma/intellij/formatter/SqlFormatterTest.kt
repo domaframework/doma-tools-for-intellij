@@ -54,6 +54,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("Select.sql", "Select$formatDataPrefix.sql")
     }
 
+    fun testSelectEscapeFunctionNameFormatter() {
+        formatSqlFile("SelectEscapeFunctionName.sql", "SelectEscapeFunctionName$formatDataPrefix.sql")
+    }
+
     fun testSelectCaseEndFormatter() {
         formatSqlFile("SelectCaseEnd.sql", "SelectCaseEnd$formatDataPrefix.sql")
     }

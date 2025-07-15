@@ -19,6 +19,7 @@ import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -54,7 +55,7 @@ open class SqlSecondKeywordBlock(
         lastGroup?.let { last ->
             val prevKeyword = last.childBlocks.findLast { it is SqlKeywordBlock }
             prevKeyword?.let { prev ->
-                return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), prev.getNodeText())
+                return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), prev.getNodeText()) && last !is SqlFunctionParamBlock
             }
             return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), last.getNodeText())
         }

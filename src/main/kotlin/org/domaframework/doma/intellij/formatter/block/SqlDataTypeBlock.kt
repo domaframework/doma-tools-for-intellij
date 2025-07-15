@@ -28,7 +28,6 @@ open class SqlDataTypeBlock(
         node,
         context.wrap,
         context.alignment,
-        null,
         context.spacingBuilder,
         context.enableFormat,
         context.formatMode,

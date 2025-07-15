@@ -29,7 +29,6 @@ abstract class SqlCommentBlock(
         node,
         context.wrap,
         context.alignment,
-        null,
         context.spacingBuilder,
         context.enableFormat,
         context.formatMode,
