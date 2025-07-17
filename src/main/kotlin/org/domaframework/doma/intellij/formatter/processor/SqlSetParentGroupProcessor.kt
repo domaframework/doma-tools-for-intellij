@@ -117,9 +117,36 @@ class SqlSetParentGroupProcessor(
                 blockBuilder,
             )
 
-        if (lastGroupBlock is SqlElConditionLoopCommentBlock && lastGroupBlock.parentBlock != null) {
-            setParentGroups(context) { history ->
-                return@setParentGroups lastGroupBlock
+        if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
+            if (lastGroupBlock.parentBlock != null) {
+                setParentGroups(context) { history ->
+                    return@setParentGroups lastGroupBlock
+                }
+            } else {
+                val history = blockBuilder.getGroupTopNodeIndexHistory()
+                val findParent =
+                    history
+                        .lastOrNull {
+                            it.indent.indentLevel < childBlock.indent.indentLevel ||
+                                (it is SqlElConditionLoopCommentBlock && it.parentBlock != null)
+                        }
+                // Search for keyword groups with a level lower than or equal to the current level,
+                // or conditional directives that already have a parent assigned.
+                if (findParent is SqlElConditionLoopCommentBlock) {
+                    // Set the parent of the most recent conditional directive to the current node.
+                    lastGroupBlock.setParentGroupBlock(findParent)
+                    setParentGroups(context) { history ->
+                        return@setParentGroups lastGroupBlock
+                    }
+                }
+                if (findParent !is SqlElConditionLoopCommentBlock) {
+                    // If a keyword group with a level lower than or equal to the current level is found,
+                    // set that keyword group as the parent, and set the parent of the most recent conditional directive to the current node.
+                    setParentGroups(context) { history ->
+                        return@setParentGroups findParent
+                    }
+                    lastGroupBlock.setParentGroupBlock(childBlock)
+                }
             }
             return
         }
@@ -223,7 +250,9 @@ class SqlSetParentGroupProcessor(
         } else {
             setParentGroups(context) { history ->
                 return@setParentGroups history
-                    .lastOrNull { it.indent.indentLevel < childBlock.indent.indentLevel }
+                    .lastOrNull {
+                        it.indent.indentLevel < childBlock.indent.indentLevel
+                    }
             }
         }
     }
@@ -307,36 +336,45 @@ class SqlSetParentGroupProcessor(
         lastGroupBlock: SqlBlock,
         childBlock: SqlElConditionLoopCommentBlock,
     ) {
-        if (lastGroupBlock is SqlCommaBlock) {
-            blockBuilder.removeLastGroupTopNodeIndexHistory()
-        }
-        setParentGroups(
+        val context =
             SetParentContext(
                 childBlock,
                 blockBuilder,
-            ),
-        ) { history ->
-            if (childBlock.conditionType.isElse()) {
-                val lastConditionLoopCommentBlock =
-                    blockBuilder.getConditionOrLoopBlocksLast()
-                return@setParentGroups lastConditionLoopCommentBlock
-            }
-            if (childBlock.conditionType.isEnd()) {
-                val lastConditionLoopCommentBlock =
-                    blockBuilder.getConditionOrLoopBlocksLast()
+            )
+
+        if (lastGroupBlock is SqlCommaBlock) {
+            blockBuilder.removeLastGroupTopNodeIndexHistory()
+        }
+        setParentGroups(context) { history ->
+            if (childBlock.conditionType.isEnd() || childBlock.conditionType.isElse()) {
+                // remove self and previous conditional directive block
+                blockBuilder.removeConditionOrLoopBlockLast()
                 blockBuilder.removeConditionOrLoopBlockLast()
 
                 val directiveIndex =
                     blockBuilder
-                        .getGroupTopNodeIndex { it is SqlElConditionLoopCommentBlock && it.conditionType.isStartDirective() }
+                        .getGroupTopNodeIndex { it is SqlElConditionLoopCommentBlock && it != childBlock }
                 if (directiveIndex >= 0) {
+                    val lastConditionLoopCommentBlock =
+                        blockBuilder.getGroupTopNodeIndexHistory()[directiveIndex]
                     blockBuilder.clearSubListGroupTopNodeIndexHistory(directiveIndex)
+                    return@setParentGroups lastConditionLoopCommentBlock
                 }
-
-                return@setParentGroups lastConditionLoopCommentBlock
+                return@setParentGroups null
             }
 
-            return@setParentGroups null
+            // If the most recent block is a conditional directive, set it as the parent block.
+            if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
+                val prevGroupIndex = blockBuilder.getGroupTopNodeIndex { it == lastGroupBlock }
+                if (prevGroupIndex > 0 && lastGroupBlock.parentBlock == null) {
+                    // Determine the parent of the most recent conditional directive.
+                    val prevGroup = blockBuilder.getGroupTopNodeIndexHistory()[prevGroupIndex - 1]
+                    lastGroupBlock.setParentGroupBlock(prevGroup)
+                }
+                return@setParentGroups lastGroupBlock
+            }
+            // Temporary Parent Block
+            return@setParentGroups history.lastOrNull()
         }
     }
 
@@ -405,9 +443,12 @@ class SqlSetParentGroupProcessor(
         val targetChildBlock = context.childBlock
 
         // The parent block for SqlElConditionLoopCommentBlock will be set later
-        if (targetChildBlock !is SqlElConditionLoopCommentBlock ||
-            !targetChildBlock.conditionType.isStartDirective()
-        ) {
+        if (targetChildBlock is SqlElConditionLoopCommentBlock && targetChildBlock.conditionType.isStartDirective()) {
+            targetChildBlock.tempParentBlock = parentGroup
+            if (parentGroup is SqlElConditionLoopCommentBlock && parentGroup.parentBlock != null) {
+                targetChildBlock.setParentGroupBlock(parentGroup)
+            }
+        } else {
             targetChildBlock.setParentGroupBlock(parentGroup)
         }
 
@@ -433,7 +474,7 @@ class SqlSetParentGroupProcessor(
         blockBuilder: SqlBlockBuilder,
     ): Boolean {
         if (childBlock is SqlElConditionLoopCommentBlock) {
-            if (childBlock.conditionType.isStartDirective()) {
+            if (childBlock.conditionType.isStartDirective() || childBlock.conditionType.isElse()) {
                 return true
             }
         }

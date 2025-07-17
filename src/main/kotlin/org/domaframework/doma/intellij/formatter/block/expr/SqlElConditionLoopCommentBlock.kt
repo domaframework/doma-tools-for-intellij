@@ -68,6 +68,7 @@ class SqlElConditionLoopCommentBlock(
         fun isElse(): Boolean = this == ELSE
     }
 
+    var tempParentBlock: SqlBlock? = null
     val conditionType: SqlConditionLoopCommentBlockType = initConditionOrLoopType(node)
     var conditionStart: SqlElConditionLoopCommentBlock? = null
     var conditionEnd: SqlElConditionLoopCommentBlock? = null
@@ -114,7 +115,7 @@ class SqlElConditionLoopCommentBlock(
         indent.groupIndentLen = createGroupIndentLen()
 
         childBlocks.forEach { child ->
-            if (child is SqlElConditionLoopCommentBlock) {
+            if (child is SqlElConditionLoopCommentBlock && child.conditionType.isStartDirective()) {
                 // If the child is a condition loop directive, align its indentation with the parent directive
                 child.indent.indentLen = indent.indentLen.plus(2)
             } else if (child is SqlLineCommentBlock) {

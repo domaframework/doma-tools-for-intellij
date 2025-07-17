@@ -101,6 +101,9 @@ class SqlFileBlock(
                 updateCommentParentAndIdent(childBlock)
                 updateBlockParentAndLAddGroup(childBlock)
                 updateWhiteSpaceInclude(lastBlock, childBlock, lastGroup)
+                // TODO After processing the END directive block,
+                //  if there is only one element (with two or fewer spaces),
+                //  remove the line breaks within the if~end block and consolidate it into a single line.
                 blocks.add(childBlock)
             } else {
                 if (lastBlock !is SqlLineCommentBlock) {

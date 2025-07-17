@@ -80,7 +80,7 @@ abstract class SqlSubGroupBlock(
         if (childBlocks.isEmpty()) {
             isFirstLineComment = childBlock is SqlCommentBlock
         }
-        childBlocks.add(childBlock)
+        super.addChildBlock(childBlock)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()

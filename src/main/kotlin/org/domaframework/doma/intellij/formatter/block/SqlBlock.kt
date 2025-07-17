@@ -60,6 +60,7 @@ open class SqlBlock(
 
     open var parentBlock: SqlBlock? = null
     open val childBlocks = mutableListOf<SqlBlock>()
+    open var prevBlocks = emptyList<SqlBlock>()
 
     fun getChildrenTextLen(): Int =
         childBlocks.sumOf { child ->
@@ -99,6 +100,7 @@ open class SqlBlock(
 
     open fun setParentGroupBlock(lastGroup: SqlBlock?) {
         parentBlock = lastGroup
+        prevBlocks = parentBlock?.childBlocks?.toList() ?: emptyList()
         parentBlock?.addChildBlock(this)
         setParentPropertyBlock(lastGroup)
     }
@@ -108,21 +110,27 @@ open class SqlBlock(
     }
 
     open fun addChildBlock(childBlock: SqlBlock) {
-        childBlocks.add(childBlock)
+        if (!childBlocks.contains(childBlock)) {
+            childBlocks.add(childBlock)
+        }
     }
 
     fun getNodeText() = node.text.lowercase()
 
     fun isEnableFormat(): Boolean = enableFormat
 
-    open fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
+    open fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         parentBlock?.let { parent ->
             if (parent is SqlElConditionLoopCommentBlock) {
-                parent.childBlocks.dropLast(1).isEmpty()
-            } else {
-                false
+                val prevBlock =
+                    prevBlocks.lastOrNull { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
+                return prevBlock is SqlElConditionLoopCommentBlock &&
+                    (prevBlock.conditionType.isElse() || prevBlock.conditionType.isEnd()) ||
+                    parent.childBlocks.dropLast(1).isEmpty()
             }
-        } == true
+        }
+        return false
+    }
 
     /**
      * Creates the indentation length for the block.
