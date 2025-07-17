@@ -22,12 +22,15 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
+import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
@@ -52,6 +55,7 @@ class SqlElConditionLoopCommentBlock(
     ) {
     enum class SqlConditionLoopCommentBlockType {
         CONDITION,
+        ELSE,
         LOOP,
         END,
         UNKNOWN,
@@ -59,10 +63,14 @@ class SqlElConditionLoopCommentBlock(
 
         fun isEnd(): Boolean = this == END
 
-        fun isInvalid(): Boolean = this == UNKNOWN
+        fun isStartDirective(): Boolean = this == CONDITION || this == LOOP
+
+        fun isElse(): Boolean = this == ELSE
     }
 
     val conditionType: SqlConditionLoopCommentBlockType = initConditionOrLoopType(node)
+    var conditionStart: SqlElConditionLoopCommentBlock? = null
+    var conditionEnd: SqlElConditionLoopCommentBlock? = null
 
     private fun initConditionOrLoopType(node: ASTNode): SqlConditionLoopCommentBlockType {
         val psi = node.psi
@@ -70,12 +78,16 @@ class SqlElConditionLoopCommentBlock(
             if (PsiTreeUtil.getChildOfType(psi, SqlElForDirective::class.java) != null) {
                 return SqlConditionLoopCommentBlockType.LOOP
             }
-            if (PsiTreeUtil.getChildOfType(psi, SqlElIfDirective::class.java) != null ||
-                psi.findElementAt(2)?.elementType == SqlTypes.EL_ELSE
-            ) {
+            val directiveElement = psi.findElementAt(2)
+            if (PsiTreeUtil.getChildOfType(psi, SqlElIfDirective::class.java) != null) {
                 return SqlConditionLoopCommentBlockType.CONDITION
             }
-            if (psi.findElementAt(2)?.elementType == SqlTypes.EL_END) {
+            if (directiveElement?.elementType == SqlTypes.EL_ELSE ||
+                directiveElement?.elementType == SqlTypes.EL_ELSEIF
+            ) {
+                return SqlConditionLoopCommentBlockType.ELSE
+            }
+            if (directiveElement?.elementType == SqlTypes.EL_END) {
                 return SqlConditionLoopCommentBlockType.END
             }
         }
@@ -89,11 +101,32 @@ class SqlElConditionLoopCommentBlock(
             0,
         )
 
+    /**
+     * Initially, set a **provisional indentation level** for conditional directives.
+     *
+     * If the next element is a **[SqlKeywordGroupBlock]** or **[SqlSubGroupBlock]**, align the directive’s indentation to that keyword’s indentation.
+     * Otherwise, use the **provisional indentation element as the base** to align the indentation of child elements under the directive.
+     */
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = 0
+        indent.groupIndentLen = createGroupIndentLen()
+
+        childBlocks.forEach { child ->
+            if (child is SqlElConditionLoopCommentBlock) {
+                // If the child is a condition loop directive, align its indentation with the parent directive
+                child.indent.indentLen = indent.indentLen.plus(2)
+            } else if (child is SqlLineCommentBlock) {
+                if (PsiTreeUtil.prevLeaf(child.node.psi, false)?.text?.contains("\n") == true) {
+                    child.indent.indentLen = indent.groupIndentLen
+                } else {
+                    child.indent.indentLen = 1
+                }
+            } else {
+                child.indent.indentLen = indent.groupIndentLen
+            }
+        }
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> {
@@ -173,11 +206,31 @@ class SqlElConditionLoopCommentBlock(
 
     override fun isLeaf(): Boolean = false
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        if (lastGroup is SqlSubGroupBlock) {
+            return lastGroup.childBlocks.dropLast(1).isNotEmpty()
+        }
+        return true
+    }
 
+    /**
+     * If the element directly under the directive is [SqlKeywordGroupBlock] or [SqlSubGroupBlock],
+     * make it the parent and align the indentation with the group directly under it.
+     *
+     * If the element immediately below the directive is not [SqlKeywordGroupBlock] or [SqlSubGroupBlock],
+     * align it to the previous group indent.
+     */
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
+            if (conditionType.isEnd() || conditionType.isElse()) {
+                return parent.indent.indentLen
+            }
+            val openConditionLoopDirectiveCount = getOpenDirectiveCount(parent)
             when (parent) {
+                is SqlKeywordGroupBlock, is SqlCommaBlock -> {
+                    return parent.indent.indentLen.plus(openConditionLoopDirectiveCount * 2)
+                }
+
                 is SqlSubGroupBlock -> {
                     val parentGroupIndentLen = parent.indent.groupIndentLen
                     val grand = parent.parentBlock
@@ -195,22 +248,48 @@ class SqlElConditionLoopCommentBlock(
                             parent.prevChildren?.dropLast(1)?.forEach { prev ->
                                 prevTextLen = prevTextLen.plus(prev.getNodeText().length)
                             }
-                            return grandIndentLen.plus(prevTextLen).plus(1)
+                            return grandIndentLen.plus(prevTextLen)
                         }
                     }
-                    return parentGroupIndentLen
+                    return if (TypeUtil.isExpectedClassType(
+                            SqlRightPatternBlock.NOT_INSERT_SPACE_TYPES,
+                            parent,
+                        )
+                    ) {
+                        parentGroupIndentLen.plus(openConditionLoopDirectiveCount * 2)
+                    } else {
+                        parentGroupIndentLen.plus(openConditionLoopDirectiveCount * 2).plus(1)
+                    }
                 }
 
-                is SqlKeywordGroupBlock, is SqlCommaBlock -> {
-                    return parent.indent.indentLen
-                }
-
-                // Parent of End Block is SqlElConditionLoopCommentBlock
                 is SqlElConditionLoopCommentBlock -> {
-                    return parent.indent.indentLen
+                    if (conditionType.isEnd()) {
+                        parent.conditionEnd = this
+                        conditionStart = parent
+                        return parent.indent.indentLen
+                    } else if (conditionType.isElse()) {
+                        return parent.indent.indentLen
+                    } else {
+                        return parent.indent.indentLen.plus(2)
+                    }
                 }
             }
         }
         return 0
+    }
+
+    override fun createGroupIndentLen(): Int = indent.indentLen
+
+    private fun getOpenDirectiveCount(parent: SqlBlock): Int {
+        val conditionLoopDirectives: List<SqlElConditionLoopCommentBlock> =
+            parent
+                .childBlocks
+                .mapNotNull { it as? SqlElConditionLoopCommentBlock }
+                .filter { it.conditionEnd == null }
+        val startDirectives =
+            conditionLoopDirectives.count { it.conditionType.isStartDirective() }
+        val endDirectives = conditionLoopDirectives.count { it.conditionType.isEnd() }
+        val diffCount = startDirectives.minus(endDirectives)
+        return if (diffCount > 0) diffCount.minus(1) else 0
     }
 }

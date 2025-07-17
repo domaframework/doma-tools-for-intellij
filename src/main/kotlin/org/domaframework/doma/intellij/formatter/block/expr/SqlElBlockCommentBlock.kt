@@ -20,6 +20,8 @@ import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
@@ -30,6 +32,9 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQuer
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
+import org.domaframework.doma.intellij.psi.SqlElElseifDirective
+import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElIfDirective
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlElBlockCommentBlock(
@@ -37,6 +42,17 @@ open class SqlElBlockCommentBlock(
     private val context: SqlBlockFormattingContext,
     open val customSpacingBuilder: SqlCustomSpacingBuilder?,
 ) : SqlCommentBlock(node, context) {
+    enum class SqlElCommentDirectiveType {
+        CONDITION_LOOP,
+        EXPAND,
+        POPULATE,
+        LITERAL,
+        EMBEDDED,
+        NORMAL,
+    }
+
+    val directiveType: SqlElCommentDirectiveType = initDirectiveType()
+
     override val indent =
         ElementIndent(
             IndentType.NONE,
@@ -49,6 +65,34 @@ open class SqlElBlockCommentBlock(
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = 0
+    }
+
+    private fun initDirectiveType(): SqlElCommentDirectiveType {
+        val element = this.node.psi
+        val contentElement = PsiTreeUtil.firstChild(element).nextSibling
+
+        if (contentElement is SqlElIfDirective ||
+            contentElement is SqlElForDirective ||
+            contentElement is SqlElElseifDirective ||
+            contentElement.elementType == SqlTypes.EL_ELSE ||
+            contentElement.elementType == SqlTypes.EL_END
+        ) {
+            return SqlElCommentDirectiveType.CONDITION_LOOP
+        }
+        if (contentElement.elementType == SqlTypes.HASH) {
+            return SqlElCommentDirectiveType.EMBEDDED
+        }
+        if (contentElement.elementType == SqlTypes.EL_EXPAND) {
+            return SqlElCommentDirectiveType.EXPAND
+        }
+        if (contentElement.elementType == SqlTypes.EL_POPULATE) {
+            return SqlElCommentDirectiveType.POPULATE
+        }
+        if (contentElement.elementType == SqlTypes.CARET) {
+            return SqlElCommentDirectiveType.LITERAL
+        }
+
+        return SqlElCommentDirectiveType.NORMAL
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> {
@@ -130,20 +174,30 @@ open class SqlElBlockCommentBlock(
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            if (parent is SqlSubQueryGroupBlock) {
-                if (parent.getChildBlocksDropLast().isEmpty()) {
-                    return 0
+            return when (parent) {
+                is SqlElConditionLoopCommentBlock -> parent.indent.groupIndentLen
+                is SqlSubQueryGroupBlock -> {
+                    if (parent.getChildBlocksDropLast().isEmpty()) {
+                        0
+                    } else if (parent.isFirstLineComment) {
+                        parent.indent.groupIndentLen.minus(2)
+                    } else {
+                        parent.indent.groupIndentLen
+                    }
                 }
-                if (parent.isFirstLineComment) {
-                    return parent.indent.groupIndentLen.minus(2)
-                }
-            }
-            if (parent is SqlValuesGroupBlock) {
-                return parent.indent.indentLen
+                is SqlValuesGroupBlock -> parent.indent.indentLen
+                else -> parent.indent.groupIndentLen
             }
         }
         return 0
     }
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = parentBlock is SqlValuesGroupBlock
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
+        parentBlock?.let { parent ->
+            (
+                parent is SqlValuesGroupBlock ||
+                    parent is SqlElConditionLoopCommentBlock
+            ) &&
+                parent.childBlocks.dropLast(1).isEmpty()
+        } == true
 }

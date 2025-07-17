@@ -26,6 +26,7 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
@@ -440,6 +441,15 @@ class SqlFileBlock(
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
+        if (childBlock1 is SqlWhitespaceBlock && childBlock2.parentBlock is SqlElConditionLoopCommentBlock) {
+            val child1 = childBlock2.parentBlock as SqlElConditionLoopCommentBlock
+            SqlCustomSpacingBuilder().getSpacingElDirectiveComment(child1, childBlock2)?.let { return it }
+        }
+
+        if (childBlock1 is SqlElBlockCommentBlock) {
+            SqlCustomSpacingBuilder().getSpacingElDirectiveComment(childBlock1, childBlock2)?.let { return it }
+        }
+
         if (childBlock2 is SqlWithColumnGroupBlock) {
             return SqlCustomSpacingBuilder.normalSpacing
         }
@@ -454,8 +464,11 @@ class SqlFileBlock(
         }
 
         if (childBlock2 is SqlElBlockCommentBlock) {
+            if (TypeUtil.isExpectedClassType(SqlRightPatternBlock.NOT_INSERT_SPACE_TYPES, childBlock1)) {
+                return SqlCustomSpacingBuilder.nonSpacing
+            }
             return when (childBlock1) {
-                is SqlElBlockCommentBlock, is SqlWhitespaceBlock -> {
+                is SqlWhitespaceBlock -> {
                     SqlCustomSpacingBuilder().getSpacing(childBlock2)
                 }
 

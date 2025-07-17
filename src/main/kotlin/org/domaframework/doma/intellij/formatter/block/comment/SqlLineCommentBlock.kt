@@ -39,6 +39,13 @@ open class SqlLineCommentBlock(
     override fun isLeaf(): Boolean = true
 
     override fun createBlockIndentLen(): Int {
+        val prevElement = PsiTreeUtil.prevLeaf(node.psi, false)
+        if (prevElement?.text?.contains("\n") != true &&
+            prevElement != null &&
+            PsiTreeUtil.prevLeaf(prevElement) !is SqlLineCommentBlock
+        ) {
+            return 1
+        }
         parentBlock?.let { parent ->
             if (parent is SqlSubQueryGroupBlock) {
                 if (parent.getChildBlocksDropLast().isEmpty()) {

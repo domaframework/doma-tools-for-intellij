@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.second
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
@@ -44,6 +45,8 @@ open class SqlSecondKeywordBlock(
                 offset
             } else if (parent is SqlSubGroupBlock) {
                 groupLen.plus(1)
+            } else if (parent is SqlElConditionLoopCommentBlock) {
+                groupLen
             } else {
                 groupLen.minus(this.getNodeText().length)
             }

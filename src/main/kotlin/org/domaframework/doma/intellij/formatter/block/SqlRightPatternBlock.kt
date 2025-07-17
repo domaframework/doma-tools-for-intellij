@@ -52,12 +52,13 @@ open class SqlRightPatternBlock(
     var preSpaceRight = false
 
     companion object {
-        private val NOT_INSERT_SPACE_TYPES =
+        val NOT_INSERT_SPACE_TYPES =
             listOf(
                 SqlFunctionParamBlock::class,
                 SqlInsertColumnGroupBlock::class,
                 SqlWithQuerySubGroupBlock::class,
                 SqlConflictExpressionSubGroupBlock::class,
+                SqlConditionalExpressionGroupBlock::class,
             )
 
         private val INDENT_EXPECTED_TYPES =
@@ -67,7 +68,7 @@ open class SqlRightPatternBlock(
                 SqlCreateTableColumnDefinitionGroupBlock::class,
             )
 
-        private val NEW_LINE_EXPECTED_TYPES =
+        val NEW_LINE_EXPECTED_TYPES =
             listOf(
                 SqlUpdateColumnGroupBlock::class,
                 SqlUpdateValueGroupBlock::class,
@@ -94,6 +95,10 @@ open class SqlRightPatternBlock(
             // Check if parent is in the notInsertSpaceClassList
             if (isExpectedClassType(NOT_INSERT_SPACE_TYPES, parent)) {
                 preSpaceRight = false
+                return
+            }
+            if (isExpectedClassType(INDENT_EXPECTED_TYPES, parent)) {
+                preSpaceRight = true
                 return
             }
 
@@ -144,8 +149,6 @@ open class SqlRightPatternBlock(
         if (preSpaceRight) return 1
 
         parentBlock?.let { parent ->
-            if (parent is SqlWithQuerySubGroupBlock) return 0
-            if (isExpectedClassType(INDENT_EXPECTED_TYPES, parent)) return parent.indent.indentLen
             return parent.indent.indentLen
         } ?: return 0
     }

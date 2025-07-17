@@ -24,6 +24,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
@@ -93,7 +94,12 @@ abstract class SqlSubGroupBlock(
 
     open fun endGroup() {}
 
-    override fun createBlockIndentLen(): Int = offset
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            if (parent is SqlElConditionLoopCommentBlock) return parent.indent.groupIndentLen
+        }
+        return offset
+    }
 
     override fun createGroupIndentLen(): Int {
         parentBlock?.let { parent ->

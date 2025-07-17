@@ -41,6 +41,7 @@ import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 import org.domaframework.doma.intellij.formatter.util.UpdateClauseUtil
 import org.domaframework.doma.intellij.psi.SqlTypes
+import kotlin.collections.lastOrNull
 
 class SqlSetParentGroupProcessor(
     private val blockBuilder: SqlBlockBuilder,
@@ -49,6 +50,16 @@ class SqlSetParentGroupProcessor(
         val childBlock: SqlBlock,
         val blockBuilder: SqlBlockBuilder,
     )
+
+    private val newGroupExpectedTypes =
+        listOf(
+            SqlSubGroupBlock::class,
+            SqlCreateViewGroupBlock::class,
+            SqlInlineGroupBlock::class,
+            SqlInlineSecondGroupBlock::class,
+            SqlColumnDefinitionRawGroupBlock::class,
+            SqlLateralGroupBlock::class,
+        )
 
     /**
      * Sets the parent of the latest group block and registers itself as a child element.
@@ -60,7 +71,7 @@ class SqlSetParentGroupProcessor(
                 blockBuilder,
             ),
         ) { history ->
-            return@setParentGroups history.last()
+            return@setParentGroups history.lastOrNull()
         }
     }
 
@@ -105,6 +116,13 @@ class SqlSetParentGroupProcessor(
                 childBlock,
                 blockBuilder,
             )
+
+        if (lastGroupBlock is SqlElConditionLoopCommentBlock && lastGroupBlock.parentBlock != null) {
+            setParentGroups(context) { history ->
+                return@setParentGroups lastGroupBlock
+            }
+            return
+        }
 
         val currentIndentLevel = childBlock.indent.indentLevel
         if (currentIndentLevel == IndentType.TOP) {
@@ -289,12 +307,7 @@ class SqlSetParentGroupProcessor(
         lastGroupBlock: SqlBlock,
         childBlock: SqlElConditionLoopCommentBlock,
     ) {
-        val expectedTypes =
-            listOf(
-                SqlCommaBlock::class,
-                SqlElConditionLoopCommentBlock::class,
-            )
-        if (isExpectedClassType(expectedTypes, lastGroupBlock)) {
+        if (lastGroupBlock is SqlCommaBlock) {
             blockBuilder.removeLastGroupTopNodeIndexHistory()
         }
         setParentGroups(
@@ -303,12 +316,26 @@ class SqlSetParentGroupProcessor(
                 blockBuilder,
             ),
         ) { history ->
+            if (childBlock.conditionType.isElse()) {
+                val lastConditionLoopCommentBlock =
+                    blockBuilder.getConditionOrLoopBlocksLast()
+                return@setParentGroups lastConditionLoopCommentBlock
+            }
             if (childBlock.conditionType.isEnd()) {
                 val lastConditionLoopCommentBlock =
                     blockBuilder.getConditionOrLoopBlocksLast()
                 blockBuilder.removeConditionOrLoopBlockLast()
+
+                val directiveIndex =
+                    blockBuilder
+                        .getGroupTopNodeIndex { it is SqlElConditionLoopCommentBlock && it.conditionType.isStartDirective() }
+                if (directiveIndex >= 0) {
+                    blockBuilder.clearSubListGroupTopNodeIndexHistory(directiveIndex)
+                }
+
                 return@setParentGroups lastConditionLoopCommentBlock
             }
+
             return@setParentGroups null
         }
     }
@@ -375,27 +402,27 @@ class SqlSetParentGroupProcessor(
         val parentGroup =
             getParentGroup(context.blockBuilder.getGroupTopNodeIndexHistory() as MutableList<SqlBlock>)
 
+        val targetChildBlock = context.childBlock
+
         // The parent block for SqlElConditionLoopCommentBlock will be set later
-        if (context.childBlock !is SqlElConditionLoopCommentBlock ||
-            context.childBlock.conditionType.isEnd()
+        if (targetChildBlock !is SqlElConditionLoopCommentBlock ||
+            !targetChildBlock.conditionType.isStartDirective()
         ) {
-            context.childBlock.setParentGroupBlock(parentGroup)
+            targetChildBlock.setParentGroupBlock(parentGroup)
         }
 
-        val expectedTypes =
-            listOf(
-                SqlSubGroupBlock::class,
-                SqlCreateViewGroupBlock::class,
-                SqlInlineGroupBlock::class,
-                SqlInlineSecondGroupBlock::class,
-                SqlColumnDefinitionRawGroupBlock::class,
-                SqlLateralGroupBlock::class,
+        if (isNewGroup(targetChildBlock, context.blockBuilder) ||
+            isExpectedClassType(
+                newGroupExpectedTypes,
+                targetChildBlock,
             )
-        if (isNewGroup(context.childBlock, context.blockBuilder) || isExpectedClassType(expectedTypes, context.childBlock)) {
-            context.blockBuilder.addGroupTopNodeIndexHistory(context.childBlock)
-            // Set parent-child relationship and indent for preceding comment at beginning of block group
-            context.blockBuilder.updateCommentBlockIndent(context.childBlock)
+        ) {
+            context.blockBuilder.addGroupTopNodeIndexHistory(targetChildBlock)
+            context.blockBuilder.updateCommentBlockIndent(targetChildBlock)
         }
+
+        // Set parent-child relationship and indent for preceding comment at beginning of block group
+        context.blockBuilder.updateConditionLoopBlockIndent(targetChildBlock)
     }
 
     /**
@@ -405,6 +432,12 @@ class SqlSetParentGroupProcessor(
         childBlock: SqlBlock,
         blockBuilder: SqlBlockBuilder,
     ): Boolean {
+        if (childBlock is SqlElConditionLoopCommentBlock) {
+            if (childBlock.conditionType.isStartDirective()) {
+                return true
+            }
+        }
+
         val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
         return isNewGroupAndNotSetLineKeywords(childBlock, lastGroup)
     }

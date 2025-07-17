@@ -15,14 +15,30 @@
  */
 package org.domaframework.doma.intellij.formatter.builder
 
+import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 
 open class SqlBlockBuilder {
+    private val updateDirectiveParentTypes =
+        listOf(
+            SqlLineCommentBlock::class,
+            SqlBlockCommentBlock::class,
+        )
+
+    private val originalConditionLoopDirectiveParentType =
+        listOf(
+            SqlKeywordGroupBlock::class,
+            SqlSubGroupBlock::class,
+        )
+
     private val groupTopNodeIndexHistory = mutableListOf<SqlBlock>()
 
     private val commentBlocks = mutableListOf<SqlCommentBlock>()
@@ -39,31 +55,85 @@ open class SqlBlockBuilder {
         commentBlocks.add(block)
     }
 
+    /**
+     * For condition/loop directive blocks
+     *
+     * determine the parent based on the type of block immediately below.
+     */
     fun updateCommentBlockIndent(baseIndent: SqlBlock) {
         if (commentBlocks.isNotEmpty()) {
             var index = 0
-            commentBlocks.forEach { block ->
-                if (block !is SqlElBlockCommentBlock) {
-                    if (index == 0 &&
-                        baseIndent.parentBlock is SqlSubGroupBlock &&
-                        baseIndent.parentBlock?.childBlocks?.size == 1
-                    ) {
-                        block.indent.indentLevel = IndentType.NONE
-                        block.indent.indentLen = 1
-                        block.indent.groupIndentLen = 0
-                    } else {
-                        block.setParentGroupBlock(baseIndent)
+            commentBlocks
+                .filter { it.parentBlock == null }
+                .forEach { block ->
+                    if (block !is SqlElBlockCommentBlock) {
+                        if (index == 0 &&
+                            baseIndent.parentBlock is SqlSubGroupBlock &&
+                            baseIndent.parentBlock?.childBlocks?.size == 1
+                        ) {
+                            block.indent.indentLevel = IndentType.NONE
+                            block.indent.indentLen = 1
+                            block.indent.groupIndentLen = 0
+                        } else {
+                            block.setParentGroupBlock(baseIndent)
+                        }
+                        index++
                     }
-                    index++
                 }
-            }
             commentBlocks.clear()
         }
-        if (conditionOrLoopBlocks.isNotEmpty()) {
-            conditionOrLoopBlocks.forEach { block ->
-                if (block.parentBlock == null) {
-                    block.setParentGroupBlock(baseIndent)
-                }
+    }
+
+    fun updateConditionLoopBlockIndent(baseIndent: SqlBlock) {
+        if (!isExpectedClassType(updateDirectiveParentTypes, baseIndent)) {
+            if (conditionOrLoopBlocks.isNotEmpty()) {
+                val lastGroup = groupTopNodeIndexHistory.lastOrNull()
+                conditionOrLoopBlocks
+                    .filter { it.parentBlock == null }
+                    .forEach { block ->
+                        var setParentBlock: SqlBlock? = null
+                        val conditionBlockIndex = groupTopNodeIndexHistory.indexOf(block)
+                        val prevConditionBlockGroup =
+                            if (conditionBlockIndex > 0) {
+                                groupTopNodeIndexHistory[conditionBlockIndex - 1]
+                            } else {
+                                null
+                            }
+                        // Prioritize previous condition loop block over keyword group
+                        if (prevConditionBlockGroup is SqlElConditionLoopCommentBlock) {
+                            setParentBlock = prevConditionBlockGroup
+                        } else if (prevConditionBlockGroup?.parentBlock is SqlElConditionLoopCommentBlock) {
+                            setParentBlock = prevConditionBlockGroup.parentBlock
+                        } else if (lastGroup == baseIndent) {
+                            setParentBlock =
+                                if (isExpectedClassType(
+                                        originalConditionLoopDirectiveParentType,
+                                        baseIndent,
+                                    )
+                                ) {
+                                    baseIndent
+                                } else {
+                                    prevConditionBlockGroup
+                                }
+                        } else {
+                            setParentBlock =
+                                if (isExpectedClassType(
+                                        originalConditionLoopDirectiveParentType,
+                                        baseIndent,
+                                    )
+                                ) {
+                                    baseIndent
+                                } else {
+                                    prevConditionBlockGroup
+                                }
+                        }
+
+                        if (block != baseIndent) {
+                            block.setParentGroupBlock(setParentBlock)
+                        } else if (setParentBlock is SqlElConditionLoopCommentBlock) {
+                            block.setParentGroupBlock(setParentBlock)
+                        }
+                    }
             }
         }
     }
@@ -92,7 +162,7 @@ open class SqlBlockBuilder {
     fun getConditionOrLoopBlocksLast(): SqlElConditionLoopCommentBlock? = conditionOrLoopBlocks.lastOrNull()
 
     fun addConditionOrLoopBlock(block: SqlElConditionLoopCommentBlock) {
-        if (!block.conditionType.isInvalid() && !block.conditionType.isEnd()) {
+        if (block.conditionType.isStartDirective()) {
             conditionOrLoopBlocks.add(block)
         }
     }

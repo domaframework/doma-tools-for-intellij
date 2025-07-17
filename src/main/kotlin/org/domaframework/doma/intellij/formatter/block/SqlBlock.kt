@@ -26,6 +26,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -114,7 +115,14 @@ open class SqlBlock(
 
     fun isEnableFormat(): Boolean = enableFormat
 
-    open fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
+    open fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
+        parentBlock?.let { parent ->
+            if (parent is SqlElConditionLoopCommentBlock) {
+                parent.childBlocks.dropLast(1).isEmpty()
+            } else {
+                false
+            }
+        } == true
 
     /**
      * Creates the indentation length for the block.
