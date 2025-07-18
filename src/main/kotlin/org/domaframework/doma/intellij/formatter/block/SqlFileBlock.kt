@@ -29,9 +29,10 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElSymbolBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
@@ -266,7 +267,11 @@ class SqlFileBlock(
                 commentBlock,
             )
         } else {
-            blockBuilder.addCommentBlock(commentBlock)
+            (commentBlock as? SqlDefaultCommentBlock)?.let {
+                blockBuilder.addCommentBlock(
+                    commentBlock,
+                )
+            }
         }
     }
 
@@ -360,7 +365,7 @@ class SqlFileBlock(
                 )
             }
 
-            is SqlWordBlock, is SqlOtherBlock, is SqlLineCommentBlock, is SqlBlockCommentBlock -> {
+            is SqlWordBlock, is SqlOtherBlock, is SqlDefaultCommentBlock -> {
                 parentSetProcessor.updateGroupBlockParentAndAddGroup(
                     childBlock,
                 )

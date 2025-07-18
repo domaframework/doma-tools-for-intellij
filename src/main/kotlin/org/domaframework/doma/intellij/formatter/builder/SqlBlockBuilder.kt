@@ -18,13 +18,11 @@ package org.domaframework.doma.intellij.formatter.builder
 import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
 
 open class SqlBlockBuilder {
     private val updateDirectiveParentTypes =
@@ -41,7 +39,7 @@ open class SqlBlockBuilder {
 
     private val groupTopNodeIndexHistory = mutableListOf<SqlBlock>()
 
-    private val commentBlocks = mutableListOf<SqlCommentBlock>()
+    private val commentBlocks = mutableListOf<SqlDefaultCommentBlock>()
 
     private val conditionOrLoopBlocks = mutableListOf<SqlElConditionLoopCommentBlock>()
 
@@ -51,29 +49,21 @@ open class SqlBlockBuilder {
         groupTopNodeIndexHistory.add(block)
     }
 
-    fun addCommentBlock(block: SqlCommentBlock) {
+    fun addCommentBlock(block: SqlDefaultCommentBlock) {
         commentBlocks.add(block)
     }
 
-    fun updateCommentBlockIndent(baseIndent: SqlBlock) {
+    /**
+     * It becomes a child of the previous block,
+     * but the indentation is aligned with the next block.
+     */
+    fun updateCommentBlockIndent(nextBlock: SqlBlock) {
         if (commentBlocks.isNotEmpty()) {
             var index = 0
             commentBlocks
-                .filter { it.parentBlock == null }
                 .forEach { block ->
-                    if (block !is SqlElBlockCommentBlock) {
-                        if (index == 0 &&
-                            baseIndent.parentBlock is SqlSubGroupBlock &&
-                            baseIndent.parentBlock?.childBlocks?.size == 1
-                        ) {
-                            block.indent.indentLevel = IndentType.NONE
-                            block.indent.indentLen = 1
-                            block.indent.groupIndentLen = 0
-                        } else {
-                            block.setParentGroupBlock(baseIndent)
-                        }
-                        index++
-                    }
+                    block.updateIndentLen(nextBlock)
+                    index++
                 }
             commentBlocks.clear()
         }
@@ -101,12 +91,7 @@ open class SqlBlockBuilder {
                             } else {
                                 null
                             }
-                        // Prioritize previous condition loop block over keyword group
-//                        if (prevConditionBlockGroup is SqlElConditionLoopCommentBlock) {
-//                            setParentBlock = prevConditionBlockGroup
-//                        } else if (prevConditionBlockGroup?.parentBlock is SqlElConditionLoopCommentBlock) {
-//                            setParentBlock = prevConditionBlockGroup.parentBlock
-//                        } else
+
                         if (lastGroup == nextBlock) {
                             setParentBlock =
                                 if (isExpectedClassType(

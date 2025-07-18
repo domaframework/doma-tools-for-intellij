@@ -28,11 +28,11 @@ import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.OnConflictKeywordType
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock

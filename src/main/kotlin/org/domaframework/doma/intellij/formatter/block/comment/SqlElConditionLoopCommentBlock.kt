@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.expr
+package org.domaframework.doma.intellij.formatter.block.comment
 
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
@@ -29,15 +29,15 @@ import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElFieldAccessBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElFunctionCallBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElStaticFieldAccessBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
-import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
@@ -95,13 +95,6 @@ class SqlElConditionLoopCommentBlock(
         return SqlConditionLoopCommentBlockType.UNKNOWN
     }
 
-    override val indent =
-        ElementIndent(
-            IndentType.NONE,
-            0,
-            0,
-        )
-
     /**
      * Initially, set a **provisional indentation level** for conditional directives.
      *
@@ -110,9 +103,6 @@ class SqlElConditionLoopCommentBlock(
      */
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLevel = IndentType.NONE
-        indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = createGroupIndentLen()
 
         childBlocks.forEach { child ->
             if (child is SqlElConditionLoopCommentBlock && child.conditionType.isStartDirective()) {
@@ -253,7 +243,7 @@ class SqlElConditionLoopCommentBlock(
                         }
                     }
                     return if (TypeUtil.isExpectedClassType(
-                            SqlRightPatternBlock.NOT_INSERT_SPACE_TYPES,
+                            SqlRightPatternBlock.NOT_INDENT_EXPECTED_TYPES,
                             parent,
                         )
                     ) {

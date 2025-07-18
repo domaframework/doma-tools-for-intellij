@@ -25,8 +25,9 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -123,7 +124,7 @@ open class SqlBlock(
         parentBlock?.let { parent ->
             if (parent is SqlElConditionLoopCommentBlock) {
                 val prevBlock =
-                    prevBlocks.lastOrNull { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
+                    prevBlocks.lastOrNull { it !is SqlDefaultCommentBlock }
                 return prevBlock is SqlElConditionLoopCommentBlock &&
                     (prevBlock.conditionType.isElse() || prevBlock.conditionType.isEnd()) ||
                     parent.childBlocks.dropLast(1).isEmpty()

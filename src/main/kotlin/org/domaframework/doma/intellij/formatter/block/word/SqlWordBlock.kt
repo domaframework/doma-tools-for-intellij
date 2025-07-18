@@ -18,7 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.word
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType

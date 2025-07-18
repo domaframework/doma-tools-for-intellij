@@ -16,49 +16,12 @@
 package org.domaframework.doma.intellij.formatter.block.comment
 
 import com.intellij.lang.ASTNode
-import com.intellij.psi.formatter.common.AbstractBlock
-import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlLineCommentBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlCommentBlock(
+) : SqlDefaultCommentBlock(
         node,
         context,
-    ) {
-    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
-    }
-
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun isLeaf(): Boolean = true
-
-    override fun createBlockIndentLen(): Int {
-        val prevElement = PsiTreeUtil.prevLeaf(node.psi, false)
-        if (prevElement?.text?.contains("\n") != true &&
-            prevElement != null &&
-            PsiTreeUtil.prevLeaf(prevElement) !is SqlLineCommentBlock
-        ) {
-            return 1
-        }
-        parentBlock?.let { parent ->
-            if (parent is SqlSubQueryGroupBlock) {
-                if (parent.getChildBlocksDropLast().isEmpty()) {
-                    return 0
-                }
-                if (parent.isFirstLineComment) {
-                    return parent.indent.groupIndentLen.minus(2)
-                }
-            }
-            return parent.indent.indentLen
-        }
-        return 0
-    }
-
-    override fun isSaveSpace(lastGroup: SqlBlock?) = PsiTreeUtil.prevLeaf(node.psi)?.text?.contains("\n") == true
-}
+    )

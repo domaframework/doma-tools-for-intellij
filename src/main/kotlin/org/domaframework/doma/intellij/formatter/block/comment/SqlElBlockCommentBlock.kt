@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.expr
+package org.domaframework.doma.intellij.formatter.block.comment
 
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
@@ -25,12 +25,12 @@ import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElFieldAccessBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElFunctionCallBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElStaticFieldAccessBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
-import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
 import org.domaframework.doma.intellij.psi.SqlElForDirective
@@ -52,20 +52,6 @@ open class SqlElBlockCommentBlock(
     }
 
     val directiveType: SqlElCommentDirectiveType = initDirectiveType()
-
-    override val indent =
-        ElementIndent(
-            IndentType.NONE,
-            0,
-            0,
-        )
-
-    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
-        indent.indentLevel = IndentType.NONE
-        indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = 0
-    }
 
     private fun initDirectiveType(): SqlElCommentDirectiveType {
         val element = this.node.psi

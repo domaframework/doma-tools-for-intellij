@@ -17,50 +17,30 @@ package org.domaframework.doma.intellij.formatter.block.comment
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.block.SqlFileBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-abstract class SqlCommentBlock(
+abstract class SqlDefaultCommentBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlBlock(
-        node,
-        context.wrap,
-        context.alignment,
-        context.spacingBuilder,
-        context.enableFormat,
-        context.formatMode,
-    ) {
-    override val indent =
-        ElementIndent(
-            IndentType.NONE,
-            0,
-            0,
-        )
-
-    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
-        indent.indentLevel = IndentType.NONE
-        indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = createGroupIndentLen()
-    }
-
+) : SqlCommentBlock(node, context) {
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun isLeaf(): Boolean = true
 
-    override fun createBlockIndentLen(): Int {
-        parentBlock?.let { parent ->
-            if (parent.parentBlock !is SqlSubGroupBlock ||
-                parent.parentBlock?.childBlocks?.size != 1
-            ) {
-                return parent.indent.indentLen
+    /**
+     * When the next element block is determined, update the indent to align it with the element below.
+     */
+    fun updateIndentLen(baseBlock: SqlBlock) {
+        indent.indentLen =
+            if (parentBlock is SqlFileBlock || isSaveSpace(parentBlock)) {
+                baseBlock.indent.indentLen
+            } else {
+                1
             }
-        }
-        return 0
     }
 
-    override fun createGroupIndentLen(): Int = 0
+    override fun isSaveSpace(lastGroup: SqlBlock?) = PsiTreeUtil.prevLeaf(node.psi)?.text?.contains("\n") == true
 }
