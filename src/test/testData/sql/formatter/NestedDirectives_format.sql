@@ -4,15 +4,14 @@ SELECT e.id
   FROM employee e
        /*%if includesDepartment */
        LEFT JOIN department d
-         ON e.department_id = d.id
+              ON e.department_id = d.id
          /*%if includeDepartmentDetails */
          LEFT JOIN department_detail dd
                 ON d.id = dd.department_id
          /*%end */
        /*%end */
  WHERE 1 = 1
- ORDER BY
- /*%if sortConditions != null && !sortConditions.isEmpty() */ -- IF1
+ ORDER BY /*%if sortConditions != null && !sortConditions.isEmpty() */ -- IF1
    /*%for sort : sortConditions */ -- IF2
      /*%if sort.field == "name" */ -- IF3
      e.name

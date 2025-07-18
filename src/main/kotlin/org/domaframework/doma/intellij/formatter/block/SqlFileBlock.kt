@@ -27,7 +27,6 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil
-import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElBlockCommentBlock
@@ -534,14 +533,6 @@ class SqlFileBlock(
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
-        if (childBlock1 is SqlWhitespaceBlock) {
-            when (childBlock2) {
-                is SqlBlockCommentBlock, is SqlLineCommentBlock, is SqlNewGroupBlock -> {
-                    return SqlCustomSpacingBuilder().getSpacing(childBlock2)
-                }
-            }
-        }
-
         if (childBlock2 is SqlNewGroupBlock) {
             if (childBlock1 is SqlSubGroupBlock && childBlock2.indent.indentLevel == IndentType.ATTACHED) {
                 return SqlCustomSpacingBuilder.nonSpacing
@@ -581,6 +572,18 @@ class SqlFileBlock(
             SqlCustomSpacingBuilder()
                 .getSpacingWithIndentComma(childBlock1, childBlock2)
                 ?.let { return it }
+        }
+
+        // First apply spacing logic for blocks under specific conditions,
+        // then execute the general spacing logic for post-line-break blocks at the end.
+        if (childBlock1 is SqlWhitespaceBlock) {
+            return when (childBlock2) {
+                is SqlDefaultCommentBlock, is SqlNewGroupBlock -> {
+                    SqlCustomSpacingBuilder().getSpacing(childBlock2)
+                }
+
+                else -> SqlCustomSpacingBuilder().getSpacing(childBlock2)
+            }
         }
 
         val spacing: Spacing? = customSpacingBuilder?.getCustomSpacing(childBlock1, childBlock2)

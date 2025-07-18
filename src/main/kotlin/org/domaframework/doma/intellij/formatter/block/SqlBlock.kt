@@ -25,11 +25,14 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlBlock(
@@ -128,6 +131,16 @@ open class SqlBlock(
                 return prevBlock is SqlElConditionLoopCommentBlock &&
                     (prevBlock.conditionType.isElse() || prevBlock.conditionType.isEnd()) ||
                     parent.childBlocks.dropLast(1).isEmpty()
+            }
+            if (parent is SqlNewGroupBlock) {
+                val prevWord = prevBlocks.lastOrNull { it !is SqlCommentBlock }
+                if (SqlKeywordUtil.isSetLineKeyword(getNodeText(), parent.getNodeText()) ||
+                    SqlKeywordUtil.isSetLineKeyword(getNodeText(), prevWord?.getNodeText() ?: "")
+                ) {
+                    return false
+                }
+                return childBlocks.lastOrNull() is SqlElConditionLoopCommentBlock ||
+                    prevBlocks.lastOrNull() is SqlElConditionLoopCommentBlock
             }
         }
         return false

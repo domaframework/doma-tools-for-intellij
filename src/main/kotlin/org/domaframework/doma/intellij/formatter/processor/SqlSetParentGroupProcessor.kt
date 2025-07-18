@@ -64,12 +64,19 @@ class SqlSetParentGroupProcessor(
      * Sets the parent of the latest group block and registers itself as a child element.
      */
     fun updateGroupBlockParentAndAddGroup(childBlock: SqlBlock) {
-        setParentGroups(
+        val context =
             SetParentContext(
                 childBlock,
                 blockBuilder,
-            ),
-        ) { history ->
+            )
+        val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
+        if (lastGroup is SqlElConditionLoopCommentBlock) {
+            updateParentGroupLastConditionLoop(lastGroup, context) { block ->
+                block.indent.indentLevel < childBlock.indent.indentLevel
+            }
+            return
+        }
+        setParentGroups(context) { history ->
             return@setParentGroups history.lastOrNull()
         }
     }
@@ -91,7 +98,7 @@ class SqlSetParentGroupProcessor(
     /**
      * Registers itself as a child element in the same block as the parent of the last group at the time of processing.
      */
-    fun updateGroupBlockLastGroupParentAddGroup(
+    private fun updateGroupBlockLastGroupParentAddGroup(
         lastGroupBlock: SqlBlock,
         childBlock: SqlBlock,
     ) {
@@ -117,7 +124,7 @@ class SqlSetParentGroupProcessor(
             )
 
         if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
-            updateParentGroupLastConditionLoop(lastGroupBlock, context, childBlock) {
+            updateParentGroupLastConditionLoop(lastGroupBlock, context) {
                 it.indent.indentLevel < childBlock.indent.indentLevel
             }
             return
@@ -257,15 +264,23 @@ class SqlSetParentGroupProcessor(
             listOf(
                 SqlColumnRawGroupBlock::class,
             )
-        if (isExpectedClassType(expectedTypes, lastGroupBlock)) {
-            blockBuilder.removeLastGroupTopNodeIndexHistory()
-        }
-        setParentGroups(
+        val context =
             SetParentContext(
                 childBlock,
                 blockBuilder,
-            ),
-        ) { history ->
+            )
+
+        if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
+            updateParentGroupLastConditionLoop(lastGroupBlock, context) {
+                it.indent.indentLevel < childBlock.indent.indentLevel
+            }
+            return
+        }
+
+        if (isExpectedClassType(expectedTypes, lastGroupBlock)) {
+            blockBuilder.removeLastGroupTopNodeIndexHistory()
+        }
+        setParentGroups(context) { history ->
             return@setParentGroups history
                 .lastOrNull { it.indent.indentLevel < childBlock.indent.indentLevel }
         }
@@ -295,7 +310,7 @@ class SqlSetParentGroupProcessor(
 
         val lastGroupBlock = blockBuilder.getLastGroupTopNodeIndexHistory()
         if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
-            updateParentGroupLastConditionLoop(lastGroupBlock, context, childBlock) {
+            updateParentGroupLastConditionLoop(lastGroupBlock, context) {
                 it.indent.indentLevel == IndentType.INLINE_SECOND
             }
             return
@@ -319,9 +334,9 @@ class SqlSetParentGroupProcessor(
     private fun updateParentGroupLastConditionLoop(
         lastGroupBlock: SqlElConditionLoopCommentBlock,
         context: SetParentContext,
-        childBlock: SqlBlock,
         findDefaultParent: (SqlBlock) -> Boolean,
     ) {
+        val childBlock = context.childBlock
         if (lastGroupBlock.parentBlock != null) {
             setParentGroups(context) { history ->
                 return@setParentGroups lastGroupBlock

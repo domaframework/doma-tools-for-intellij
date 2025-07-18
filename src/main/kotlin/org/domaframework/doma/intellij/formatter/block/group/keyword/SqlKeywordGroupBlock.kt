@@ -44,6 +44,7 @@ open class SqlKeywordGroupBlock(
             listOf(
                 SqlKeywordBlock::class,
                 SqlKeywordGroupBlock::class,
+                SqlElConditionLoopCommentBlock::class,
             )
 
         if (lastChild == null ||
@@ -55,7 +56,9 @@ open class SqlKeywordGroupBlock(
         ) {
             topKeywordBlocks.add(block)
         } else {
-            canAddTopKeyword = false
+            if (block !is SqlElConditionLoopCommentBlock) {
+                canAddTopKeyword = false
+            }
         }
 
         indent.groupIndentLen = createGroupIndentLen()

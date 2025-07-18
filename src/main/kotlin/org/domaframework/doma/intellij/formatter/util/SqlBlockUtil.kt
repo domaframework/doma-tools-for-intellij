@@ -24,7 +24,6 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
@@ -35,7 +34,6 @@ import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClaus
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
@@ -393,19 +391,7 @@ class SqlBlockUtil(
             .getColumnRawGroup(lastGroup, child, sqlBlockFormattingCtx)
             ?.let { return it }
 
-        return when (lastGroup) {
-            is SqlColumnRawGroupBlock, is SqlKeywordGroupBlock -> {
-                if (lastGroup.indent.indentLevel == IndentType.SECOND) {
-                    SqlCommaBlock(child, sqlBlockFormattingCtx)
-                } else {
-                    SqlColumnRawGroupBlock(child, sqlBlockFormattingCtx)
-                }
-            }
-
-            is SqlWithCommonTableGroupBlock -> SqlWithCommonTableGroupBlock(child, sqlBlockFormattingCtx)
-
-            else -> SqlCommaBlock(child, sqlBlockFormattingCtx)
-        }
+        return CommaRawUtil.getCommaBlock(lastGroup, child, sqlBlockFormattingCtx)
     }
 
     fun getWordBlock(

@@ -25,7 +25,7 @@ import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
@@ -35,8 +35,6 @@ import org.domaframework.doma.intellij.formatter.block.expr.SqlElStaticFieldAcce
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
@@ -200,10 +198,13 @@ class SqlElConditionLoopCommentBlock(
     override fun isLeaf(): Boolean = false
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        if (conditionType.isEnd() || conditionType.isElse()) {
+            return true
+        }
         if (lastGroup is SqlSubGroupBlock) {
             return lastGroup.childBlocks.dropLast(1).isNotEmpty()
         }
-        return true
+        return lastGroup?.childBlocks?.any { it !is SqlKeywordBlock && it !is SqlKeywordGroupBlock } == true
     }
 
     /**
@@ -220,10 +221,6 @@ class SqlElConditionLoopCommentBlock(
             }
             val openConditionLoopDirectiveCount = getOpenDirectiveCount(parent)
             when (parent) {
-                is SqlKeywordGroupBlock, is SqlCommaBlock, is SqlInlineGroupBlock, is SqlInlineSecondGroupBlock -> {
-                    return parent.indent.indentLen.plus(openConditionLoopDirectiveCount * 2)
-                }
-
                 is SqlSubGroupBlock -> {
                     val parentGroupIndentLen = parent.indent.groupIndentLen
                     val grand = parent.parentBlock
@@ -266,6 +263,7 @@ class SqlElConditionLoopCommentBlock(
                         return parent.indent.indentLen.plus(2)
                     }
                 }
+                else -> return parent.indent.indentLen.plus(openConditionLoopDirectiveCount * 2)
             }
         }
         return 0
