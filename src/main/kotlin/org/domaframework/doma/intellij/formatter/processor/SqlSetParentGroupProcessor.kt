@@ -37,9 +37,9 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWit
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
+import org.domaframework.doma.intellij.formatter.handler.UpdateClauseHandler
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
-import org.domaframework.doma.intellij.formatter.util.UpdateClauseUtil
 import org.domaframework.doma.intellij.psi.SqlTypes
 import kotlin.collections.lastOrNull
 
@@ -160,7 +160,7 @@ class SqlSetParentGroupProcessor(
             if (isExpectedClassType(TOP_LEVEL_EXPECTED_TYPES, lastGroupBlock)) {
                 lastGroupBlock
             } else if (childBlock is SqlUpdateQueryGroupBlock) {
-                UpdateClauseUtil.getParentGroupBlock(blockBuilder, childBlock)
+                UpdateClauseHandler.getParentGroupBlock(blockBuilder, childBlock)
             } else {
                 findTopLevelParent()
             }

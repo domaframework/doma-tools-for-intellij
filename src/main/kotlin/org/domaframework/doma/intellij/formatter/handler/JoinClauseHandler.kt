@@ -13,21 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.util
+package org.domaframework.doma.intellij.formatter.handler
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
+import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 
-object JoinGroupUtil {
+object JoinClauseHandler {
     fun getJoinKeywordGroupBlock(
         lastGroupBlock: SqlBlock?,
         keywordText: String,
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,
     ): SqlBlock =
-        if (SqlKeywordUtil.isJoinKeyword(keywordText)) {
+        if (SqlKeywordUtil.Companion.isJoinKeyword(keywordText)) {
             SqlJoinGroupBlock(
                 child,
                 sqlBlockFormattingCtx,

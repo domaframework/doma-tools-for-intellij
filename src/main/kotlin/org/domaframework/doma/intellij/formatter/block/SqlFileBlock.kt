@@ -57,8 +57,8 @@ import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
+import org.domaframework.doma.intellij.formatter.handler.CreateClauseHandler
 import org.domaframework.doma.intellij.formatter.processor.SqlSetParentGroupProcessor
-import org.domaframework.doma.intellij.formatter.util.CreateTableUtil
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.formatter.util.SqlBlockGenerator
@@ -552,7 +552,7 @@ class SqlFileBlock(
         }
 
         // Create Table Column Definition Raw Group Block
-        CreateTableUtil
+        CreateClauseHandler
             .getColumnDefinitionRawGroupSpacing(childBlock1, childBlock2)
             ?.let { return it }
 

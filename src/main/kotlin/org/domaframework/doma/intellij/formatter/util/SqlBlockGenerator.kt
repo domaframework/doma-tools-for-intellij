@@ -64,6 +64,13 @@ import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBloc
 import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
+import org.domaframework.doma.intellij.formatter.handler.CommaRawClauseHandler
+import org.domaframework.doma.intellij.formatter.handler.CreateClauseHandler
+import org.domaframework.doma.intellij.formatter.handler.InsertClauseHandler
+import org.domaframework.doma.intellij.formatter.handler.JoinClauseHandler
+import org.domaframework.doma.intellij.formatter.handler.NotQueryGroupHandler
+import org.domaframework.doma.intellij.formatter.handler.UpdateClauseHandler
+import org.domaframework.doma.intellij.formatter.handler.WithClauseHandler
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 
 data class SqlBlockFormattingContext(
@@ -74,7 +81,7 @@ data class SqlBlockFormattingContext(
     val formatMode: FormattingMode,
 )
 
-class SqlBlockUtil(
+class SqlBlockGenerator(
     sqlBlock: SqlBlock,
     enableFormat: Boolean,
     formatMode: FormattingMode,
@@ -155,7 +162,7 @@ class SqlBlockUtil(
     ): SqlBlock {
         when (indentLevel) {
             IndentType.JOIN -> {
-                return JoinGroupUtil.getJoinKeywordGroupBlock(
+                return JoinClauseHandler.getJoinKeywordGroupBlock(
                     lastGroupBlock,
                     keywordText,
                     child,
@@ -237,7 +244,7 @@ class SqlBlockUtil(
                                 sqlBlockFormattingCtx,
                             )
                         } else {
-                            WithClauseUtil
+                            WithClauseHandler
                                 .getWithClauseKeywordGroup(
                                     lastGroupBlock,
                                     child,
@@ -263,11 +270,11 @@ class SqlBlockUtil(
                         )
 
                     else -> {
-                        WithClauseUtil
+                        WithClauseHandler
                             .getWithClauseKeywordGroup(lastGroupBlock, child, sqlBlockFormattingCtx)
                             ?.let { return it }
 
-                        NotQueryGroupUtil
+                        NotQueryGroupHandler
                             .getKeywordGroup(
                                 child,
                                 sqlBlockFormattingCtx,
@@ -337,19 +344,19 @@ class SqlBlockUtil(
     ): SqlBlock {
         when (lastGroup) {
             is SqlKeywordGroupBlock -> {
-                CreateTableUtil
+                CreateClauseHandler
                     .getCreateTableClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
                     ?.let { return it }
 
-                WithClauseUtil
+                WithClauseHandler
                     .getWithClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
                     ?.let { return it }
 
-                InsertClauseUtil
+                InsertClauseHandler
                     .getInsertClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
                     ?.let { return it }
 
-                UpdateClauseUtil
+                UpdateClauseHandler
                     .getUpdateClauseSubGroup(
                         lastGroup,
                         child,
@@ -357,7 +364,7 @@ class SqlBlockUtil(
                     )?.let { return it }
 
                 // List-type test data for IN clause
-                NotQueryGroupUtil
+                NotQueryGroupHandler
                     .getSubGroup(lastGroup, child, sqlBlockFormattingCtx)
                     ?.let { return it }
 
@@ -369,12 +376,12 @@ class SqlBlockUtil(
 
             else -> {
                 if (lastGroup is SqlSubGroupBlock) {
-                    WithClauseUtil
+                    WithClauseHandler
                         .getWithClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
                         ?.let { return it }
                 }
 
-                NotQueryGroupUtil
+                NotQueryGroupHandler
                     .getSubGroup(lastGroup, child, sqlBlockFormattingCtx)
                     ?.let { return it }
 
@@ -387,11 +394,11 @@ class SqlBlockUtil(
         lastGroup: SqlBlock?,
         child: ASTNode,
     ): SqlBlock {
-        CreateTableUtil
+        CreateClauseHandler
             .getColumnRawGroup(lastGroup, child, sqlBlockFormattingCtx)
             ?.let { return it }
 
-        return CommaRawUtil.getCommaBlock(lastGroup, child, sqlBlockFormattingCtx)
+        return CommaRawClauseHandler.getCommaBlock(lastGroup, child, sqlBlockFormattingCtx)
     }
 
     fun getWordBlock(
