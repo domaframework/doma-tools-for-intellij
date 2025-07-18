@@ -82,7 +82,7 @@ open class SqlBlock(
 
     fun getChildBlocksDropLast(
         dropIndex: Int = 1,
-        skipCommentBlock: Boolean = false,
+        skipCommentBlock: Boolean = true,
     ): List<SqlBlock> {
         val children = childBlocks.dropLast(dropIndex)
         if (skipCommentBlock) {

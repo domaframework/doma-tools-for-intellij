@@ -341,10 +341,6 @@ class SqlSetParentGroupProcessor(
                 childBlock,
                 blockBuilder,
             )
-
-        if (lastGroupBlock is SqlCommaBlock) {
-            blockBuilder.removeLastGroupTopNodeIndexHistory()
-        }
         setParentGroups(context) { history ->
             if (childBlock.conditionType.isEnd() || childBlock.conditionType.isElse()) {
                 // remove self and previous conditional directive block

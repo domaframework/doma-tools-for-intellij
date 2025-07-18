@@ -24,6 +24,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordG
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
@@ -49,23 +50,31 @@ open class SqlRightPatternBlock(
         context.enableFormat,
         context.formatMode,
     ) {
-    var preSpaceRight = false
+    enum class LineBreakAndSpacingType {
+        NONE, // No line break and no spacing
+        LINE_BREAK, // Line break only
+        SPACING, // Spacing only
+        LINE_BREAK_AND_SPACING, // Both line break and spacing
+    }
+
+    private var preSpaceRight = false
+    var lineBreakAndSpacingType: LineBreakAndSpacingType = LineBreakAndSpacingType.NONE
 
     companion object {
-        val NOT_INSERT_SPACE_TYPES =
+        private val INDENT_EXPECTED_TYPES =
+            listOf(
+                SqlUpdateColumnGroupBlock::class,
+                SqlUpdateValueGroupBlock::class,
+                SqlCreateTableColumnDefinitionGroupBlock::class,
+            )
+
+        val NOT_INDENT_EXPECTED_TYPES =
             listOf(
                 SqlFunctionParamBlock::class,
                 SqlInsertColumnGroupBlock::class,
                 SqlWithQuerySubGroupBlock::class,
                 SqlConflictExpressionSubGroupBlock::class,
                 SqlConditionalExpressionGroupBlock::class,
-            )
-
-        private val INDENT_EXPECTED_TYPES =
-            listOf(
-                SqlUpdateColumnGroupBlock::class,
-                SqlUpdateValueGroupBlock::class,
-                SqlCreateTableColumnDefinitionGroupBlock::class,
             )
 
         val NEW_LINE_EXPECTED_TYPES =
@@ -78,7 +87,7 @@ open class SqlRightPatternBlock(
                 SqlWithQuerySubGroupBlock::class,
             )
 
-        private val NEW_LINE_EXCLUDE_TYPES =
+        val NOT_NEW_LINE_EXPECTED_TYPES =
             listOf(
                 SqlDataTypeParamBlock::class,
                 SqlConditionalExpressionGroupBlock::class,
@@ -93,11 +102,16 @@ open class SqlRightPatternBlock(
     private fun enableLastRight() {
         parentBlock?.let { parent ->
             // Check if parent is in the notInsertSpaceClassList
-            if (isExpectedClassType(NOT_INSERT_SPACE_TYPES, parent)) {
+            if (isExpectedClassType(NOT_INDENT_EXPECTED_TYPES, parent)) {
                 preSpaceRight = false
                 return
             }
-            if (isExpectedClassType(INDENT_EXPECTED_TYPES, parent)) {
+            if (isExpectedClassType(
+                    INDENT_EXPECTED_TYPES,
+                    parent,
+                ) ||
+                parent.childBlocks.firstOrNull() is SqlValuesGroupBlock
+            ) {
                 preSpaceRight = true
                 return
             }
@@ -146,9 +160,16 @@ open class SqlRightPatternBlock(
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun createBlockIndentLen(): Int {
-        if (preSpaceRight) return 1
-
         parentBlock?.let { parent ->
+            if ((
+                    isExpectedClassType(NEW_LINE_EXPECTED_TYPES, parent) ||
+                        parent.getChildBlocksDropLast().firstOrNull() is SqlValuesGroupBlock
+                ) &&
+                preSpaceRight
+            ) {
+                return parent.indent.indentLen
+            }
+            if (preSpaceRight) return 1
             return parent.indent.indentLen
         } ?: return 0
     }
@@ -156,26 +177,51 @@ open class SqlRightPatternBlock(
     override fun isLeaf(): Boolean = true
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        if (preSpaceRight) return false
-
         parentBlock?.let { parent ->
-            if ((
-                    isExpectedClassType(NEW_LINE_EXPECTED_TYPES, parent) ||
-                        isExpectedClassType(NEW_LINE_EXPECTED_TYPES, parent.parentBlock)
-                ) &&
-                !isExpectedClassType(NEW_LINE_EXCLUDE_TYPES, parent)
+            if (isExpectedClassType(NEW_LINE_EXPECTED_TYPES, parent) ||
+                parent.childBlocks.firstOrNull() is SqlValuesGroupBlock
             ) {
+                lineBreakAndSpacingType =
+                    if (preSpaceRight) {
+                        LineBreakAndSpacingType.LINE_BREAK_AND_SPACING
+                    } else {
+                        LineBreakAndSpacingType.LINE_BREAK
+                    }
                 return true
             }
 
             if (parent is SqlSubGroupBlock) {
                 val firstChild =
-                    parent.getChildBlocksDropLast(skipCommentBlock = true).firstOrNull()
+                    parent.getChildBlocksDropLast().firstOrNull()
                 if (firstChild is SqlKeywordGroupBlock) {
-                    return firstChild.indent.indentLevel != IndentType.TOP
+                    val lineBreak =
+                        firstChild.indent.indentLevel != IndentType.TOP &&
+                            !isExpectedClassType(NOT_NEW_LINE_EXPECTED_TYPES, parent)
+                    lineBreakAndSpacingType =
+                        if (lineBreak) {
+                            if (preSpaceRight) {
+                                LineBreakAndSpacingType.LINE_BREAK_AND_SPACING
+                            } else {
+                                LineBreakAndSpacingType.LINE_BREAK
+                            }
+                        } else {
+                            if (preSpaceRight) {
+                                LineBreakAndSpacingType.SPACING
+                            } else {
+                                LineBreakAndSpacingType.NONE
+                            }
+                        }
+
+                    return lineBreak
                 }
             }
         }
+        lineBreakAndSpacingType =
+            if (preSpaceRight) {
+                LineBreakAndSpacingType.SPACING
+            } else {
+                LineBreakAndSpacingType.NONE
+            }
         return false
     }
 }

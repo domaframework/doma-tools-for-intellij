@@ -58,6 +58,7 @@ open class SqlCommaBlock(
                 SqlFunctionParamBlock::class,
                 SqlWithColumnGroupBlock::class,
                 SqlKeywordGroupBlock::class,
+                SqlElConditionLoopCommentBlock::class,
             )
 
         private val PARENT_INDENT_SYNC_TYPES =

@@ -141,27 +141,10 @@ class SqlCustomSpacingBuilder {
         return normalSpacing
     }
 
-    fun getSpacingRightPattern(block: SqlRightPatternBlock): Spacing? {
-        val parentBlock = block.parentBlock
-
-        if (block.isSaveSpace(null)) {
-            return getSpacing(block)
+    fun getSpacingRightPattern(block: SqlRightPatternBlock): Spacing? =
+        when (block.lineBreakAndSpacingType) {
+            SqlRightPatternBlock.LineBreakAndSpacingType.NONE, SqlRightPatternBlock.LineBreakAndSpacingType.LINE_BREAK -> nonSpacing
+            SqlRightPatternBlock.LineBreakAndSpacingType.SPACING -> normalSpacing
+            SqlRightPatternBlock.LineBreakAndSpacingType.LINE_BREAK_AND_SPACING -> getSpacing(block)
         }
-
-        if (TypeUtil.isExpectedClassType(SqlRightPatternBlock.NEW_LINE_EXPECTED_TYPES, parentBlock)) {
-            return getSpacing(block)
-        }
-
-        if (parentBlock is SqlParallelListBlock) {
-            val lastKeywordGroup = parentBlock.getChildBlocksDropLast().lastOrNull()
-            return if (lastKeywordGroup is SqlKeywordGroupBlock) {
-                normalSpacing
-            } else {
-                nonSpacing
-            }
-        }
-
-        if (parentBlock is SqlDataTypeParamBlock || !block.preSpaceRight) return nonSpacing
-        return normalSpacing
-    }
 }

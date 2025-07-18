@@ -39,14 +39,20 @@ open class SqlKeywordGroupBlock(
 
     fun updateTopKeywordBlocks(block: SqlBlock) {
         val lastChild =
-            getChildBlocksDropLast(skipCommentBlock = true).lastOrNull()
+            getChildBlocksDropLast().lastOrNull()
         val topKeywordTypes =
             listOf(
                 SqlKeywordBlock::class,
                 SqlKeywordGroupBlock::class,
             )
 
-        if (lastChild == null || TypeUtil.isExpectedClassType(topKeywordTypes, lastChild) && canAddTopKeyword) {
+        if (lastChild == null ||
+            TypeUtil.isExpectedClassType(
+                topKeywordTypes,
+                lastChild,
+            ) &&
+            canAddTopKeyword
+        ) {
             topKeywordBlocks.add(block)
         } else {
             canAddTopKeyword = false
@@ -168,5 +174,9 @@ open class SqlKeywordGroupBlock(
 
     override fun createGroupIndentLen(): Int = indent.indentLen.plus(topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.minus(1))
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        val prevWord = prevBlocks.lastOrNull()
+        return !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), prevWord?.getNodeText() ?: "") &&
+            !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), lastGroup?.getNodeText() ?: "")
+    }
 }

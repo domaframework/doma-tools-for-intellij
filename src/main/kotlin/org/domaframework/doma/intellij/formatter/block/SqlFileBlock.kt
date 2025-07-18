@@ -78,6 +78,17 @@ class SqlFileBlock(
         enableFormat,
         formatMode,
     ) {
+    override val indent =
+        ElementIndent(
+            IndentType.FILE,
+            0,
+            0,
+        )
+
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(null)
+    }
+
     private val blocks = mutableListOf<AbstractBlock>()
 
     private val blockBuilder = SqlBlockBuilder()
@@ -446,11 +457,21 @@ class SqlFileBlock(
 
         if (childBlock1 is SqlWhitespaceBlock && childBlock2.parentBlock is SqlElConditionLoopCommentBlock) {
             val child1 = childBlock2.parentBlock as SqlElConditionLoopCommentBlock
-            SqlCustomSpacingBuilder().getSpacingElDirectiveComment(child1, childBlock2)?.let { return it }
+            SqlCustomSpacingBuilder()
+                .getSpacingElDirectiveComment(child1, childBlock2)
+                ?.let { return it }
         }
 
-        if (childBlock1 is SqlElBlockCommentBlock) {
-            SqlCustomSpacingBuilder().getSpacingElDirectiveComment(childBlock1, childBlock2)?.let { return it }
+        if (childBlock1 is SqlElBlockCommentBlock && childBlock2 !is SqlRightPatternBlock) {
+            SqlCustomSpacingBuilder()
+                .getSpacingElDirectiveComment(childBlock1, childBlock2)
+                ?.let { return it }
+        }
+
+        if (childBlock2 is SqlRightPatternBlock) {
+            return SqlCustomSpacingBuilder().getSpacingRightPattern(
+                childBlock2,
+            )
         }
 
         if (childBlock2 is SqlWithColumnGroupBlock) {
@@ -467,7 +488,11 @@ class SqlFileBlock(
         }
 
         if (childBlock2 is SqlElBlockCommentBlock) {
-            if (TypeUtil.isExpectedClassType(SqlRightPatternBlock.NOT_INSERT_SPACE_TYPES, childBlock1)) {
+            if (TypeUtil.isExpectedClassType(
+                    SqlRightPatternBlock.NOT_INDENT_EXPECTED_TYPES,
+                    childBlock1,
+                )
+            ) {
                 return SqlCustomSpacingBuilder.nonSpacing
             }
             return when (childBlock1) {
@@ -530,7 +555,9 @@ class SqlFileBlock(
         }
 
         // Create Table Column Definition Raw Group Block
-        CreateTableUtil.getColumnDefinitionRawGroupSpacing(childBlock1, childBlock2)?.let { return it }
+        CreateTableUtil
+            .getColumnDefinitionRawGroupSpacing(childBlock1, childBlock2)
+            ?.let { return it }
 
         when (childBlock2) {
             is SqlColumnDefinitionRawGroupBlock ->
@@ -539,10 +566,6 @@ class SqlFileBlock(
                         childBlock2,
                     )?.let { return it }
 
-            is SqlRightPatternBlock -> return SqlCustomSpacingBuilder().getSpacingRightPattern(
-                childBlock2,
-            )
-
             is SqlColumnBlock ->
                 SqlCustomSpacingBuilder()
                     .getSpacingColumnDefinition(childBlock2)
@@ -550,7 +573,9 @@ class SqlFileBlock(
         }
 
         if (childBlock1 is SqlBlock && (childBlock2 is SqlCommaBlock || childBlock2 is SqlColumnRawGroupBlock)) {
-            SqlCustomSpacingBuilder().getSpacingWithIndentComma(childBlock1, childBlock2)?.let { return it }
+            SqlCustomSpacingBuilder()
+                .getSpacingWithIndentComma(childBlock1, childBlock2)
+                ?.let { return it }
         }
 
         val spacing: Spacing? = customSpacingBuilder?.getCustomSpacing(childBlock1, childBlock2)

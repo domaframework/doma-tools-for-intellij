@@ -43,6 +43,16 @@ abstract class SqlSubGroupBlock(
         node,
         context,
     ) {
+    companion object {
+        private val NEW_LINE_EXPECTED_TYPES =
+            listOf(
+                SqlWithQueryGroupBlock::class,
+                SqlWithCommonTableGroupBlock::class,
+                SqlWithColumnGroupBlock::class,
+                SqlCreateViewGroupBlock::class,
+            )
+    }
+
     open val offset = 1
 
     // TODO Even if the first element of a subgroup is a comment,
@@ -112,14 +122,7 @@ abstract class SqlSubGroupBlock(
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         lastGroup?.let { lastBlock ->
             if (lastBlock is SqlJoinQueriesGroupBlock) return true
-            val expectedTypes =
-                listOf(
-                    SqlWithQueryGroupBlock::class,
-                    SqlWithCommonTableGroupBlock::class,
-                    SqlWithColumnGroupBlock::class,
-                    SqlCreateViewGroupBlock::class,
-                )
-            return TypeUtil.isExpectedClassType(expectedTypes, lastBlock.parentBlock)
+            return TypeUtil.isExpectedClassType(NEW_LINE_EXPECTED_TYPES, lastBlock.parentBlock)
         }
         return false
     }
