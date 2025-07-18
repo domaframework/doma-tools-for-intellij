@@ -11,7 +11,8 @@ SELECT e.id
          /*%end */
        /*%end */
  WHERE 1 = 1
- ORDER BY /*%if sortConditions != null && !sortConditions.isEmpty() */ -- IF1
+ ORDER BY
+ /*%if sortConditions != null && !sortConditions.isEmpty() */ -- IF1
    /*%for sort : sortConditions */ -- IF2
      /*%if sort.field == "name" */ -- IF3
      e.name
