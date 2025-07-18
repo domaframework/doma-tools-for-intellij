@@ -117,35 +117,8 @@ class SqlSetParentGroupProcessor(
             )
 
         if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
-            if (lastGroupBlock.parentBlock != null) {
-                setParentGroups(context) { history ->
-                    return@setParentGroups lastGroupBlock
-                }
-            } else {
-                val history = blockBuilder.getGroupTopNodeIndexHistory()
-                val findParent =
-                    history
-                        .lastOrNull {
-                            it.indent.indentLevel < childBlock.indent.indentLevel ||
-                                (it is SqlElConditionLoopCommentBlock && it.parentBlock != null)
-                        }
-                // Search for keyword groups with a level lower than or equal to the current level,
-                // or conditional directives that already have a parent assigned.
-                if (findParent is SqlElConditionLoopCommentBlock) {
-                    // Set the parent of the most recent conditional directive to the current node.
-                    lastGroupBlock.setParentGroupBlock(findParent)
-                    setParentGroups(context) { history ->
-                        return@setParentGroups lastGroupBlock
-                    }
-                }
-                if (findParent !is SqlElConditionLoopCommentBlock) {
-                    // If a keyword group with a level lower than or equal to the current level is found,
-                    // set that keyword group as the parent, and set the parent of the most recent conditional directive to the current node.
-                    setParentGroups(context) { history ->
-                        return@setParentGroups findParent
-                    }
-                    lastGroupBlock.setParentGroupBlock(childBlock)
-                }
+            updateParentGroupLastConditionLoop(lastGroupBlock, context, childBlock) {
+                it.indent.indentLevel < childBlock.indent.indentLevel
             }
             return
         }
@@ -319,6 +292,15 @@ class SqlSetParentGroupProcessor(
             }
             return
         }
+
+        val lastGroupBlock = blockBuilder.getLastGroupTopNodeIndexHistory()
+        if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
+            updateParentGroupLastConditionLoop(lastGroupBlock, context, childBlock) {
+                it.indent.indentLevel == IndentType.INLINE_SECOND
+            }
+            return
+        }
+
         val inlineSecondIndex =
             blockBuilder.getGroupTopNodeIndex { block ->
                 block.indent.indentLevel == IndentType.INLINE_SECOND
@@ -329,6 +311,47 @@ class SqlSetParentGroupProcessor(
         updateGroupBlockParentAndAddGroup(
             childBlock,
         )
+    }
+
+    /**
+     * Updates the parent of the last conditional directive block and sets the parent of the current block.
+     */
+    private fun updateParentGroupLastConditionLoop(
+        lastGroupBlock: SqlElConditionLoopCommentBlock,
+        context: SetParentContext,
+        childBlock: SqlBlock,
+        findDefaultParent: (SqlBlock) -> Boolean,
+    ) {
+        if (lastGroupBlock.parentBlock != null) {
+            setParentGroups(context) { history ->
+                return@setParentGroups lastGroupBlock
+            }
+        } else {
+            val history = blockBuilder.getGroupTopNodeIndexHistory()
+            val findParent =
+                history
+                    .lastOrNull { block ->
+                        findDefaultParent(block) ||
+                            (block is SqlElConditionLoopCommentBlock && block.parentBlock != null)
+                    }
+            // Search for keyword groups with a level lower than or equal to the current level,
+            // or conditional directives that already have a parent assigned.
+            if (findParent is SqlElConditionLoopCommentBlock) {
+                // Set the parent of the most recent conditional directive to the current node.
+                lastGroupBlock.setParentGroupBlock(findParent)
+                setParentGroups(context) { history ->
+                    return@setParentGroups lastGroupBlock
+                }
+            }
+            if (findParent !is SqlElConditionLoopCommentBlock) {
+                // If a keyword group with a level lower than or equal to the current level is found,
+                // set that keyword group as the parent, and set the parent of the most recent conditional directive to the current node.
+                setParentGroups(context) { history ->
+                    return@setParentGroups findParent
+                }
+                lastGroupBlock.setParentGroupBlock(childBlock)
+            }
+        }
     }
 
     fun updateConditionLoopCommentBlockParent(

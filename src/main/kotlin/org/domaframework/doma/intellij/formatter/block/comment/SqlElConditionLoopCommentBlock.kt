@@ -35,6 +35,8 @@ import org.domaframework.doma.intellij.formatter.block.expr.SqlElStaticFieldAcce
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
@@ -218,7 +220,7 @@ class SqlElConditionLoopCommentBlock(
             }
             val openConditionLoopDirectiveCount = getOpenDirectiveCount(parent)
             when (parent) {
-                is SqlKeywordGroupBlock, is SqlCommaBlock -> {
+                is SqlKeywordGroupBlock, is SqlCommaBlock, is SqlInlineGroupBlock, is SqlInlineSecondGroupBlock -> {
                     return parent.indent.indentLen.plus(openConditionLoopDirectiveCount * 2)
                 }
 
