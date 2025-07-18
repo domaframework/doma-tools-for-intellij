@@ -51,7 +51,9 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGrou
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.other.SqlEscapeBlock
 import org.domaframework.doma.intellij.formatter.block.other.SqlOtherBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
@@ -314,6 +316,8 @@ class SqlFileBlock(
             return
         }
 
+        if (childBlock is SqlDefaultCommentBlock) return
+
         when (childBlock) {
             is SqlKeywordGroupBlock -> {
                 parentSetProcessor.updateKeywordGroupBlockParentAndAddGroup(
@@ -364,7 +368,7 @@ class SqlFileBlock(
                 )
             }
 
-            is SqlWordBlock, is SqlOtherBlock, is SqlDefaultCommentBlock -> {
+            is SqlWordBlock, is SqlOtherBlock -> {
                 parentSetProcessor.updateGroupBlockParentAndAddGroup(
                     childBlock,
                 )
@@ -546,7 +550,7 @@ class SqlFileBlock(
 
                 is SqlDataTypeParamBlock, is SqlFunctionParamBlock -> return SqlCustomSpacingBuilder.nonSpacing
 
-                else -> return SqlCustomSpacingBuilder.normalSpacing
+                // else -> return SqlCustomSpacingBuilder.normalSpacing
             }
         }
 
@@ -584,6 +588,10 @@ class SqlFileBlock(
 
                 else -> SqlCustomSpacingBuilder().getSpacing(childBlock2)
             }
+        }
+
+        if (childBlock1 is SqlTableBlock || childBlock1 is SqlAliasBlock) {
+            return SqlCustomSpacingBuilder.normalSpacing
         }
 
         val spacing: Spacing? = customSpacingBuilder?.getCustomSpacing(childBlock1, childBlock2)

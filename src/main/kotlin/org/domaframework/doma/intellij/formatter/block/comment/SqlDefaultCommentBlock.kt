@@ -19,24 +19,42 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlFileBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 abstract class SqlDefaultCommentBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlCommentBlock(node, context) {
+    /**
+     * If this block is the last element, the indentation update process is not called,
+     * so set the default indentation to 1.
+     */
+    override val indent =
+        ElementIndent(
+            IndentType.NONE,
+            1,
+            1,
+        )
+
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun isLeaf(): Boolean = true
 
     /**
-     * When the next element block is determined, update the indent to align it with the element below.
+     * When the next element block is determined,
+     * update the indent to align it with the element below.
      */
-    fun updateIndentLen(baseBlock: SqlBlock) {
+    fun updateIndentLen(
+        baseBlock: SqlBlock,
+        groupBlockCount: Int,
+    ) {
         indent.indentLen =
-            if (parentBlock is SqlFileBlock || isSaveSpace(parentBlock)) {
+            if (isSaveSpace(parentBlock)) {
                 baseBlock.indent.indentLen
+            } else if (groupBlockCount <= 2) {
+                // If it is the top of the file, the indent number should be 0.
+                0
             } else {
                 1
             }

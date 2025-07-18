@@ -25,7 +25,6 @@ import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
@@ -204,7 +203,7 @@ class SqlElConditionLoopCommentBlock(
         if (lastGroup is SqlSubGroupBlock) {
             return lastGroup.childBlocks.dropLast(1).isNotEmpty()
         }
-        return lastGroup?.childBlocks?.any { it !is SqlKeywordBlock && it !is SqlKeywordGroupBlock } == true
+        return true
     }
 
     /**
@@ -275,7 +274,7 @@ class SqlElConditionLoopCommentBlock(
         val conditionLoopDirectives: List<SqlElConditionLoopCommentBlock> =
             parent
                 .childBlocks
-                .mapNotNull { it as? SqlElConditionLoopCommentBlock }
+                .filterIsInstance<SqlElConditionLoopCommentBlock>()
                 .filter { it.conditionEnd == null }
         val startDirectives =
             conditionLoopDirectives.count { it.conditionType.isStartDirective() }

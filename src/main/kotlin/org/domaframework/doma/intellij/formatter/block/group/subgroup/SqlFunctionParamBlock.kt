@@ -17,9 +17,8 @@ package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -65,9 +64,8 @@ class SqlFunctionParamBlock(
 
             val children =
                 prevChildren?.dropLast(1)?.filter {
-                    it !is SqlLineCommentBlock &&
-                        it !is SqlBlockCommentBlock &&
-                        it.node != SqlTypes.DOT
+                    it !is SqlDefaultCommentBlock
+                    it.node != SqlTypes.DOT
                 }
             children?.let { prevList ->
                 return prevList
@@ -89,8 +87,7 @@ class SqlFunctionParamBlock(
 
         val prevChildrenDropLast =
             prevChildren?.dropLast(1)?.filter {
-                it !is SqlLineCommentBlock &&
-                    it !is SqlBlockCommentBlock &&
+                it !is SqlDefaultCommentBlock &&
                     it.node.elementType != SqlTypes.DOT
             }
                 ?: emptyList()

@@ -110,7 +110,7 @@ open class SqlRightPatternBlock(
                     INDENT_EXPECTED_TYPES,
                     parent,
                 ) ||
-                parent.childBlocks.firstOrNull() is SqlValuesGroupBlock
+                parent.childBlocks.any { it is SqlValuesGroupBlock }
             ) {
                 preSpaceRight = true
                 return
@@ -179,7 +179,7 @@ open class SqlRightPatternBlock(
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         parentBlock?.let { parent ->
             if (isExpectedClassType(NEW_LINE_EXPECTED_TYPES, parent) ||
-                parent.childBlocks.firstOrNull() is SqlValuesGroupBlock
+                parent.childBlocks.any { it is SqlValuesGroupBlock }
             ) {
                 lineBreakAndSpacingType =
                     if (preSpaceRight) {

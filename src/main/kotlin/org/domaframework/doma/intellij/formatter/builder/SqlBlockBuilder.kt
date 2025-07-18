@@ -17,18 +17,15 @@ package org.domaframework.doma.intellij.formatter.builder
 
 import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 
 open class SqlBlockBuilder {
     private val updateDirectiveParentTypes =
         listOf(
-            SqlLineCommentBlock::class,
-            SqlBlockCommentBlock::class,
+            SqlDefaultCommentBlock::class,
         )
 
     private val originalConditionLoopDirectiveParentType =
@@ -58,11 +55,14 @@ open class SqlBlockBuilder {
      * but the indentation is aligned with the next block.
      */
     fun updateCommentBlockIndent(nextBlock: SqlBlock) {
-        if (commentBlocks.isNotEmpty()) {
+        if (commentBlocks.isNotEmpty() &&
+            nextBlock.parentBlock != null ||
+            groupTopNodeIndexHistory.size <= 2
+        ) {
             var index = 0
             commentBlocks
                 .forEach { block ->
-                    block.updateIndentLen(nextBlock)
+                    block.updateIndentLen(nextBlock, groupTopNodeIndexHistory.size)
                     index++
                 }
             commentBlocks.clear()

@@ -102,8 +102,6 @@ abstract class SqlSubGroupBlock(
 
     override fun isLeaf(): Boolean = true
 
-    open fun endGroup() {}
-
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             if (parent is SqlElConditionLoopCommentBlock) return parent.indent.groupIndentLen

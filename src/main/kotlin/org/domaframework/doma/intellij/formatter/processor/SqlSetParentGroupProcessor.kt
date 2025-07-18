@@ -19,6 +19,7 @@ import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
@@ -426,10 +427,6 @@ class SqlSetParentGroupProcessor(
                 return@setParentGroups history[paramIndex]
             }
 
-            if (childBlock.parentBlock is SqlSubGroupBlock) {
-                (childBlock.parentBlock as SqlSubGroupBlock).endGroup()
-            }
-
             if (blockBuilder.getGroupTopNodeIndexHistory()[paramIndex] is SqlWithQuerySubGroupBlock) {
                 val withCommonBlockIndex =
                     blockBuilder.getGroupTopNodeIndex { block ->
@@ -475,6 +472,8 @@ class SqlSetParentGroupProcessor(
 
         val targetChildBlock = context.childBlock
 
+        if (targetChildBlock is SqlDefaultCommentBlock) return
+
         // The parent block for SqlElConditionLoopCommentBlock will be set later
         if (targetChildBlock is SqlElConditionLoopCommentBlock && targetChildBlock.conditionType.isStartDirective()) {
             targetChildBlock.tempParentBlock = parentGroup
@@ -492,9 +491,9 @@ class SqlSetParentGroupProcessor(
             )
         ) {
             context.blockBuilder.addGroupTopNodeIndexHistory(targetChildBlock)
-            context.blockBuilder.updateCommentBlockIndent(targetChildBlock)
         }
 
+        context.blockBuilder.updateCommentBlockIndent(targetChildBlock)
         // Set parent-child relationship and indent for preceding comment at beginning of block group
         context.blockBuilder.updateConditionLoopBlockIndent(targetChildBlock)
     }
