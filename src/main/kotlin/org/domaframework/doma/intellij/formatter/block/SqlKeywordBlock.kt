@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
@@ -69,9 +70,9 @@ open class SqlKeywordBlock(
     override fun createBlockIndentLen(): Int =
         when (indentLevel) {
             IndentType.TOP -> {
-                parentBlock?.let {
-                    if (it.indent.indentLevel == IndentType.SUB) {
-                        it.indent.groupIndentLen.plus(1)
+                parentBlock?.let { parent ->
+                    if (parent.indent.indentLevel == IndentType.SUB) {
+                        parent.indent.groupIndentLen.plus(1)
                     } else {
                         0
                     }
@@ -79,21 +80,29 @@ open class SqlKeywordBlock(
             }
 
             IndentType.SECOND -> {
-                parentBlock?.let {
-                    it.indent.groupIndentLen
-                        .plus(it.getNodeText().length)
-                        .minus(this.getNodeText().length)
+                parentBlock?.let { parent ->
+                    parent.indent.groupIndentLen
+                        .plus(parent.getNodeText().length)
+                        .minus(getNodeText().length)
                 } ?: 1
             }
 
             IndentType.INLINE_SECOND -> {
-                parentBlock?.let {
-                    it.indent.groupIndentLen
-                        .plus(it.getNodeText().length)
+                parentBlock?.let { parent ->
+                    parent.indent.groupIndentLen
+                        .plus(parent.getNodeText().length)
                         .plus(1)
                 } ?: 1
             }
 
-            else -> 1
+            else -> {
+                parentBlock?.let { parent ->
+                    if (parent is SqlElConditionLoopCommentBlock) {
+                        parent.indent.groupIndentLen
+                    } else {
+                        1
+                    }
+                } ?: 1
+            }
         }
 }

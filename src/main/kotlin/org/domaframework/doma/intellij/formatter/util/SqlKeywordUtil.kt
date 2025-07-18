@@ -313,6 +313,7 @@ class SqlKeywordUtil {
                 "update" to setOf("do"),
                 "set" to setOf("by", "cycle"),
                 "order" to setOf("partition", "by"),
+                "select" to setOf("if", "exists"),
             )
 
         fun isSetLineKeyword(

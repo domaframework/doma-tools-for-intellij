@@ -23,6 +23,7 @@ import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
@@ -42,6 +43,16 @@ abstract class SqlSubGroupBlock(
         node,
         context,
     ) {
+    companion object {
+        private val NEW_LINE_EXPECTED_TYPES =
+            listOf(
+                SqlWithQueryGroupBlock::class,
+                SqlWithCommonTableGroupBlock::class,
+                SqlWithColumnGroupBlock::class,
+                SqlCreateViewGroupBlock::class,
+            )
+    }
+
     open val offset = 1
 
     // TODO Even if the first element of a subgroup is a comment,
@@ -79,7 +90,7 @@ abstract class SqlSubGroupBlock(
         if (childBlocks.isEmpty()) {
             isFirstLineComment = childBlock is SqlCommentBlock
         }
-        childBlocks.add(childBlock)
+        super.addChildBlock(childBlock)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -91,9 +102,12 @@ abstract class SqlSubGroupBlock(
 
     override fun isLeaf(): Boolean = true
 
-    open fun endGroup() {}
-
-    override fun createBlockIndentLen(): Int = offset
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            if (parent is SqlElConditionLoopCommentBlock) return parent.indent.groupIndentLen
+        }
+        return offset
+    }
 
     override fun createGroupIndentLen(): Int {
         parentBlock?.let { parent ->
@@ -106,14 +120,7 @@ abstract class SqlSubGroupBlock(
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         lastGroup?.let { lastBlock ->
             if (lastBlock is SqlJoinQueriesGroupBlock) return true
-            val expectedTypes =
-                listOf(
-                    SqlWithQueryGroupBlock::class,
-                    SqlWithCommonTableGroupBlock::class,
-                    SqlWithColumnGroupBlock::class,
-                    SqlCreateViewGroupBlock::class,
-                )
-            return TypeUtil.isExpectedClassType(expectedTypes, lastBlock.parentBlock)
+            return TypeUtil.isExpectedClassType(NEW_LINE_EXPECTED_TYPES, lastBlock.parentBlock)
         }
         return false
     }

@@ -56,6 +56,6 @@ class SqlSelectQueryGroupBlock(
             if (lastGroup is SqlWithQuerySubGroupBlock) return true
             if (lastBlock is SqlSubGroupBlock) return lastBlock.getChildBlocksDropLast().isNotEmpty()
         }
-        return true
+        return super.isSaveSpace(lastGroup)
     }
 }

@@ -26,11 +26,12 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElSymbolBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
@@ -50,15 +51,17 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGrou
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.other.SqlEscapeBlock
 import org.domaframework.doma.intellij.formatter.block.other.SqlOtherBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
+import org.domaframework.doma.intellij.formatter.handler.CreateClauseHandler
 import org.domaframework.doma.intellij.formatter.processor.SqlSetParentGroupProcessor
-import org.domaframework.doma.intellij.formatter.util.CreateTableUtil
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import org.domaframework.doma.intellij.formatter.util.SqlBlockUtil
+import org.domaframework.doma.intellij.formatter.util.SqlBlockGenerator
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlFileBlock(
@@ -77,11 +80,22 @@ class SqlFileBlock(
         enableFormat,
         formatMode,
     ) {
+    override val indent =
+        ElementIndent(
+            IndentType.FILE,
+            0,
+            0,
+        )
+
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(null)
+    }
+
     private val blocks = mutableListOf<AbstractBlock>()
 
     private val blockBuilder = SqlBlockBuilder()
     private val parentSetProcessor = SqlSetParentGroupProcessor(blockBuilder)
-    private val blockUtil = SqlBlockUtil(this, isEnableFormat(), formatMode)
+    private val blockUtil = SqlBlockGenerator(this, isEnableFormat(), formatMode)
 
     private val pendingCommentBlocks = mutableListOf<SqlBlock>()
 
@@ -251,7 +265,11 @@ class SqlFileBlock(
                 commentBlock,
             )
         } else {
-            blockBuilder.addCommentBlock(commentBlock)
+            (commentBlock as? SqlDefaultCommentBlock)?.let {
+                blockBuilder.addCommentBlock(
+                    commentBlock,
+                )
+            }
         }
     }
 
@@ -294,6 +312,8 @@ class SqlFileBlock(
             )
             return
         }
+
+        if (childBlock is SqlDefaultCommentBlock) return
 
         when (childBlock) {
             is SqlKeywordGroupBlock -> {
@@ -345,7 +365,7 @@ class SqlFileBlock(
                 )
             }
 
-            is SqlWordBlock, is SqlOtherBlock, is SqlLineCommentBlock, is SqlBlockCommentBlock -> {
+            is SqlWordBlock, is SqlOtherBlock -> {
                 parentSetProcessor.updateGroupBlockParentAndAddGroup(
                     childBlock,
                 )
@@ -440,6 +460,25 @@ class SqlFileBlock(
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
+        if (childBlock1 is SqlWhitespaceBlock && childBlock2.parentBlock is SqlElConditionLoopCommentBlock) {
+            val child1 = childBlock2.parentBlock as SqlElConditionLoopCommentBlock
+            SqlCustomSpacingBuilder()
+                .getSpacingElDirectiveComment(child1, childBlock2)
+                ?.let { return it }
+        }
+
+        if (childBlock1 is SqlElBlockCommentBlock && childBlock2 !is SqlRightPatternBlock) {
+            SqlCustomSpacingBuilder()
+                .getSpacingElDirectiveComment(childBlock1, childBlock2)
+                ?.let { return it }
+        }
+
+        if (childBlock2 is SqlRightPatternBlock) {
+            return SqlCustomSpacingBuilder().getSpacingRightPattern(
+                childBlock2,
+            )
+        }
+
         if (childBlock2 is SqlWithColumnGroupBlock) {
             return SqlCustomSpacingBuilder.normalSpacing
         }
@@ -454,8 +493,15 @@ class SqlFileBlock(
         }
 
         if (childBlock2 is SqlElBlockCommentBlock) {
+            if (TypeUtil.isExpectedClassType(
+                    SqlRightPatternBlock.NOT_INDENT_EXPECTED_TYPES,
+                    childBlock1,
+                )
+            ) {
+                return SqlCustomSpacingBuilder.nonSpacing
+            }
             return when (childBlock1) {
-                is SqlElBlockCommentBlock, is SqlWhitespaceBlock -> {
+                is SqlWhitespaceBlock -> {
                     SqlCustomSpacingBuilder().getSpacing(childBlock2)
                 }
 
@@ -488,14 +534,6 @@ class SqlFileBlock(
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
-        if (childBlock1 is SqlWhitespaceBlock) {
-            when (childBlock2) {
-                is SqlBlockCommentBlock, is SqlLineCommentBlock, is SqlNewGroupBlock -> {
-                    return SqlCustomSpacingBuilder().getSpacing(childBlock2)
-                }
-            }
-        }
-
         if (childBlock2 is SqlNewGroupBlock) {
             if (childBlock1 is SqlSubGroupBlock && childBlock2.indent.indentLevel == IndentType.ATTACHED) {
                 return SqlCustomSpacingBuilder.nonSpacing
@@ -509,12 +547,14 @@ class SqlFileBlock(
 
                 is SqlDataTypeParamBlock, is SqlFunctionParamBlock -> return SqlCustomSpacingBuilder.nonSpacing
 
-                else -> return SqlCustomSpacingBuilder.normalSpacing
+                // else -> return SqlCustomSpacingBuilder.normalSpacing
             }
         }
 
         // Create Table Column Definition Raw Group Block
-        CreateTableUtil.getColumnDefinitionRawGroupSpacing(childBlock1, childBlock2)?.let { return it }
+        CreateClauseHandler
+            .getColumnDefinitionRawGroupSpacing(childBlock1, childBlock2)
+            ?.let { return it }
 
         when (childBlock2) {
             is SqlColumnDefinitionRawGroupBlock ->
@@ -523,10 +563,6 @@ class SqlFileBlock(
                         childBlock2,
                     )?.let { return it }
 
-            is SqlRightPatternBlock -> return SqlCustomSpacingBuilder().getSpacingRightPattern(
-                childBlock2,
-            )
-
             is SqlColumnBlock ->
                 SqlCustomSpacingBuilder()
                     .getSpacingColumnDefinition(childBlock2)
@@ -534,7 +570,25 @@ class SqlFileBlock(
         }
 
         if (childBlock1 is SqlBlock && (childBlock2 is SqlCommaBlock || childBlock2 is SqlColumnRawGroupBlock)) {
-            SqlCustomSpacingBuilder().getSpacingWithIndentComma(childBlock1, childBlock2)?.let { return it }
+            SqlCustomSpacingBuilder()
+                .getSpacingWithIndentComma(childBlock1, childBlock2)
+                ?.let { return it }
+        }
+
+        // First apply spacing logic for blocks under specific conditions,
+        // then execute the general spacing logic for post-line-break blocks at the end.
+        if (childBlock1 is SqlWhitespaceBlock) {
+            return when (childBlock2) {
+                is SqlDefaultCommentBlock, is SqlNewGroupBlock -> {
+                    SqlCustomSpacingBuilder().getSpacing(childBlock2)
+                }
+
+                else -> SqlCustomSpacingBuilder().getSpacing(childBlock2)
+            }
+        }
+
+        if (childBlock1 is SqlTableBlock || childBlock1 is SqlAliasBlock) {
+            return SqlCustomSpacingBuilder.normalSpacing
         }
 
         val spacing: Spacing? = customSpacingBuilder?.getCustomSpacing(childBlock1, childBlock2)

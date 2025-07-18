@@ -23,7 +23,7 @@ import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 open class SqlBlockCommentBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlCommentBlock(
+) : SqlDefaultCommentBlock(
         node,
         context,
     ) {

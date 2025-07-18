@@ -15,17 +15,28 @@
  */
 package org.domaframework.doma.intellij.formatter.builder
 
+import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
 
 open class SqlBlockBuilder {
+    private val updateDirectiveParentTypes =
+        listOf(
+            SqlDefaultCommentBlock::class,
+        )
+
+    private val originalConditionLoopDirectiveParentType =
+        listOf(
+            SqlKeywordGroupBlock::class,
+            SqlSubGroupBlock::class,
+        )
+
     private val groupTopNodeIndexHistory = mutableListOf<SqlBlock>()
 
-    private val commentBlocks = mutableListOf<SqlCommentBlock>()
+    private val commentBlocks = mutableListOf<SqlDefaultCommentBlock>()
 
     private val conditionOrLoopBlocks = mutableListOf<SqlElConditionLoopCommentBlock>()
 
@@ -35,35 +46,82 @@ open class SqlBlockBuilder {
         groupTopNodeIndexHistory.add(block)
     }
 
-    fun addCommentBlock(block: SqlCommentBlock) {
+    fun addCommentBlock(block: SqlDefaultCommentBlock) {
         commentBlocks.add(block)
     }
 
-    fun updateCommentBlockIndent(baseIndent: SqlBlock) {
-        if (commentBlocks.isNotEmpty()) {
+    /**
+     * It becomes a child of the previous block,
+     * but the indentation is aligned with the next block.
+     */
+    fun updateCommentBlockIndent(nextBlock: SqlBlock) {
+        if (commentBlocks.isNotEmpty() &&
+            nextBlock.parentBlock != null ||
+            groupTopNodeIndexHistory.size <= 2
+        ) {
             var index = 0
-            commentBlocks.forEach { block ->
-                if (block !is SqlElBlockCommentBlock) {
-                    if (index == 0 &&
-                        baseIndent.parentBlock is SqlSubGroupBlock &&
-                        baseIndent.parentBlock?.childBlocks?.size == 1
-                    ) {
-                        block.indent.indentLevel = IndentType.NONE
-                        block.indent.indentLen = 1
-                        block.indent.groupIndentLen = 0
-                    } else {
-                        block.setParentGroupBlock(baseIndent)
-                    }
+            commentBlocks
+                .forEach { block ->
+                    block.updateIndentLen(nextBlock, groupTopNodeIndexHistory.size)
                     index++
                 }
-            }
             commentBlocks.clear()
         }
-        if (conditionOrLoopBlocks.isNotEmpty()) {
-            conditionOrLoopBlocks.forEach { block ->
-                if (block.parentBlock == null) {
-                    block.setParentGroupBlock(baseIndent)
-                }
+    }
+
+    /**
+     * For condition/loop directive blocks
+     * determine the parent based on the type of block immediately below.
+     *
+     * When this process is invoked, a directive block has already been added to [groupTopNodeIndexHistory],
+     * and the parent of the block passed as [nextBlock] has already been determined.
+     */
+    fun updateConditionLoopBlockIndent(nextBlock: SqlBlock) {
+        if (!isExpectedClassType(updateDirectiveParentTypes, nextBlock)) {
+            if (conditionOrLoopBlocks.isNotEmpty()) {
+                val lastGroup = groupTopNodeIndexHistory.lastOrNull()
+                conditionOrLoopBlocks
+                    .filter { it.parentBlock == null }
+                    .forEach { block ->
+                        var setParentBlock: SqlBlock? = null
+                        val conditionBlockIndex = groupTopNodeIndexHistory.indexOf(block)
+                        val prevConditionBlockGroup =
+                            if (conditionBlockIndex > 0) {
+                                groupTopNodeIndexHistory[conditionBlockIndex - 1]
+                            } else {
+                                null
+                            }
+
+                        if (lastGroup == nextBlock) {
+                            setParentBlock =
+                                if (isExpectedClassType(
+                                        originalConditionLoopDirectiveParentType,
+                                        nextBlock,
+                                    )
+                                ) {
+                                    nextBlock
+                                } else {
+                                    null
+                                }
+                        } else {
+                            setParentBlock =
+                                if (isExpectedClassType(
+                                        originalConditionLoopDirectiveParentType,
+                                        nextBlock,
+                                    )
+                                ) {
+                                    nextBlock
+                                } else {
+                                    prevConditionBlockGroup
+                                }
+                        }
+
+                        if (block != nextBlock) {
+                            block.setParentGroupBlock(setParentBlock)
+                        } else if (setParentBlock is SqlElConditionLoopCommentBlock) {
+                            block.setParentGroupBlock(setParentBlock)
+                        }
+                    }
             }
         }
     }
@@ -89,10 +147,8 @@ open class SqlBlockBuilder {
             condition(it)
         }
 
-    fun getConditionOrLoopBlocksLast(): SqlElConditionLoopCommentBlock? = conditionOrLoopBlocks.lastOrNull()
-
     fun addConditionOrLoopBlock(block: SqlElConditionLoopCommentBlock) {
-        if (!block.conditionType.isInvalid() && !block.conditionType.isEnd()) {
+        if (block.conditionType.isStartDirective() || block.conditionType.isElse()) {
             conditionOrLoopBlocks.add(block)
         }
     }

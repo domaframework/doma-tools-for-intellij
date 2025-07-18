@@ -4,13 +4,13 @@ WITH tables AS (
              , pre_as
              , clm3
         FROM demo
-       WHERE id = /*# "block" */1 )
+       WHERE id = /*# "block" */ )
     UNION ALL
     ( SELECT id2
              , no_pre_as2 AS AS_NAME2
              , pre_as2
         FROM demo2
-       WHERE id2 = /*# "block2" */1 )
+       WHERE id2 = /*# "block2" */ )
 )
 SELECT query.id3
        , query.no_pre_as3 AS AS_NAME3

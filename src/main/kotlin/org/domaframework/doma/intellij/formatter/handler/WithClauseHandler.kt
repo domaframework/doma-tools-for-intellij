@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.util
+package org.domaframework.doma.intellij.formatter.handler
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
@@ -23,9 +23,12 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWit
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithOptionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
+import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-object WithClauseUtil {
+object WithClauseHandler {
     fun getWithClauseSubGroup(
         lastGroup: SqlBlock,
         child: ASTNode,
@@ -54,7 +57,7 @@ object WithClauseUtil {
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,
     ): SqlBlock? {
-        if (SqlKeywordUtil.isWithOptionKeyword(child.text)) {
+        if (SqlKeywordUtil.Companion.isWithOptionKeyword(child.text)) {
             return SqlWithOptionGroupBlock(child, sqlBlockFormattingCtx)
         }
         if (lastGroup is SqlWithOptionGroupBlock) {

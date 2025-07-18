@@ -166,6 +166,14 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("WithDelete.sql", "WithDelete$formatDataPrefix.sql")
     }
 
+    fun testNestedDirectivesFormatter() {
+        formatSqlFile("NestedDirectives.sql", "NestedDirectives$formatDataPrefix.sql")
+    }
+
+    fun testSelectCaseEndWithConditionFormatter() {
+        formatSqlFile("SelectCaseEndWithCondition.sql", "SelectCaseEndWithCondition$formatDataPrefix.sql")
+    }
+
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.util
+package org.domaframework.doma.intellij.formatter.handler
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
@@ -22,8 +22,9 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlI
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-object InsertClauseUtil {
+object InsertClauseHandler {
     fun getInsertClauseSubGroup(
         lastGroup: SqlBlock,
         child: ASTNode,
