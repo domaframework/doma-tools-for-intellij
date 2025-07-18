@@ -1,4 +1,5 @@
-SELECT e.id       , e.name       , d.name AS department_name
+SELECT e.id       , e.name       , d.name AS department_name        /*%if addColumn */
+       , d.location AS department_location /*%end */
   FROM employee e
        /*%if includesDepartment */
        LEFT JOIN department d ON e.department_id = d.id
@@ -29,7 +30,7 @@ ASC
        /*%end */ -- END5
      /*%end */ -- END3
      /*%if sort_has_next */ -- IF8
-,
+      e.sort_field ,
 /*%end */ -- END8
    /*%end */ -- END2
  /*%else */ -- ELSE1

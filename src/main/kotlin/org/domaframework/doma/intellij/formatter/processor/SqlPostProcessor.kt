@@ -27,6 +27,12 @@ import com.intellij.psi.impl.source.codeStyle.PostFormatProcessor
 import org.domaframework.doma.intellij.setting.SqlLanguage
 
 class SqlPostProcessor : PostFormatProcessor {
+    companion object {
+        private const val FILE_END_PADDING = " \n"
+    }
+
+    private val trailingSpacesRegex = Regex(" +(\r?\n)")
+
     override fun processElement(
         source: PsiElement,
         settings: CodeStyleSettings,
@@ -37,25 +43,44 @@ class SqlPostProcessor : PostFormatProcessor {
         rangeToReformat: TextRange,
         settings: CodeStyleSettings,
     ): TextRange {
-        if (source.language != SqlLanguage.INSTANCE) return rangeToReformat
-
-        val project: Project = source.project
-        val document = PsiDocumentManager.getInstance(project).getDocument(source) ?: return rangeToReformat
-
-        val originalText = document.text
-        val withoutTrailingSpaces = originalText.replace(Regex(" +(\r?\n)"), "$1")
-        val finalText = withoutTrailingSpaces.trimEnd() + " \n"
-
-        if (originalText == finalText) {
+        if (!isSqlFile(source)) {
             return rangeToReformat
         }
 
+        val document = getDocument(source) ?: return rangeToReformat
+        val processedText = processDocumentText(document.text)
+
+        if (document.text == processedText) {
+            return rangeToReformat
+        }
+
+        updateDocument(source.project, document, processedText)
+        return TextRange(0, processedText.length)
+    }
+
+    private fun isSqlFile(source: PsiFile): Boolean = source.language == SqlLanguage.INSTANCE
+
+    private fun getDocument(source: PsiFile) = PsiDocumentManager.getInstance(source.project).getDocument(source)
+
+    private fun processDocumentText(originalText: String): String {
+        val withoutTrailingSpaces = removeTrailingSpaces(originalText)
+        return ensureProperFileEnding(withoutTrailingSpaces)
+    }
+
+    private fun removeTrailingSpaces(text: String): String = text.replace(trailingSpacesRegex, "$1")
+
+    private fun ensureProperFileEnding(text: String): String = text.trimEnd() + FILE_END_PADDING
+
+    private fun updateDocument(
+        project: Project,
+        document: com.intellij.openapi.editor.Document,
+        newText: String,
+    ) {
         ApplicationManager.getApplication().invokeAndWait {
             WriteCommandAction.runWriteCommandAction(project) {
-                document.setText(finalText)
+                document.setText(newText)
                 PsiDocumentManager.getInstance(project).commitDocument(document)
             }
         }
-        return TextRange(0, finalText.length)
     }
 }

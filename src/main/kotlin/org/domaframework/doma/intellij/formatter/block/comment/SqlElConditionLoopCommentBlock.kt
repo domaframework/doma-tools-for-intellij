@@ -270,6 +270,11 @@ class SqlElConditionLoopCommentBlock(
 
     override fun createGroupIndentLen(): Int = indent.indentLen
 
+    /**
+     * Count the number of [SqlElConditionLoopCommentBlock] within the same parent block.
+     * Since the current directive is included in the count,
+     * **subtract 1 at the end** to exclude itself.
+     */
     private fun getOpenDirectiveCount(parent: SqlBlock): Int {
         val conditionLoopDirectives: List<SqlElConditionLoopCommentBlock> =
             parent

@@ -65,23 +65,21 @@ open class SqlBlock(
     open val childBlocks = mutableListOf<SqlBlock>()
     open var prevBlocks = emptyList<SqlBlock>()
 
-    fun getChildrenTextLen(): Int =
-        childBlocks.sumOf { child ->
-            val children =
-                child.childBlocks.filter { it !is SqlDefaultCommentBlock }
-            if (children.isNotEmpty()) {
-                child
-                    .getChildrenTextLen()
-                    .plus(child.getNodeText().length)
-            } else if (child.node.elementType == SqlTypes.DOT ||
-                child.node.elementType == SqlTypes.RIGHT_PAREN
-            ) {
-                // Since elements do not include surrounding spaces, they should be excluded from the character count.
-                0
-            } else {
-                child.getNodeText().length.plus(1)
-            }
+    fun getChildrenTextLen(): Int = childBlocks.sumOf { child -> calculateChildTextLength(child) }
+
+    private fun calculateChildTextLength(child: SqlBlock): Int {
+        val nonCommentChildren = child.childBlocks.filterNot { it is SqlDefaultCommentBlock }
+
+        if (nonCommentChildren.isNotEmpty()) {
+            return child.getChildrenTextLen() + child.getNodeText().length
         }
+        if (isExcludedFromTextLength(child)) {
+            return 0
+        }
+        return child.getNodeText().length + 1
+    }
+
+    private fun isExcludedFromTextLength(block: SqlBlock): Boolean = block.node.elementType in setOf(SqlTypes.DOT, SqlTypes.RIGHT_PAREN)
 
     fun getChildBlocksDropLast(
         dropIndex: Int = 1,
@@ -122,34 +120,48 @@ open class SqlBlock(
 
     fun isEnableFormat(): Boolean = enableFormat
 
-    open fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+    open fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
         parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) {
-                val prevBlock =
-                    prevBlocks.lastOrNull { it !is SqlDefaultCommentBlock }
-                return prevBlock is SqlElConditionLoopCommentBlock &&
-                    (prevBlock.conditionType.isElse() || prevBlock.conditionType.isEnd()) ||
-                    parent.childBlocks.dropLast(1).isEmpty()
+            when (parent) {
+                is SqlElConditionLoopCommentBlock -> shouldSaveSpaceForConditionLoop(parent)
+                is SqlNewGroupBlock -> shouldSaveSpaceForNewGroup(parent)
+                else -> false
             }
-            // Checks for non-breaking keyword combinations, ignoring comment blocks
-            if (parent is SqlNewGroupBlock) {
-                val prevWord = prevBlocks.lastOrNull { it !is SqlCommentBlock }
-                if (SqlKeywordUtil.isSetLineKeyword(getNodeText(), parent.getNodeText()) ||
-                    SqlKeywordUtil.isSetLineKeyword(getNodeText(), prevWord?.getNodeText() ?: "")
-                ) {
-                    return false
-                }
-                // Breaks a line if it is a child of itself or preceded by a condition/loop directive
-                return childBlocks.lastOrNull() is SqlElConditionLoopCommentBlock ||
-                    (
-                        prevBlocks.lastOrNull() is SqlElConditionLoopCommentBlock &&
-                            prevBlocks
-                                .last()
-                                .node.psi.startOffset > parent.node.psi.startOffset
-                    )
-            }
+        } == true
+
+    private fun shouldSaveSpaceForConditionLoop(parent: SqlElConditionLoopCommentBlock): Boolean {
+        val prevBlock = prevBlocks.lastOrNull { it !is SqlDefaultCommentBlock }
+        val isPrevBlockElseOrEnd =
+            prevBlock is SqlElConditionLoopCommentBlock &&
+                (prevBlock.conditionType.isElse() || prevBlock.conditionType.isEnd())
+        val hasNoChildrenExceptLast = parent.childBlocks.dropLast(1).isEmpty()
+
+        return isPrevBlockElseOrEnd || hasNoChildrenExceptLast
+    }
+
+    private fun shouldSaveSpaceForNewGroup(parent: SqlNewGroupBlock): Boolean {
+        val prevWord = prevBlocks.lastOrNull { it !is SqlCommentBlock }
+
+        if (isNonBreakingKeywordCombination(parent, prevWord)) {
+            return false
         }
-        return false
+
+        return isFollowedByConditionLoop() || isPrecededByConditionLoop(parent)
+    }
+
+    private fun isNonBreakingKeywordCombination(
+        parent: SqlNewGroupBlock,
+        prevWord: SqlBlock?,
+    ): Boolean =
+        SqlKeywordUtil.isSetLineKeyword(getNodeText(), parent.getNodeText()) ||
+            SqlKeywordUtil.isSetLineKeyword(getNodeText(), prevWord?.getNodeText() ?: "")
+
+    private fun isFollowedByConditionLoop(): Boolean = childBlocks.lastOrNull() is SqlElConditionLoopCommentBlock
+
+    private fun isPrecededByConditionLoop(parent: SqlNewGroupBlock): Boolean {
+        val lastPrevBlock = prevBlocks.lastOrNull()
+        return lastPrevBlock is SqlElConditionLoopCommentBlock &&
+            lastPrevBlock.node.psi.startOffset > parent.node.psi.startOffset
     }
 
     /**
@@ -193,10 +205,14 @@ open class SqlBlock(
      */
     override fun getChildIndent(): Indent? =
         if (isEnableFormat()) {
-            Indent.getSpaceIndent(4)
+            Indent.getSpaceIndent(DEFAULT_INDENT_SIZE)
         } else {
             Indent.getSpaceIndent(0)
         }
+
+    companion object {
+        private const val DEFAULT_INDENT_SIZE = 4
+    }
 
     /**
      * Determines whether the block is a leaf node.

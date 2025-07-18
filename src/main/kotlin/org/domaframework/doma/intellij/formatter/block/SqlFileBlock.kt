@@ -61,7 +61,7 @@ import org.domaframework.doma.intellij.formatter.processor.SqlSetParentGroupProc
 import org.domaframework.doma.intellij.formatter.util.CreateTableUtil
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import org.domaframework.doma.intellij.formatter.util.SqlBlockUtil
+import org.domaframework.doma.intellij.formatter.util.SqlBlockGenerator
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlFileBlock(
@@ -95,7 +95,7 @@ class SqlFileBlock(
 
     private val blockBuilder = SqlBlockBuilder()
     private val parentSetProcessor = SqlSetParentGroupProcessor(blockBuilder)
-    private val blockUtil = SqlBlockUtil(this, isEnableFormat(), formatMode)
+    private val blockUtil = SqlBlockGenerator(this, isEnableFormat(), formatMode)
 
     private val pendingCommentBlocks = mutableListOf<SqlBlock>()
 
@@ -114,9 +114,6 @@ class SqlFileBlock(
                 updateCommentParentAndIdent(childBlock)
                 updateBlockParentAndLAddGroup(childBlock)
                 updateWhiteSpaceInclude(lastBlock, childBlock, lastGroup)
-                // TODO After processing the END directive block,
-                //  if there is only one element (with two or fewer spaces),
-                //  remove the line breaks within the if~end block and consolidate it into a single line.
                 blocks.add(childBlock)
             } else {
                 if (lastBlock !is SqlLineCommentBlock) {

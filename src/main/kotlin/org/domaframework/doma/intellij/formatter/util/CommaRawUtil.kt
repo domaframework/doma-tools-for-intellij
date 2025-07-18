@@ -24,37 +24,67 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordG
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 
 object CommaRawUtil {
+    /**
+     * Creates an appropriate comma block based on the last group context.
+     * Handles special cases for condition/loop comment blocks and different group types.
+     */
     fun getCommaBlock(
         lastGroup: SqlBlock?,
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,
     ): SqlBlock =
-        if (lastGroup is SqlElConditionLoopCommentBlock) {
-            if (lastGroup.parentBlock == null) {
-                getSqlCommaBlock(lastGroup.tempParentBlock, child, sqlBlockFormattingCtx)
-            } else {
-                getSqlCommaBlock(lastGroup.parentBlock, child, sqlBlockFormattingCtx)
-            }
-        } else {
-            getSqlCommaBlock(lastGroup, child, sqlBlockFormattingCtx)
+        when (lastGroup) {
+            is SqlElConditionLoopCommentBlock ->
+                createCommaBlockForConditionLoop(
+                    lastGroup,
+                    child,
+                    sqlBlockFormattingCtx,
+                )
+
+            else -> createCommaBlockForGroup(lastGroup, child, sqlBlockFormattingCtx)
         }
 
-    private fun getSqlCommaBlock(
+    /**
+     * Creates a comma block for condition/loop comment blocks.
+     * Uses the parent block if available, otherwise uses the temporary parent block.
+     */
+    private fun createCommaBlockForConditionLoop(
+        lastGroup: SqlElConditionLoopCommentBlock,
+        child: ASTNode,
+        sqlBlockFormattingCtx: SqlBlockFormattingContext,
+    ): SqlBlock {
+        val effectiveParent = lastGroup.parentBlock ?: lastGroup.tempParentBlock
+        return createCommaBlockForGroup(effectiveParent, child, sqlBlockFormattingCtx)
+    }
+
+    /**
+     * Creates an appropriate comma block based on the group type and indent level.
+     */
+    private fun createCommaBlockForGroup(
         lastGroup: SqlBlock?,
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,
     ): SqlBlock =
-        when (lastGroup) {
-            is SqlColumnRawGroupBlock, is SqlKeywordGroupBlock -> {
-                if (lastGroup.indent.indentLevel == IndentType.SECOND) {
-                    SqlCommaBlock(child, sqlBlockFormattingCtx)
-                } else {
-                    SqlColumnRawGroupBlock(child, sqlBlockFormattingCtx)
-                }
-            }
+        when {
+            shouldCreateColumnRawBlock(lastGroup) ->
+                SqlColumnRawGroupBlock(
+                    child,
+                    sqlBlockFormattingCtx,
+                )
 
-            is SqlWithCommonTableGroupBlock -> SqlWithCommonTableGroupBlock(child, sqlBlockFormattingCtx)
+            lastGroup is SqlWithCommonTableGroupBlock ->
+                SqlWithCommonTableGroupBlock(
+                    child,
+                    sqlBlockFormattingCtx,
+                )
 
             else -> SqlCommaBlock(child, sqlBlockFormattingCtx)
         }
+
+    /**
+     * Determines if a column raw block should be created based on the group type and indent level.
+     */
+    private fun shouldCreateColumnRawBlock(lastGroup: SqlBlock?): Boolean =
+        (lastGroup is SqlColumnRawGroupBlock || lastGroup is SqlKeywordGroupBlock) &&
+            lastGroup.indent.indentLevel != IndentType.SECOND
 }
