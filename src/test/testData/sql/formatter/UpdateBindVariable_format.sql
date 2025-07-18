@@ -3,6 +3,6 @@ UPDATE /*# tableName */
        , X2 = 2
        , X3 = 3
        /*%for entity : entities */
-       , /*# entity.itemIdentifier */= /* entity.value */'abc'
+       , /*# entity.itemIdentifier */ = /* entity.value */'abc'
        /*%end*/
  WHERE X = /* reportId */1 
