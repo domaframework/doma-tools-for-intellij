@@ -11,6 +11,5 @@ UPDATE /*# tableName */
            , x + 1
            /*%for entity : entities */
            , /* entity.value */'abc'
-           /*%end*/
-         )
+           /*%end*/ )
  WHERE x = /* reportId */1 

@@ -82,7 +82,6 @@ open class SqlRightPatternBlock(
         val NEW_LINE_EXPECTED_TYPES =
             listOf(
                 SqlUpdateColumnGroupBlock::class,
-                SqlUpdateValueGroupBlock::class,
                 SqlCreateTableColumnDefinitionGroupBlock::class,
                 SqlColumnDefinitionRawGroupBlock::class,
                 SqlUpdateSetGroupBlock::class,
