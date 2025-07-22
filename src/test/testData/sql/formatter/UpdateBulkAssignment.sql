@@ -4,7 +4,7 @@ UPDATE /*# tableName */
       , x3
       /*%for entity : entities */
       , /*# entity.itemIdentifier */ 
-      /*%end*/) = ( /* @userId() */1
+      /*%end*/)=(/* @userId() */1
          , x
          , x + 1
          /*%for entity : entities */

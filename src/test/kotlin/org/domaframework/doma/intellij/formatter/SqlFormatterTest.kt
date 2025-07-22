@@ -114,8 +114,8 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("UpdateBindVariable.sql", "UpdateBindVariable$formatDataPrefix.sql")
     }
 
-    fun testUpdateTupleAssignmentFormatter() {
-        formatSqlFile("UpdateTupleAssignment.sql", "UpdateTupleAssignment$formatDataPrefix.sql")
+    fun testUpdateBulkAssignmentFormatter() {
+        formatSqlFile("UpdateBulkAssignment.sql", "UpdateBulkAssignment$formatDataPrefix.sql")
     }
 
     fun testDeleteFormatter() {
