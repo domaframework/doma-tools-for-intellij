@@ -2,8 +2,8 @@ WITH new_user AS (
     INSERT INTO users
                 (name
                  , email)
-         VALUES ('Alice Example'
-                 , 'alice@example.com')
+         VALUES ( 'Alice Example'
+                  , 'alice@example.com' )
     RETURNING id
               , name
 )

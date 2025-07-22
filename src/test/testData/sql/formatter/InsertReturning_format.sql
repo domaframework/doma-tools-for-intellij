@@ -7,15 +7,15 @@ INSERT INTO /*# tableName */
              , x3
              , x4)
      VALUES ( /* reportId */1
-             , /* reportId */1
-             /*%for entity : entities */
-             , /* entity.value */'abc'
-             /*%end*/
-             , /* @userId() */1
-             , x5
-             , /* @userId() */1
-             , x6
-             , 1
-             , /* @maxDateTime() */'9999-12-31')
+              , /* reportId */1
+              /*%for entity : entities */
+              , /* entity.value */'abc'
+              /*%end*/
+              , /* @userId() */1
+              , x5
+              , /* @userId() */1
+              , x6
+              , 1
+              , /* @maxDateTime() */'9999-12-31' )
 RETURNING x1
           , x2 

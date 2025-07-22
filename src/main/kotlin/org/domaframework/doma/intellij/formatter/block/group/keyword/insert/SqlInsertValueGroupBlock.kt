@@ -29,7 +29,7 @@ class SqlInsertValueGroupBlock(
     ) {
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.groupIndentLen = createBlockIndentLen()
+        indent.groupIndentLen = createBlockIndentLen().plus(1)
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {

@@ -40,8 +40,10 @@ import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRaw
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnAssignmentSymbolBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQueryGroupBlock
@@ -483,8 +485,15 @@ class SqlFileBlock(
             return SqlCustomSpacingBuilder.normalSpacing
         }
 
-        if (childBlock1 is SqlSubGroupBlock && childBlock2 is SqlSubGroupBlock) {
-            return SqlCustomSpacingBuilder.nonSpacing
+        if (childBlock1 is SqlSubGroupBlock) {
+            if (childBlock2 is SqlSubGroupBlock) {
+                return SqlCustomSpacingBuilder.nonSpacing
+            }
+            if (childBlock1 is SqlInsertValueGroupBlock ||
+                childBlock1 is SqlUpdateValueGroupBlock
+            ) {
+                return SqlCustomSpacingBuilder.normalSpacing
+            }
         }
 
         // Do not leave a space after the comment block of the bind variable
@@ -546,8 +555,6 @@ class SqlFileBlock(
                 }
 
                 is SqlDataTypeParamBlock, is SqlFunctionParamBlock -> return SqlCustomSpacingBuilder.nonSpacing
-
-                // else -> return SqlCustomSpacingBuilder.normalSpacing
             }
         }
 
