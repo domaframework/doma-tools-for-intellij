@@ -44,7 +44,7 @@ abstract class SqlCommentBlock(
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = 0
+        indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -61,4 +61,6 @@ abstract class SqlCommentBlock(
         }
         return 0
     }
+
+    override fun createGroupIndentLen(): Int = 0
 }

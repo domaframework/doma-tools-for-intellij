@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.condition
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -49,7 +50,9 @@ class SqlConditionKeywordGroupBlock(
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             val groupLen = parent.indent.groupIndentLen
-            return if (parent is SqlSubGroupBlock) {
+            return if (parent is SqlElConditionLoopCommentBlock) {
+                parent.indent.groupIndentLen
+            } else if (parent is SqlSubGroupBlock) {
                 if (getNodeText() == "and") {
                     groupLen
                 } else {

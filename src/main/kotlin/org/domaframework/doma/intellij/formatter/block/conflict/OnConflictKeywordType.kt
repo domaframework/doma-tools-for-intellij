@@ -15,8 +15,15 @@
  */
 package org.domaframework.doma.intellij.formatter.block.conflict
 
-enum class OnConflictKeywordType {
-    CONFLICT,
-    CONSTRAINT,
-    UNKNOWN,
+enum class OnConflictKeywordType(
+    private val keyword: String,
+) {
+    CONFLICT("conflict"),
+    CONSTRAINT("constraint"),
+    UNKNOWN("unknown"),
+    ;
+
+    companion object {
+        fun of(keyword: String): OnConflictKeywordType = entries.find { it.keyword == keyword } ?: UNKNOWN
+    }
 }

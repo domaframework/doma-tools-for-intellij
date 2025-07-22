@@ -43,6 +43,4 @@ class SqlDataTypeParamBlock(
         indent.indentLen = 0
         indent.groupIndentLen = 0
     }
-
-    override fun createBlockIndentLen(): Int = 0
 }

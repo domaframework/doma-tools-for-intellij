@@ -24,11 +24,15 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 import org.domaframework.doma.intellij.psi.SqlTypes
+import org.jetbrains.kotlin.psi.psiUtil.startOffset
 
 open class SqlBlock(
     node: ASTNode,
@@ -59,32 +63,31 @@ open class SqlBlock(
 
     open var parentBlock: SqlBlock? = null
     open val childBlocks = mutableListOf<SqlBlock>()
+    open var prevBlocks = emptyList<SqlBlock>()
 
-    fun getChildrenTextLen(): Int =
-        childBlocks.sumOf { child ->
-            val children =
-                child.childBlocks.filter { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
-            if (children.isNotEmpty()) {
-                child
-                    .getChildrenTextLen()
-                    .plus(child.getNodeText().length)
-            } else if (child.node.elementType == SqlTypes.DOT ||
-                child.node.elementType == SqlTypes.RIGHT_PAREN
-            ) {
-                // Since elements do not include surrounding spaces, they should be excluded from the character count.
-                0
-            } else {
-                child.getNodeText().length.plus(1)
-            }
+    fun getChildrenTextLen(): Int = childBlocks.sumOf { child -> calculateChildTextLength(child) }
+
+    private fun calculateChildTextLength(child: SqlBlock): Int {
+        val nonCommentChildren = child.childBlocks.filterNot { it is SqlDefaultCommentBlock }
+
+        if (nonCommentChildren.isNotEmpty()) {
+            return child.getChildrenTextLen() + child.getNodeText().length
         }
+        if (isExcludedFromTextLength(child)) {
+            return 0
+        }
+        return child.getNodeText().length + 1
+    }
+
+    private fun isExcludedFromTextLength(block: SqlBlock): Boolean = block.node.elementType in setOf(SqlTypes.DOT, SqlTypes.RIGHT_PAREN)
 
     fun getChildBlocksDropLast(
         dropIndex: Int = 1,
-        skipCommentBlock: Boolean = false,
+        skipCommentBlock: Boolean = true,
     ): List<SqlBlock> {
         val children = childBlocks.dropLast(dropIndex)
         if (skipCommentBlock) {
-            return children.filter { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
+            return children.filter { it !is SqlDefaultCommentBlock }
         }
         return children
     }
@@ -98,6 +101,7 @@ open class SqlBlock(
 
     open fun setParentGroupBlock(lastGroup: SqlBlock?) {
         parentBlock = lastGroup
+        prevBlocks = parentBlock?.childBlocks?.toList() ?: emptyList()
         parentBlock?.addChildBlock(this)
         setParentPropertyBlock(lastGroup)
     }
@@ -107,14 +111,58 @@ open class SqlBlock(
     }
 
     open fun addChildBlock(childBlock: SqlBlock) {
-        childBlocks.add(childBlock)
+        if (!childBlocks.contains(childBlock)) {
+            childBlocks.add(childBlock)
+        }
     }
 
     fun getNodeText() = node.text.lowercase()
 
     fun isEnableFormat(): Boolean = enableFormat
 
-    open fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
+    open fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
+        parentBlock?.let { parent ->
+            when (parent) {
+                is SqlElConditionLoopCommentBlock -> shouldSaveSpaceForConditionLoop(parent)
+                is SqlNewGroupBlock -> shouldSaveSpaceForNewGroup(parent)
+                else -> false
+            }
+        } == true
+
+    private fun shouldSaveSpaceForConditionLoop(parent: SqlElConditionLoopCommentBlock): Boolean {
+        val prevBlock = prevBlocks.lastOrNull { it !is SqlDefaultCommentBlock }
+        val isPrevBlockElseOrEnd =
+            prevBlock is SqlElConditionLoopCommentBlock &&
+                (prevBlock.conditionType.isElse() || prevBlock.conditionType.isEnd())
+        val hasNoChildrenExceptLast = parent.childBlocks.dropLast(1).isEmpty()
+
+        return isPrevBlockElseOrEnd || hasNoChildrenExceptLast
+    }
+
+    private fun shouldSaveSpaceForNewGroup(parent: SqlNewGroupBlock): Boolean {
+        val prevWord = prevBlocks.lastOrNull { it !is SqlCommentBlock }
+
+        if (isNonBreakingKeywordCombination(parent, prevWord)) {
+            return false
+        }
+
+        return isFollowedByConditionLoop() || isPrecededByConditionLoop(parent)
+    }
+
+    private fun isNonBreakingKeywordCombination(
+        parent: SqlNewGroupBlock,
+        prevWord: SqlBlock?,
+    ): Boolean =
+        SqlKeywordUtil.isSetLineKeyword(getNodeText(), parent.getNodeText()) ||
+            SqlKeywordUtil.isSetLineKeyword(getNodeText(), prevWord?.getNodeText() ?: "")
+
+    private fun isFollowedByConditionLoop(): Boolean = childBlocks.lastOrNull() is SqlElConditionLoopCommentBlock
+
+    private fun isPrecededByConditionLoop(parent: SqlNewGroupBlock): Boolean {
+        val lastPrevBlock = prevBlocks.lastOrNull()
+        return lastPrevBlock is SqlElConditionLoopCommentBlock &&
+            lastPrevBlock.node.psi.startOffset > parent.node.psi.startOffset
+    }
 
     /**
      * Creates the indentation length for the block.
@@ -157,10 +205,14 @@ open class SqlBlock(
      */
     override fun getChildIndent(): Indent? =
         if (isEnableFormat()) {
-            Indent.getSpaceIndent(4)
+            Indent.getSpaceIndent(DEFAULT_INDENT_SIZE)
         } else {
             Indent.getSpaceIndent(0)
         }
+
+    companion object {
+        private const val DEFAULT_INDENT_SIZE = 4
+    }
 
     /**
      * Determines whether the block is a leaf node.

@@ -19,6 +19,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
@@ -33,6 +34,15 @@ abstract class SqlTopQueryGroupBlock(
         IndentType.TOP,
         context,
     ) {
+    companion object {
+        private val PARENT_INDENT_SYNC_TYPES =
+            listOf(
+                SqlCreateViewGroupBlock::class,
+                SqlWithQuerySubGroupBlock::class,
+                SqlElConditionLoopCommentBlock::class,
+            )
+    }
+
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = indentLevel
@@ -46,12 +56,7 @@ abstract class SqlTopQueryGroupBlock(
         parentBlock?.let { parent ->
             if (parent.indent.indentLevel == IndentType.FILE) return 0
             var baseIndent = parent.indent.groupIndentLen
-            val parentIndentSyncTypes =
-                listOf(
-                    SqlCreateViewGroupBlock::class,
-                    SqlWithQuerySubGroupBlock::class,
-                )
-            if (!TypeUtil.isExpectedClassType(parentIndentSyncTypes, parent)) {
+            if (!TypeUtil.isExpectedClassType(PARENT_INDENT_SYNC_TYPES, parent)) {
                 baseIndent = baseIndent.plus(1)
             }
             return baseIndent

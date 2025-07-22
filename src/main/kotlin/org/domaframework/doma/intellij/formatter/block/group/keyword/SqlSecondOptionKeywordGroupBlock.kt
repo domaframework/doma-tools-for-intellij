@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
@@ -39,6 +40,7 @@ open class SqlSecondOptionKeywordGroupBlock(
             if (parent.indent.indentLevel == IndentType.FILE) {
                 return 0
             }
+            if (parent is SqlElConditionLoopCommentBlock) return groupLen
             val subGroupBlock = parent.parentBlock as? SqlSubGroupBlock
             val newIndent =
                 if (parent is SqlSubQueryGroupBlock) {

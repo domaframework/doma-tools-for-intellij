@@ -17,8 +17,7 @@ package org.domaframework.doma.intellij.formatter.block.word
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -40,7 +39,7 @@ class SqlFunctionGroupBlock(
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            val children = prevChildren.dropLast(1).filter { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
+            val children = prevChildren.dropLast(1).filter { it !is SqlDefaultCommentBlock }
             val prevBlocksLength =
                 children
                     .sumOf { prev ->

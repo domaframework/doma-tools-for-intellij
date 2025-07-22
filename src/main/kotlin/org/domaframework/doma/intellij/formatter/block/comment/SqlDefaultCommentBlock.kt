@@ -13,49 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword.inline
+package org.domaframework.doma.intellij.formatter.block.comment
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
-import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-open class SqlInlineGroupBlock(
+abstract class SqlDefaultCommentBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlNewGroupBlock(
-        node,
-        context,
-    ) {
-    val inlineConditions: MutableList<SqlInlineSecondGroupBlock> = mutableListOf()
-
+) : SqlCommentBlock(node, context) {
+    /**
+     * If this block is the last element, the indentation update process is not called,
+     * so set the default indentation to 1.
+     */
     override val indent =
         ElementIndent(
-            IndentType.INLINE,
-            0,
-            0,
+            IndentType.NONE,
+            1,
+            1,
         )
-
-    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
-        indent.indentLevel = IndentType.INLINE
-        indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = createGroupIndentLen()
-    }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createBlockIndentLen(): Int =
-        parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) {
-                parent.indent.groupIndentLen
-            } else {
-                parent.indent.groupIndentLen.plus(1)
-            }
-        } ?: 1
+    override fun isLeaf(): Boolean = true
 
-    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
+    /**
+     * When the next element block is determined,
+     * update the indent to align it with the element below.
+     */
+    fun updateIndentLen(
+        baseBlock: SqlBlock,
+        groupBlockCount: Int,
+    ) {
+        indent.indentLen =
+            if (isSaveSpace(parentBlock)) {
+                baseBlock.indent.indentLen
+            } else if (groupBlockCount <= 2) {
+                // If it is the top of the file, the indent number should be 0.
+                0
+            } else {
+                1
+            }
+    }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?) = PsiTreeUtil.prevLeaf(node.psi)?.text?.contains("\n") == true
 }

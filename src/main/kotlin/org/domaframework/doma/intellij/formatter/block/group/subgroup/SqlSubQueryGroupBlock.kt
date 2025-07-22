@@ -18,8 +18,8 @@ package org.domaframework.doma.intellij.formatter.block.group.subgroup
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlJoinQueriesGroupBlock
@@ -50,23 +50,22 @@ open class SqlSubQueryGroupBlock(
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
-            return if (parent is SqlJoinQueriesGroupBlock) {
-                parent.indent.indentLen
-            } else if (parent is SqlWithQuerySubGroupBlock) {
-                parent.indent.groupIndentLen
-            } else if (parent is SqlJoinGroupBlock) {
-                parent.indent.groupIndentLen.plus(1)
-            } else {
-                val children = prevChildren?.filter { it !is SqlLineCommentBlock && it !is SqlBlockCommentBlock }
-                return children
-                    ?.dropLast(1)
-                    ?.sumOf { prev ->
-                        prev
-                            .getChildrenTextLen()
-                            .plus(prev.getNodeText().length.plus(1))
-                    }?.plus(parent.indent.groupIndentLen)
-                    ?.plus(1)
-                    ?: offset
+            return when (parent) {
+                is SqlElConditionLoopCommentBlock, is SqlWithQuerySubGroupBlock -> return parent.indent.groupIndentLen
+                is SqlJoinQueriesGroupBlock -> return parent.indent.indentLen
+                is SqlJoinGroupBlock -> return parent.indent.groupIndentLen.plus(1)
+                else -> {
+                    val children = prevChildren?.filter { it !is SqlDefaultCommentBlock }
+                    return children
+                        ?.dropLast(1)
+                        ?.sumOf { prev ->
+                            prev
+                                .getChildrenTextLen()
+                                .plus(prev.getNodeText().length.plus(1))
+                        }?.plus(parent.indent.groupIndentLen)
+                        ?.plus(1)
+                        ?: offset
+                }
             }
         } ?: offset
 

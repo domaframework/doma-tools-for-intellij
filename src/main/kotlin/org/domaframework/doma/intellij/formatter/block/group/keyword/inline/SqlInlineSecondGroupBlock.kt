@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.inline
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -53,10 +54,11 @@ open class SqlInlineSecondGroupBlock(
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
-            // TODO:Customize indentation within an inline group
             if (isEndCase) {
                 val diffTextLength = parent.getNodeText().length.minus(getNodeText().length)
                 parent.indent.indentLen.plus(diffTextLength)
+            } else if (parent is SqlElConditionLoopCommentBlock) {
+                parent.indent.groupIndentLen
             } else {
                 parent.indent.groupIndentLen.plus(1)
             }

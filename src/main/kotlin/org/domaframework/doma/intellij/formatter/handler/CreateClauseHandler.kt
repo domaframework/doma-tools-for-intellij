@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.util
+package org.domaframework.doma.intellij.formatter.handler
 
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
@@ -24,9 +24,10 @@ import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlo
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-object CreateTableUtil {
+object CreateClauseHandler {
     fun getCreateTableClauseSubGroup(
         lastGroup: SqlBlock,
         child: ASTNode,

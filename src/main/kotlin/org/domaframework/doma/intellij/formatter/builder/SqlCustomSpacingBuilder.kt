@@ -22,13 +22,10 @@ import com.intellij.psi.tree.IElementType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElBlockCommentBlock.SqlElCommentDirectiveType
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 
 class SqlCustomSpacingBuilder {
@@ -122,30 +119,29 @@ class SqlCustomSpacingBuilder {
         return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
     }
 
-    fun getSpacingRightPattern(block: SqlRightPatternBlock): Spacing? {
-        val parentBlock = block.parentBlock
-
-        if (block.isSaveSpace(null)) {
-            return getSpacing(block)
+    fun getSpacingElDirectiveComment(
+        child: SqlElBlockCommentBlock,
+        child2: SqlBlock,
+    ): Spacing? {
+        if (child2 is SqlRightPatternBlock) return null
+        if (child.directiveType == SqlElCommentDirectiveType.CONDITION_LOOP) {
+            val indent = child2.indent.indentLen
+            return Spacing.createSpacing(indent, indent, 0, false, 0, 0)
         }
 
-        if (parentBlock is SqlCreateTableColumnDefinitionGroupBlock ||
-            parentBlock is SqlUpdateColumnGroupBlock ||
-            parentBlock is SqlUpdateValueGroupBlock
+        if (child.directiveType == SqlElCommentDirectiveType.NORMAL ||
+            child.directiveType == SqlElCommentDirectiveType.LITERAL
         ) {
-            return getSpacing(block)
+            return nonSpacing
         }
 
-        if (parentBlock is SqlParallelListBlock) {
-            val lastKeywordGroup = parentBlock.getChildBlocksDropLast().lastOrNull()
-            return if (lastKeywordGroup is SqlKeywordGroupBlock) {
-                normalSpacing
-            } else {
-                nonSpacing
-            }
-        }
-
-        if (parentBlock is SqlDataTypeParamBlock || !block.preSpaceRight) return nonSpacing
         return normalSpacing
     }
+
+    fun getSpacingRightPattern(block: SqlRightPatternBlock): Spacing? =
+        when (block.lineBreakAndSpacingType) {
+            SqlRightPatternBlock.LineBreakAndSpacingType.NONE, SqlRightPatternBlock.LineBreakAndSpacingType.LINE_BREAK -> nonSpacing
+            SqlRightPatternBlock.LineBreakAndSpacingType.SPACING -> normalSpacing
+            SqlRightPatternBlock.LineBreakAndSpacingType.LINE_BREAK_AND_SPACING -> getSpacing(block)
+        }
 }
