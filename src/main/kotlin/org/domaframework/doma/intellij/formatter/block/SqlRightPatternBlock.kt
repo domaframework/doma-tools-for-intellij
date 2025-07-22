@@ -24,6 +24,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordG
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
@@ -66,6 +67,7 @@ open class SqlRightPatternBlock(
                 SqlUpdateColumnGroupBlock::class,
                 SqlUpdateValueGroupBlock::class,
                 SqlCreateTableColumnDefinitionGroupBlock::class,
+                SqlInsertValueGroupBlock::class,
             )
 
         val NOT_INDENT_EXPECTED_TYPES =

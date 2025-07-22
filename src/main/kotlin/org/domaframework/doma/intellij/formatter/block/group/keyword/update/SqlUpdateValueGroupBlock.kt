@@ -62,7 +62,8 @@ class SqlUpdateValueGroupBlock(
         parentBlock?.let { parent ->
             if (parent is SqlUpdateSetGroupBlock) {
                 val parentGroupIndent = parent.indent.groupIndentLen
-                return parentGroupIndent.plus(3)
+                // Add four spaces after the SET keyword: " = " and "("
+                return parentGroupIndent.plus(4)
             }
         } ?: return offset
         return offset

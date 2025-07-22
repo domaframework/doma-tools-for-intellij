@@ -1,8 +1,8 @@
 INSERT INTO users
             (username
              , email)
-     VALUES ('user'
-             , 'user@example.com')
+     VALUES ( 'user'
+              , 'user@example.com' )
 ON CONFLICT ON CONSTRAINT
 DO UPDATE
       SET email = EXCLUDED.email
