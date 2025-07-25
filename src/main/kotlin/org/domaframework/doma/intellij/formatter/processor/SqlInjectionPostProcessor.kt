@@ -20,12 +20,11 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.codeStyle.CodeStyleSettings
-import com.intellij.psi.impl.source.codeStyle.PostFormatProcessor
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.formatter.visitor.DaoInjectionSqlVisitor
 
-class SqlInjectionPostProcessor : PostFormatProcessor {
+class SqlInjectionPostProcessor : SqlPostProcessor() {
     override fun processElement(
         element: PsiElement,
         settings: CodeStyleSettings,
@@ -46,6 +45,8 @@ class SqlInjectionPostProcessor : PostFormatProcessor {
         val project: Project = element.project
         val visitor = DaoInjectionSqlVisitor(element, project)
         element.accept(visitor)
-        visitor.processAll()
+        visitor.processAll { text, skipFinalLineBreak ->
+            processDocumentText(text, skipFinalLineBreak)
+        }
     }
 }

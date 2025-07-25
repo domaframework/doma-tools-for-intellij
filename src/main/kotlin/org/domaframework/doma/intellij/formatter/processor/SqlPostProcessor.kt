@@ -15,21 +15,14 @@
  */
 package org.domaframework.doma.intellij.formatter.processor
 
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.editor.Document
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.impl.source.codeStyle.PostFormatProcessor
-import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.common.util.StringUtil
-import org.domaframework.doma.intellij.setting.SqlLanguage
 
-class SqlPostProcessor : PostFormatProcessor {
+abstract class SqlPostProcessor : PostFormatProcessor {
     companion object {
         private const val FILE_END_PADDING = " ${StringUtil.LINE_SEPARATE}"
     }
@@ -37,36 +30,17 @@ class SqlPostProcessor : PostFormatProcessor {
     private val trailingSpacesRegex = Regex(" +(\r?\n)")
 
     override fun processElement(
-        source: PsiElement,
+        element: PsiElement,
         settings: CodeStyleSettings,
-    ): PsiElement = source
+    ): PsiElement = element
 
     override fun processText(
         source: PsiFile,
         rangeToReformat: TextRange,
         settings: CodeStyleSettings,
-    ): TextRange {
-        if (!isSqlFile(source) || isInjectedSqlFile(source)) {
-            return rangeToReformat
-        }
+    ): TextRange = rangeToReformat
 
-        val originalDocument = getDocument(source)
-        val document = originalDocument ?: source.fileDocument
-        val processedText = processDocumentText(document.text, originalDocument != null)
-
-        if (document.text == processedText) {
-            return rangeToReformat
-        }
-
-        updateDocument(source.project, document, processedText)
-        return TextRange(0, processedText.length)
-    }
-
-    private fun isSqlFile(source: PsiFile): Boolean = source.language == SqlLanguage.INSTANCE
-
-    private fun getDocument(source: PsiFile) = PsiDocumentManager.getInstance(source.project).getDocument(source)
-
-    private fun processDocumentText(
+    protected fun processDocumentText(
         originalText: String,
         existsOriginalDocument: Boolean,
     ): String {
@@ -82,17 +56,4 @@ class SqlPostProcessor : PostFormatProcessor {
     ): String =
         text.trimEnd() +
             if (isEndSpace) FILE_END_PADDING else ""
-
-    private fun updateDocument(
-        project: Project,
-        document: Document,
-        newText: String,
-    ) {
-        ApplicationManager.getApplication().invokeAndWait {
-            WriteCommandAction.runWriteCommandAction(project) {
-                document.setText(newText)
-                PsiDocumentManager.getInstance(project).commitDocument(document)
-            }
-        }
-    }
 }
