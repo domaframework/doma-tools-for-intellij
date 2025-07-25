@@ -272,7 +272,9 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         prevElement: PsiElement?,
         text: String,
     ): String =
-        if (prevElement?.text?.contains(StringUtil.LINE_SEPARATE) == false) {
+        if (prevElement?.text?.contains(StringUtil.LINE_SEPARATE) == false &&
+            PsiTreeUtil.prevLeaf(prevElement) != null
+        ) {
             "${StringUtil.LINE_SEPARATE}$text"
         } else {
             text
