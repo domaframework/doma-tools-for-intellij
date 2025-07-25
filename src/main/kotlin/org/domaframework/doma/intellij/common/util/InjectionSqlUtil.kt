@@ -13,26 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.inspection.sql.visitor
+package org.domaframework.doma.intellij.common.util
 
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteralExpression
-import org.domaframework.doma.intellij.common.util.InjectionSqlUtil
-import org.domaframework.doma.intellij.psi.SqlVisitor
+import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 
-open class SqlVisitorBase : SqlVisitor() {
-    /**
-     * For processing inside Sql annotations, get it as an injected custom language
-     */
-    protected fun initInjectionElement(
+object InjectionSqlUtil {
+    fun initInjectionElement(
         basePsiFile: PsiFile,
         project: Project,
         literal: PsiLiteralExpression,
     ): PsiFile? =
-        InjectionSqlUtil.initInjectionElement(
-            basePsiFile,
-            project,
-            literal,
-        )
+        if (isJavaOrKotlinFileType(basePsiFile)) {
+            val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
+            injectedLanguageManager
+                .getInjectedPsiFiles(literal)
+                ?.firstOrNull()
+                ?.first as? PsiFile
+        } else {
+            null
+        }
+
+    fun isInjectedSqlFile(source: PsiFile): Boolean {
+        val injectedLanguageManager = InjectedLanguageManager.getInstance(source.project)
+        return injectedLanguageManager.isInjectedFragment(source)
+    }
 }
