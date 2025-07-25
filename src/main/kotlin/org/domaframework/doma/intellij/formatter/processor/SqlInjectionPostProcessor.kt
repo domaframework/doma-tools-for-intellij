@@ -21,6 +21,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import com.intellij.psi.impl.source.codeStyle.PostFormatProcessor
+import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.formatter.visitor.DaoInjectionSqlVisitor
 
@@ -35,7 +36,7 @@ class SqlInjectionPostProcessor : PostFormatProcessor {
         rangeToReformat: TextRange,
         settings: CodeStyleSettings,
     ): TextRange {
-        if (!isJavaOrKotlinFileType(source)) return rangeToReformat
+        if (!isJavaOrKotlinFileType(source) || getDaoClass(source) == null) return rangeToReformat
 
         processInjected(source)
         return rangeToReformat
