@@ -37,6 +37,7 @@ public class SqlColorSettingsPage implements ColorSettingsPage {
         new AttributesDescriptor("SQL//Literal//String", SqlSyntaxHighlighter.STRING),
         new AttributesDescriptor("SQL//Literal//Number", SqlSyntaxHighlighter.NUMBER),
         new AttributesDescriptor("SQL//Syntax//Keyword", SqlSyntaxHighlighter.KEYWORD),
+        new AttributesDescriptor("SQL//Syntax//Function name", SqlSyntaxHighlighter.FUNCTION_NAME),
         new AttributesDescriptor("SQL//Syntax//DataType", SqlSyntaxHighlighter.DATATYPE),
         new AttributesDescriptor("SQL//Syntax//Other", SqlSyntaxHighlighter.OTHER),
         new AttributesDescriptor("SQL//Syntax//Word", SqlSyntaxHighlighter.WORD),
@@ -106,59 +107,64 @@ public class SqlColorSettingsPage implements ColorSettingsPage {
                 /**
                   * Set highlights as you like
                   */
-                update product set /*%populate*/
-                  category = /* category */'category',
-                  expected_sales = /* price * pieces */0,
-                  unit_price = /* purchase / pieces */0,
-                  /*%if mark != "XXX" */
-                   mark = /* mark */'mark',
-                 /*%end */
-                  /*%! This comment delete */
-                  employee_type = (
-                    select /*%expand "e" */* from employee e
-                    where
-                    /*%for name : names */
-                    orderer = /* name */'orderer'
-                    /*%if name.startWith("AA") && name.contains("_A") */
-                     AND div = 'A'
-                     AND rank >= 5
-                    /*%elseif name.startWith("BB") || name.contains("_B") */
-                     AND div = 'B'
-                     AND rank > 2
-                     AND rank < 5
-                     /*%else */
-                      AND div = 'C'
-                    /*%end */
-                    /*%if name_has_next */
-                    /*# "OR" */
-                    /*%end */
-                  /*%end*/
-                )
-                where
-                 type = /* @example.Type@Type.getValue() */'type'
-                 and cost_limit <= /* cost + 100 */0
-                 and cost_limit >= /* cost - 100 */99999;
+                UPDATE product
+                   SET /*%populate*/
+                       category = /* category */'category'
+                       , expected_sales = /* price * pieces */0
+                       , unit_price = /* purchase / pieces */0
+                       /*%if mark != "XXX" */
+                       , mark = /* mark */'mark'
+                       /*%end */
+                       /*%! This comment delete */
+                       , employee_type = ( SELECT /*%expand "e" */*
+                                             FROM employee e
+                                            WHERE
+                                                  /*%for name : names */
+                                                  orderer = /* name */'orderer'
+                                                    /*%if name.startWith("AA") && name.contains("_A") */
+                                                      AND div = 'A'
+                                                      AND rank >= 5
+                                                    /*%elseif name.startWith("BB") || name.contains("_B") */
+                                                      AND div = 'B'
+                                                      AND rank > 2
+                                                      AND rank < 5
+                                                    /*%else */
+                                                        AND div = 'C'
+                                                    /*%end */
+                                                    /*%if name_has_next */
+                                                      /*# "OR" */
+                                                    /*%end */
+                                                  /*%end*/ )
+                 WHERE type = /* @example.Type@Type.getValue() */'type'
+                   AND cost_limit <= /* cost + 100 */0
+                   AND cost_limit >= /* cost - 100 */99999;
 
                 -- Demo Text2
-                select p.project_id
-                  , p.project_name
-                  , p.project_type
-                  , p.project_category
-                  , p.pre_project
-                 from project p
-                 where p.project_type = /* new Project().type */'type'
-                 and(
-                 /*%for project : preProjects */
-                  /*%if project.category != null */
-                  project_category = /* project.category.plus('t') */'category'
-                  /*%elseif project.pre == true */
-                   pre_project = /* project.preProjectId */0
-                   /*%if project_has_next */
-                    /*# "OR" */
-                  /*%end */
-                  /*%end */
-                 /*%end */
-                )
+                SELECT p.project_id
+                       , p.project_name
+                       , p.project_type
+                       , p.project_category
+                       , p.pre_project
+                  FROM project p
+                 WHERE p.project_type = /* new Project().type */'type'
+                   AND (
+                        /*%for project : preProjects */
+                          /*%if project.category != null */
+                            project_category = /* project.category.plus('t') */'category'
+                          /*%elseif project.pre == true */
+                            pre_project = /* project.preProjectId */0
+                            /*%if project_has_next */
+                              /*# "OR" */
+                            /*%end */
+                         /*%end */
+                        /*%end */)
+
+                -- DemoText3
+                SELECT common
+                       , amount
+                       , date
+                       , SUM(amount) OVER(PARTITION BY common ORDER BY date) AS common_amount
+                  FROM ammount_table
                 """;
   }
 

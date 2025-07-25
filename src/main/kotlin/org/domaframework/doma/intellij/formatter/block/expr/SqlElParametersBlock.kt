@@ -15,45 +15,31 @@
  */
 package org.domaframework.doma.intellij.formatter.block.expr
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
-import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElParametersBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    customSpacingBuilder: SqlCustomSpacingBuilder?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    private val formatMode: FormattingMode,
-) : SqlBlock(
+    private val context: SqlBlockFormattingContext,
+) : SqlExprBlock(
         node,
-        wrap,
-        alignment,
-        customSpacingBuilder,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
             SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN ->
-                SqlElSymbolBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+                SqlElSymbolBlock(child, context)
 
             SqlTypes.EL_PRIMARY_EXPR ->
-                SqlElPrimaryBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+                SqlElPrimaryBlock(child, context)
 
             SqlTypes.COMMA ->
-                SqlElCommaBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+                SqlElCommaBlock(child, context)
 
-            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+            else -> SqlUnknownBlock(child, context)
         }
 
     override fun isLeaf(): Boolean = false

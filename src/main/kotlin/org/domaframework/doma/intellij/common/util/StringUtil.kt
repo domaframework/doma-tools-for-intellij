@@ -16,6 +16,8 @@
 package org.domaframework.doma.intellij.common.util
 
 object StringUtil {
+    const val LINE_SEPARATE: String = "\n"
+
     fun getSqlElClassText(text: String): String =
         text
             .substringAfter("@")
