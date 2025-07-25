@@ -93,23 +93,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                     }
 
                     SqlTypes.LEFT_PAREN -> {
-                        newKeyword =
-                            if (createQueryType == CreateQueryType.TABLE) {
-                                getNewLineString(it.prevSibling, getUpperText(it))
-                            } else if (keywordIndex > 0) {
-                                if (listOf(
-                                        "insert",
-                                        "into",
-                                        "all",
-                                    ).contains(replaceKeywordList[keywordIndex - 1].text.lowercase())
-                                ) {
-                                    getNewLineString(it.prevSibling, getUpperText(it))
-                                } else {
-                                    getUpperText(it)
-                                }
-                            } else {
-                                getUpperText(it)
-                            }
+                        newKeyword = getNewLineString(it.prevSibling, getUpperText(it))
                     }
 
                     SqlTypes.RIGHT_PAREN -> {
