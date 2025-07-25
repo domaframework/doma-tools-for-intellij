@@ -38,25 +38,35 @@ import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettin
 class SqlFormattingModelBuilder : FormattingModelBuilder {
     override fun createModel(formattingContext: FormattingContext): FormattingModel {
         val codeStyleSettings = formattingContext.codeStyleSettings
+
+        return createRegularSQLModel(formattingContext, codeStyleSettings)
+    }
+
+    private fun createRegularSQLModel(
+        formattingContext: FormattingContext,
+        settings: CodeStyleSettings,
+    ): FormattingModel {
         val setting = DomaToolsFormatEnableSettings.getInstance()
         val isEnableFormat = setting.state.isEnableSqlFormat == true
         val formatMode = formattingContext.formattingMode
-        val spacingBuilder = createSpaceBuilder(codeStyleSettings)
+        val spacingBuilder = createSpaceBuilder(settings)
         val customSpacingBuilder = createCustomSpacingBuilder()
 
+        val block =
+            SqlFileBlock(
+                formattingContext.node,
+                Wrap.createWrap(WrapType.NONE, false),
+                Alignment.createAlignment(),
+                customSpacingBuilder,
+                spacingBuilder,
+                isEnableFormat,
+                formatMode,
+            )
         return FormattingModelProvider
             .createFormattingModelForPsiFile(
                 formattingContext.containingFile,
-                SqlFileBlock(
-                    formattingContext.node,
-                    Wrap.createWrap(WrapType.NONE, false),
-                    Alignment.createAlignment(),
-                    customSpacingBuilder,
-                    spacingBuilder,
-                    isEnableFormat,
-                    formatMode,
-                ),
-                codeStyleSettings,
+                block,
+                settings,
             )
     }
 

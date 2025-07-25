@@ -67,6 +67,7 @@
       implementationClass="org.domaframework.doma.intellij.formatter.builder.SqlFormattingModelBuilder"/>
     <preFormatProcessor implementation="org.domaframework.doma.intellij.formatter.processor.SqlFormatPreProcessor" />
     <postFormatProcessor implementation="org.domaframework.doma.intellij.formatter.processor.SqlPostProcessor" />
+    <postFormatProcessor implementation="org.domaframework.doma.intellij.formatter.processor.SqlInjectionPostProcessor" />
 
     <!-- CustomLanguage -->
     <fileType

@@ -15,7 +15,6 @@
  */
 package org.domaframework.doma.intellij.formatter.processor
 
-import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Document
