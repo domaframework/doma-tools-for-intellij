@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.comment
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.util.PsiTreeUtil
+import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -60,5 +61,5 @@ abstract class SqlDefaultCommentBlock(
             }
     }
 
-    override fun isSaveSpace(lastGroup: SqlBlock?) = PsiTreeUtil.prevLeaf(node.psi)?.text?.contains("\n") == true
+    override fun isSaveSpace(lastGroup: SqlBlock?) = PsiTreeUtil.prevLeaf(node.psi)?.text?.contains(StringUtil.LINE_SEPARATE) == true
 }

@@ -26,7 +26,9 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.impl.source.codeStyle.PreFormatProcessor
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
+import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.formatter.util.CreateQueryType
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 import org.domaframework.doma.intellij.formatter.visitor.SqlFormatVisitor
@@ -58,7 +60,10 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         rangeToReformat: TextRange,
     ): TextRange {
         // Turn on by default the code formatter that only runs when explicitly invoked by the user.
-        if (source.language != SqlLanguage.INSTANCE) return rangeToReformat
+        // Handle both direct SQL files and injected SQL in Java files
+        if (source.language != SqlLanguage.INSTANCE && !isInjectedSqlFile(source)) {
+            return rangeToReformat
+        }
 
         logging()
 
@@ -151,7 +156,6 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         element: PsiWhiteSpace,
     ) {
         val singleSpace = " "
-        val newLine = "\n"
         val range = element.textRange
         val originalText = document.getText(range)
         val nextElement = element.nextSibling
@@ -162,24 +166,28 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             newText = originalText.replace(originalText, singleSpace)
         } else {
             newText =
-                when (nextElement.elementType) {
-                    SqlTypes.LINE_COMMENT -> {
-                        if (nextElementText.startsWith(newLine)) {
-                            originalText.replace(originalText, singleSpace)
-                        } else if (originalText.contains(newLine)) {
-                            originalText.replace(Regex("\\s*\\n\\s*"), newLine)
-                        } else {
-                            originalText.replace(originalText, singleSpace)
+                if (element.prevSibling == null) {
+                    ""
+                } else {
+                    when (nextElement.elementType) {
+                        SqlTypes.LINE_COMMENT -> {
+                            if (nextElementText.startsWith(StringUtil.LINE_SEPARATE)) {
+                                originalText.replace(originalText, singleSpace)
+                            } else if (originalText.contains(StringUtil.LINE_SEPARATE)) {
+                                originalText.replace(Regex("\\s*\\n\\s*"), StringUtil.LINE_SEPARATE)
+                            } else {
+                                originalText.replace(originalText, singleSpace)
+                            }
                         }
-                    }
 
-                    else -> {
-                        if (nextElementText.contains(newLine) == true) {
-                            originalText.replace(originalText, singleSpace)
-                        } else if (originalText.contains(newLine)) {
-                            originalText.replace(Regex("\\s*\\n\\s*"), newLine)
-                        } else {
-                            originalText.replace(originalText, newLine)
+                        else -> {
+                            if (nextElementText.contains(StringUtil.LINE_SEPARATE) == true) {
+                                originalText.replace(originalText, singleSpace)
+                            } else if (originalText.contains(StringUtil.LINE_SEPARATE)) {
+                                originalText.replace(Regex("\\s*\\n\\s*"), StringUtil.LINE_SEPARATE)
+                            } else {
+                                originalText.replace(originalText, StringUtil.LINE_SEPARATE)
+                            }
                         }
                     }
                 }
@@ -264,8 +272,10 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         prevElement: PsiElement?,
         text: String,
     ): String =
-        if (prevElement?.text?.contains("\n") == false) {
-            "\n$text"
+        if (prevElement?.text?.contains(StringUtil.LINE_SEPARATE) == false &&
+            PsiTreeUtil.prevLeaf(prevElement) != null
+        ) {
+            "${StringUtil.LINE_SEPARATE}$text"
         } else {
             text
         }

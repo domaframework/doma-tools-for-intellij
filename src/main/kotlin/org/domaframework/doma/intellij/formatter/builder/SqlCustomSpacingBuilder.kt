@@ -19,6 +19,7 @@ import com.intellij.formatting.ASTBlock
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.psi.tree.IElementType
+import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlWhitespaceBlock
@@ -79,8 +80,8 @@ class SqlCustomSpacingBuilder {
             null -> return nonSpacing
             is SqlWhitespaceBlock -> {
                 val indentLen: Int = child2.indent.indentLen
-                val afterNewLine = child1.getNodeText().substringAfterLast("\n", "")
-                if (child1.getNodeText().contains("\n")) {
+                val afterNewLine = child1.getNodeText().substringAfterLast(StringUtil.LINE_SEPARATE, "")
+                if (child1.getNodeText().contains(StringUtil.LINE_SEPARATE)) {
                     val currentIndent = afterNewLine.length
                     val newIndent =
                         if (currentIndent != indentLen) {

@@ -15,20 +15,16 @@
  */
 package org.domaframework.doma.intellij.formatter.processor
 
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.codeStyle.CodeStyleSettings
-import com.intellij.psi.impl.source.codeStyle.PostFormatProcessor
-import org.domaframework.doma.intellij.common.util.StringUtil
+import org.domaframework.doma.intellij.common.dao.getDaoClass
+import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
+import org.domaframework.doma.intellij.formatter.visitor.DaoInjectionSqlVisitor
 
-abstract class SqlPostProcessor : PostFormatProcessor {
-    companion object {
-        private const val FILE_END_PADDING = " ${StringUtil.LINE_SEPARATE}"
-    }
-
-    private val trailingSpacesRegex = Regex(" +(\r?\n)")
-
+class SqlInjectionPostProcessor : SqlPostProcessor() {
     override fun processElement(
         element: PsiElement,
         settings: CodeStyleSettings,
@@ -38,22 +34,19 @@ abstract class SqlPostProcessor : PostFormatProcessor {
         source: PsiFile,
         rangeToReformat: TextRange,
         settings: CodeStyleSettings,
-    ): TextRange = rangeToReformat
+    ): TextRange {
+        if (!isJavaOrKotlinFileType(source) || getDaoClass(source) == null) return rangeToReformat
 
-    protected fun processDocumentText(
-        originalText: String,
-        existsOriginalDocument: Boolean,
-    ): String {
-        val withoutTrailingSpaces = removeTrailingSpaces(originalText)
-        return ensureProperFileEnding(withoutTrailingSpaces, existsOriginalDocument)
+        processInjected(source)
+        return rangeToReformat
     }
 
-    private fun removeTrailingSpaces(text: String): String = text.replace(trailingSpacesRegex, "$1")
-
-    private fun ensureProperFileEnding(
-        text: String,
-        isEndSpace: Boolean,
-    ): String =
-        text.trimEnd() +
-            if (isEndSpace) FILE_END_PADDING else ""
+    private fun processInjected(element: PsiFile) {
+        val project: Project = element.project
+        val visitor = DaoInjectionSqlVisitor(element, project)
+        element.accept(visitor)
+        visitor.processAll { text, skipFinalLineBreak ->
+            processDocumentText(text, skipFinalLineBreak)
+        }
+    }
 }

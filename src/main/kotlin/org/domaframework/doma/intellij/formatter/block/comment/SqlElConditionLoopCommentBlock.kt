@@ -22,6 +22,7 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
@@ -108,7 +109,7 @@ class SqlElConditionLoopCommentBlock(
                 // If the child is a condition loop directive, align its indentation with the parent directive
                 child.indent.indentLen = indent.indentLen.plus(2)
             } else if (child is SqlLineCommentBlock) {
-                if (PsiTreeUtil.prevLeaf(child.node.psi, false)?.text?.contains("\n") == true) {
+                if (PsiTreeUtil.prevLeaf(child.node.psi, false)?.text?.contains(StringUtil.LINE_SEPARATE) == true) {
                     child.indent.indentLen = indent.groupIndentLen
                 } else {
                     child.indent.indentLen = 1
