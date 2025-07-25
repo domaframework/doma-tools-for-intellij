@@ -18,4 +18,4 @@ WITH RECURSIVE org_tree (emp_id
              ON e.manager_id = ot.emp_id
 )
 SELECT *
-  FROM org_tree 
+  FROM org_tree

@@ -5,4 +5,4 @@ DELETE FROM x
                 WHERE id > /* id */101
                   AND div = 't' )
 RETURNING id
-          , name 
+          , name

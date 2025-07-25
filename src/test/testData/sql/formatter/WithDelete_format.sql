@@ -5,4 +5,4 @@ WITH deleted_posts AS (
     RETURNING id
 )
 SELECT *
-  FROM deleted_posts 
+  FROM deleted_posts

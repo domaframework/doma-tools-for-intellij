@@ -13,4 +13,4 @@ SELECT u.user_id
                             ORDER BY o.order_date DESC
                             LIMIT 1 ) o
               ON true
-             AND false 
+             AND false

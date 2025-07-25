@@ -23,4 +23,4 @@ SELECT query.id3
              AND query.pre_as3 = q2.sub_id
  WHERE query.id3 = /* id */1
  ORDER BY query.id3
-          , query.pre_as3 
+          , query.pre_as3

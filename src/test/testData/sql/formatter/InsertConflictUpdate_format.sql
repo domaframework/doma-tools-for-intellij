@@ -13,4 +13,4 @@ DO UPDATE
     WHERE employees.name IS DISTINCT FROM EXCLUDED.name
 RETURNING id
           , manager_id
-          , name 
+          , name

@@ -12,4 +12,4 @@ INSERT INTO user_profiles
              , bio)
 SELECT id
        , name
-  FROM new_user 
+  FROM new_user

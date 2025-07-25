@@ -4,4 +4,4 @@ UPDATE user
  WHERE id = /* user.id */1
 RETURNING id
           , name
-          , rank 
+          , rank

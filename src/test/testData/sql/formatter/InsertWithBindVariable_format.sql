@@ -16,4 +16,4 @@ INSERT INTO /*# tableName */
               , /* @userId() */1
               , x6
               , 1
-              , /* @maxDateTime() */'9999-12-31' ) 
+              , /* @maxDateTime() */'9999-12-31' )

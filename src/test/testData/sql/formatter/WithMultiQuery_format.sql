@@ -21,4 +21,4 @@ SELECT user_id
   FROM users
  WHERE suspended = TRUE
  ORDER BY name ASC
- LIMIT 100 OFFSET 10 
+ LIMIT 100 OFFSET 10

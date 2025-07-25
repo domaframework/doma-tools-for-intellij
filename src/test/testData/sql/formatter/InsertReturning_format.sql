@@ -18,4 +18,4 @@ INSERT INTO /*# tableName */
               , 1
               , /* @maxDateTime() */'9999-12-31' )
 RETURNING x1
-          , x2 
+          , x2

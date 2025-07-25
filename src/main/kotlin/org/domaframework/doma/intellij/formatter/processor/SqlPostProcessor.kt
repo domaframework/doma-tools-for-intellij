@@ -23,10 +23,6 @@ import com.intellij.psi.impl.source.codeStyle.PostFormatProcessor
 import org.domaframework.doma.intellij.common.util.StringUtil
 
 abstract class SqlPostProcessor : PostFormatProcessor {
-    companion object {
-        private const val FILE_END_PADDING = " ${StringUtil.LINE_SEPARATE}"
-    }
-
     private val trailingSpacesRegex = Regex(" +(\r?\n)")
 
     override fun processElement(
@@ -55,5 +51,5 @@ abstract class SqlPostProcessor : PostFormatProcessor {
         isEndSpace: Boolean,
     ): String =
         text.trimEnd() +
-            if (isEndSpace) FILE_END_PADDING else ""
+            if (isEndSpace) StringUtil.LINE_SEPARATE else ""
 }

@@ -6,4 +6,4 @@ INSERT INTO users
 ON CONFLICT ON CONSTRAINT
 DO UPDATE
       SET email = EXCLUDED.email
-          , created_at = CURRENT_TIMESTAMP 
+          , created_at = CURRENT_TIMESTAMP
