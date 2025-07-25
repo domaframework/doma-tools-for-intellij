@@ -5,4 +5,4 @@ SELECT u.name
        , ( SELECT tag
              FROM post
             WHERE u.usr_id = auther ) AS tag
-       , employee 
+       , employee

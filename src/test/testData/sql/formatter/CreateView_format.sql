@@ -5,4 +5,4 @@ AS
          , lastname
          , hiredate
     FROM employee
-   WHERE salary > 50000 
+   WHERE salary > 50000

@@ -8,4 +8,4 @@ SELECT CASE WHEN div = 'A' THEN 'AAA'
             /*%end*/
             ELSE 'CCC'
         END AS divName
-  FROM users 
+  FROM users

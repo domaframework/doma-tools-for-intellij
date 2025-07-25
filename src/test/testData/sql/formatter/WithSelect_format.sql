@@ -7,4 +7,4 @@ WITH users AS (
 SELECT user_id
        , name
   FROM users
- WHERE suspended = TRUE 
+ WHERE suspended = TRUE

@@ -12,4 +12,4 @@ WITH recent_activity AS (
     RETURNING id
 )
 SELECT *
-  FROM updated_users 
+  FROM updated_users

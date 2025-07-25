@@ -56,4 +56,4 @@ SELECT COUNT(DISTINCT x) AS count_x
                                   OR x.modelmag_g BETWEEN 10 AND 21)
                           GROUP BY n.objid ) AS nbor
                     ON o.objid = nbor.objid
- WHERE o.objid IN /* params */(1, 2, 3) 
+ WHERE o.objid IN /* params */(1, 2, 3)

@@ -11,4 +11,4 @@ WITH RECURSIVE org_tree (emp_id
 )
 SEARCH BREADTH FIRST BY emp_id SET order_seq
 CYCLE emp_id SET is_cycle TO TRUE DEFAULT FALSE USING path_ids
-SELECT * FROM org_tree;
+SELECT * FROM org_tree

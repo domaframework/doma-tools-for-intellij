@@ -3,4 +3,4 @@ DELETE FROM x "div"
                       , id
                  FROM x2
                 WHERE id > 101
-                  AND `div`."age$a" = 't' ) 
+                  AND `div`."age$a" = 't' )

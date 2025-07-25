@@ -4,4 +4,4 @@ SELECT user_id
            FROM employee emp
                 , ( VALUES
                     /*# usersList */
-                  ) T (user_id, name) ) u 
+                  ) T (user_id, name) ) u

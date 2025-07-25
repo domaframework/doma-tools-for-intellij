@@ -4,4 +4,4 @@ SELECT u.name
        , LATERAL ( SELECT *
                      FROM post
                     WHERE content = 'XXX' ) AS tag
-       , employee 
+       , employee
