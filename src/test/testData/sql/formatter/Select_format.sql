@@ -54,6 +54,7 @@ SELECT COUNT(DISTINCT x) AS count_x
                             AND ((x.TYPE = 'Star'
                                   AND x.TYPE = 'Galaxy')
                                   OR x.modelmag_g BETWEEN 10 AND 21)
+                             OR status = /* status */'active'
                           GROUP BY n.objid ) AS nbor
                     ON o.objid = nbor.objid
  WHERE o.objid IN /* params */(1, 2, 3) 

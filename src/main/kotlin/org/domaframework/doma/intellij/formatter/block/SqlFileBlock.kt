@@ -425,6 +425,26 @@ class SqlFileBlock(
                 SqlTypes.BLOCK_COMMENT_CONTENT,
                 Spacing.createSpacing(0, 0, 0, true, 0),
             ).withSpacing(
+                SqlTypes.BLOCK_COMMENT_START,
+                SqlTypes.EL_ID_EXPR,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.BLOCK_COMMENT_START,
+                SqlTypes.EL_PRIMARY_EXPR,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.BLOCK_COMMENT_START,
+                SqlTypes.EL_STRING,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.BLOCK_COMMENT_START,
+                SqlTypes.EL_NUMBER,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.BLOCK_COMMENT_START,
+                SqlTypes.BOOLEAN,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
                 SqlTypes.BLOCK_COMMENT_CONTENT,
                 SqlTypes.BLOCK_COMMENT_END,
                 Spacing.createSpacing(0, 0, 0, true, 0),
