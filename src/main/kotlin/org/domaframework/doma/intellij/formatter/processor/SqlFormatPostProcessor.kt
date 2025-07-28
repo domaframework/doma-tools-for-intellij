@@ -29,9 +29,9 @@ import org.domaframework.doma.intellij.setting.SqlLanguage
 
 class SqlFormatPostProcessor : SqlPostProcessor() {
     override fun processElement(
-        source: PsiElement,
+        element: PsiElement,
         settings: CodeStyleSettings,
-    ): PsiElement = source
+    ): PsiElement = element
 
     override fun processText(
         source: PsiFile,

@@ -131,7 +131,8 @@ class SqlCustomSpacingBuilder {
         }
 
         if (child.directiveType == SqlElCommentDirectiveType.NORMAL ||
-            child.directiveType == SqlElCommentDirectiveType.LITERAL
+            child.directiveType == SqlElCommentDirectiveType.LITERAL ||
+            child.directiveType == SqlElCommentDirectiveType.EXPAND
         ) {
             return nonSpacing
         }

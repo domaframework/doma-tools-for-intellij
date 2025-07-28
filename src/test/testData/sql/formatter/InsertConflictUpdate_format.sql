@@ -4,8 +4,8 @@ INSERT INTO employees
 SELECT name
        , user_id
   FROM user_settings
- WHERE user_id = /*employee.id*/0
-   AND name = /*employee.name*/'name'
+ WHERE user_id = /* employee.id */0
+   AND name = /* employee.name */'name'
 ON CONFLICT (id)
 DO UPDATE
       SET name = EXCLUDED.name
