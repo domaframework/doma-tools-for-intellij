@@ -7,3 +7,10 @@ SELECT /*%expand */*
              FROM post
             WHERE u.usr_id = /* authr.id */0 ) AS tag
        , employee
+ WHERE common_id = /* @example.status.CommonStatus@id */1
+   AND
+       /*%if insertCondition */
+       post_title = /* title */'title'
+       /*%else */
+       post = /*# null */
+       /*%end*/
