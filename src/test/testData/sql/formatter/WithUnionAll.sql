@@ -1,7 +1,7 @@
-with tables AS ( ( SELECT top, no_pre_as AS AS_NAME, pre_as, clm3 from demo
+with tables AS (( SELECT top, no_pre_as AS AS_NAME, pre_as, clm3 from demo
 WHERE id = /*# "block" */ )
 UNION ALL ( SELECT id2, no_pre_as2 AS AS_NAME2, pre_as2 FROM demo2
-          WHERE id2 = /*# "block2" */ ) )
+          WHERE id2 = /*# "block2" */ ))
 SELECT query.id3
        , query.no_pre_as3 AS AS_NAME3
        , query.pre_as3
