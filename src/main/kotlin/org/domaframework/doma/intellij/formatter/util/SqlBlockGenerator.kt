@@ -341,6 +341,7 @@ class SqlBlockGenerator(
     fun getSubGroupBlock(
         lastGroup: SqlBlock?,
         child: ASTNode,
+        groups: List<SqlBlock>,
     ): SqlBlock {
         when (lastGroup) {
             is SqlKeywordGroupBlock -> {
@@ -365,7 +366,7 @@ class SqlBlockGenerator(
 
                 // List-type test data for IN clause
                 NotQueryGroupHandler
-                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx, groups)
                     ?.let { return it }
 
                 return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
@@ -382,7 +383,7 @@ class SqlBlockGenerator(
                 }
 
                 NotQueryGroupHandler
-                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx, groups)
                     ?.let { return it }
 
                 return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)

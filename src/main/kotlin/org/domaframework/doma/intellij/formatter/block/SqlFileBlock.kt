@@ -166,7 +166,7 @@ class SqlFileBlock(
             }
 
             SqlTypes.LEFT_PAREN -> {
-                return blockUtil.getSubGroupBlock(lastGroup, child)
+                return blockUtil.getSubGroupBlock(lastGroup, child, blockBuilder.getGroupTopNodeIndexHistory())
             }
 
             SqlTypes.OTHER -> {
