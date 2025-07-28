@@ -457,6 +457,42 @@ class SqlFileBlock(
                 SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
                 Spacing.createSpacing(1, 1, 0, true, 0),
             ).withSpacing(
+                SqlTypes.BLOCK_COMMENT_START,
+                SqlTypes.HASH,
+                Spacing.createSpacing(0, 0, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.HASH,
+                SqlTypes.EL_ID_EXPR,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.HASH,
+                SqlTypes.EL_PRIMARY_EXPR,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.HASH,
+                SqlTypes.EL_STRING,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.HASH,
+                SqlTypes.EL_NUMBER,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.HASH,
+                SqlTypes.BOOLEAN,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.HASH,
+                SqlTypes.EL_NULL,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.HASH,
+                SqlTypes.EL_FIELD_ACCESS_EXPR,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.HASH,
+                SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
                 SqlTypes.BLOCK_COMMENT_CONTENT,
                 SqlTypes.BLOCK_COMMENT_END,
                 Spacing.createSpacing(0, 0, 0, true, 0),
