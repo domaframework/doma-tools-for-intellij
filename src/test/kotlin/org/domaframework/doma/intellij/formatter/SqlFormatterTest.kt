@@ -174,6 +174,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("SelectCaseEndWithCondition.sql", "SelectCaseEndWithCondition$formatDataPrefix.sql")
     }
 
+    fun testSelectDirectiveTestDataFormatter() {
+        formatSqlFile("SelectDirectiveTestData.sql", "SelectDirectiveTestData$formatDataPrefix.sql")
+    }
+
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,

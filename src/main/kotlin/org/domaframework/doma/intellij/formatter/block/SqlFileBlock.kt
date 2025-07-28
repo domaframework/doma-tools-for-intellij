@@ -445,6 +445,18 @@ class SqlFileBlock(
                 SqlTypes.BOOLEAN,
                 Spacing.createSpacing(1, 1, 0, true, 0),
             ).withSpacing(
+                SqlTypes.BLOCK_COMMENT_START,
+                SqlTypes.EL_NULL,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.BLOCK_COMMENT_START,
+                SqlTypes.EL_FIELD_ACCESS_EXPR,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.BLOCK_COMMENT_START,
+                SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
                 SqlTypes.BLOCK_COMMENT_CONTENT,
                 SqlTypes.BLOCK_COMMENT_END,
                 Spacing.createSpacing(0, 0, 0, true, 0),
@@ -457,9 +469,37 @@ class SqlFileBlock(
                 SqlTypes.OTHER,
                 Spacing.createSpacing(1, 1, 0, false, 0),
             ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_CONTENT,
-                SqlTypes.BLOCK_COMMENT_START,
-                Spacing.createSpacing(0, 0, 0, true, 0),
+                SqlTypes.EL_ID_EXPR,
+                SqlTypes.BLOCK_COMMENT_END,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.EL_PRIMARY_EXPR,
+                SqlTypes.BLOCK_COMMENT_END,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.STRING,
+                SqlTypes.BLOCK_COMMENT_END,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.EL_NUMBER,
+                SqlTypes.BLOCK_COMMENT_END,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.EL_NULL,
+                SqlTypes.BLOCK_COMMENT_END,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.BOOLEAN,
+                SqlTypes.BLOCK_COMMENT_END,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.EL_FIELD_ACCESS_EXPR,
+                SqlTypes.BLOCK_COMMENT_END,
+                Spacing.createSpacing(1, 1, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
+                SqlTypes.BLOCK_COMMENT_END,
+                Spacing.createSpacing(1, 1, 0, true, 0),
             ).withSpacing(
                 SqlTypes.BLOCK_COMMENT_CONTENT,
                 SqlTypes.BLOCK_COMMENT_END,
