@@ -50,6 +50,7 @@ abstract class SqlSubGroupBlock(
                 SqlWithCommonTableGroupBlock::class,
                 SqlWithColumnGroupBlock::class,
                 SqlCreateViewGroupBlock::class,
+                SqlElConditionLoopCommentBlock::class,
             )
     }
 

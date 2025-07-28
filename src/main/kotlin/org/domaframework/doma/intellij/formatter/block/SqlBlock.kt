@@ -135,8 +135,16 @@ open class SqlBlock(
             prevBlock is SqlElConditionLoopCommentBlock &&
                 (prevBlock.conditionType.isElse() || prevBlock.conditionType.isEnd())
         val hasNoChildrenExceptLast = parent.childBlocks.dropLast(1).isEmpty()
+        if (parent.conditionType.isElse()) {
+            return prevBlocks.isEmpty()
+        }
 
-        return isPrevBlockElseOrEnd || hasNoChildrenExceptLast
+        val isConditionDirectiveParentGroup =
+            parent.parentBlock?.let { grand ->
+                grand is SqlNewGroupBlock
+            } == true
+
+        return isPrevBlockElseOrEnd || (hasNoChildrenExceptLast && isConditionDirectiveParentGroup)
     }
 
     private fun shouldSaveSpaceForNewGroup(parent: SqlNewGroupBlock): Boolean {
