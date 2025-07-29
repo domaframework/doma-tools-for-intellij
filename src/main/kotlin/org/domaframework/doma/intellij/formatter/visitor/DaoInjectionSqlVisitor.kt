@@ -74,7 +74,7 @@ class DaoInjectionSqlVisitor(
                     if (commentEndRegex.containsMatchIn(line)) {
                         blockComment = false
                     }
-                    SINGLE_SPACE.plus(line.dropWhile { it.isWhitespace() })
+                    "$SINGLE_SPACE${line.dropWhile { it.isWhitespace() }}"
                 } else {
                     val baseLine =
                         if (commentStartRegex.containsMatchIn(line)) {
