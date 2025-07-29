@@ -48,6 +48,8 @@ class DaoInjectionSqlVisitor(
         private const val TRIPLE_QUOTE = "\"\"\""
         private const val WRITE_COMMAND_NAME = "Format Injected SQL"
         private const val BASE_INDENT = "\t\t\t"
+        private val COMMENT_START_REGEX = Regex("^[ \t]*/[*][ \t]*\\*")
+        private val COMMENT_END_REGEX = Regex("\\*/.*$")
     }
 
     private val formattingTasks = mutableListOf<FormattingTask>()
@@ -65,23 +67,22 @@ class DaoInjectionSqlVisitor(
 
     private fun removeIndentLines(sqlText: String): String {
         val lines = sqlText.lines()
-        val commentStartRegex = Regex("^[ \t]*/[*][ \t]*\\*")
-        val commentEndRegex = Regex("\\*/.*$")
+
         var blockComment = false
         val removeIndentLines =
             lines.map { line ->
                 if (blockComment) {
-                    if (commentEndRegex.containsMatchIn(line)) {
+                    if (COMMENT_END_REGEX.containsMatchIn(line)) {
                         blockComment = false
                     }
                     "$SINGLE_SPACE${line.dropWhile { it.isWhitespace() }}"
                 } else {
                     val baseLine =
-                        if (commentStartRegex.containsMatchIn(line)) {
+                        if (COMMENT_START_REGEX.containsMatchIn(line)) {
                             blockComment = true
                             // Exclude spaces between `/*` and the comment content element,
                             // as IntelliJ IDEA's Java formatter may insert a space there during formatting.
-                            line.replace(commentStartRegex, "/**")
+                            line.replace(COMMENT_START_REGEX, "/**")
                         } else {
                             line
                         }
