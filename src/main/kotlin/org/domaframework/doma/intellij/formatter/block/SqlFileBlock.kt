@@ -66,7 +66,7 @@ import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.formatter.util.SqlBlockGenerator
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-class SqlFileBlock(
+open class SqlFileBlock(
     node: ASTNode,
     wrap: Wrap?,
     alignment: Alignment?,
@@ -221,7 +221,7 @@ class SqlFileBlock(
                 return if (lastGroup is SqlWithCommonTableGroupBlock) {
                     SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
                 } else {
-                    blockUtil.getBlockCommentBlock(child, createBlockCommentSpacingBuilder())
+                    blockUtil.getBlockCommentBlock(child, createBlockDirectiveCommentSpacingBuilder())
                 }
             }
 
@@ -416,15 +416,11 @@ class SqlFileBlock(
     }
 
     /**
-     * Creates a spacing builder specifically for block comments.
+     * Creates a spacing builder specifically for directive block comments.
      */
-    private fun createBlockCommentSpacingBuilder(): SqlCustomSpacingBuilder =
+    protected fun createBlockDirectiveCommentSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()
             .withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
-                SqlTypes.BLOCK_COMMENT_CONTENT,
-                Spacing.createSpacing(0, 0, 0, true, 0),
-            ).withSpacing(
                 SqlTypes.BLOCK_COMMENT_START,
                 SqlTypes.EL_ID_EXPR,
                 Spacing.createSpacing(1, 1, 0, true, 0),
@@ -572,10 +568,6 @@ class SqlFileBlock(
                 SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
                 SqlTypes.BLOCK_COMMENT_END,
                 Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_CONTENT,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(0, 0, 0, true, 0),
             )
 
     /**
