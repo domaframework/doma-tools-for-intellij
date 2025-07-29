@@ -47,7 +47,7 @@ class DaoInjectionSqlVisitor(
         private const val SQL_FILE_EXTENSION = ".sql"
         private const val TRIPLE_QUOTE = "\"\"\""
         private const val WRITE_COMMAND_NAME = "Format Injected SQL"
-        private const val BASE_INDENT = "\t\t\t" // getBaseIndent(formattedSql)
+        private const val BASE_INDENT = "\t\t\t"
     }
 
     private val formattingTasks = mutableListOf<FormattingTask>()
