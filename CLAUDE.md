@@ -30,6 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Verify plugin compatibility
 ./gradlew verifyPlugin
 ```
+
 ---
 ## Architecture Overview
 
