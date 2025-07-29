@@ -27,6 +27,7 @@ import com.intellij.psi.util.elementType
 import com.intellij.psi.util.prevLeafs
 import com.intellij.util.ProcessingContext
 import org.domaframework.doma.intellij.common.sql.directive.DirectiveCompletion
+import org.domaframework.doma.intellij.common.util.StringUtil.SINGLE_SPACE
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
@@ -135,7 +136,7 @@ object PsiPatternUtil {
         element: PsiElement,
         symbol: String,
     ): String {
-        val text = originalFile.containingFile?.text ?: " "
+        val text = originalFile.containingFile?.text ?: SINGLE_SPACE
         val offset = element.textOffset
         val builder = StringBuilder()
         for (i in offset - 1 downTo 0) {

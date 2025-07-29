@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.common.sql
 
 import org.domaframework.doma.intellij.common.util.StringUtil
+import org.domaframework.doma.intellij.common.util.StringUtil.SINGLE_SPACE
 
 /**
  * Exclude extra strings and block symbols added by IntelliJ operations a
@@ -29,5 +30,5 @@ fun cleanString(str: String): String {
         // TODO: Temporary support when using operators.
         //  Remove the "== a" element because it is attached to the end.
         //  Make it possible to obtain the equilateral elements of the left side individually.
-        .substringBefore(" ")
+        .substringBefore(SINGLE_SPACE)
 }

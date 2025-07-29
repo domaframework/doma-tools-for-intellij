@@ -159,9 +159,6 @@ class SqlElConditionLoopCommentBlock(
                     context,
                 )
 
-            SqlTypes.BLOCK_COMMENT_CONTENT ->
-                SqlBlockCommentBlock(child, context)
-
             else -> SqlUnknownBlock(child, context)
         }
 

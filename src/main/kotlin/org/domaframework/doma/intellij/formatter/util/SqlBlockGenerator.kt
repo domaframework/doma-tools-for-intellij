@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.util
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.FormattingMode
+import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
@@ -72,6 +73,7 @@ import org.domaframework.doma.intellij.formatter.handler.NotQueryGroupHandler
 import org.domaframework.doma.intellij.formatter.handler.UpdateClauseHandler
 import org.domaframework.doma.intellij.formatter.handler.WithClauseHandler
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 data class SqlBlockFormattingContext(
     val wrap: Wrap?,
@@ -451,7 +453,7 @@ class SqlBlockGenerator(
         blockCommentSpacingBuilder: SqlCustomSpacingBuilder?,
     ): SqlCommentBlock {
         if (PsiTreeUtil.getChildOfType(child.psi, PsiComment::class.java) != null) {
-            return SqlBlockCommentBlock(child, sqlBlockFormattingCtx)
+            return SqlBlockCommentBlock(child, createBlockCommentSpacingBuilder(), sqlBlockFormattingCtx)
         }
         if (child.psi is SqlCustomElCommentExpr &&
             (child.psi as SqlCustomElCommentExpr).isConditionOrLoopDirective()
@@ -468,4 +470,16 @@ class SqlBlockGenerator(
             blockCommentSpacingBuilder,
         )
     }
+
+    private fun createBlockCommentSpacingBuilder(): SqlCustomSpacingBuilder =
+        SqlCustomSpacingBuilder()
+            .withSpacing(
+                SqlTypes.BLOCK_COMMENT_START,
+                SqlTypes.BLOCK_COMMENT_CONTENT,
+                Spacing.createSpacing(0, 0, 0, true, 0),
+            ).withSpacing(
+                SqlTypes.BLOCK_COMMENT_CONTENT,
+                SqlTypes.BLOCK_COMMENT_END,
+                Spacing.createSpacing(0, 0, 0, true, 0),
+            )
 }

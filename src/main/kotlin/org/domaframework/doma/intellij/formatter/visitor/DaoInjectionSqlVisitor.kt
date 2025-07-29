@@ -27,8 +27,6 @@ import com.intellij.psi.codeStyle.CodeStyleManager
 import org.domaframework.doma.intellij.common.util.InjectionSqlUtil
 import org.domaframework.doma.intellij.common.util.StringUtil
 import kotlin.text.isBlank
-import kotlin.text.isNotBlank
-import kotlin.text.takeWhile
 
 /**
  * Visitor for processing and formatting SQL injections in DAO files.
@@ -41,15 +39,15 @@ class DaoInjectionSqlVisitor(
     private data class FormattingTask(
         val expression: PsiLiteralExpression,
         val formattedText: String,
-        val baseIndent: String,
     )
 
     companion object {
         private const val TEMP_FILE_PREFIX = "temp_format"
         private const val SQL_FILE_EXTENSION = ".sql"
-        private const val SQL_COMMENT_PATTERN = "^[ \\t]*/\\*"
         private const val TRIPLE_QUOTE = "\"\"\""
         private const val WRITE_COMMAND_NAME = "Format Injected SQL"
+        private const val BASE_INDENT = "\t\t\t"
+        private val COMMENT_START_REGEX = Regex("^[ \t]*/[*][ \t]*\\*")
     }
 
     private val formattingTasks = mutableListOf<FormattingTask>()
@@ -59,36 +57,31 @@ class DaoInjectionSqlVisitor(
         val injected: PsiFile? = InjectionSqlUtil.initInjectionElement(element, project, expression)
         if (injected != null) {
             // Format SQL and store the task
-            val originalSqlText = injected.text
-            val formattedSql = formatAsTemporarySqlFile(originalSqlText)
-            // Keep the current top line indent
-            val baseIndent = getBaseIndent(formattedSql)
             val originalText = expression.value?.toString() ?: return
-
-            if (formattedSql != originalText) {
-                formattingTasks.add(FormattingTask(expression, formattedSql, baseIndent))
-            }
+            val removeIndent = removeIndentLines(originalText)
+            formattingTasks.add(FormattingTask(expression, removeIndent))
         }
     }
 
-    /**
-     * Extracts the base indentation from the first non-blank, non-comment line.
-     */
-    private fun getBaseIndent(string: String): String {
-        val lines = string.lines()
-        val commentRegex = Regex(SQL_COMMENT_PATTERN)
+    private fun removeIndentLines(sqlText: String): String {
+        val lines = sqlText.lines()
 
-        // Skip blank lines and comment lines
-        val firstContentLineIndex =
-            lines.indexOfFirst { line ->
-                line.isNotBlank() && !commentRegex.matches(line)
+        var blockComment = false
+        val removeIndentLines =
+            lines.map { line ->
+                val baseLine =
+                    if (COMMENT_START_REGEX.containsMatchIn(line)) {
+                        blockComment = true
+                        // Exclude spaces between `/*` and the comment content element,
+                        // as IntelliJ IDEA's Java formatter may insert a space there during formatting.
+                        line.replace(COMMENT_START_REGEX, "/**")
+                    } else {
+                        line
+                    }
+                baseLine.dropWhile { it.isWhitespace() }
             }
 
-        return if (firstContentLineIndex >= 0) {
-            lines[firstContentLineIndex].takeWhile { it.isWhitespace() }
-        } else {
-            ""
-        }
+        return removeIndentLines.joinToString(StringUtil.LINE_SEPARATE)
     }
 
     /**
@@ -139,10 +132,11 @@ class DaoInjectionSqlVisitor(
      */
     private fun replaceHostStringLiteral(
         task: FormattingTask,
-        removeSpace: (String, Boolean) -> String,
+        sqlPostProcessorProcess: (String, Boolean) -> String,
     ) {
         try {
-            val formattedLiteral = createFormattedLiteral(task, removeSpace)
+            // Keep the current top line indent
+            val formattedLiteral = createFormattedLiteral(task, sqlPostProcessorProcess)
             replaceInDocument(task.expression, formattedLiteral)
         } catch (_: Exception) {
             // Silently ignore formatting failures
@@ -151,16 +145,19 @@ class DaoInjectionSqlVisitor(
 
     private fun createFormattedLiteral(
         task: FormattingTask,
-        removeSpace: (String, Boolean) -> String,
+        sqlPostProcessorProcess: (String, Boolean) -> String,
     ): String {
-        val newLiteralText = createFormattedLiteralText(task.formattedText)
-        val normalizedText = normalizeIndentation(newLiteralText, task.baseIndent)
-        val cleanedText = removeSpace(normalizedText, false)
+        // Retrieve the same formatted string as when formatting a regular SQL file.
+        val formattedSql = formatAsTemporarySqlFile(task.formattedText)
+        val cleanedText = sqlPostProcessorProcess(formattedSql, false)
+        // Generate text aligned with the literal element using the formatted string.
+        val newLiteralText = createFormattedLiteralText(cleanedText)
+        val normalizedText = normalizeIndentation(newLiteralText)
 
         val elementFactory =
             com.intellij.psi.JavaPsiFacade
                 .getElementFactory(project)
-        val newLiteral = elementFactory.createExpressionFromText(cleanedText, task.expression)
+        val newLiteral = elementFactory.createExpressionFromText(normalizedText, task.expression)
         return newLiteral.text
     }
 
@@ -193,10 +190,7 @@ class DaoInjectionSqlVisitor(
     /**
      * Normalizes indentation by removing base indent and reapplying it consistently.
      */
-    private fun normalizeIndentation(
-        sqlText: String,
-        baseIndent: String,
-    ): String {
+    private fun normalizeIndentation(sqlText: String): String {
         val lines = sqlText.lines()
         if (lines.isEmpty()) return sqlText
 
@@ -207,8 +201,8 @@ class DaoInjectionSqlVisitor(
             contentLines.map { line ->
                 when {
                     line.isBlank() -> line
-                    line.startsWith(baseIndent) -> baseIndent + line.removePrefix(baseIndent)
-                    else -> baseIndent + line
+                    line.startsWith(BASE_INDENT) -> BASE_INDENT + line.removePrefix(BASE_INDENT)
+                    else -> BASE_INDENT + line
                 }
             }
 

@@ -20,6 +20,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
+import org.domaframework.doma.intellij.common.util.StringUtil.SINGLE_SPACE
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.getClassAnnotation
 import org.domaframework.doma.intellij.extension.psi.isDomain
@@ -79,13 +80,13 @@ object TypeUtil {
      * Checks if the given type is a valid Map<String, Object>.
      */
     fun isValidMapType(type: PsiType?): Boolean {
-        val canonical = type?.canonicalText?.replace(" ", "") ?: return false
+        val canonical = type?.canonicalText?.replace(SINGLE_SPACE, "") ?: return false
         val expected =
             DomaClassName.MAP
                 .getGenericParamCanonicalText(
                     DomaClassName.STRING.className,
                     DomaClassName.OBJECT.className,
-                ).replace(" ", "")
+                ).replace(SINGLE_SPACE, "")
         return canonical == expected
     }
 

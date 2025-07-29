@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.common.util
+package org.domaframework.doma.intellij.formatter.block.comment
 
-object StringUtil {
-    const val LINE_SEPARATE: String = "\n"
-    const val SINGLE_SPACE: String = " "
+import com.intellij.lang.ASTNode
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-    fun getSqlElClassText(text: String): String =
-        text
-            .substringAfter("@")
-            .substringBefore("@")
-
-    fun replaceBlockCommentStartEnd(text: String): String = text.substringAfter("/*").substringBefore("*/")
+class SqlCommentStartBlock(
+    node: ASTNode,
+    context: SqlBlockFormattingContext,
+) : SqlCommentSeparateBlock(node, context) {
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
 }
