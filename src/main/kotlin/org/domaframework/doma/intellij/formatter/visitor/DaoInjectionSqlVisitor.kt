@@ -26,9 +26,8 @@ import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.codeStyle.CodeStyleManager
 import org.domaframework.doma.intellij.common.util.InjectionSqlUtil
 import org.domaframework.doma.intellij.common.util.StringUtil
+import org.domaframework.doma.intellij.common.util.StringUtil.SINGLE_SPACE
 import kotlin.text.isBlank
-import kotlin.text.isNotBlank
-import kotlin.text.takeWhile
 
 /**
  * Visitor for processing and formatting SQL injections in DAO files.
