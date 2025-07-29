@@ -46,7 +46,7 @@ class SqlInjectionPostProcessor : SqlPostProcessor() {
         val visitor = DaoInjectionSqlVisitor(element, project)
         element.accept(visitor)
         visitor.processAll { text, skipFinalLineBreak ->
-            processDocumentText(text, skipFinalLineBreak)
+            processDocumentText(text)
         }
     }
 }

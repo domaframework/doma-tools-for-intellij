@@ -36,20 +36,12 @@ abstract class SqlPostProcessor : PostFormatProcessor {
         settings: CodeStyleSettings,
     ): TextRange = rangeToReformat
 
-    protected fun processDocumentText(
-        originalText: String,
-        existsOriginalDocument: Boolean,
-    ): String {
+    protected fun processDocumentText(originalText: String): String {
         val withoutTrailingSpaces = removeTrailingSpaces(originalText)
-        return ensureProperFileEnding(withoutTrailingSpaces, existsOriginalDocument)
+        return ensureProperFileEnding(withoutTrailingSpaces)
     }
 
     private fun removeTrailingSpaces(text: String): String = text.replace(trailingSpacesRegex, "$1")
 
-    private fun ensureProperFileEnding(
-        text: String,
-        isEndSpace: Boolean,
-    ): String =
-        text.trimEnd() +
-            if (isEndSpace) StringUtil.LINE_SEPARATE else ""
+    private fun ensureProperFileEnding(text: String): String = text.trimEnd() + StringUtil.LINE_SEPARATE
 }
