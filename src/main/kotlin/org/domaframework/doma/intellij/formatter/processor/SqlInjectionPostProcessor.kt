@@ -15,13 +15,15 @@
  */
 package org.domaframework.doma.intellij.formatter.processor
 
-import com.intellij.openapi.project.Project
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
+import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.formatter.visitor.DaoInjectionSqlVisitor
 
 class SqlInjectionPostProcessor : SqlPostProcessor() {
@@ -35,17 +37,49 @@ class SqlInjectionPostProcessor : SqlPostProcessor() {
         rangeToReformat: TextRange,
         settings: CodeStyleSettings,
     ): TextRange {
-        if (!isJavaOrKotlinFileType(source) || getDaoClass(source) == null) return rangeToReformat
+        if (!shouldProcessFile(source)) {
+            return rangeToReformat
+        }
 
-        processInjected(source)
+        val manager = InjectedLanguageManager.getInstance(source.project)
+        if (manager.isInjectedFragment(source)) {
+            processInjectedFragment(source, manager)
+        } else {
+            processRegularFile(source)
+        }
+
         return rangeToReformat
     }
 
-    private fun processInjected(element: PsiFile) {
-        val project: Project = element.project
-        val visitor = DaoInjectionSqlVisitor(element, project)
-        element.accept(visitor)
-        visitor.processAll { text, skipFinalLineBreak ->
+    private fun shouldProcessFile(source: PsiFile): Boolean {
+        val manager = InjectedLanguageManager.getInstance(source.project)
+        val isInjectedSql = if (isSupportFileType(source)) manager.isInjectedFragment(source) else false
+        val isDaoFile = isJavaOrKotlinFileType(source) && getDaoClass(source) != null
+
+        return isInjectedSql || isDaoFile
+    }
+
+    private fun processInjectedFragment(
+        source: PsiFile,
+        manager: InjectedLanguageManager,
+    ) {
+        val host = manager.getInjectionHost(source) as? PsiLiteralExpression ?: return
+        val hostDaoFile = host.containingFile
+        val originalText = host.value?.toString() ?: return
+
+        val visitor = DaoInjectionSqlVisitor(hostDaoFile, source.project)
+        val formattingTask = DaoInjectionSqlVisitor.FormattingTask(host, originalText)
+
+        visitor.replaceHostStringLiteral(formattingTask) { text ->
+            processDocumentText(text)
+        }
+    }
+
+    private fun processRegularFile(source: PsiFile) {
+        val visitor = DaoInjectionSqlVisitor(source, source.project)
+        source.accept(visitor)
+
+        visitor.processAll { text ->
             processDocumentText(text)
         }
     }
