@@ -19,15 +19,17 @@ import org.domaframework.doma.intellij.DomaSqlTest
 import org.domaframework.doma.intellij.inspection.dao.inspector.DaoAnnotationOptionParameterInspection
 
 class DaoAnnotationOptionParameterInspectionTest : DomaSqlTest() {
+    private val daoPackage = "inspection/option"
+
     override fun setUp() {
         super.setUp()
         myFixture.enableInspections(DaoAnnotationOptionParameterInspection())
         addEntityJavaFile("Department.java")
-        addDaoJavaFile("inspection/option/AnnotationOptionTestDao.java")
+        addDaoJavaFile("$daoPackage/AnnotationOptionTestDao.java")
     }
 
     fun testAnnotationOptionParameter() {
-        val clazz = myFixture.findClass("doma.example.dao.inspection.option.AnnotationOptionTestDao")
+        val clazz = findDaoClass("$daoPackage.AnnotationOptionTestDao")
         myFixture.testHighlighting(false, false, false, clazz.containingFile.virtualFile)
     }
 }
