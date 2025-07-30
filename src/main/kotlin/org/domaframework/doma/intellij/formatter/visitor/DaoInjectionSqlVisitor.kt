@@ -36,7 +36,7 @@ class DaoInjectionSqlVisitor(
     private val element: PsiFile,
     private val project: Project,
 ) : JavaRecursiveElementVisitor() {
-    private data class FormattingTask(
+    data class FormattingTask(
         val expression: PsiLiteralExpression,
         val formattedText: String,
     )
@@ -58,8 +58,7 @@ class DaoInjectionSqlVisitor(
         if (injected != null) {
             // Format SQL and store the task
             val originalText = expression.value?.toString() ?: return
-            val removeIndent = removeIndentLines(originalText)
-            formattingTasks.add(FormattingTask(expression, removeIndent))
+            formattingTasks.add(FormattingTask(expression, originalText))
         }
     }
 
@@ -88,7 +87,7 @@ class DaoInjectionSqlVisitor(
      * Processes all collected formatting tasks in a single write action.
      * @param removeSpace Function to remove trailing spaces from formatted text
      */
-    fun processAll(removeSpace: (String, Boolean) -> String) {
+    fun processAll(removeSpace: (String) -> String) {
         if (formattingTasks.isEmpty()) return
 
         // Apply all formatting tasks in a single write action
@@ -130,9 +129,9 @@ class DaoInjectionSqlVisitor(
     /**
      * Replaces the host Java string literal with formatted SQL text.
      */
-    private fun replaceHostStringLiteral(
+    fun replaceHostStringLiteral(
         task: FormattingTask,
-        sqlPostProcessorProcess: (String, Boolean) -> String,
+        sqlPostProcessorProcess: (String) -> String,
     ) {
         try {
             // Keep the current top line indent
@@ -145,11 +144,12 @@ class DaoInjectionSqlVisitor(
 
     private fun createFormattedLiteral(
         task: FormattingTask,
-        sqlPostProcessorProcess: (String, Boolean) -> String,
+        sqlPostProcessorProcess: (String) -> String,
     ): String {
         // Retrieve the same formatted string as when formatting a regular SQL file.
-        val formattedSql = formatAsTemporarySqlFile(task.formattedText)
-        val cleanedText = sqlPostProcessorProcess(formattedSql, false)
+        val removeIndent = removeIndentLines(task.formattedText)
+        val formattedSql = formatAsTemporarySqlFile(removeIndent)
+        val cleanedText = sqlPostProcessorProcess(formattedSql)
         // Generate text aligned with the literal element using the formatted string.
         val newLiteralText = createFormattedLiteralText(cleanedText)
         val normalizedText = normalizeIndentation(newLiteralText)
