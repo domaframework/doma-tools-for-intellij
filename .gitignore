@@ -14,3 +14,4 @@ out/
 .kotlin
 secrets.properties
 /certificate/**
+.claude/settings.local.json
