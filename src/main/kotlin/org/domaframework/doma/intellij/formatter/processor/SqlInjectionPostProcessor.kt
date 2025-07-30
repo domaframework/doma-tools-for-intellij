@@ -16,7 +16,6 @@
 package org.domaframework.doma.intellij.formatter.processor
 
 import com.intellij.lang.injection.InjectedLanguageManager
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -24,6 +23,7 @@ import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.codeStyle.CodeStyleSettings
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
+import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.formatter.visitor.DaoInjectionSqlVisitor
 
 class SqlInjectionPostProcessor : SqlPostProcessor() {
@@ -53,9 +53,9 @@ class SqlInjectionPostProcessor : SqlPostProcessor() {
 
     private fun shouldProcessFile(source: PsiFile): Boolean {
         val manager = InjectedLanguageManager.getInstance(source.project)
-        val isInjectedSql = manager.isInjectedFragment(source)
+        val isInjectedSql = if (isSupportFileType(source)) manager.isInjectedFragment(source) else false
         val isDaoFile = isJavaOrKotlinFileType(source) && getDaoClass(source) != null
-        
+
         return isInjectedSql || isDaoFile
     }
 
@@ -69,7 +69,7 @@ class SqlInjectionPostProcessor : SqlPostProcessor() {
 
         val visitor = DaoInjectionSqlVisitor(hostDaoFile, source.project)
         val formattingTask = DaoInjectionSqlVisitor.FormattingTask(host, originalText)
-        
+
         visitor.replaceHostStringLiteral(formattingTask) { text ->
             processDocumentText(text)
         }
@@ -78,7 +78,7 @@ class SqlInjectionPostProcessor : SqlPostProcessor() {
     private fun processRegularFile(source: PsiFile) {
         val visitor = DaoInjectionSqlVisitor(source, source.project)
         source.accept(visitor)
-        
+
         visitor.processAll { text ->
             processDocumentText(text)
         }
