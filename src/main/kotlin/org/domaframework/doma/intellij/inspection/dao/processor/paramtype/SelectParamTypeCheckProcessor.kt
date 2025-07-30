@@ -27,6 +27,7 @@ import org.domaframework.doma.intellij.common.validation.result.ValidationMethod
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodSelectStrategyParamResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.getSuperClassType
+import org.domaframework.doma.intellij.extension.psi.isDataType
 import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
 import org.domaframework.doma.intellij.inspection.dao.processor.StrategyParam
@@ -49,12 +50,13 @@ class SelectParamTypeCheckProcessor(
                 val optionalParamClass = project.getJavaClazz(it.canonicalText)
                 optionalParamClass?.isDomain() == true ||
                     PsiTypeChecker.isBaseClassType(it) ||
-                    optionalParamClass?.isEntity() == true
+                    optionalParamClass?.isEntity() == true ||
+                    optionalParamClass?.isDataType() == true
             } == true
         }
 
         val paramClass = project.getJavaClazz(paramType.canonicalText)
-        return paramClass?.isDomain() == true || paramClass?.isEntity() == true
+        return paramClass?.isDomain() == true || paramClass?.isEntity() == true || paramClass?.isDataType() == true
     }
 
     override fun checkParams(holder: ProblemsHolder) {

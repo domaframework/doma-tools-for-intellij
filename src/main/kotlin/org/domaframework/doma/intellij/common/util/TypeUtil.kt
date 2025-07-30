@@ -22,6 +22,7 @@ import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.getClassAnnotation
+import org.domaframework.doma.intellij.extension.psi.isDataType
 import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
 
@@ -71,6 +72,17 @@ object TypeUtil {
     ): Boolean {
         val clazz = type?.canonicalText?.let { project.getJavaClazz(it) }
         return clazz?.isDomain() == true
+    }
+
+    /**
+     * Checks if the given type is a data type.
+     */
+    fun isDataType(
+        type: PsiType?,
+        project: Project,
+    ): Boolean {
+        val clazz = type?.canonicalText?.let { project.getJavaClazz(it) }
+        return clazz?.isDataType() == true
     }
 
     /**
