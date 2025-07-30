@@ -50,7 +50,7 @@ fun PsiClass.isEntity(): Boolean = this.getClassAnnotation(DomaClassName.ENTITY.
 
 fun PsiClass.isDomain(): Boolean = this.getClassAnnotation(DomaClassName.DOMAIN.className) != null
 
-fun PsiClass.isDataType(): Boolean = this.getClassAnnotation(DomaClassName.DATATYPE.className) != null
+fun PsiClass.isDataType(): Boolean = this.getClassAnnotation(DomaClassName.DATATYPE.className) != null && this.isRecord
 
 fun PsiClassType.getSuperType(superClassName: String): PsiClassType? {
     var parent: PsiClassType? = this
