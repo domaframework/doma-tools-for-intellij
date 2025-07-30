@@ -32,6 +32,7 @@ class AnnotationParamTypeCheckInspectionTest : DomaSqlTest() {
             "ScriptParamTestDao",
             "SqlProcessorParamTestDao",
             "FactoryParamTestDao",
+            "DataTypeParamTypeTestDao",
         )
     private val daoPackage = "inspection/paramtype"
 
@@ -43,6 +44,7 @@ class AnnotationParamTypeCheckInspectionTest : DomaSqlTest() {
         addOtherJavaFile("collector", "HogeCollector.java")
         addOtherJavaFile("function", "HogeFunction.java")
         addOtherJavaFile("function", "HogeBiFunction.java")
+        addOtherJavaFile("domain", "Salary.java")
         testDaoNames.forEach { daoName ->
             addDaoJavaFile("$daoPackage/$daoName.java")
         }
@@ -85,6 +87,11 @@ class AnnotationParamTypeCheckInspectionTest : DomaSqlTest() {
 
     fun testFactoryParam() {
         val dao = findDaoClass("$daoPackage.FactoryParamTestDao")
+        myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
+    }
+
+    fun testDataTypeParam() {
+        val dao = findDaoClass("$daoPackage.DataTypeParamTypeTestDao")
         myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
     }
 }

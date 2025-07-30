@@ -91,7 +91,7 @@ class SelectReturnTypeCheckProcessor(
             }
         }
 
-        if (TypeUtil.isDomain(checkType, project) || TypeUtil.isEntity(checkType, project)) {
+        if (TypeUtil.isDomain(checkType, project) || TypeUtil.isEntity(checkType, project) || TypeUtil.isDataType(checkType, project)) {
             return null
         }
 
