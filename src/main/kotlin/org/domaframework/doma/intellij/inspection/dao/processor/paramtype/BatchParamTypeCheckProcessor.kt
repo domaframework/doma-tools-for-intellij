@@ -86,7 +86,6 @@ class BatchParamTypeCheckProcessor(
 
         val iterableClassType = param.type as? PsiClassType
         iterableClassType?.parameters?.firstOrNull()?.let { iterableParam ->
-            // Check if @Sql annotation is present or sqlFile=true
             if (psiDaoMethod.useSqlAnnotation() || psiDaoMethod.sqlFileOption) {
                 if (!TypeUtil.isEntity(iterableParam, project) &&
                     !TypeUtil.isDomain(iterableParam, project) &&
@@ -95,7 +94,6 @@ class BatchParamTypeCheckProcessor(
                     resultParamType.highlightElement(holder)
                 }
             } else {
-                // When @Sql annotation is present or sqlFile=true, only Entity types are allowed
                 if (!TypeUtil.isEntity(iterableParam, project)) {
                     resultParamType.highlightElement(holder)
                 }
