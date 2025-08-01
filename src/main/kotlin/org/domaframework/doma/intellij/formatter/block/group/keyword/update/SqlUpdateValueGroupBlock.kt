@@ -32,7 +32,7 @@ class SqlUpdateValueGroupBlock(
         node,
         context,
     ) {
-    // TODO:Customize indentation
+    // TODO Customize indentation
     override val offset = 2
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {

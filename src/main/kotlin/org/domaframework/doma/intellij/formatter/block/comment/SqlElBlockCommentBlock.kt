@@ -106,7 +106,6 @@ open class SqlElBlockCommentBlock(
                 SqlElFieldAccessBlock(
                     child,
                     context,
-                    createFieldAccessSpacingBuilder(),
                 )
 
             SqlTypes.BLOCK_COMMENT_START -> SqlCommentStartBlock(child, context)
@@ -130,26 +129,6 @@ open class SqlElBlockCommentBlock(
 
             else -> SqlUnknownBlock(child, context)
         }
-
-    private fun createFieldAccessSpacingBuilder(): SqlCustomSpacingBuilder =
-        SqlCustomSpacingBuilder()
-            .withSpacing(
-                SqlTypes.EL_PRIMARY_EXPR,
-                SqlTypes.DOT,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.DOT,
-                SqlTypes.EL_IDENTIFIER,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_IDENTIFIER,
-                SqlTypes.DOT,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_IDENTIFIER,
-                SqlTypes.EL_PARAMETERS,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            )
 
     protected fun createBlockCommentSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()

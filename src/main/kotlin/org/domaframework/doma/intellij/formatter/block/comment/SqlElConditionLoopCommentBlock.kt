@@ -168,7 +168,6 @@ class SqlElConditionLoopCommentBlock(
                 SqlElFieldAccessBlock(
                     child,
                     context,
-                    createFieldAccessSpacingBuilder(),
                 )
 
             SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR ->
@@ -185,26 +184,6 @@ class SqlElConditionLoopCommentBlock(
 
             else -> SqlUnknownBlock(child, context)
         }
-
-    private fun createFieldAccessSpacingBuilder(): SqlCustomSpacingBuilder =
-        SqlCustomSpacingBuilder()
-            .withSpacing(
-                SqlTypes.EL_PRIMARY_EXPR,
-                SqlTypes.DOT,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.DOT,
-                SqlTypes.EL_IDENTIFIER,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_IDENTIFIER,
-                SqlTypes.DOT,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_IDENTIFIER,
-                SqlTypes.EL_PARAMETERS,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            )
 
     override fun getSpacing(
         child1: Block?,

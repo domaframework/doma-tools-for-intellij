@@ -18,6 +18,8 @@ package org.domaframework.doma.intellij.formatter.block.expr
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -32,6 +34,19 @@ abstract class SqlExprBlock(
         context.enableFormat,
         context.formatMode,
     ) {
+    override fun buildChildren(): MutableList<AbstractBlock> {
+        val blocks = mutableListOf<AbstractBlock>()
+        var child = node.firstChildNode
+        while (child != null) {
+            if (child !is PsiWhiteSpace) {
+                val block = getBlock(child)
+                blocks.add(block)
+            }
+            child = child.treeNext
+        }
+        return blocks
+    }
+
     override fun getSpacing(
         child1: Block?,
         child2: Block,
