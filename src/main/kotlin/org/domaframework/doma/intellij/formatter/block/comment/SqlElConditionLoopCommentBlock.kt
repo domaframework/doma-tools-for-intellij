@@ -26,12 +26,8 @@ import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlOperationBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElFieldAccessBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElFunctionCallBlock
-import org.domaframework.doma.intellij.formatter.block.expr.SqlElStaticFieldAccessBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
@@ -159,27 +155,11 @@ class SqlElConditionLoopCommentBlock(
 
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
-            SqlTypes.GE, SqlTypes.LE, SqlTypes.GT, SqlTypes.LT, SqlTypes.EL_EQ, SqlTypes.EL_NE,
-            SqlTypes.PLUS, SqlTypes.MINUS, SqlTypes.ASTERISK, SqlTypes.SLASH, SqlTypes.AT_SIGN,
-            ->
-                SqlOperationBlock(child, context)
-
-            SqlTypes.EL_FIELD_ACCESS_EXPR ->
-                SqlElFieldAccessBlock(
+            SqlTypes.EL_IF_DIRECTIVE, SqlTypes.EL_ELSEIF_DIRECTIVE, SqlTypes.EL_FOR_DIRECTIVE ->
+                SqlElBlockCommentBlock(
                     child,
                     context,
-                )
-
-            SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR ->
-                SqlElStaticFieldAccessBlock(
-                    child,
-                    context,
-                )
-
-            SqlTypes.EL_FUNCTION_CALL_EXPR ->
-                SqlElFunctionCallBlock(
-                    child,
-                    context,
+                    createBlockDirectiveCommentSpacingBuilder(),
                 )
 
             else -> SqlUnknownBlock(child, context)

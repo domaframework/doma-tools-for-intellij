@@ -230,6 +230,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("WithOptional.sql", "WithOptional$formatDataPrefix.sql")
     }
 
+    fun testCalculationDirectivesFormatter() {
+        formatSqlFile("CalculationDirectives.sql", "CalculationDirectives$formatDataPrefix.sql")
+    }
+
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,
