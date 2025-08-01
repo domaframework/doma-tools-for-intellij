@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.processor
+package org.domaframework.doma.intellij.formatter.builder
 
-import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
@@ -36,14 +36,16 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWit
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
-import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.handler.UpdateClauseHandler
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 import org.domaframework.doma.intellij.psi.SqlTypes
-import kotlin.collections.lastOrNull
 
-class SqlSetParentGroupProcessor(
+/**
+ * Processor responsible for establishing parent-child relationships between SQL formatting blocks
+ * and managing the block hierarchy during SQL formatting.
+ */
+class SqlBlockRelationBuilder(
     private val blockBuilder: SqlBlockBuilder,
 ) {
     data class SetParentContext(
@@ -157,7 +159,7 @@ class SqlSetParentGroupProcessor(
         context: SetParentContext,
     ) {
         val parentBlock =
-            if (isExpectedClassType(TOP_LEVEL_EXPECTED_TYPES, lastGroupBlock)) {
+            if (TypeUtil.isExpectedClassType(TOP_LEVEL_EXPECTED_TYPES, lastGroupBlock)) {
                 lastGroupBlock
             } else if (childBlock is SqlUpdateQueryGroupBlock) {
                 UpdateClauseHandler.getParentGroupBlock(blockBuilder, childBlock)
@@ -230,7 +232,7 @@ class SqlSetParentGroupProcessor(
         context: SetParentContext,
     ) {
         val prevKeyword = lastGroupBlock.childBlocks.findLast { it is SqlKeywordBlock }
-        if (prevKeyword != null && SqlKeywordUtil.isSetLineKeyword(childBlock.getNodeText(), prevKeyword.getNodeText())) {
+        if (prevKeyword != null && SqlKeywordUtil.Companion.isSetLineKeyword(childBlock.getNodeText(), prevKeyword.getNodeText())) {
             updateGroupBlockLastGroupParentAddGroup(lastGroupBlock, childBlock)
             return
         }
@@ -258,7 +260,7 @@ class SqlSetParentGroupProcessor(
     private fun shouldHandleJoinKeyword(
         lastIndentLevel: IndentType,
         childBlock: SqlKeywordGroupBlock,
-    ): Boolean = lastIndentLevel == IndentType.JOIN && SqlKeywordUtil.isSecondOptionKeyword(childBlock.getNodeText())
+    ): Boolean = lastIndentLevel == IndentType.JOIN && SqlKeywordUtil.Companion.isSecondOptionKeyword(childBlock.getNodeText())
 
     fun updateColumnDefinitionRawGroupBlockParentAndAddGroup(
         lastGroupBlock: SqlBlock,
@@ -297,7 +299,7 @@ class SqlSetParentGroupProcessor(
             return
         }
 
-        if (isExpectedClassType(COLUMN_RAW_EXPECTED_TYPES, lastGroupBlock)) {
+        if (TypeUtil.isExpectedClassType(COLUMN_RAW_EXPECTED_TYPES, lastGroupBlock)) {
             blockBuilder.removeLastGroupTopNodeIndexHistory()
         }
         setParentGroups(context) { history ->
@@ -368,6 +370,7 @@ class SqlSetParentGroupProcessor(
     private fun findParentForConditionLoop(findDefaultParent: (SqlBlock) -> Boolean): SqlBlock? =
         blockBuilder.getGroupTopNodeIndexHistory().lastOrNull { block ->
             findDefaultParent(block) ||
+                block is SqlSubGroupBlock ||
                 (block is SqlElConditionLoopCommentBlock && block.parentBlock != null)
         }
 
@@ -495,7 +498,7 @@ class SqlSetParentGroupProcessor(
         // The parent block for SqlElConditionLoopCommentBlock will be set later
         if (targetChildBlock is SqlElConditionLoopCommentBlock && targetChildBlock.conditionType.isStartDirective()) {
             targetChildBlock.tempParentBlock = parentGroup
-            if (parentGroup is SqlElConditionLoopCommentBlock && parentGroup.parentBlock != null) {
+            if ((parentGroup is SqlElConditionLoopCommentBlock || parentGroup is SqlSubGroupBlock) && parentGroup.parentBlock != null) {
                 targetChildBlock.setParentGroupBlock(parentGroup)
             }
         } else {
@@ -503,7 +506,7 @@ class SqlSetParentGroupProcessor(
         }
 
         if (isNewGroup(targetChildBlock, context.blockBuilder) ||
-            isExpectedClassType(NEW_GROUP_EXPECTED_TYPES, targetChildBlock)
+            TypeUtil.isExpectedClassType(NEW_GROUP_EXPECTED_TYPES, targetChildBlock)
         ) {
             context.blockBuilder.addGroupTopNodeIndexHistory(targetChildBlock)
         }

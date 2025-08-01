@@ -56,15 +56,21 @@ open class SqlSubQueryGroupBlock(
                 is SqlJoinGroupBlock -> return parent.indent.groupIndentLen.plus(1)
                 else -> {
                     val children = prevChildren?.filter { it !is SqlDefaultCommentBlock }
-                    return children
-                        ?.dropLast(1)
-                        ?.sumOf { prev ->
+                    // Retrieve the list of child blocks excluding the conditional directive that appears immediately before this block,
+                    // as it is already included as a child block.
+                    val sumChildren =
+                        if (children?.firstOrNull() is SqlElConditionLoopCommentBlock) {
+                            children.drop(1).dropLast(1)
+                        } else {
+                            children?.dropLast(1) ?: emptyList()
+                        }
+                    return sumChildren
+                        .sumOf { prev ->
                             prev
                                 .getChildrenTextLen()
                                 .plus(prev.getNodeText().length.plus(1))
-                        }?.plus(parent.indent.groupIndentLen)
-                        ?.plus(1)
-                        ?: offset
+                        }.plus(parent.indent.groupIndentLen)
+                        .plus(1)
                 }
             }
         } ?: offset

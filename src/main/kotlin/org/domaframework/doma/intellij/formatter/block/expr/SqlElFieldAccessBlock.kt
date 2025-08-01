@@ -21,6 +21,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -28,7 +29,6 @@ import org.domaframework.doma.intellij.psi.SqlTypes
 class SqlElFieldAccessBlock(
     node: ASTNode,
     private val context: SqlBlockFormattingContext,
-    private val customSpacingBuilder: SqlCustomSpacingBuilder?,
 ) : SqlExprBlock(
         node,
         context,
@@ -48,6 +48,8 @@ class SqlElFieldAccessBlock(
 
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
+            SqlTypes.EL_IDENTIFIER, SqlTypes.EL_ID_EXPR -> SqlElIdentifierBlock(child, context)
+
             SqlTypes.EL_PRIMARY_EXPR -> {
                 SqlElPrimaryBlock(child, context)
             }
@@ -62,20 +64,13 @@ class SqlElFieldAccessBlock(
                 SqlElParametersBlock(child, context)
 
             else ->
-                SqlBlock(
-                    child,
-                    context.wrap,
-                    context.alignment,
-                    context.spacingBuilder,
-                    context.enableFormat,
-                    context.formatMode,
-                )
+                SqlUnknownBlock(child, context)
         }
 
     override fun getSpacing(
         child1: Block?,
         child2: Block,
-    ): Spacing? = customSpacingBuilder?.getCustomSpacing(child1, child2) ?: spacingBuilder.getSpacing(this, child1, child2)
+    ): Spacing? = SqlCustomSpacingBuilder.nonSpacing
 
     override fun isLeaf(): Boolean = false
 }

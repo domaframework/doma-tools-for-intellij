@@ -58,9 +58,9 @@ import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBloc
 import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
+import org.domaframework.doma.intellij.formatter.builder.SqlBlockRelationBuilder
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.handler.CreateClauseHandler
-import org.domaframework.doma.intellij.formatter.processor.SqlSetParentGroupProcessor
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.formatter.util.SqlBlockGenerator
@@ -96,7 +96,7 @@ open class SqlFileBlock(
     private val blocks = mutableListOf<AbstractBlock>()
 
     private val blockBuilder = SqlBlockBuilder()
-    private val parentSetProcessor = SqlSetParentGroupProcessor(blockBuilder)
+    private val blockRelationBuilder = SqlBlockRelationBuilder(blockBuilder)
     private val blockUtil = SqlBlockGenerator(this, isEnableFormat(), formatMode)
 
     private val pendingCommentBlocks = mutableListOf<SqlBlock>()
@@ -150,6 +150,7 @@ open class SqlFileBlock(
                 formatMode,
             )
         val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
+        val lastGroupFilteredDirective = blockBuilder.getLastGroupFilterDirective()
         return when (child.elementType) {
             SqlTypes.KEYWORD -> {
                 return blockUtil.getKeywordBlock(
@@ -218,10 +219,20 @@ open class SqlFileBlock(
             }
 
             SqlTypes.BLOCK_COMMENT -> {
+                val tempBlock =
+                    blockUtil.getBlockCommentBlock(
+                        child,
+                        createBlockDirectiveCommentSpacingBuilder(),
+                    )
+                if (tempBlock !is SqlElConditionLoopCommentBlock) {
+                    if (lastGroup is SqlWithQueryGroupBlock || lastGroupFilteredDirective is SqlWithQueryGroupBlock) {
+                        return SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
+                    }
+                }
                 return if (lastGroup is SqlWithCommonTableGroupBlock) {
                     SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
                 } else {
-                    blockUtil.getBlockCommentBlock(child, createBlockDirectiveCommentSpacingBuilder())
+                    tempBlock
                 }
             }
 
@@ -309,7 +320,7 @@ open class SqlFileBlock(
         val lastGroupBlock = blockBuilder.getLastGroupTopNodeIndexHistory()
         val lastIndentLevel = lastGroupBlock?.indent?.indentLevel
         if (lastGroupBlock == null || lastIndentLevel == null) {
-            parentSetProcessor.updateGroupBlockAddGroup(
+            blockRelationBuilder.updateGroupBlockAddGroup(
                 childBlock,
             )
             return
@@ -319,7 +330,7 @@ open class SqlFileBlock(
 
         when (childBlock) {
             is SqlKeywordGroupBlock -> {
-                parentSetProcessor.updateKeywordGroupBlockParentAndAddGroup(
+                blockRelationBuilder.updateKeywordGroupBlockParentAndAddGroup(
                     lastGroupBlock,
                     lastIndentLevel,
                     childBlock,
@@ -327,7 +338,7 @@ open class SqlFileBlock(
             }
 
             is SqlColumnDefinitionRawGroupBlock -> {
-                parentSetProcessor.updateColumnDefinitionRawGroupBlockParentAndAddGroup(
+                blockRelationBuilder.updateColumnDefinitionRawGroupBlockParentAndAddGroup(
                     lastGroupBlock,
                     lastIndentLevel,
                     childBlock,
@@ -335,7 +346,7 @@ open class SqlFileBlock(
             }
 
             is SqlColumnRawGroupBlock -> {
-                parentSetProcessor.updateColumnRawGroupBlockParentAndAddGroup(
+                blockRelationBuilder.updateColumnRawGroupBlockParentAndAddGroup(
                     lastGroupBlock,
                     childBlock,
                 )
@@ -343,57 +354,57 @@ open class SqlFileBlock(
 
             is SqlInlineGroupBlock -> {
                 // case-end
-                parentSetProcessor.updateGroupBlockParentAndAddGroup(
+                blockRelationBuilder.updateGroupBlockParentAndAddGroup(
                     childBlock,
                 )
             }
 
             is SqlInlineSecondGroupBlock -> {
-                parentSetProcessor.updateInlineSecondGroupBlockParentAndAddGroup(
+                blockRelationBuilder.updateInlineSecondGroupBlockParentAndAddGroup(
                     childBlock,
                 )
             }
 
             is SqlColumnBlock -> {
-                parentSetProcessor.updateGroupBlockParentAndAddGroup(
+                blockRelationBuilder.updateGroupBlockParentAndAddGroup(
                     childBlock,
                 )
             }
 
             is SqlElConditionLoopCommentBlock -> {
-                parentSetProcessor.updateConditionLoopCommentBlockParent(
+                blockRelationBuilder.updateConditionLoopCommentBlockParent(
                     lastGroupBlock,
                     childBlock,
                 )
             }
 
             is SqlWordBlock, is SqlOtherBlock -> {
-                parentSetProcessor.updateGroupBlockParentAndAddGroup(
+                blockRelationBuilder.updateGroupBlockParentAndAddGroup(
                     childBlock,
                 )
             }
 
             is SqlSubGroupBlock -> {
-                parentSetProcessor.updateSubGroupBlockParent(
+                blockRelationBuilder.updateSubGroupBlockParent(
                     lastGroupBlock,
                     childBlock,
                 )
             }
 
             is SqlRightPatternBlock -> {
-                parentSetProcessor.updateSqlRightPatternBlockParent(
+                blockRelationBuilder.updateSqlRightPatternBlockParent(
                     childBlock,
                 )
             }
 
             is SqlElSymbolBlock -> {
-                parentSetProcessor.updateGroupBlockParentAndAddGroup(
+                blockRelationBuilder.updateGroupBlockParentAndAddGroup(
                     childBlock,
                 )
             }
 
             is SqlDataTypeBlock -> {
-                parentSetProcessor.updateGroupBlockParentAndAddGroup(
+                blockRelationBuilder.updateGroupBlockParentAndAddGroup(
                     childBlock,
                 )
             }
@@ -402,13 +413,13 @@ open class SqlFileBlock(
                 if (lastGroupBlock is SqlCommaBlock) {
                     blockBuilder.removeLastGroupTopNodeIndexHistory()
                 }
-                parentSetProcessor.updateGroupBlockParentAndAddGroup(
+                blockRelationBuilder.updateGroupBlockParentAndAddGroup(
                     childBlock,
                 )
             }
 
             else -> {
-                parentSetProcessor.updateGroupBlockParentAndAddGroup(
+                blockRelationBuilder.updateGroupBlockParentAndAddGroup(
                     childBlock,
                 )
             }

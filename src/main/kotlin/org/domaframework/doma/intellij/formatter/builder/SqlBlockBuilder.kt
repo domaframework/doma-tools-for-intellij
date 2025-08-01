@@ -42,6 +42,8 @@ open class SqlBlockBuilder {
 
     fun getGroupTopNodeIndexHistory(): List<SqlBlock> = groupTopNodeIndexHistory
 
+    fun getLastGroupFilterDirective(): SqlBlock? = getGroupTopNodeIndexHistory().lastOrNull { it !is SqlElConditionLoopCommentBlock }
+
     fun addGroupTopNodeIndexHistory(block: SqlBlock) {
         groupTopNodeIndexHistory.add(block)
     }

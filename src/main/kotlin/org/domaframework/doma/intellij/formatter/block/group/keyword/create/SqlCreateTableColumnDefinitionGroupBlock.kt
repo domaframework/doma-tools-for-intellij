@@ -41,7 +41,7 @@ class SqlCreateTableColumnDefinitionGroupBlock(
         node,
         context,
     ) {
-    // TODO:Customize indentation
+    // TODO Customize indentation
     override val offset = 2
     private val groupOffset = 5
     val columnRawGroupBlocks = mutableListOf<SqlColumnDefinitionRawGroupBlock>()

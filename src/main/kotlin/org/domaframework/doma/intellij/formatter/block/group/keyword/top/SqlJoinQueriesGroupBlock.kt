@@ -18,9 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.top
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 /**
@@ -30,9 +28,9 @@ import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 class SqlJoinQueriesGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlKeywordGroupBlock(node, IndentType.TOP, context) {
+) : SqlTopQueryGroupBlock(node, context) {
     // TODO Customize offset
-    val offset = 0
+    private val offset = 0
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
@@ -43,8 +41,9 @@ class SqlJoinQueriesGroupBlock(
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             return when (parent) {
-                is SqlWithQuerySubGroupBlock, is SqlElConditionLoopCommentBlock,
+                is SqlWithQuerySubGroupBlock,
                 -> parent.indent.groupIndentLen
+                is SqlElConditionLoopCommentBlock -> createIndentLenInConditionLoopDirective(parent)
                 else -> parent.indent.groupIndentLen.plus(1)
             }
         }

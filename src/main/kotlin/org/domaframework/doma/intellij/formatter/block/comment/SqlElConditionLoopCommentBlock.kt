@@ -36,6 +36,8 @@ import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRaw
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -66,6 +68,15 @@ class SqlElConditionLoopCommentBlock(
         fun isStartDirective(): Boolean = this == CONDITION || this == LOOP
 
         fun isElse(): Boolean = this == ELSE
+    }
+
+    companion object {
+        private val LINE_BREAK_PARENT_TYPES =
+            listOf(
+                SqlSubGroupBlock::class,
+                SqlColumnRawGroupBlock::class,
+                SqlElConditionLoopCommentBlock::class,
+            )
     }
 
     var tempParentBlock: SqlBlock? = null
@@ -100,6 +111,13 @@ class SqlElConditionLoopCommentBlock(
      *
      * If the next element is a **[SqlKeywordGroupBlock]** or **[SqlSubGroupBlock]**, align the directive’s indentation to that keyword’s indentation.
      * Otherwise, use the **provisional indentation element as the base** to align the indentation of child elements under the directive.
+     *
+     * @note
+     * When a keyword group appears immediately before a conditional or loop directive, and a non-group block appears immediately after, the directive can end up being registered as a child of both.
+     *
+     * To ensure correct group block generation in the later sub-group block processing, the conditional/loop directive must remain registered as a child of the preceding keyword group.
+     * If it is not retained, the resulting group block structure will be inaccurate.
+     *
      */
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
@@ -117,6 +135,12 @@ class SqlElConditionLoopCommentBlock(
             } else {
                 child.indent.indentLen = indent.groupIndentLen
             }
+        }
+    }
+
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (lastGroup is SqlElConditionLoopCommentBlock && conditionType.isEnd()) {
+            lastGroup.conditionEnd = this
         }
     }
 
@@ -144,7 +168,6 @@ class SqlElConditionLoopCommentBlock(
                 SqlElFieldAccessBlock(
                     child,
                     context,
-                    createFieldAccessSpacingBuilder(),
                 )
 
             SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR ->
@@ -162,26 +185,6 @@ class SqlElConditionLoopCommentBlock(
             else -> SqlUnknownBlock(child, context)
         }
 
-    private fun createFieldAccessSpacingBuilder(): SqlCustomSpacingBuilder =
-        SqlCustomSpacingBuilder()
-            .withSpacing(
-                SqlTypes.EL_PRIMARY_EXPR,
-                SqlTypes.DOT,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.DOT,
-                SqlTypes.EL_IDENTIFIER,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_IDENTIFIER,
-                SqlTypes.DOT,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_IDENTIFIER,
-                SqlTypes.EL_PARAMETERS,
-                Spacing.createSpacing(0, 0, 0, false, 0),
-            )
-
     override fun getSpacing(
         child1: Block?,
         child2: Block,
@@ -198,10 +201,10 @@ class SqlElConditionLoopCommentBlock(
         if (conditionType.isEnd() || conditionType.isElse()) {
             return true
         }
-        if (lastGroup is SqlSubGroupBlock) {
-            return lastGroup.childBlocks.dropLast(1).isNotEmpty()
+        if (TypeUtil.isExpectedClassType(LINE_BREAK_PARENT_TYPES, lastGroup)) {
+            return lastGroup?.childBlocks?.dropLast(1)?.isNotEmpty() == true || lastGroup is SqlElConditionLoopCommentBlock
         }
-        return true
+        return lastGroup?.childBlocks?.firstOrNull() != this
     }
 
     /**
@@ -241,7 +244,8 @@ class SqlElConditionLoopCommentBlock(
                     return if (TypeUtil.isExpectedClassType(
                             SqlRightPatternBlock.NOT_INDENT_EXPECTED_TYPES,
                             parent,
-                        )
+                        ) ||
+                        parent is SqlWithCommonTableGroupBlock
                     ) {
                         parentGroupIndentLen.plus(openConditionLoopDirectiveCount * 2)
                     } else {
@@ -258,6 +262,22 @@ class SqlElConditionLoopCommentBlock(
                         return parent.indent.indentLen
                     } else {
                         return parent.indent.indentLen.plus(2)
+                    }
+                }
+
+                is SqlKeywordGroupBlock -> {
+                    // At this point, it's not possible to determine whether the parent keyword group appears before or after this block based solely on the parent-child relationship.
+                    // Therefore, determine the position directly using the text offset.
+                    return if (parent.node.startOffset <
+                        node.startOffset
+                    ) {
+                        // The child branch applies in cases where a conditional directive is included as a child of this block.
+                        val questOffset = if (parent is SqlWithQueryGroupBlock) 0 else 1
+                        parent.indent.groupIndentLen
+                            .plus(openConditionLoopDirectiveCount * 2)
+                            .plus(questOffset)
+                    } else {
+                        parent.indent.indentLen.plus(openConditionLoopDirectiveCount * 2)
                     }
                 }
                 else -> return parent.indent.indentLen.plus(openConditionLoopDirectiveCount * 2)
