@@ -41,6 +41,7 @@ abstract class SqlTopQueryGroupBlock(
                 SqlWithQuerySubGroupBlock::class,
                 SqlElConditionLoopCommentBlock::class,
             )
+        private val offset = 0
     }
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
@@ -54,7 +55,10 @@ abstract class SqlTopQueryGroupBlock(
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            if (parent.indent.indentLevel == IndentType.FILE) return 0
+            if (parent.indent.indentLevel == IndentType.FILE) return offset
+            if (parent is SqlElConditionLoopCommentBlock) {
+                return createIndentLenInConditionLoopDirective(parent)
+            }
             var baseIndent = parent.indent.groupIndentLen
             if (!TypeUtil.isExpectedClassType(PARENT_INDENT_SYNC_TYPES, parent)) {
                 baseIndent = baseIndent.plus(1)
@@ -62,5 +66,37 @@ abstract class SqlTopQueryGroupBlock(
             return baseIndent
         }
         return 0
+    }
+
+    protected fun createIndentLenInConditionLoopDirective(parent: SqlElConditionLoopCommentBlock): Int {
+        // When the parent is a conditional directive, adjust the indent considering loop nesting
+        val parentConditionLoopNests = mutableListOf<SqlBlock>()
+        var blockParent: SqlBlock? = parent
+        parentConditionLoopNests.add(parent)
+        while (blockParent is SqlElConditionLoopCommentBlock) {
+            blockParent = blockParent.parentBlock
+            if (blockParent != null) parentConditionLoopNests.add(blockParent)
+        }
+        val prevGroupBlock = parentConditionLoopNests.lastOrNull()
+        parentConditionLoopNests.dropLast(1).reversed().forEachIndexed { index, p ->
+            if (index == 0) {
+                // For the first conditional loop directive, if it has a parent block whose indent level is lower than itself,
+                // align with the indent of that parent's parent
+                prevGroupBlock?.let { prev ->
+                    if (prev.indent.indentLevel >= indent.indentLevel) {
+                        p.indent.indentLen = prev.parentBlock?.indent?.indentLen ?: offset
+                    }
+                }
+            } else {
+                // For subsequent conditional loop directives, adjust the indent by the nesting count * 2
+                p.indent.indentLen = p.parentBlock
+                    ?.indent
+                    ?.indentLen
+                    ?.plus(2) ?: (index * 2)
+            }
+            p.indent.groupIndentLen = p.indent.indentLen
+        }
+
+        return parent.indent.indentLen
     }
 }

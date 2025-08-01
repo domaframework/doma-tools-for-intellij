@@ -121,6 +121,11 @@ abstract class SqlSubGroupBlock(
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         lastGroup?.let { lastBlock ->
             if (lastBlock is SqlJoinQueriesGroupBlock) return true
+            val prevBlock = prevChildren?.dropLast(1)?.lastOrNull()
+            if (prevBlock is SqlKeywordBlock) {
+                if (prevBlock.getNodeText() == "in") return false
+            }
+            if (lastGroup is SqlElConditionLoopCommentBlock) return true
             return TypeUtil.isExpectedClassType(NEW_LINE_EXPECTED_TYPES, lastBlock.parentBlock)
         }
         return false

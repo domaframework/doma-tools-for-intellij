@@ -46,7 +46,7 @@ class SqlConditionKeywordGroupBlock(
         }
     }
 
-    // TODO　If AND appears after OR, change it so that it is right-justified.
+    // If AND appears after OR, change it so that it is right-justified.
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             val groupLen = parent.indent.groupIndentLen

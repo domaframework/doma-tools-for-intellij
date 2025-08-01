@@ -62,5 +62,5 @@ abstract class SqlCommentBlock(
         return 0
     }
 
-    override fun createGroupIndentLen(): Int = 0
+    override fun createGroupIndentLen(): Int = indent.indentLen
 }

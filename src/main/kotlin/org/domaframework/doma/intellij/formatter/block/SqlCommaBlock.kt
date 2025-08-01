@@ -82,7 +82,7 @@ open class SqlCommaBlock(
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.COMMA
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
+        indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
@@ -141,6 +141,8 @@ open class SqlCommaBlock(
         }
         return 1
     }
+
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(1)
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         if (parentBlock is SqlConditionalExpressionGroupBlock) return false
