@@ -178,6 +178,58 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("SelectDirectiveTestData.sql", "SelectDirectiveTestData$formatDataPrefix.sql")
     }
 
+    fun testBasicBindVariablesFormatter() {
+        formatSqlFile("BasicBindVariables.sql", "BasicBindVariables$formatDataPrefix.sql")
+    }
+
+    fun testConditionalDirectiveFormatter() {
+        formatSqlFile("ConditionalDirective.sql", "ConditionalDirective$formatDataPrefix.sql")
+    }
+
+    fun testEmbeddedVariableFormatter() {
+        formatSqlFile("EmbeddedVariable.sql", "EmbeddedVariable$formatDataPrefix.sql")
+    }
+
+    fun testExpandVariableFormatter() {
+        formatSqlFile("ExpandVariable.sql", "ExpandVariable$formatDataPrefix.sql")
+    }
+
+    fun testInClauseBindVariableFormatter() {
+        formatSqlFile("InClauseBindVariable.sql", "InClauseBindVariable$formatDataPrefix.sql")
+    }
+
+    fun testLiteralVariableFormatter() {
+        formatSqlFile("LiteralVariable.sql", "LiteralVariable$formatDataPrefix.sql")
+    }
+
+    fun testLoopDirectiveFormatter() {
+        formatSqlFile("LoopDirective.sql", "LoopDirective$formatDataPrefix.sql")
+    }
+
+    fun testNestForDirectiveFormatter() {
+        formatSqlFile("NestForDirective.sql", "NestForDirective$formatDataPrefix.sql")
+    }
+
+    fun testPopulateVariableFormatter() {
+        formatSqlFile("PopulateVariable.sql", "PopulateVariable$formatDataPrefix.sql")
+    }
+
+    fun testStaticFieldAccessFormatter() {
+        formatSqlFile("StaticFieldAccess.sql", "StaticFieldAccess$formatDataPrefix.sql")
+    }
+
+    fun testUseDirectiveWithQueryFormatter() {
+        formatSqlFile("UseDirectiveWithQuery.sql", "UseDirectiveWithQuery$formatDataPrefix.sql")
+    }
+
+    fun testUserDirectiveSelectQueryFormatter() {
+        formatSqlFile("UserDirectiveSelectQuery.sql", "UserDirectiveSelectQuery$formatDataPrefix.sql")
+    }
+
+    fun testWithOptionalFormatter() {
+        formatSqlFile("WithOptional.sql", "WithOptional$formatDataPrefix.sql")
+    }
+
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,
