@@ -18,7 +18,6 @@ package org.domaframework.doma.intellij.formatter.handler
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictExpressionSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
@@ -46,19 +45,17 @@ object NotQueryGroupHandler {
         lastGroup: SqlBlock?,
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,
-        groups: List<SqlBlock>,
     ): SqlBlock? =
         when {
             hasInKeyword(lastGroup) -> SqlParallelListBlock(child, sqlBlockFormattingCtx)
-            lastGroupParentConditionKeywordGroup(groups) -> createConditionalExpressionGroup(child, sqlBlockFormattingCtx)
+            lastGroupParentConditionKeywordGroup(lastGroup) -> createConditionalExpressionGroup(child, sqlBlockFormattingCtx)
             hasFunctionOrAliasContext(lastGroup) -> createFunctionOrValueBlock(lastGroup, child, sqlBlockFormattingCtx)
             lastGroup is SqlConflictClauseBlock -> SqlConflictExpressionSubGroupBlock(child, sqlBlockFormattingCtx)
             hasValuesContext(lastGroup) -> SqlValuesParamGroupBlock(child, sqlBlockFormattingCtx)
             else -> null
         }
 
-    private fun lastGroupParentConditionKeywordGroup(groups: List<SqlBlock>): Boolean =
-        groups.lastOrNull { it !is SqlElConditionLoopCommentBlock } is SqlConditionKeywordGroupBlock
+    private fun lastGroupParentConditionKeywordGroup(lastGroup: SqlBlock?): Boolean = lastGroup is SqlConditionKeywordGroupBlock
 
     /**
      * Creates a keyword group block for specific keywords.

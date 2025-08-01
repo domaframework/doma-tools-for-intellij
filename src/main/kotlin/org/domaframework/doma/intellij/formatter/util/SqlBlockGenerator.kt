@@ -345,6 +345,7 @@ class SqlBlockGenerator(
         child: ASTNode,
         groups: List<SqlBlock>,
     ): SqlBlock {
+        val ignoreConditionLoopLastBlock = groups.lastOrNull { it !is SqlElConditionLoopCommentBlock }
         when (lastGroup) {
             is SqlKeywordGroupBlock -> {
                 CreateClauseHandler
@@ -368,7 +369,7 @@ class SqlBlockGenerator(
 
                 // List-type test data for IN clause
                 NotQueryGroupHandler
-                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx, groups)
+                    .getSubGroup(ignoreConditionLoopLastBlock, child, sqlBlockFormattingCtx)
                     ?.let { return it }
 
                 return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
@@ -385,7 +386,11 @@ class SqlBlockGenerator(
                 }
 
                 NotQueryGroupHandler
-                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx, groups)
+                    .getSubGroup(ignoreConditionLoopLastBlock, child, sqlBlockFormattingCtx)
+                    ?.let { return it }
+
+                NotQueryGroupHandler
+                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx)
                     ?.let { return it }
 
                 return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
