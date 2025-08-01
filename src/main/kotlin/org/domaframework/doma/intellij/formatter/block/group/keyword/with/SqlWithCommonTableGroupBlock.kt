@@ -19,6 +19,8 @@ import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -71,14 +73,34 @@ class SqlWithCommonTableGroupBlock(
         }
     }
 
-    override fun createBlockIndentLen(): Int = 0
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            val prevBlock =
+                parent
+                    .getChildBlocksDropLast()
+                    .lastOrNull()
+            return if (prevBlock is SqlElConditionLoopCommentBlock) 4 else 0
+        }
+        return 0
+    }
 
     override fun createGroupIndentLen(): Int {
         parentBlock?.let { parent ->
-            getChildBlocksDropLast().sumOf { it.getNodeText().length.plus(1) }
+            return getChildBlocksDropLast().sumOf { it.getNodeText().length.plus(1) }.plus(offset)
         }
         return offset
     }
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = !isFirstTable
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
+        parentBlock?.let { parent ->
+            isFirstChildConditionLoopDirective() ||
+                (
+                    (
+                        parent is SqlValuesGroupBlock ||
+                            parent is SqlElConditionLoopCommentBlock
+                    ) &&
+                        parent.childBlocks.dropLast(1).isEmpty()
+                )
+        } == true ||
+            !isFirstTable
 }

@@ -29,6 +29,7 @@ import org.domaframework.doma.intellij.formatter.block.expr.SqlElFieldAccessBloc
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElFunctionCallBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElStaticFieldAccessBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -176,7 +177,11 @@ open class SqlElBlockCommentBlock(
                 is SqlElConditionLoopCommentBlock -> parent.indent.groupIndentLen
                 is SqlSubQueryGroupBlock -> {
                     if (parent.getChildBlocksDropLast().isEmpty()) {
-                        0
+                        if (isConditionLoopDirectiveRegisteredBeforeParent()) {
+                            parent.indent.groupIndentLen
+                        } else {
+                            parent.indent.groupIndentLen
+                        }
                     } else if (parent.isFirstLineComment) {
                         parent.indent.groupIndentLen.minus(2)
                     } else {
@@ -192,10 +197,16 @@ open class SqlElBlockCommentBlock(
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
         parentBlock?.let { parent ->
-            (
-                parent is SqlValuesGroupBlock ||
-                    parent is SqlElConditionLoopCommentBlock
-            ) &&
-                parent.childBlocks.dropLast(1).isEmpty()
+            isConditionLoopDirectiveRegisteredBeforeParent() ||
+                (
+                    (
+                        parent is SqlWithQuerySubGroupBlock ||
+                            parent is SqlValuesGroupBlock ||
+                            parent is SqlElConditionLoopCommentBlock
+                    ) &&
+                        parent.childBlocks
+                            .dropLast(1)
+                            .none { it !is SqlElConditionLoopCommentBlock }
+                )
         } == true
 }

@@ -50,11 +50,13 @@ open class SqlBlock(
         var indentLevel: IndentType,
         /**
          * The number of indentation spaces for this element.
+         *
          * Returns `0` if there is no line break.
          */
         var indentLen: Int,
         /**
          * Indentation baseline applied to the group itself.
+         *
          * Even if the group does not start on a new line,
          * it determines and applies indentation to the group based on factors such as the number of preceding characters.
          */
@@ -80,6 +82,48 @@ open class SqlBlock(
     }
 
     private fun isExcludedFromTextLength(block: SqlBlock): Boolean = block.node.elementType in setOf(SqlTypes.DOT, SqlTypes.RIGHT_PAREN)
+
+    /**
+     * Checks if a conditional loop directive is registered before the parent block.
+     *
+     * @note
+     * If the next element after a conditional directive is not a conditional directive block,
+     * the directive becomes a child of the next element block.
+     * Therefore, if the first element in [childBlocks] is a conditional directive,
+     * it can be determined that—syntactically—the conditional directive was placed immediately before the current block.
+     */
+    protected fun isConditionLoopDirectiveRegisteredBeforeParent(): Boolean {
+        val firstPrevBlock = (prevBlocks.lastOrNull() as? SqlElConditionLoopCommentBlock)
+        parentBlock?.let { parent ->
+            return firstPrevBlock != null &&
+                firstPrevBlock.conditionEnd != null &&
+                firstPrevBlock.node.startOffset > parent.node.startOffset
+        }
+        return false
+    }
+
+    /**
+     * Determines if this is the element immediately after a conditional loop directive.
+     *
+     * @note
+     * The parent conditional loop directive becomes a child of the element immediately after the conditional loop directive.
+     * In the following case, "%if" is a child of "status", and the following "=" and "'pending'" are children of "%if".
+     * Therefore, set the condition to break line only when the parent of the conditional loop directive is a group block.
+     *
+     * @example
+     * ```sql
+     * WHERE
+     *      /*%if status == "pending" */
+     *      status = 'pending'
+     * ```
+     */
+    protected fun isElementAfterConditionLoopDirective(): Boolean =
+        (parentBlock as? SqlElConditionLoopCommentBlock)?.let { parent ->
+            parent.childBlocks.firstOrNull() == this &&
+                (parent.parentBlock is SqlNewGroupBlock || parent.parentBlock is SqlElConditionLoopCommentBlock)
+        } == true
+
+    protected fun isFirstChildConditionLoopDirective(): Boolean = childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock
 
     fun getChildBlocksDropLast(
         dropIndex: Int = 1,
@@ -121,31 +165,17 @@ open class SqlBlock(
     fun isEnableFormat(): Boolean = enableFormat
 
     open fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
-        parentBlock?.let { parent ->
-            when (parent) {
-                is SqlElConditionLoopCommentBlock -> shouldSaveSpaceForConditionLoop(parent)
-                is SqlNewGroupBlock -> shouldSaveSpaceForNewGroup(parent)
-                else -> false
+        when (lastGroup) {
+            is SqlNewGroupBlock -> shouldSaveSpaceForNewGroup(lastGroup)
+            else -> {
+                shouldSaveSpaceForConditionLoop()
             }
         } == true
 
-    private fun shouldSaveSpaceForConditionLoop(parent: SqlElConditionLoopCommentBlock): Boolean {
-        val prevBlock = prevBlocks.lastOrNull { it !is SqlDefaultCommentBlock }
-        val isPrevBlockElseOrEnd =
-            prevBlock is SqlElConditionLoopCommentBlock &&
-                (prevBlock.conditionType.isElse() || prevBlock.conditionType.isEnd())
-        val hasNoChildrenExceptLast = parent.childBlocks.dropLast(1).isEmpty()
-        if (parent.conditionType.isElse()) {
-            return prevBlocks.isEmpty()
-        }
-
-        val isConditionDirectiveParentGroup =
-            parent.parentBlock?.let { grand ->
-                grand is SqlNewGroupBlock
-            } == true
-
-        return isPrevBlockElseOrEnd || (hasNoChildrenExceptLast && isConditionDirectiveParentGroup)
-    }
+    private fun shouldSaveSpaceForConditionLoop(): Boolean =
+        isConditionLoopDirectiveRegisteredBeforeParent() ||
+            isElementAfterConditionLoopDirective() ||
+            isFirstChildConditionLoopDirective()
 
     private fun shouldSaveSpaceForNewGroup(parent: SqlNewGroupBlock): Boolean {
         val prevWord = prevBlocks.lastOrNull { it !is SqlCommentBlock }
@@ -174,6 +204,8 @@ open class SqlBlock(
 
     /**
      * Creates the indentation length for the block.
+     *
+     * @return The number of spaces to use for indentation
      */
     open fun createBlockIndentLen(): Int = 0
 
@@ -183,6 +215,8 @@ open class SqlBlock(
 
     /**
      * Creates a spacing builder for custom spacing rules.
+     *
+     * @return A new instance of SqlCustomSpacingBuilder
      */
     protected open fun createSpacingBuilder(): SqlCustomSpacingBuilder = SqlCustomSpacingBuilder()
 
@@ -190,11 +224,15 @@ open class SqlBlock(
 
     /**
      * Determines whether to adjust the indentation on pressing Enter.
+     *
+     * @return true if indentation should be adjusted on Enter, false otherwise
      */
     fun isAdjustIndentOnEnter(): Boolean = formatMode == FormattingMode.ADJUST_INDENT_ON_ENTER && !isEnableFormat()
 
     /**
      * Returns the indentation for the block.
+     *
+     * @return The indent to apply to this block, or null if no indentation should be applied
      */
     override fun getIndent(): Indent? =
         if (isAdjustIndentOnEnter()) {
@@ -210,6 +248,8 @@ open class SqlBlock(
 
     /**
      * Returns the child indentation for the block.
+     *
+     * @return The indent to apply to child blocks
      */
     override fun getChildIndent(): Indent? =
         if (isEnableFormat()) {
@@ -224,6 +264,8 @@ open class SqlBlock(
 
     /**
      * Determines whether the block is a leaf node.
+     *
+     * @return true if this block has no child nodes, false otherwise
      */
     override fun isLeaf(): Boolean = myNode.firstChildNode == null
 }
