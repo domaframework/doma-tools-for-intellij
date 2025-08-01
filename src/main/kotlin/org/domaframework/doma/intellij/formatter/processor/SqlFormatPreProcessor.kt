@@ -30,7 +30,6 @@ import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSq
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.util.StringUtil.LINE_SEPARATE
 import org.domaframework.doma.intellij.common.util.StringUtil.SINGLE_SPACE
-import org.domaframework.doma.intellij.formatter.util.CreateQueryType
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 import org.domaframework.doma.intellij.formatter.visitor.SqlFormatVisitor
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -80,7 +79,6 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         var keywordIndex = replaceKeywordList.size
 
         visitor.replaces.asReversed().forEach {
-            val createQueryType = getCreateQueryGroup(keywordList, index)
             val textRangeStart = it.startOffset
             val textRangeEnd = textRangeStart + it.text.length
             if (it.elementType != TokenType.WHITE_SPACE) {
@@ -102,8 +100,8 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                             getRightPatternNewText(it)
                     }
 
-                    SqlTypes.WORD -> {
-                        newKeyword = getWordNewText(it, newKeyword, createQueryType)
+                    SqlTypes.WORD, SqlTypes.FUNCTION_NAME -> {
+                        newKeyword = getWordNewText(it, newKeyword)
                     }
 
                     SqlTypes.COMMA, SqlTypes.OTHER -> {
@@ -111,17 +109,8 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                     }
 
                     SqlTypes.BLOCK_COMMENT_START -> {
-                        val lastKeyword =
-                            if (keywordIndex > 0) {
-                                replaceKeywordList[keywordIndex - 1]
-                            } else {
-                                null
-                            }
-
-                        if (lastKeyword != null && lastKeyword.text.lowercase() == "values") {
-                            newKeyword =
-                                getNewLineString(PsiTreeUtil.prevLeaf(it), getUpperText(it))
-                        }
+                        newKeyword =
+                            getNewLineString(PsiTreeUtil.prevLeaf(it), getUpperText(it))
                     }
                 }
                 document.deleteString(textRangeStart, textRangeEnd)
@@ -144,9 +133,10 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         val originalText = document.getText(range)
         val nextElement = element.nextSibling
         val nextElementText = nextElement?.let { document.getText(it.textRange) } ?: ""
+        val preElement = element.prevSibling
 
         var newText = ""
-        if (!targetElementTypes.contains(nextElement?.elementType)) {
+        if (!targetElementTypes.contains(nextElement?.elementType) && preElement?.elementType != SqlTypes.BLOCK_COMMENT) {
             newText = originalText.replace(originalText, SINGLE_SPACE)
         } else {
             newText =
@@ -186,7 +176,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         val keywordText = element.text.lowercase()
         val upperText = getUpperText(element)
         return if (SqlKeywordUtil.getIndentType(keywordText).isNewLineGroup()) {
-            val prevElement = PsiTreeUtil.prevLeaf(element)
+            val prevElement = element.prevSibling
             getNewLineString(prevElement, upperText)
         } else {
             upperText
@@ -201,15 +191,13 @@ class SqlFormatPreProcessor : PreFormatProcessor {
     private fun getWordNewText(
         element: PsiElement,
         newKeyword: String,
-        createQueryType: CreateQueryType,
     ): String {
         newKeyword
         var prev = element.prevSibling
         var isColumnName = true
         while (prev != null && prev.elementType != SqlTypes.LEFT_PAREN && prev.elementType != SqlTypes.COMMA) {
             if (prev !is PsiWhiteSpace &&
-                prev.elementType != SqlTypes.LINE_COMMENT &&
-                prev.elementType != SqlTypes.BLOCK_COMMENT
+                prev.elementType != SqlTypes.LINE_COMMENT
             ) {
                 isColumnName =
                     prev.elementType == SqlTypes.COMMA ||
@@ -219,45 +207,22 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             prev = prev.prevSibling
         }
 
-        return if (createQueryType == CreateQueryType.TABLE && isColumnName) {
+        return if (prev.elementType == SqlTypes.BLOCK_COMMENT) {
             getNewLineString(element.prevSibling, getUpperText(element))
         } else {
             getUpperText(element)
         }
     }
 
-    private fun getCreateQueryGroup(
-        keywordList: List<PsiElement>,
-        index: Int,
-    ): CreateQueryType {
-        var topLastKeyWord: PsiElement? = null
-        var attachmentKeywordType = CreateQueryType.NONE
-        keywordList
-            .dropLast(keywordList.size.minus(index))
-            .filter {
-                it.elementType == SqlTypes.KEYWORD
-            }.asReversed()
-            .forEach { key ->
-                if (SqlKeywordUtil.Companion.isTopKeyword(key.text)) {
-                    topLastKeyWord = key
-                    return@forEach
-                }
-                if (SqlKeywordUtil.Companion.isAttachedKeyword(key.text)) {
-                    attachmentKeywordType = CreateQueryType.Companion.getCreateTableType(key.text)
-                }
-            }
-        val prevKeywordText = topLastKeyWord?.text?.lowercase()
-        val isCreateGroup = prevKeywordText == "create"
-        if (!isCreateGroup) return CreateQueryType.NONE
-        return attachmentKeywordType
-    }
-
     private fun getNewLineString(
         prevElement: PsiElement?,
         text: String,
     ): String =
-        if (prevElement?.text?.contains(LINE_SEPARATE) == false &&
-            PsiTreeUtil.prevLeaf(prevElement) != null
+        if (prevElement?.elementType == SqlTypes.BLOCK_COMMENT ||
+            (
+                prevElement?.text?.contains(LINE_SEPARATE) == false &&
+                    prevElement.prevSibling != null
+            )
         ) {
             "$LINE_SEPARATE$text"
         } else {
