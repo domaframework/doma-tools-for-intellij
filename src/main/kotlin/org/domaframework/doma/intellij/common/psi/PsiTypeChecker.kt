@@ -60,8 +60,9 @@ object PsiTypeChecker {
     fun isBaseClassType(psiType: PsiType?): Boolean {
         if (psiType == null) return false
         // Check if the type is a primitive type
-        if (psiType is PsiPrimitiveType && psiType.canonicalText == "char") {
-            return false
+        if (psiType is PsiPrimitiveType) {
+            // char is not supported, but other primitive types are
+            return psiType.canonicalText != "char"
         }
 
         // Check if the type is a wrapper class

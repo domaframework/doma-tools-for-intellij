@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.inspection.dao.processor.returntype
 
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiType
+import com.intellij.psi.PsiTypes
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.common.util.TypeUtil
@@ -77,7 +78,7 @@ class SelectReturnTypeCheckProcessor(
                 shortName,
                 checkTypeCanonicalText,
             )
-        if (checkType == null) return result
+        if (checkType == null || checkType == PsiTypes.voidType()) return result
 
         if (TypeUtil.isBaseOrOptionalWrapper(checkType)) {
             return null
