@@ -25,6 +25,7 @@ import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
 import org.domaframework.doma.intellij.common.sql.directive.collector.FunctionCallCollector
 import org.domaframework.doma.intellij.common.sql.directive.collector.StaticClassPackageCollector
 import org.domaframework.doma.intellij.common.sql.directive.collector.StaticPropertyCollector
+import org.domaframework.doma.intellij.common.util.StringUtil.SINGLE_SPACE
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -117,7 +118,7 @@ class StaticDirectiveHandler(
         val prev = PsiTreeUtil.prevLeaf(element, true)
         val staticFieldAccess =
             PsiTreeUtil.getParentOfType(prev, SqlElStaticFieldAccessExpr::class.java)
-        val sqlElClassWords = PsiPatternUtil.getBindSearchWord(element.containingFile, element, " ")
+        val sqlElClassWords = PsiPatternUtil.getBindSearchWord(element.containingFile, element, SINGLE_SPACE)
         return (
             staticFieldAccess != null && staticFieldAccess.elIdExprList.isEmpty()
         ) ||
@@ -141,7 +142,7 @@ class StaticDirectiveHandler(
                 .getChildOfType(prev, SqlElClass::class.java)
                 ?: PsiTreeUtil.getChildOfType(PsiTreeUtil.prevLeaf(element)?.parent, SqlElClass::class.java)
 
-        val sqlElClassWords = PsiPatternUtil.getBindSearchWord(element.containingFile, element, " ")
+        val sqlElClassWords = PsiPatternUtil.getBindSearchWord(element.containingFile, element, SINGLE_SPACE)
         val sqlElClassName = PsiTreeUtil.getChildrenOfTypeAsList(clazzRef, PsiElement::class.java).joinToString("") { it.text }
         val fqdn = if (sqlElClassName.isNotEmpty()) sqlElClassName else sqlElClassWords.replace("@", "")
 

@@ -27,6 +27,8 @@ class SqlFormatterTest : BasePlatformTestCase() {
 
     override fun getTestDataPath(): String? = "src/test/testData/sql/formatter"
 
+    private val formatDataPrefix = "_format"
+
     override fun setUp() {
         super.setUp()
         settingSqlFormat(true)
@@ -49,39 +51,187 @@ class SqlFormatterTest : BasePlatformTestCase() {
     }
 
     fun testSelectFormatter() {
-        formatSqlFile("Select.sql", "FormattedSelect.sql")
+        formatSqlFile("Select.sql", "Select$formatDataPrefix.sql")
+    }
+
+    fun testSelectEscapeFunctionNameFormatter() {
+        formatSqlFile("SelectEscapeFunctionName.sql", "SelectEscapeFunctionName$formatDataPrefix.sql")
+    }
+
+    fun testSelectCaseEndFormatter() {
+        formatSqlFile("SelectCaseEnd.sql", "SelectCaseEnd$formatDataPrefix.sql")
+    }
+
+    fun testSelectFromLateralFormatter() {
+        formatSqlFile("SelectFromLateral.sql", "SelectFromLateral$formatDataPrefix.sql")
+    }
+
+    fun testSelectFromLateralSecondFormatter() {
+        formatSqlFile("SelectFromLateralSecond.sql", "SelectFromLateralSecond$formatDataPrefix.sql")
+    }
+
+    fun testSelectJoinLateralFormatter() {
+        formatSqlFile("SelectJoinLateral.sql", "SelectJoinLateral$formatDataPrefix.sql")
+    }
+
+    fun testSelectFromValuesFormatter() {
+        formatSqlFile("SelectFromValues.sql", "SelectFromValues$formatDataPrefix.sql")
+    }
+
+    fun testSelectFromValuesUserDirectiveFormatter() {
+        formatSqlFile("SelectFromValuesUserDirective.sql", "SelectFromValuesUserDirective$formatDataPrefix.sql")
     }
 
     fun testCreateTableFormatter() {
-        formatSqlFile("CreateTable.sql", "FormattedCreateTable.sql")
+        formatSqlFile("CreateTable.sql", "CreateTable$formatDataPrefix.sql")
     }
 
     fun testCreateViewFormatter() {
-        formatSqlFile("CreateView.sql", "FormattedCreateView.sql")
+        formatSqlFile("CreateView.sql", "CreateView$formatDataPrefix.sql")
     }
 
     fun testInsertFormatter() {
-        formatSqlFile("Insert.sql", "FormattedInsert.sql")
+        formatSqlFile("Insert.sql", "Insert$formatDataPrefix.sql")
+    }
+
+    fun testInsertReturningFormatter() {
+        formatSqlFile("InsertReturning.sql", "InsertReturning$formatDataPrefix.sql")
     }
 
     fun testInsertWithBindVariableFormatter() {
-        formatSqlFile("InsertWithBindVariable.sql", "FormattedInsertWithBindVariable.sql")
+        formatSqlFile("InsertWithBindVariable.sql", "InsertWithBindVariable$formatDataPrefix.sql")
     }
 
     fun testUpdateFormatter() {
-        formatSqlFile("Update.sql", "FormattedUpdate.sql")
+        formatSqlFile("Update.sql", "Update$formatDataPrefix.sql")
+    }
+
+    fun testUpdateReturningFormatter() {
+        formatSqlFile("UpdateReturning.sql", "UpdateReturning$formatDataPrefix.sql")
     }
 
     fun testUpdateBindVariableFormatter() {
-        formatSqlFile("UpdateBindVariable.sql", "FormattedUpdateBindVariable.sql")
+        formatSqlFile("UpdateBindVariable.sql", "UpdateBindVariable$formatDataPrefix.sql")
     }
 
-    fun testUpdateTupleAssignmentFormatter() {
-        formatSqlFile("UpdateTupleAssignment.sql", "FormattedUpdateTupleAssignment.sql")
+    fun testUpdateBulkAssignmentFormatter() {
+        formatSqlFile("UpdateBulkAssignment.sql", "UpdateBulkAssignment$formatDataPrefix.sql")
     }
 
     fun testDeleteFormatter() {
-        formatSqlFile("Delete.sql", "FormattedDelete.sql")
+        formatSqlFile("Delete.sql", "Delete$formatDataPrefix.sql")
+    }
+
+    fun testDeleteReturningFormatter() {
+        formatSqlFile("DeleteReturning.sql", "DeleteReturning$formatDataPrefix.sql")
+    }
+
+    fun testInsertConflictUpdateFormatter() {
+        formatSqlFile("InsertConflictUpdate.sql", "InsertConflictUpdate$formatDataPrefix.sql")
+    }
+
+    fun testInsertConflictNothingFormatter() {
+        formatSqlFile("InsertConflictNothing.sql", "InsertConflictNothing$formatDataPrefix.sql")
+    }
+
+    fun testInsertConflictUpdateWithOutTableFormatter() {
+        formatSqlFile("InsertConflictUpdateWithOutTable.sql", "InsertConflictUpdateWithOutTable$formatDataPrefix.sql")
+    }
+
+    fun testWithSelect() {
+        formatSqlFile("WithSelect.sql", "WithSelect$formatDataPrefix.sql")
+    }
+
+    fun testWithMultiQuery() {
+        formatSqlFile("WithMultiQuery.sql", "WithMultiQuery$formatDataPrefix.sql")
+    }
+
+    fun testWithRecursive() {
+        formatSqlFile("WithRecursive.sql", "WithRecursive$formatDataPrefix.sql")
+    }
+
+    fun testWithUnionAll() {
+        formatSqlFile("WithUnionAll.sql", "WithUnionAll$formatDataPrefix.sql")
+    }
+
+    fun testWithInsert() {
+        formatSqlFile("WithInsert.sql", "WithInsert$formatDataPrefix.sql")
+    }
+
+    fun testWithUpdate() {
+        formatSqlFile("WithUpdate.sql", "WithUpdate$formatDataPrefix.sql")
+    }
+
+    fun testWithDelete() {
+        formatSqlFile("WithDelete.sql", "WithDelete$formatDataPrefix.sql")
+    }
+
+    fun testNestedDirectivesFormatter() {
+        formatSqlFile("NestedDirectives.sql", "NestedDirectives$formatDataPrefix.sql")
+    }
+
+    fun testSelectCaseEndWithConditionFormatter() {
+        formatSqlFile("SelectCaseEndWithCondition.sql", "SelectCaseEndWithCondition$formatDataPrefix.sql")
+    }
+
+    fun testSelectDirectiveTestDataFormatter() {
+        formatSqlFile("SelectDirectiveTestData.sql", "SelectDirectiveTestData$formatDataPrefix.sql")
+    }
+
+    fun testBasicBindVariablesFormatter() {
+        formatSqlFile("BasicBindVariables.sql", "BasicBindVariables$formatDataPrefix.sql")
+    }
+
+    fun testConditionalDirectiveFormatter() {
+        formatSqlFile("ConditionalDirective.sql", "ConditionalDirective$formatDataPrefix.sql")
+    }
+
+    fun testEmbeddedVariableFormatter() {
+        formatSqlFile("EmbeddedVariable.sql", "EmbeddedVariable$formatDataPrefix.sql")
+    }
+
+    fun testExpandVariableFormatter() {
+        formatSqlFile("ExpandVariable.sql", "ExpandVariable$formatDataPrefix.sql")
+    }
+
+    fun testInClauseBindVariableFormatter() {
+        formatSqlFile("InClauseBindVariable.sql", "InClauseBindVariable$formatDataPrefix.sql")
+    }
+
+    fun testLiteralVariableFormatter() {
+        formatSqlFile("LiteralVariable.sql", "LiteralVariable$formatDataPrefix.sql")
+    }
+
+    fun testLoopDirectiveFormatter() {
+        formatSqlFile("LoopDirective.sql", "LoopDirective$formatDataPrefix.sql")
+    }
+
+    fun testNestForDirectiveFormatter() {
+        formatSqlFile("NestForDirective.sql", "NestForDirective$formatDataPrefix.sql")
+    }
+
+    fun testPopulateVariableFormatter() {
+        formatSqlFile("PopulateVariable.sql", "PopulateVariable$formatDataPrefix.sql")
+    }
+
+    fun testStaticFieldAccessFormatter() {
+        formatSqlFile("StaticFieldAccess.sql", "StaticFieldAccess$formatDataPrefix.sql")
+    }
+
+    fun testUseDirectiveWithQueryFormatter() {
+        formatSqlFile("UseDirectiveWithQuery.sql", "UseDirectiveWithQuery$formatDataPrefix.sql")
+    }
+
+    fun testUserDirectiveSelectQueryFormatter() {
+        formatSqlFile("UserDirectiveSelectQuery.sql", "UserDirectiveSelectQuery$formatDataPrefix.sql")
+    }
+
+    fun testWithOptionalFormatter() {
+        formatSqlFile("WithOptional.sql", "WithOptional$formatDataPrefix.sql")
+    }
+
+    fun testCalculationDirectivesFormatter() {
+        formatSqlFile("CalculationDirectives.sql", "CalculationDirectives$formatDataPrefix.sql")
     }
 
     private fun formatSqlFile(

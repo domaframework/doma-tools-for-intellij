@@ -15,36 +15,25 @@
  */
 package org.domaframework.doma.intellij.formatter.block.expr
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
+import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
+import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElStaticFieldAccessBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    customSpacingBuilder: SqlCustomSpacingBuilder?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    private val formatMode: FormattingMode,
-) : SqlBlock(
+    private val context: SqlBlockFormattingContext,
+) : SqlExprBlock(
         node,
-        wrap,
-        alignment,
-        customSpacingBuilder,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
@@ -54,20 +43,28 @@ class SqlElStaticFieldAccessBlock(
                         PsiWhiteSpace::class.java,
                     ) is SqlElClass
                 ) {
-                    SqlElClassRightBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+                    SqlElClassRightBlock(child, context)
                 } else {
-                    SqlElAtSignBlock(child, wrap, alignment, null, spacingBuilder, isEnableFormat(), formatMode)
+                    SqlElAtSignBlock(child, context, null)
                 }
             }
 
             SqlTypes.EL_CLASS ->
-                SqlElClassBlock(child, wrap, alignment, null, spacingBuilder, isEnableFormat(), formatMode)
+                SqlElClassBlock(child, context, null)
 
-            SqlTypes.EL_IDENTIFIER ->
-                SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+            SqlTypes.EL_IDENTIFIER, SqlTypes.EL_ID_EXPR, SqlTypes.EL_PRIMARY_EXPR ->
+                SqlElIdentifierBlock(child, context)
 
-            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+            SqlTypes.EL_PARAMETERS ->
+                SqlParallelListBlock(child, context)
+
+            else -> SqlUnknownBlock(child, context)
         }
+
+    override fun getSpacing(
+        child1: Block?,
+        child2: Block,
+    ): Spacing? = SqlCustomSpacingBuilder.nonSpacing
 
     override fun createSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()

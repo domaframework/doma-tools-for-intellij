@@ -15,32 +15,22 @@
  */
 package org.domaframework.doma.intellij.formatter.block
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.Indent
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 open class SqlKeywordBlock(
     node: ASTNode,
     val indentLevel: IndentType = IndentType.ATTACHED,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
-) : SqlNewGroupBlock(
-        node,
-        wrap,
-        alignment,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
-    ) {
+    context: SqlBlockFormattingContext,
+) : SqlNewGroupBlock(node, context) {
     override val indent =
         ElementIndent(
             indentLevel,
@@ -48,29 +38,41 @@ open class SqlKeywordBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
-
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
         indent.indentLevel = indentLevel
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 
-    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
-
-    override fun getIndent(): Indent? {
-        if (!isAdjustIndentOnEnter() && parentBlock?.indent?.indentLevel == IndentType.SUB) {
-            return Indent.getIndent(Indent.Type.SPACES, 0, false, true)
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        if (lastGroup is SqlKeywordGroupBlock) {
+            lastGroup.updateTopKeywordBlocks(this)
         }
-        return Indent.getNoneIndent()
+
+        if (getNodeText() == "nothing" && lastGroup is SqlDoGroupBlock) {
+            lastGroup.doQueryBlock = this
+        }
+
+        if (lastGroup is SqlWithQueryGroupBlock) {
+            when (getNodeText()) {
+                "recursive" -> lastGroup.recursiveBlock = this
+            }
+        }
+
+        if (lastGroup is SqlWithCommonTableGroupBlock) {
+            lastGroup.optionKeywordBlocks.add(this)
+        }
     }
+
+    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     override fun createBlockIndentLen(): Int =
         when (indentLevel) {
             IndentType.TOP -> {
-                parentBlock?.let {
-                    if (it.indent.indentLevel == IndentType.SUB) {
-                        it.indent.groupIndentLen.plus(1)
+                parentBlock?.let { parent ->
+                    if (parent.indent.indentLevel == IndentType.SUB) {
+                        parent.indent.groupIndentLen.plus(1)
                     } else {
                         0
                     }
@@ -78,21 +80,29 @@ open class SqlKeywordBlock(
             }
 
             IndentType.SECOND -> {
-                parentBlock?.let {
-                    it.indent.groupIndentLen
-                        .plus(it.getNodeText().length)
-                        .minus(this.getNodeText().length)
+                parentBlock?.let { parent ->
+                    parent.indent.groupIndentLen
+                        .plus(parent.getNodeText().length)
+                        .minus(getNodeText().length)
                 } ?: 1
             }
 
             IndentType.INLINE_SECOND -> {
-                parentBlock?.let {
-                    it.indent.groupIndentLen
-                        .plus(it.getNodeText().length)
+                parentBlock?.let { parent ->
+                    parent.indent.groupIndentLen
+                        .plus(parent.getNodeText().length)
                         .plus(1)
                 } ?: 1
             }
 
-            else -> 1
+            else -> {
+                parentBlock?.let { parent ->
+                    if (parent is SqlElConditionLoopCommentBlock) {
+                        parent.indent.groupIndentLen
+                    } else {
+                        1
+                    }
+                } ?: 1
+            }
         }
 }

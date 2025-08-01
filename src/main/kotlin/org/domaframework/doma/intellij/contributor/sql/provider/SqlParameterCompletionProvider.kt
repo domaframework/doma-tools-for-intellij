@@ -43,6 +43,7 @@ import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.util.SqlCompletionUtil.createMethodLookupElement
 import org.domaframework.doma.intellij.common.util.StringUtil
+import org.domaframework.doma.intellij.common.util.StringUtil.SINGLE_SPACE
 import org.domaframework.doma.intellij.common.validation.result.ValidationCompleteResult
 import org.domaframework.doma.intellij.contributor.sql.processor.SqlCompletionDirectiveBlockProcessor
 import org.domaframework.doma.intellij.contributor.sql.processor.SqlCompletionOtherBlockProcessor
@@ -207,7 +208,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
                 val fqdn =
                     StringUtil.getSqlElClassText(
                         PsiPatternUtil
-                            .getBindSearchWord(originalFile, top, " "),
+                            .getBindSearchWord(originalFile, top, SINGLE_SPACE),
                     )
                 topElementType = getElementTypeByPrevSqlElClassWords(project, fqdn, topText)
             }

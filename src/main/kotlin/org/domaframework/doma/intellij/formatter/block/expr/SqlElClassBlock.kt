@@ -15,36 +15,24 @@
  */
 package org.domaframework.doma.intellij.formatter.block.expr
 
-import com.intellij.formatting.Alignment
 import com.intellij.formatting.Block
-import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Spacing
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
+import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElClassBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
+    private val context: SqlBlockFormattingContext,
     private val customSpacingBuilder: SqlCustomSpacingBuilder?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    private val formatMode: FormattingMode,
-) : SqlBlock(
+) : SqlExprBlock(
         node,
-        wrap,
-        alignment,
-        customSpacingBuilder,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
     override fun buildChildren(): MutableList<AbstractBlock> {
         val blocks = mutableListOf<AbstractBlock>()
@@ -61,11 +49,11 @@ class SqlElClassBlock(
 
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
-            SqlTypes.EL_IDENTIFIER -> SqlElIdentifierBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+            SqlTypes.EL_IDENTIFIER -> SqlElIdentifierBlock(child, context)
 
-            SqlTypes.DOT -> SqlElDotBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+            SqlTypes.DOT -> SqlElDotBlock(child, context)
 
-            else -> SqlUnknownBlock(child, wrap, alignment, spacingBuilder, isEnableFormat(), formatMode)
+            else -> SqlUnknownBlock(child, context)
         }
 
     override fun getSpacing(
