@@ -15,78 +15,129 @@
  */
 package org.domaframework.doma.intellij.formatter.block
 
-import com.intellij.formatting.Alignment
-import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.IndentType
-import org.domaframework.doma.intellij.formatter.block.group.SqlColumnDefinitionRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlInsertKeywordGroupBlock
+import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
+import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictExpressionSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlUpdateKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlInsertColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateColumnGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlUpdateValueGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlValuesParamGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 /**
  * Parent is always a subclass of a subgroup
  */
 open class SqlRightPatternBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
+    context: SqlBlockFormattingContext,
 ) : SqlBlock(
         node,
-        wrap,
-        alignment,
-        null,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context.wrap,
+        context.alignment,
+        context.spacingBuilder,
+        context.enableFormat,
+        context.formatMode,
     ) {
-    var preSpaceRight = false
+    enum class LineBreakAndSpacingType {
+        NONE, // No line break and no spacing
+        LINE_BREAK, // Line break only
+        SPACING, // Spacing only
+        LINE_BREAK_AND_SPACING, // Both line break and spacing
+    }
 
-    fun enableLastRight() {
+    private var preSpaceRight = false
+    var lineBreakAndSpacingType: LineBreakAndSpacingType = LineBreakAndSpacingType.NONE
+
+    companion object {
+        private val INDENT_EXPECTED_TYPES =
+            listOf(
+                SqlUpdateColumnGroupBlock::class,
+                SqlUpdateValueGroupBlock::class,
+                SqlCreateTableColumnDefinitionGroupBlock::class,
+                SqlInsertValueGroupBlock::class,
+            )
+
+        val NOT_INDENT_EXPECTED_TYPES =
+            listOf(
+                SqlFunctionParamBlock::class,
+                SqlInsertColumnGroupBlock::class,
+                SqlWithQuerySubGroupBlock::class,
+                SqlConflictExpressionSubGroupBlock::class,
+                SqlConditionalExpressionGroupBlock::class,
+            )
+
+        val NEW_LINE_EXPECTED_TYPES =
+            listOf(
+                SqlUpdateColumnGroupBlock::class,
+                SqlCreateTableColumnDefinitionGroupBlock::class,
+                SqlColumnDefinitionRawGroupBlock::class,
+                SqlUpdateSetGroupBlock::class,
+                SqlWithQuerySubGroupBlock::class,
+            )
+
+        val NOT_NEW_LINE_EXPECTED_TYPES =
+            listOf(
+                SqlDataTypeParamBlock::class,
+                SqlConditionalExpressionGroupBlock::class,
+                SqlConflictExpressionSubGroupBlock::class,
+                SqlFunctionParamBlock::class,
+            )
+    }
+
+    /**
+     * Configures whether to add a space to the right side when the group ends.
+     */
+    private fun enableLastRight() {
         parentBlock?.let { parent ->
-            // TODO:Customize indentation
-            if (parent is SqlFunctionParamBlock) {
+            // Check if parent is in the notInsertSpaceClassList
+            if (isExpectedClassType(NOT_INDENT_EXPECTED_TYPES, parent)) {
                 preSpaceRight = false
                 return
             }
-            if (parent is SqlInsertColumnGroupBlock) {
-                preSpaceRight = false
+            if (isExpectedClassType(
+                    INDENT_EXPECTED_TYPES,
+                    parent,
+                ) ||
+                parent.childBlocks.any { it is SqlValuesGroupBlock }
+            ) {
+                preSpaceRight = true
                 return
             }
 
+            // Check if parent is SqlSubQueryGroupBlock
             if (parent is SqlSubQueryGroupBlock) {
                 val prevKeywordBlock =
                     parent.childBlocks
                         .filter { it.node.startOffset < node.startOffset }
-                        .find { it is SqlKeywordGroupBlock && it.indent.indentLevel == IndentType.TOP }
-                if (prevKeywordBlock != null) {
-                    preSpaceRight = true
-                    return
-                }
+                        .find { it is SqlKeywordGroupBlock }
+
+                preSpaceRight = prevKeywordBlock?.indent?.indentLevel == IndentType.TOP
+                return
             }
 
-            parent.parentBlock?.let { grand ->
-                preSpaceRight = (
-                    grand.indent.indentLevel <= IndentType.SECOND &&
-                        grand.parentBlock !is SqlInsertKeywordGroupBlock
-                ) ||
-                    grand.indent.indentLevel == IndentType.JOIN
+            // Check grandparent for SqlKeywordGroupBlock
+            parent.parentBlock?.let { grandParent ->
+                preSpaceRight = grandParent.childBlocks.any { it is SqlKeywordGroupBlock }
                 return
             }
         }
-        preSpaceRight = false
+
+        // Default case
+        preSpaceRight = parentBlock is SqlValuesParamGroupBlock
     }
 
     override val indent =
@@ -96,31 +147,83 @@ open class SqlRightPatternBlock(
             0,
         )
 
-    override fun setParentGroupBlock(block: SqlBlock?) {
-        super.setParentGroupBlock(block)
+    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
+        super.setParentGroupBlock(lastGroup)
+        enableLastRight()
         indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
-        enableLastRight()
+    }
+
+    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
+        (lastGroup as? SqlSubGroupBlock)?.endPatternBlock = this
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createBlockIndentLen(): Int =
-        if (parentBlock is SqlUpdateColumnGroupBlock || parentBlock is SqlUpdateValueGroupBlock) {
-            parentBlock?.indent?.indentLen ?: 1
-        } else {
-            parentBlock?.indent?.groupIndentLen ?: 1
-        }
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            if ((
+                    isExpectedClassType(NEW_LINE_EXPECTED_TYPES, parent) ||
+                        parent.getChildBlocksDropLast().firstOrNull() is SqlValuesGroupBlock
+                ) &&
+                preSpaceRight
+            ) {
+                return parent.indent.indentLen
+            }
+            if (preSpaceRight) return 1
+            return parent.indent.indentLen
+        } ?: return 0
+    }
 
     override fun isLeaf(): Boolean = true
 
-    fun isNewLine(lastGroup: SqlBlock?): Boolean =
-        lastGroup is SqlColumnDefinitionGroupBlock ||
-            lastGroup is SqlColumnDefinitionRawGroupBlock ||
-            lastGroup?.parentBlock is SqlUpdateKeywordGroupBlock ||
-            lastGroup?.parentBlock is SqlUpdateColumnGroupBlock ||
-            lastGroup is SqlUpdateColumnGroupBlock ||
-            lastGroup is SqlUpdateValueGroupBlock ||
-            lastGroup?.parentBlock is SqlUpdateValueGroupBlock
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        parentBlock?.let { parent ->
+            if (isExpectedClassType(NEW_LINE_EXPECTED_TYPES, parent) ||
+                parent.childBlocks.any { it is SqlValuesGroupBlock }
+            ) {
+                lineBreakAndSpacingType =
+                    if (preSpaceRight) {
+                        LineBreakAndSpacingType.LINE_BREAK_AND_SPACING
+                    } else {
+                        LineBreakAndSpacingType.LINE_BREAK
+                    }
+                return true
+            }
+
+            if (parent is SqlSubGroupBlock) {
+                val firstChild =
+                    parent.getChildBlocksDropLast().firstOrNull()
+                if (firstChild is SqlKeywordGroupBlock) {
+                    val lineBreak =
+                        firstChild.indent.indentLevel != IndentType.TOP &&
+                            !isExpectedClassType(NOT_NEW_LINE_EXPECTED_TYPES, parent)
+                    lineBreakAndSpacingType =
+                        if (lineBreak) {
+                            if (preSpaceRight) {
+                                LineBreakAndSpacingType.LINE_BREAK_AND_SPACING
+                            } else {
+                                LineBreakAndSpacingType.LINE_BREAK
+                            }
+                        } else {
+                            if (preSpaceRight) {
+                                LineBreakAndSpacingType.SPACING
+                            } else {
+                                LineBreakAndSpacingType.NONE
+                            }
+                        }
+
+                    return lineBreak
+                }
+            }
+        }
+        lineBreakAndSpacingType =
+            if (preSpaceRight) {
+                LineBreakAndSpacingType.SPACING
+            } else {
+                LineBreakAndSpacingType.NONE
+            }
+        return false
+    }
 }

@@ -7,7 +7,9 @@ import com.intellij.lexer.FlexLexer;
 
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
+import org.domaframework.doma.intellij.SqlTokenHelper;
 
+import org.domaframework.doma.intellij.psi.SqlTokenType;
 import org.domaframework.doma.intellij.psi.SqlTypes;
 
 %%
@@ -19,117 +21,19 @@ import org.domaframework.doma.intellij.psi.SqlTypes;
 %function advance
 %type IElementType
 %{
-  // SQL keywords
-  private static final Set<String> KEYWORDS = Set.of(
-      "add",
-      "after",
-      "alter",
-      "all",
-      "and",
-      "as",
-      "asc",
-      "between",
-      "by",
-      "case",
-      "change",
-      "check",
-      "column",
-      "comment",
-      "create",
-      "cross",
-      "database",
-      "default",
-      "delete",
-      "desc",
-      "distinct",
-      "drop",
-      "else",
-      "end",
-      "except",
-      "exists",
-      "first",
-      "foreign",
-      "from",
-      "full",
-      "group",
-      "having",
-      "if",
-      "in",
-      "index",
-      "inner",
-      "insert",
-      "intersect",
-      "into",
-      "is",
-      "join",
-      "key",
-      "left",
-      "like",
-      "limit",
-      "not",
-      "null",
-      "modify",
-      "offset",
-      "on",
-      "outer",
-      "or",
-      "order",
-      "primary",
-      "references",
-      "rename",
-      "right",
-      "select",
-      "set",
-      "table",
-      "temporary",
-      "then",
-      "to",
-      "truncate",
-      "union",
-      "unique",
-      "update",
-      "values",
-      "view",
-      "when",
-      "where"
-  );
+        private static boolean isKeyword(CharSequence word) {
+          // TODO Reads plugin settings and allows users to register arbitrary keywords
+            return SqlTokenHelper.getKeyword().contains(word.toString().toLowerCase());
+        }
 
-  // COLUMN DataTypes
-  private static final Set<String> DATATYPES = Set.of(
-      "int",
-      "integer",
-      "smallint",
-      "bigint",
-      "tinyint",
-      "float",
-      "double",
-      "decimal",
-      "numeric",
-      "char",
-      "varchar",
-      "text",
-      "date",
-      "time",
-      "timestamp",
-      "datetime",
-      "boolean",
-      "bit",
-      "binary",
-      "varbinary",
-      "blob",
-      "clob",
-      "json",
-      "enum",
-      "set"
-   );
+        private static boolean isColumnDataType(CharSequence word) {
+          return SqlTokenHelper.getDataTypeTokens().contains(word.toString().toLowerCase());
+        }
 
-  private static boolean isKeyword(CharSequence word) {
-      return KEYWORDS.contains(word.toString().toLowerCase());
-  }
-
-  private static boolean isColumnDataType(CharSequence word) {
-    return DATATYPES.contains(word.toString().toLowerCase());
-  }
+        private static boolean isWindowFunction(CharSequence word) {
+          // TODO Reads plugin settings and allows users to register arbitrary function names
+          return SqlTokenHelper.getFunctionTokens().contains(word.toString().toLowerCase());
+        }
 %}
 
 %eof{  return;
@@ -166,7 +70,7 @@ El_NonWordPart = [=<>\-,/*();\R \n\t\f]
   {LineComment}                                { return SqlTypes.LINE_COMMENT; }
   {String}                                     { return SqlTypes.STRING; }
   {Number}                                     { return SqlTypes.NUMBER; }
-  {Word}                                       { return isKeyword(yytext()) ? SqlTypes.KEYWORD : isColumnDataType(yytext()) ? SqlTypes.DATATYPE : SqlTypes.WORD; }
+  {Word}                                       { return isKeyword(yytext()) ? SqlTypes.KEYWORD : isColumnDataType(yytext()) ? SqlTypes.DATATYPE : isWindowFunction(yytext()) ? SqlTypes.FUNCTION_NAME : SqlTypes.WORD; }
   "."                                         { return SqlTypes.DOT; }
   ","                                         { return SqlTypes.COMMA; }
   "+"                                          { return SqlTypes.PLUS;}

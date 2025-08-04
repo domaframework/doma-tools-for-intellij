@@ -15,11 +15,10 @@
  */
 package org.domaframework.doma.intellij.inspection.sql.visitor
 
-import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteralExpression
-import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
+import org.domaframework.doma.intellij.common.util.InjectionSqlUtil
 import org.domaframework.doma.intellij.psi.SqlVisitor
 
 open class SqlVisitorBase : SqlVisitor() {
@@ -31,16 +30,9 @@ open class SqlVisitorBase : SqlVisitor() {
         project: Project,
         literal: PsiLiteralExpression,
     ): PsiFile? =
-        when (isJavaOrKotlinFileType(basePsiFile)) {
-            true -> {
-                val injectedLanguageManager =
-                    InjectedLanguageManager.getInstance(project)
-                injectedLanguageManager
-                    .getInjectedPsiFiles(literal)
-                    ?.firstOrNull()
-                    ?.first as? PsiFile
-            }
-
-            false -> null
-        }
+        InjectionSqlUtil.initInjectionElement(
+            basePsiFile,
+            project,
+            literal,
+        )
 }

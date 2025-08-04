@@ -24,6 +24,7 @@ import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
 import org.domaframework.doma.intellij.common.util.DomaClassName
+import org.domaframework.doma.intellij.common.util.StringUtil.SINGLE_SPACE
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.getSuperType
 import org.domaframework.doma.intellij.extension.psi.isDataType
@@ -100,13 +101,13 @@ abstract class TypeCheckerProcessor(
     }
 
     protected fun checkMapType(paramTypeCanonicalText: String): Boolean {
-        val mapClassName = paramTypeCanonicalText.replace(" ", "")
+        val mapClassName = paramTypeCanonicalText.replace(SINGLE_SPACE, "")
         val mapExpectedType =
             DomaClassName.MAP
                 .getGenericParamCanonicalText(
                     DomaClassName.STRING.className,
                     DomaClassName.OBJECT.className,
-                ).replace(" ", "")
+                ).replace(SINGLE_SPACE, "")
         return mapClassName == mapExpectedType
     }
 }

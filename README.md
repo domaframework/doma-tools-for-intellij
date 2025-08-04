@@ -34,6 +34,7 @@ Checks that bind variables are used appropriately for DAO and SQL associations.
 The plugin also provides quick fixes for DAO methods where the required SQL files do not exist.
 
 - Quick fix to generate SQL template file.
+
   ![quickfix.png](images/quickfix.png)
 - Checks for unused DAO method arguments.
   ![inspection.png](images/inspection.png)
@@ -69,9 +70,13 @@ Along with DAO changes, the plugin will refactor the SQL file directory and file
 - After refactoring the DAO package, the SQL directory will also be updated.
 ![RenameDao.gif](images/gif/RenameDao.gif)
 
-## Formatter (Preview)
+## Formatter
 Provides code formatting for SQL syntax.
 This feature is in preview. You cannot customize the indentation or keywords to be broken down!
+
+The formatting applies to SQL written in SQL files and in value fields (text blocks) within org.seasar.doma.Sql annotations.
+
+![Format.gif](images/gif/Format.gif)
 
 Automatic indentation on newlines provided by the SQL formatting feature is disabled by default.
 
@@ -79,7 +84,64 @@ To enable auto-indentation, toggle the corresponding flag in the settings screen
 
 `Settings > Other Settings > Doma Tools > Enable auto-indent for SQL`
 
-![Format.gif](images/gif/Format.gif)
+### Limitations
+The current formatter has the following limitations:
+
+- **No customizable indentation**: The number of spaces for indentation is fixed and cannot be changed
+- **No customizable line breaks**: You cannot configure which keywords trigger line breaks
+- **No custom function registration**: User-defined functions cannot be registered for formatting rules
+- **No formatting style options**: Cannot choose between different formatting styles or conventions
+
+### Formatting Features
+The SQL formatter supports the following formatting capabilities:
+
+- **SQL Keywords**: Converts keywords to uppercase (SELECT, FROM, WHERE, INSERT, UPDATE, DELETE, etc.)
+- **Statement Structure**: Properly formats different SQL statement types:
+  - SELECT statements with proper column and clause alignment
+  - INSERT statements with formatted column lists and VALUES clauses
+  - UPDATE statements with aligned SET clauses
+  - DELETE statements with formatted conditions
+  - WITH clauses (CTE) with proper indentation
+- **Joins**: Formats JOIN operations with appropriate indentation and alignment
+- **Subqueries**: Properly indents nested queries and subselects
+- **Functions**: Formats function calls with proper parameter alignment
+- **Comments**: Preserves single-line (--) and multi-line (/* */) comments
+- **Doma Directives**: Maintains proper formatting for Doma-specific directives:
+  - Bind variables: `/* paramName */` with proper spacing
+  - Conditional directives: `/*%if condition */` ... `/*%end*/`
+  - Loop directives: `/*%for item : collection */` ... `/*%end*/`
+  - Expand directive: `/*%expand */`
+  - Populate directive: `/*%populate */`
+  - Static property calls: `/* @ClassName@property */`
+  - Literal values: `/*^ literalValue */`
+  - Embedded variables: `/*# variable */`
+
+### Examples
+
+**Before formatting:**
+```sql
+SELECT COUNT(DISTINCT x) AS count_x, o.*, COALESCE(nbor.nearest, 999)
+AS nearest FROM ( SELECT p.objid, p.psfmag_g - p.extinction_g AS rpm
+FROM phototag p JOIN usno u ON p.objid = u.objid
+WHERE p.TYPE = 'Star' /*%if status == 2 */ and u.propermotion > 2.0 /*%end*/ ) as o
+```
+
+**After formatting:**
+```sql
+SELECT COUNT(DISTINCT x) AS count_x
+       , o.*
+       , COALESCE(nbor.nearest
+                  , 999) AS nearest
+  FROM ( SELECT p.objid
+                , p.psfmag_g - p.extinction_g AS rpm
+           FROM phototag p
+                JOIN usno u
+                  ON p.objid = u.objid
+          WHERE p.TYPE = 'Star'
+            /*%if status == 2 */
+            AND u.propermotion > 2.0
+            /*%end*/ ) AS o
+```
 
 ## Reference Contributor
 Ctrl+Click on a bind variable in an SQL file to jump to its source symbol.
