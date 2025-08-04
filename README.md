@@ -34,6 +34,7 @@ Checks that bind variables are used appropriately for DAO and SQL associations.
 The plugin also provides quick fixes for DAO methods where the required SQL files do not exist.
 
 - Quick fix to generate SQL template file.
+
   ![quickfix.png](images/quickfix.png)
 - Checks for unused DAO method arguments.
   ![inspection.png](images/inspection.png)
@@ -73,15 +74,15 @@ Along with DAO changes, the plugin will refactor the SQL file directory and file
 Provides code formatting for SQL syntax.
 This feature is in preview. You cannot customize the indentation or keywords to be broken down!
 
-The formatter works with both SQL files and SQL text blocks within `@Sql` annotations in DAO methods.
+The formatting applies to SQL written in SQL files and in value fields (text blocks) within org.seasar.doma.Sql annotations.
+
+![Format.gif](images/gif/Format.gif)
 
 Automatic indentation on newlines provided by the SQL formatting feature is disabled by default.
 
 To enable auto-indentation, toggle the corresponding flag in the settings screen below.
 
 `Settings > Other Settings > Doma Tools > Enable auto-indent for SQL`
-
-![Format.gif](images/gif/Format.gif)
 
 ### Limitations
 The current formatter has the following limitations:
