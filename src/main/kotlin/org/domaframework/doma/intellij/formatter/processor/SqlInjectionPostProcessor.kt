@@ -25,6 +25,7 @@ import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.formatter.visitor.DaoInjectionSqlVisitor
+import org.domaframework.doma.intellij.formatter.visitor.FormattingTask
 
 class SqlInjectionPostProcessor : SqlPostProcessor() {
     override fun processElement(
@@ -64,22 +65,24 @@ class SqlInjectionPostProcessor : SqlPostProcessor() {
         manager: InjectedLanguageManager,
     ) {
         val host = manager.getInjectionHost(source) as? PsiLiteralExpression ?: return
-        val hostDaoFile = host.containingFile
         val originalText = host.value?.toString() ?: return
 
-        val visitor = DaoInjectionSqlVisitor(hostDaoFile, source.project)
-        val formattingTask = DaoInjectionSqlVisitor.FormattingTask(host, originalText)
+        val visitor = DaoInjectionSqlVisitor(source.project)
+        val formattingTask = FormattingTask(host, originalText)
 
-        visitor.replaceHostStringLiteral(formattingTask) { text ->
+        visitor.convertExpressionToTextBlock(formattingTask.expression)
+        visitor.processFormattingTask(formattingTask) { text ->
             processDocumentText(text)
         }
     }
 
     private fun processRegularFile(source: PsiFile) {
-        val visitor = DaoInjectionSqlVisitor(source, source.project)
+        val visitor = DaoInjectionSqlVisitor(source.project)
         source.accept(visitor)
-
-        visitor.processAll { text ->
+        visitor.processAllTextBlock()
+        visitor.initFormattingTasks()
+        source.accept(visitor)
+        visitor.processAllReFormat { text ->
             processDocumentText(text)
         }
     }
