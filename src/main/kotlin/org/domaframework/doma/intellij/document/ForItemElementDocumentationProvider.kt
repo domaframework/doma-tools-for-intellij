@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.document
 import com.intellij.lang.documentation.AbstractDocumentationProvider
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
+import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.document.generator.DocumentDaoParameterGenerator
 import org.domaframework.doma.intellij.document.generator.DocumentStaticFieldGenerator
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
@@ -62,7 +63,7 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
 
         generator.generateDocument()
 
-        return result.joinToString("\n")
+        return result.joinToString(StringUtil.LINE_SEPARATE)
     }
 
     override fun generateHoverDoc(
@@ -77,6 +78,6 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
         val result: MutableList<String?> = LinkedList<String?>()
         val typeDocument = generateDoc(element, originalElement)
         result.add(typeDocument)
-        return result.joinToString("\n")
+        return result.joinToString(StringUtil.LINE_SEPARATE)
     }
 }

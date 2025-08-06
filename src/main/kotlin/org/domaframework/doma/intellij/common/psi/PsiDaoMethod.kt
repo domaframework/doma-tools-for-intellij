@@ -16,7 +16,6 @@
 package org.domaframework.doma.intellij.common.psi
 
 import com.intellij.lang.Language
-import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -151,7 +150,6 @@ class PsiDaoMethod(
         }
         // the injection part as a custom language file
         getSqlAnnotation()?.let { annotation ->
-            InjectedLanguageManager.getInstance(psiProject)
             annotation.parameterList.children
                 .firstOrNull { it is PsiNameValuePair }
                 ?.let { sql ->

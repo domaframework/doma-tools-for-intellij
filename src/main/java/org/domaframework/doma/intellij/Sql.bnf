@@ -94,7 +94,7 @@ private item ::= (comment | literal | word |
  BOOLEAN )
 private comment ::= (block_comment | LINE_COMMENT)
 private literal ::= (STRING | NUMBER)
-private word ::= (KEYWORD | WORD | DATATYPE)
+private word ::= (KEYWORD | WORD | FUNCTION_NAME | DATATYPE)
 block_comment ::= "/*" (el_directive | BLOCK_COMMENT_CONTENT?) "*/" {
     pin=1
     mixin="org.domaframework.doma.intellij.psi.SqlElCommentExprImpl"

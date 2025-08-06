@@ -16,10 +16,31 @@ import org.seasar.doma.jdbc.Reference;
 public interface FunctionReturnTypeTestDao {
 
   @Function
-  int <error descr="The return type int is invalid">primitiveFunction</error>(@In int id);
+  int primitiveFunction(@In int id);
 
   @Function
   void voidFunction(@In int id);
+
+  @Function
+  long primitiveLongFunction(@In long id);
+
+  @Function
+  boolean primitiveBooleanFunction(@In boolean flag);
+
+  @Function
+  double primitiveDoubleFunction(@In double value);
+
+  @Function
+  float primitiveFloatFunction(@In float value);
+
+  @Function
+  byte primitiveByteFunction(@In byte value);
+
+  @Function
+  short primitiveShortFunction(@In short value);
+
+  @Function
+  char <error descr="The return type char is invalid">primitiveCharFunction</error>(@In char value);
 
   @Function
   String executeFunction(

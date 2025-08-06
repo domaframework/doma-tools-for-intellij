@@ -20,10 +20,14 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
+import org.domaframework.doma.intellij.common.util.StringUtil.SINGLE_SPACE
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.getClassAnnotation
+import org.domaframework.doma.intellij.extension.psi.isDataType
 import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import kotlin.reflect.KClass
 
 object TypeUtil {
     /**
@@ -82,16 +86,27 @@ object TypeUtil {
     }
 
     /**
+     * Checks if the given type is a data type.
+     */
+    fun isDataType(
+        type: PsiType?,
+        project: Project,
+    ): Boolean {
+        val clazz = type?.canonicalText?.let { project.getJavaClazz(it) }
+        return clazz?.isDataType() == true
+    }
+
+    /**
      * Checks if the given type is a valid Map<String, Object>.
      */
     fun isValidMapType(type: PsiType?): Boolean {
-        val canonical = type?.canonicalText?.replace(" ", "") ?: return false
+        val canonical = type?.canonicalText?.replace(SINGLE_SPACE, "") ?: return false
         val expected =
             DomaClassName.MAP
                 .getGenericParamCanonicalText(
                     DomaClassName.STRING.className,
                     DomaClassName.OBJECT.className,
-                ).replace(" ", "")
+                ).replace(SINGLE_SPACE, "")
         return canonical == expected
     }
 
@@ -102,4 +117,15 @@ object TypeUtil {
         if (type == null) return false
         return PsiTypeChecker.isBaseClassType(type) || DomaClassName.isOptionalWrapperType(type.canonicalText)
     }
+
+    /**
+     * Determines whether the specified class instance matches.
+     */
+    fun isExpectedClassType(
+        expectedClasses: List<KClass<*>>,
+        childBlock: SqlBlock?,
+    ): Boolean =
+        expectedClasses.any { clazz ->
+            clazz.isInstance(childBlock)
+        }
 }

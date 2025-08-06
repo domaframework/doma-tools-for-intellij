@@ -28,9 +28,9 @@ import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.dao.findDaoFile
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.dao.jumpToDaoMethod
-import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import java.awt.event.MouseEvent
@@ -46,7 +46,7 @@ class SqlLineMakerProvider : RelatedItemLineMarkerProvider() {
     ) {
         val project = e.project
         val file = e.containingFile ?: return
-        if (!isSupportFileType(file) || isInjectionSqlFile(file)) return
+        if (!isSupportFileType(file) || isInjectedSqlFile(file)) return
         // Display only on the first line
         if (e.originalElement?.parent?.originalElement !is PsiFile ||
             e.textRange?.startOffset != file.textRange?.startOffset

@@ -26,6 +26,7 @@ import org.domaframework.doma.intellij.common.util.DomaClassName
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodParamsSupportGenericParamResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationMethodProcedureParamTypeResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
+import org.domaframework.doma.intellij.extension.psi.isDataType
 import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
 
@@ -46,6 +47,7 @@ class ProcedureFunctionResultSetParamAnnotationTypeChecker(
                 val optionalParamClass = project.getJavaClazz(it.canonicalText)
                 optionalParamClass?.isDomain() == true ||
                     optionalParamClass?.isEntity() == true ||
+                    optionalParamClass?.isDataType() == true ||
                     PsiTypeChecker.isBaseClassType(
                         it,
                     )
@@ -53,7 +55,7 @@ class ProcedureFunctionResultSetParamAnnotationTypeChecker(
         }
 
         val paramClass = project.getJavaClazz(paramType.canonicalText)
-        return paramClass?.isDomain() == true
+        return paramClass?.isDomain() == true || paramClass?.isDataType() == true
     }
 
     override fun checkParam(
@@ -101,7 +103,7 @@ class ProcedureFunctionResultSetParamAnnotationTypeChecker(
 
         val paramClass = project.getJavaClazz(listParamType.canonicalText)
 
-        if (checkParamType(listParamType) || paramClass?.isEntity() == true) return
+        if (checkParamType(listParamType) || paramClass?.isEntity() == true || paramClass?.isDataType() == true) return
         result.highlightElement(holder)
     }
 }

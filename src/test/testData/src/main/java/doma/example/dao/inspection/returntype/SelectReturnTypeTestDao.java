@@ -139,4 +139,38 @@ public interface SelectReturnTypeTestDao {
   @Sql("select * from emp where salary > /* salary */0")
   String selectHogeFunction(BigDecimal salary, HogeFunction function);
 
+  // Test cases for primitive return types - these should be valid (except char)
+  @Select
+  @Sql("select count(*) from EMPLOYEE")
+  int selectCountAsInt();
+
+  @Select
+  @Sql("select count(*) from EMPLOYEE")
+  long selectCountAsLong();
+
+  @Select
+  @Sql("select exists(select 1 from EMPLOYEE where EMPLOYEE_ID = /* id */1)")
+  boolean selectExistsAsBoolean(Integer id);
+
+  @Select
+  @Sql("select avg(SALARY) from EMPLOYEE")
+  double selectAverageAsDouble();
+
+  @Select
+  @Sql("select avg(SALARY) from EMPLOYEE")
+  float selectAverageAsFloat();
+
+  @Select
+  @Sql("select age from EMPLOYEE where EMPLOYEE_ID = /* id */1")
+  byte selectAgeAsByte(Integer id);
+
+  @Select
+  @Sql("select department_id from EMPLOYEE where EMPLOYEE_ID = /* id */1")
+  short selectDepartmentIdAsShort(Integer id);
+
+  // This should show an error - char is not supported
+  @Select
+  @Sql("select initial from EMPLOYEE where EMPLOYEE_ID = /* id */1")
+  char <error descr="The return type char is invalid">selectInitialAsChar</error>(Integer id);
+
 }

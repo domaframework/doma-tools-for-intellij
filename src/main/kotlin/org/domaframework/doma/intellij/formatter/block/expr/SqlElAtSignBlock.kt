@@ -15,33 +15,20 @@
  */
 package org.domaframework.doma.intellij.formatter.block.expr
 
-import com.intellij.formatting.Alignment
 import com.intellij.formatting.Block
-import com.intellij.formatting.FormattingMode
 import com.intellij.formatting.Spacing
-import com.intellij.formatting.SpacingBuilder
-import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import org.domaframework.doma.intellij.formatter.SqlCustomSpacingBuilder
-import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
+import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 class SqlElAtSignBlock(
     node: ASTNode,
-    wrap: Wrap?,
-    alignment: Alignment?,
+    context: SqlBlockFormattingContext,
     private val customSpacingBuilder: SqlCustomSpacingBuilder?,
-    spacingBuilder: SpacingBuilder,
-    enableFormat: Boolean,
-    formatMode: FormattingMode,
-) : SqlBlock(
+) : SqlExprBlock(
         node,
-        wrap,
-        alignment,
-        null,
-        spacingBuilder,
-        enableFormat,
-        formatMode,
+        context,
     ) {
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 

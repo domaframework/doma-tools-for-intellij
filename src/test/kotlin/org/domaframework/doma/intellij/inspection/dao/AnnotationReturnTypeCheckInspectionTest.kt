@@ -32,6 +32,7 @@ class AnnotationReturnTypeCheckInspectionTest : DomaSqlTest() {
             "ProcedureReturnTypeTestDao",
             "FunctionReturnTypeTestDao",
             "FactoryReturnTypeTestDao",
+            "DataTypeReturnTypeTestDao",
         )
     private val daoPackage = "inspection/returntype"
 
@@ -43,6 +44,7 @@ class AnnotationReturnTypeCheckInspectionTest : DomaSqlTest() {
         addEntityJavaFile("Packet.java")
         addEntityJavaFile("Pckt.java")
         addOtherJavaFile("domain", "Hiredate.java")
+        addOtherJavaFile("domain", "Salary.java")
         addOtherJavaFile("collector", "HogeCollector.java")
         addOtherJavaFile("function", "HogeFunction.java")
         addOtherJavaFile("function", "HogeBiFunction.java")
@@ -86,6 +88,11 @@ class AnnotationReturnTypeCheckInspectionTest : DomaSqlTest() {
 
     fun testFactoryReturnTypeCheckProcessor() {
         val dao = findDaoClass("$daoPackage.FactoryReturnTypeTestDao")
+        myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
+    }
+
+    fun testDataTypeReturnTypeCheckProcessor() {
+        val dao = findDaoClass("$daoPackage.DataTypeReturnTypeTestDao")
         myFixture.testHighlighting(false, false, false, dao.containingFile.virtualFile)
     }
 }

@@ -86,8 +86,17 @@ class BatchParamTypeCheckProcessor(
 
         val iterableClassType = param.type as? PsiClassType
         iterableClassType?.parameters?.firstOrNull()?.let { iterableParam ->
-            if (!TypeUtil.isEntity(iterableParam, project)) {
-                resultParamType.highlightElement(holder)
+            if (psiDaoMethod.useSqlAnnotation() || psiDaoMethod.sqlFileOption) {
+                if (!TypeUtil.isEntity(iterableParam, project) &&
+                    !TypeUtil.isDomain(iterableParam, project) &&
+                    !TypeUtil.isDataType(iterableParam, project)
+                ) {
+                    resultParamType.highlightElement(holder)
+                }
+            } else {
+                if (!TypeUtil.isEntity(iterableParam, project)) {
+                    resultParamType.highlightElement(holder)
+                }
             }
             return
         }

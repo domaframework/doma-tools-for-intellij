@@ -24,8 +24,10 @@ import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiTypeChecker
 import org.domaframework.doma.intellij.common.util.DomaClassName
+import org.domaframework.doma.intellij.common.util.StringUtil.SINGLE_SPACE
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.getSuperType
+import org.domaframework.doma.intellij.extension.psi.isDataType
 import org.domaframework.doma.intellij.extension.psi.isDomain
 
 /**
@@ -98,22 +100,22 @@ abstract class TypeCheckerProcessor(
             val optionalParam = paramClassType.parameters.firstOrNull()
             return optionalParam?.let {
                 val optionalParamClass = project.getJavaClazz(it.canonicalText)
-                optionalParamClass?.isDomain() == true || PsiTypeChecker.isBaseClassType(it)
+                optionalParamClass?.isDomain() == true || optionalParamClass?.isDataType() == true || PsiTypeChecker.isBaseClassType(it)
             } == true
         }
 
         val paramClass = project.getJavaClazz(paramType.canonicalText)
-        return paramClass?.isDomain() == true
+        return paramClass?.isDomain() == true || paramClass?.isDataType() == true
     }
 
     protected fun checkMapType(paramTypeCanonicalText: String): Boolean {
-        val mapClassName = paramTypeCanonicalText.replace(" ", "")
+        val mapClassName = paramTypeCanonicalText.replace(SINGLE_SPACE, "")
         val mapExpectedType =
             DomaClassName.MAP
                 .getGenericParamCanonicalText(
                     DomaClassName.STRING.className,
                     DomaClassName.OBJECT.className,
-                ).replace(" ", "")
+                ).replace(SINGLE_SPACE, "")
         return mapClassName == mapExpectedType
     }
 }

@@ -71,9 +71,10 @@
 
     <!-- Formatter -->
     <lang.formatter language="DomaSql"
-      implementationClass="org.domaframework.doma.intellij.formatter.SqlFormattingModelBuilder"/>
-    <preFormatProcessor implementation="org.domaframework.doma.intellij.formatter.SqlFormatPreProcessor" />
-    <postFormatProcessor implementation="org.domaframework.doma.intellij.formatter.SqlPostProcessor" />
+      implementationClass="org.domaframework.doma.intellij.formatter.builder.SqlFormattingModelBuilder"/>
+    <preFormatProcessor implementation="org.domaframework.doma.intellij.formatter.processor.SqlFormatPreProcessor" />
+    <postFormatProcessor implementation="org.domaframework.doma.intellij.formatter.processor.SqlFormatPostProcessor" />
+    <postFormatProcessor implementation="org.domaframework.doma.intellij.formatter.processor.SqlInjectionPostProcessor" />
 
     <!-- CustomLanguage -->
     <fileType
