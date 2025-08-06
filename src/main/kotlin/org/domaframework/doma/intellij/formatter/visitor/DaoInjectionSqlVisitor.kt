@@ -54,14 +54,16 @@ class DaoInjectionSqlVisitor(
             .getElementFactory(project)
     }
 
-    fun initFormattingTasks() {
-        formattingTasks.clear()
-    }
-
     override fun visitLiteralExpression(expression: PsiLiteralExpression) {
         super.visitLiteralExpression(expression)
         expression.value?.toString()?.let { originalText ->
-            formattingTasks.add(FormattingTask(expression, originalText))
+            val existExpression =
+                formattingTasks.find { it.expression == expression && !it.isOriginalTextBlock }
+            val isTextBlock = existExpression?.isOriginalTextBlock ?: expression.isTextBlock
+            if (existExpression != null) {
+                formattingTasks.remove(existExpression)
+            }
+            formattingTasks.add(FormattingTask(expression, originalText, isTextBlock))
         }
     }
 
@@ -133,10 +135,15 @@ class DaoInjectionSqlVisitor(
                 ?.firstOrNull()
                 ?.first as? PsiFile ?: return
 
-        val result = SqlFormatPreProcessor().updateDocument(injectionFile, injectionFile.textRange)
-        val formattedText = result.document?.text ?: return
-
-        replaceHostStringLiteral(FormattingTask(task.expression, formattedText), removeSpace)
+        val formattedText =
+            if (!task.isOriginalTextBlock) {
+                val result =
+                    SqlFormatPreProcessor().updateDocument(injectionFile, injectionFile.textRange)
+                result.document?.text ?: return
+            } else {
+                task.formattedText
+            }
+        replaceHostStringLiteral(FormattingTask(task.expression, formattedText, task.isOriginalTextBlock), removeSpace)
     }
 
     /**

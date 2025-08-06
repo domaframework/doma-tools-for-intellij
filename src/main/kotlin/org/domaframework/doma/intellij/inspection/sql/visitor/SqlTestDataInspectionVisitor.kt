@@ -21,8 +21,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.nextLeafs
-import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
+import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.common.validation.result.ValidationTestDataResult
 import org.domaframework.doma.intellij.psi.SqlBlockComment
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
@@ -42,7 +42,7 @@ class SqlTestDataInspectionVisitor(
             injectionFile.accept(this)
             super.visitElement(element)
         }
-        if (isInjectionSqlFile(file)) {
+        if (isInjectedSqlFile(file)) {
             element.acceptChildren(this)
         }
     }

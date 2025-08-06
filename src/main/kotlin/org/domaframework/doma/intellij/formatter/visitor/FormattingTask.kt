@@ -20,4 +20,5 @@ import com.intellij.psi.PsiLiteralExpression
 data class FormattingTask(
     val expression: PsiLiteralExpression,
     val formattedText: String,
+    val isOriginalTextBlock: Boolean,
 )

@@ -32,8 +32,8 @@ import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.common.getExtension
 import org.domaframework.doma.intellij.common.getJarRoot
 import org.domaframework.doma.intellij.common.getMethodDaoFilePath
-import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isSupportFileType
+import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.extension.getContentRoot
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.getModule
@@ -135,7 +135,7 @@ private fun getDaoPathFromSqlFilePath(
     sqlFile: PsiFile,
     contentRootPath: String,
 ): PsiClass? {
-    if (isInjectionSqlFile(sqlFile)) {
+    if (isInjectedSqlFile(sqlFile)) {
         return null
     }
     val module = sqlFile.module ?: return null

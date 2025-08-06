@@ -28,7 +28,6 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.impl.source.codeStyle.PreFormatProcessor
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
-import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.util.StringUtil.LINE_SEPARATE
@@ -74,7 +73,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         }
 
         // Do not execute processor processing in single-line text state
-        if (isInjectionSqlFile(source)) {
+        if (isInjectedSqlFile(source)) {
             val host = InjectedLanguageManager.getInstance(source.project).getInjectionHost(source) as? PsiLiteralExpression
             if (host?.isTextBlock != true) return rangeToReformat
         }
