@@ -41,4 +41,9 @@ object InjectionSqlUtil {
         val injectedLanguageManager = InjectedLanguageManager.getInstance(source.project)
         return injectedLanguageManager.isInjectedFragment(source)
     }
+
+    fun getLiteralExpressionHost(source: PsiFile): PsiLiteralExpression? {
+        val injectedLanguageManager = InjectedLanguageManager.getInstance(source.project)
+        return injectedLanguageManager.getInjectionHost(source) as? PsiLiteralExpression
+    }
 }

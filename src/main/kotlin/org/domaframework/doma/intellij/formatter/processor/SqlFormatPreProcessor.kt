@@ -16,11 +16,13 @@
 package org.domaframework.doma.intellij.formatter.processor
 
 import com.intellij.lang.ASTNode
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.TokenType
 import com.intellij.psi.impl.source.codeStyle.PreFormatProcessor
@@ -50,6 +52,11 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             SqlTypes.OTHER,
         )
 
+    data class ProcessResult(
+        val document: Document?,
+        val range: TextRange,
+    )
+
     override fun process(
         node: ASTNode,
         rangeToReformat: TextRange,
@@ -65,13 +72,26 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             return rangeToReformat
         }
 
+        // Do not execute processor processing in single-line text state
+        if (isInjectedSqlFile(source)) {
+            val host = InjectedLanguageManager.getInstance(source.project).getInjectionHost(source) as? PsiLiteralExpression
+            if (host?.isTextBlock != true) return rangeToReformat
+        }
+        val result = updateDocument(source, rangeToReformat)
+        return result.range
+    }
+
+    fun updateDocument(
+        source: PsiFile,
+        rangeToReformat: TextRange,
+    ): ProcessResult {
         logging()
 
         val visitor = SqlFormatVisitor()
         source.accept(visitor)
 
         val docManager = PsiDocumentManager.getInstance(source.project)
-        val document = docManager.getDocument(source) ?: return rangeToReformat
+        val document = docManager.getDocument(source) ?: return ProcessResult(null, rangeToReformat)
 
         val keywordList = visitor.replaces.filter { it.elementType != TokenType.WHITE_SPACE }
         val replaceKeywordList = visitor.replaces.filter { it.elementType == SqlTypes.KEYWORD }
@@ -122,7 +142,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
 
         docManager.commitDocument(document)
 
-        return rangeToReformat.grown(visitor.replaces.size)
+        return ProcessResult(document, rangeToReformat.grown(visitor.replaces.size))
     }
 
     private fun removeSpacesAroundNewline(

@@ -19,8 +19,8 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.util.elementType
-import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
+import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.extension.psi.isFirstElement
 import org.domaframework.doma.intellij.inspection.sql.processor.InspectionFieldAccessVisitorProcessor
 import org.domaframework.doma.intellij.inspection.sql.processor.InspectionPrimaryVisitorProcessor
@@ -41,7 +41,7 @@ class SqlBindVariableInspectionVisitor(
             injectionFile.accept(this)
             super.visitElement(element)
         }
-        if (isInjectionSqlFile(file)) {
+        if (isInjectedSqlFile(file)) {
             element.acceptChildren(this)
         }
     }

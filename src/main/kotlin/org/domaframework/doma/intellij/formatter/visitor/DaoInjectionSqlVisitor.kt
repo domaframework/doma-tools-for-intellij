@@ -15,32 +15,28 @@
  */
 package org.domaframework.doma.intellij.formatter.visitor
 
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaRecursiveElementVisitor
+import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.codeStyle.CodeStyleManager
-import org.domaframework.doma.intellij.common.util.InjectionSqlUtil
 import org.domaframework.doma.intellij.common.util.StringUtil
-import kotlin.text.isBlank
+import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
+import org.domaframework.doma.intellij.formatter.processor.SqlFormatPreProcessor
 
 /**
  * Visitor for processing and formatting SQL injections in DAO files.
  * Formats SQL strings embedded in Java/Kotlin string literals while preserving indentation.
  */
 class DaoInjectionSqlVisitor(
-    private val element: PsiFile,
     private val project: Project,
 ) : JavaRecursiveElementVisitor() {
-    data class FormattingTask(
-        val expression: PsiLiteralExpression,
-        val formattedText: String,
-    )
-
     companion object {
         private const val TEMP_FILE_PREFIX = "temp_format"
         private const val SQL_FILE_EXTENSION = ".sql"
@@ -51,56 +47,106 @@ class DaoInjectionSqlVisitor(
     }
 
     private val formattingTasks = mutableListOf<FormattingTask>()
+    private val injectionManager by lazy { InjectedLanguageManager.getInstance(project) }
+    private val documentManager by lazy { PsiDocumentManager.getInstance(project) }
+    private val codeStyleManager by lazy { CodeStyleManager.getInstance(project) }
+    private val fileTypeManager by lazy { FileTypeManager.getInstance() }
+    private val elementFactory by lazy {
+        com.intellij.psi.JavaPsiFacade
+            .getElementFactory(project)
+    }
 
     override fun visitLiteralExpression(expression: PsiLiteralExpression) {
         super.visitLiteralExpression(expression)
-        val injected: PsiFile? = InjectionSqlUtil.initInjectionElement(element, project, expression)
-        if (injected != null) {
-            // Format SQL and store the task
-            val originalText = expression.value?.toString() ?: return
-            formattingTasks.add(FormattingTask(expression, originalText))
+        if ((expression.parent.parent.parent as? PsiAnnotation)?.qualifiedName != DomaAnnotationType.Sql.fqdn) return
+        expression.value?.toString()?.let { originalText ->
+            val existExpression =
+                formattingTasks.find { it.expression == expression && !it.isOriginalTextBlock }
+            val isTextBlock = existExpression?.isOriginalTextBlock ?: expression.isTextBlock
+            if (existExpression != null) {
+                formattingTasks.remove(existExpression)
+            }
+            formattingTasks.add(FormattingTask(expression, originalText, isTextBlock))
         }
     }
 
-    private fun removeIndentLines(sqlText: String): String {
-        val lines = sqlText.lines()
+    private fun removeIndentLines(sqlText: String): String =
+        sqlText.lines().joinToString(StringUtil.LINE_SEPARATE) { line ->
+            val processedLine =
+                if (COMMENT_START_REGEX.containsMatchIn(line)) {
+                    // Remove spaces between /* and comment content, as IntelliJ Java formatter may insert them
+                    line.replace(COMMENT_START_REGEX, "/**")
+                } else {
+                    line
+                }
+            processedLine.dropWhile { it.isWhitespace() }
+        }
 
-        var blockComment = false
-        val removeIndentLines =
-            lines.map { line ->
-                val baseLine =
-                    if (COMMENT_START_REGEX.containsMatchIn(line)) {
-                        blockComment = true
-                        // Exclude spaces between `/*` and the comment content element,
-                        // as IntelliJ IDEA's Java formatter may insert a space there during formatting.
-                        line.replace(COMMENT_START_REGEX, "/**")
-                    } else {
-                        line
-                    }
-                baseLine.dropWhile { it.isWhitespace() }
-            }
+    fun processAllTextBlock() {
+        if (formattingTasks.isEmpty()) return
 
-        return removeIndentLines.joinToString(StringUtil.LINE_SEPARATE)
+        WriteCommandAction.runWriteCommandAction(project, WRITE_COMMAND_NAME, null, {
+            // Convert PsiLiteralExpression to text blocks first
+            formattingTasks
+                .sortedByDescending { it.expression.textRange.startOffset }
+                .forEach { task ->
+                    convertExpressionToTextBlock(task.expression)
+                }
+        })
     }
+
+    fun convertExpressionToTextBlock(expression: PsiLiteralExpression) {
+        if (!expression.isValid || expression.isTextBlock) return
+
+        val oldText = expression.value?.toString() ?: return
+        val newText = convertToTextBlock(oldText)
+        val document = documentManager.getDocument(expression.containingFile) ?: return
+
+        val range = expression.textRange
+        document.replaceString(range.startOffset, range.endOffset, newText)
+        documentManager.commitDocument(document)
+    }
+
+    private fun convertToTextBlock(content: String): String = "\"\"\"\n${content.replace("\"\"\"", "\\\"\\\"\\\"")}${TRIPLE_QUOTE}"
 
     /**
      * Processes all collected formatting tasks in a single write action.
      * @param removeSpace Function to remove trailing spaces from formatted text
      */
-    fun processAll(removeSpace: (String) -> String) {
+    fun processAllReFormat(removeSpace: (String) -> String) {
         if (formattingTasks.isEmpty()) return
 
-        // Apply all formatting tasks in a single write action
         WriteCommandAction.runWriteCommandAction(project, WRITE_COMMAND_NAME, null, {
-            // Sort by text range in descending order to maintain offsets
             formattingTasks
                 .sortedByDescending { it.expression.textRange.startOffset }
                 .forEach { task ->
                     if (task.expression.isValid) {
-                        replaceHostStringLiteral(task, removeSpace)
+                        processFormattingTask(task, removeSpace)
                     }
                 }
         })
+    }
+
+    fun processFormattingTask(
+        task: FormattingTask,
+        removeSpace: (String) -> String,
+    ) {
+        // Apply PreProcessor to single-line injection SQL
+        val injectionFile =
+            injectionManager
+                .getInjectedPsiFiles(task.expression)
+                ?.firstOrNull()
+                ?.first as? PsiFile ?: return
+
+        val formattedText =
+            if (!task.isOriginalTextBlock) {
+                val result =
+                    SqlFormatPreProcessor().updateDocument(injectionFile, injectionFile.textRange)
+                result.document?.text ?: return
+            } else {
+                task.formattedText
+            }
+        replaceHostStringLiteral(FormattingTask(task.expression, formattedText, task.isOriginalTextBlock), removeSpace)
     }
 
     /**
@@ -108,37 +154,28 @@ class DaoInjectionSqlVisitor(
      * Returns original text if formatting fails.
      */
     private fun formatAsTemporarySqlFile(sqlText: String): String =
-        try {
+        runCatching {
             val tempFileName = "${TEMP_FILE_PREFIX}${SQL_FILE_EXTENSION}"
-            val fileType = FileTypeManager.getInstance().getFileTypeByExtension("sql")
-
+            val fileType = fileTypeManager.getFileTypeByExtension("sql")
             val tempSqlFile =
                 PsiFileFactory
                     .getInstance(project)
                     .createFileFromText(tempFileName, fileType, sqlText)
 
-            CodeStyleManager
-                .getInstance(project)
-                .reformatText(tempSqlFile, 0, tempSqlFile.textLength)
-
+            codeStyleManager.reformatText(tempSqlFile, 0, tempSqlFile.textLength)
             tempSqlFile.text
-        } catch (_: Exception) {
-            sqlText // Return original text on error
-        }
+        }.getOrDefault(sqlText)
 
     /**
      * Replaces the host Java string literal with formatted SQL text.
      */
-    fun replaceHostStringLiteral(
+    private fun replaceHostStringLiteral(
         task: FormattingTask,
         sqlPostProcessorProcess: (String) -> String,
     ) {
-        try {
-            // Keep the current top line indent
+        runCatching {
             val formattedLiteral = createFormattedLiteral(task, sqlPostProcessorProcess)
             replaceInDocument(task.expression, formattedLiteral)
-        } catch (_: Exception) {
-            // Silently ignore formatting failures
         }
     }
 
@@ -146,17 +183,15 @@ class DaoInjectionSqlVisitor(
         task: FormattingTask,
         sqlPostProcessorProcess: (String) -> String,
     ): String {
-        // Retrieve the same formatted string as when formatting a regular SQL file.
-        val removeIndent = removeIndentLines(task.formattedText)
-        val formattedSql = formatAsTemporarySqlFile(removeIndent)
-        val cleanedText = sqlPostProcessorProcess(formattedSql)
-        // Generate text aligned with the literal element using the formatted string.
-        val newLiteralText = createFormattedLiteralText(cleanedText)
-        val normalizedText = normalizeIndentation(newLiteralText)
+        // Format SQL to match regular SQL file formatting
+        val sqlWithoutIndent = removeIndentLines(task.formattedText)
+        val formattedSql = formatAsTemporarySqlFile(sqlWithoutIndent)
+        val processedSql = sqlPostProcessorProcess(formattedSql)
 
-        val elementFactory =
-            com.intellij.psi.JavaPsiFacade
-                .getElementFactory(project)
+        // Create properly aligned literal text
+        val literalText = createFormattedLiteralText(processedSql)
+        val normalizedText = normalizeIndentation(literalText)
+
         val newLiteral = elementFactory.createExpressionFromText(normalizedText, task.expression)
         return newLiteral.text
     }
@@ -165,27 +200,23 @@ class DaoInjectionSqlVisitor(
         expression: PsiLiteralExpression,
         newText: String,
     ) {
-        val document =
-            PsiDocumentManager
-                .getInstance(project)
-                .getDocument(expression.containingFile) ?: return
-
+        val document = documentManager.getDocument(expression.containingFile) ?: return
         val range = expression.textRange
+
         document.replaceString(range.startOffset, range.endOffset, newText)
+        documentManager.commitDocument(document)
     }
 
     /**
      * Creates a Java text block (triple-quoted string) from formatted SQL.
      */
-    private fun createFormattedLiteralText(formattedSqlText: String): String {
-        val lines = formattedSqlText.split(StringUtil.LINE_SEPARATE)
-        return buildString {
+    private fun createFormattedLiteralText(formattedSqlText: String): String =
+        buildString {
             append(TRIPLE_QUOTE)
             append(StringUtil.LINE_SEPARATE)
-            append(lines.joinToString(StringUtil.LINE_SEPARATE))
+            append(formattedSqlText)
             append(TRIPLE_QUOTE)
         }
-    }
 
     /**
      * Normalizes indentation by removing base indent and reapplying it consistently.
@@ -194,15 +225,12 @@ class DaoInjectionSqlVisitor(
         val lines = sqlText.lines()
         if (lines.isEmpty()) return sqlText
 
-        val literalSeparator = lines.first()
-        val contentLines = lines.drop(1)
-
+        val (literalSeparator, contentLines) = lines.first() to lines.drop(1)
         val normalizedLines =
             contentLines.map { line ->
                 when {
                     line.isBlank() -> line
-                    line.startsWith(BASE_INDENT) -> BASE_INDENT + line.removePrefix(BASE_INDENT)
-                    else -> BASE_INDENT + line
+                    else -> BASE_INDENT + line.removePrefix(BASE_INDENT)
                 }
             }
 

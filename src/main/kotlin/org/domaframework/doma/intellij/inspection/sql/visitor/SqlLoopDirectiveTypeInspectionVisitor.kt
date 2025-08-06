@@ -18,8 +18,8 @@ package org.domaframework.doma.intellij.inspection.sql.visitor
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLiteralExpression
-import org.domaframework.doma.intellij.common.isInjectionSqlFile
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
+import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.inspection.sql.processor.InspectionForDirectiveVisitorProcessor
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 
@@ -34,7 +34,7 @@ class SqlLoopDirectiveTypeInspectionVisitor(
             injectionFile.accept(this)
             super.visitElement(element)
         }
-        if (isInjectionSqlFile(file)) {
+        if (isInjectedSqlFile(file)) {
             element.acceptChildren(this)
         }
     }

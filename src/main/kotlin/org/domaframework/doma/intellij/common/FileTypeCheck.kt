@@ -18,8 +18,6 @@ package org.domaframework.doma.intellij.common
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.psi.PsiFile
 
-val sourceExtensionNames: List<String> = listOf("JAVA", "Kotlin", "CLASS")
-
 /**
  * Get extension by file type identifier
  */
@@ -55,14 +53,4 @@ fun isSupportFileType(file: PsiFile): Boolean {
         "sql", "script" -> true
         else -> false
     }
-}
-
-fun isInjectionSqlFile(file: PsiFile): Boolean {
-    val extension = file.fileType.defaultExtension
-    val filePath = file.virtualFile?.path ?: return false
-    return when (extension) {
-        "sql" -> true
-        else -> false
-    } &&
-        !(filePath.endsWith(".sql") || filePath.endsWith(".script"))
 }
