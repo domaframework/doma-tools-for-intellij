@@ -22,7 +22,7 @@ import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
-import org.domaframework.doma.intellij.inspection.dao.processor.DaoAnnotationOptionParameterCheckProcessor
+import org.domaframework.doma.intellij.inspection.dao.processor.option.DaoAnnotationOptionParameterCheckProcessor
 
 class DaoAnnotationOptionParameterInspectionVisitor(
     private val holder: ProblemsHolder,
@@ -39,14 +39,11 @@ class DaoAnnotationOptionParameterInspectionVisitor(
                 DomaAnnotationType.BatchUpdate,
                 DomaAnnotationType.Insert,
                 DomaAnnotationType.BatchInsert,
-                DomaAnnotationType.Delete,
-                DomaAnnotationType.BatchDelete,
+                DomaAnnotationType.MultiInsert,
             ).contains(psiDaoMethod.daoType)
         ) {
-            {
-                val processor = DaoAnnotationOptionParameterCheckProcessor(psiDaoMethod, shortName)
-                processor.checkAnnotationOptions(holder)
-            }
+            val processor = DaoAnnotationOptionParameterCheckProcessor(psiDaoMethod, shortName)
+            processor.checkAnnotationOptions(holder)
         }
     }
 }

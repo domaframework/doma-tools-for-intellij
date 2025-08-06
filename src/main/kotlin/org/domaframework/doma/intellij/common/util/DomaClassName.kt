@@ -67,6 +67,7 @@ enum class DomaClassName(
     SELECT_TYPE("org.seasar.doma.SelectType"),
 
     ENTITY("org.seasar.doma.Entity"),
+    EMBEDDABLE("org.seasar.doma.Embeddable"),
     ;
 
     fun isTargetClassNameStartsWith(paramTypeCanonicalNames: String): Boolean = paramTypeCanonicalNames.startsWith(this.className)

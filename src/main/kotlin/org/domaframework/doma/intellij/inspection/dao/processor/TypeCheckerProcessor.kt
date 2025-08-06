@@ -38,8 +38,9 @@ import org.domaframework.doma.intellij.extension.psi.isDomain
  * @property project The IntelliJ project instance.
  */
 abstract class TypeCheckerProcessor(
-    psiDaoMethod: PsiDaoMethod,
+    private val psiDaoMethod: PsiDaoMethod,
 ) {
+    protected val returningFqn = DomaClassName.RETURNING.className
     protected val method = psiDaoMethod.psiMethod
     protected val project = method.project
 
@@ -49,6 +50,13 @@ abstract class TypeCheckerProcessor(
         method.parameterList.parameters.find { param ->
             (param.type as? PsiClassType)?.getSuperType(typeName) != null
         }
+
+    protected fun hasReturingOption(): Boolean {
+        val methodAnnotation: PsiAnnotation =
+            getAnnotation(psiDaoMethod.daoType.fqdn) ?: return false
+        val returningOption: PsiAnnotation? = getDaoAnnotationOption(methodAnnotation, "returning")
+        return returningOption?.nameReferenceElement?.qualifiedName == returningFqn
+    }
 
     protected fun getDaoAnnotationOption(
         psiAnnotation: PsiAnnotation,

@@ -50,6 +50,8 @@ fun PsiClass.isEntity(): Boolean = this.getClassAnnotation(DomaClassName.ENTITY.
 
 fun PsiClass.isDomain(): Boolean = this.getClassAnnotation(DomaClassName.DOMAIN.className) != null
 
+fun PsiClass.isEmbeddable(): Boolean = this.getClassAnnotation(DomaClassName.EMBEDDABLE.className) != null
+
 fun PsiClassType.getSuperType(superClassName: String): PsiClassType? {
     var parent: PsiClassType? = this
     while (parent != null && !parent.canonicalText.startsWith(superClassName)) {
