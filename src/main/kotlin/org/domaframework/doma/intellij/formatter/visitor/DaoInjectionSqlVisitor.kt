@@ -20,12 +20,14 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaRecursiveElementVisitor
+import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.codeStyle.CodeStyleManager
 import org.domaframework.doma.intellij.common.util.StringUtil
+import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 import org.domaframework.doma.intellij.formatter.processor.SqlFormatPreProcessor
 
 /**
@@ -56,6 +58,7 @@ class DaoInjectionSqlVisitor(
 
     override fun visitLiteralExpression(expression: PsiLiteralExpression) {
         super.visitLiteralExpression(expression)
+        if ((expression.parent.parent.parent as? PsiAnnotation)?.qualifiedName != DomaAnnotationType.Sql.fqdn) return
         expression.value?.toString()?.let { originalText ->
             val existExpression =
                 formattingTasks.find { it.expression == expression && !it.isOriginalTextBlock }
