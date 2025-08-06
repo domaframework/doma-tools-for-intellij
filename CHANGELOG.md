@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [2.0.1] - 2025-08-06
+
+### Bug Fixes
+
+- Formatting Support for Single-Line Injected SQL in @Sql Annotations ([#364])
+
+### Dependency Updates
+
+- Update dependency gradle to v9 ([#354])
+- Update dependency org.jetbrains.changelog to v2.4.0 ([#365])
+
+[#364]:https://github.com/domaframework/doma-tools-for-intellij/pull/364
+[#354]:https://github.com/domaframework/doma-tools-for-intellij/pull/354
+[#365]:https://github.com/domaframework/doma-tools-for-intellij/pull/365
+
+
 ## [2.0.0] - 2025-08-04
 
 ### New Features
@@ -441,3 +457,4 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[2.0.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.0.0...2.0.1
