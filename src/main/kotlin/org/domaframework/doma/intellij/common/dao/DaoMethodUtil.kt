@@ -51,7 +51,7 @@ fun findDaoMethod(
     val virtualFile = originalFile.virtualFile ?: return null
     val module = project.getModule(virtualFile)
 
-    if (isInjectionSqlFile(originalFile)) {
+    if (isInjectedSqlFile(originalFile)) {
         originalFile.let {
             return PsiTreeUtil.getParentOfType(originalFile.context, PsiMethod::class.java)
         }
