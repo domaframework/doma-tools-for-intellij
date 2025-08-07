@@ -72,7 +72,7 @@ class BatchParamTypeCheckProcessor(
                 shortName,
             )
 
-        project.getJavaClazz(param.type.canonicalText)?.let { paramClass ->
+        project.getJavaClazz(param.type)?.let { paramClass ->
             val paramClassType = paramClass.psiClassType
             if (!PsiClassTypeUtil.isIterableType(
                     paramClassType,

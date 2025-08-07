@@ -22,8 +22,10 @@ import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiType
 import com.intellij.psi.search.GlobalSearchScope
 
 fun Project.getContentRoot(baseFile: VirtualFile): VirtualFile? =
@@ -40,15 +42,19 @@ fun Project.getModule(virtualFile: VirtualFile): Module? =
 
 fun Project.findFile(file: VirtualFile): PsiFile? = PsiManager.getInstance(this).findFile(file)
 
+fun Project.getJavaClazz(type: PsiType): PsiClass? {
+    val topClassName = (type as? PsiClassType)?.rawType()?.canonicalText ?: type.canonicalText
+    return getJavaClazz(topClassName)
+}
+
 fun Project.getJavaClazz(fqdn: String): PsiClass? {
     val scope = GlobalSearchScope.allScope(this)
-    val topClassName = fqdn.substringBefore("<")
     return JavaPsiFacade
         .getInstance(this)
-        .findClasses(topClassName, scope)
+        .findClasses(fqdn, scope)
         .firstOrNull()
         ?: JavaPsiFacade.getInstance(this).findClass(
-            topClassName,
+            fqdn,
             GlobalSearchScope.allScope(this),
         )
 }

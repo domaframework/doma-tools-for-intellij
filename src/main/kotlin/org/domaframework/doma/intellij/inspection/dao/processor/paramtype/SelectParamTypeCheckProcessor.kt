@@ -47,7 +47,7 @@ class SelectParamTypeCheckProcessor(
             val paramClassType = paramType as? PsiClassType ?: return false
             val optionalParam = paramClassType.parameters.firstOrNull()
             return optionalParam?.let {
-                val optionalParamClass = project.getJavaClazz(it.canonicalText)
+                val optionalParamClass = project.getJavaClazz(it)
                 optionalParamClass?.isDomain() == true ||
                     PsiTypeChecker.isBaseClassType(it) ||
                     optionalParamClass?.isEntity() == true ||
@@ -55,7 +55,7 @@ class SelectParamTypeCheckProcessor(
             } == true
         }
 
-        val paramClass = project.getJavaClazz(paramType.canonicalText)
+        val paramClass = project.getJavaClazz(paramType)
         return paramClass?.isDomain() == true || paramClass?.isEntity() == true || paramClass?.isDataType() == true
     }
 
