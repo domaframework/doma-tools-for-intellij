@@ -77,6 +77,14 @@ object TypeUtil {
         return clazz?.isDomain() == true
     }
 
+    fun isEmbeddable(
+        type: PsiType?,
+        project: Project,
+    ): Boolean {
+        val clazz = type?.canonicalText?.let { project.getJavaClazz(it) }
+        return clazz?.getClassAnnotation(DomaClassName.EMBEDDABLE.className) != null
+    }
+
     /**
      * Checks if the given type is a data type.
      */

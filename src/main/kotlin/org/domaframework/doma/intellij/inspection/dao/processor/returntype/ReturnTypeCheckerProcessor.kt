@@ -15,7 +15,6 @@
  */
 package org.domaframework.doma.intellij.inspection.dao.processor.returntype
 
-import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.DomaClassName
@@ -27,20 +26,12 @@ import org.domaframework.doma.intellij.extension.psi.getSuperClassType
 import org.domaframework.doma.intellij.inspection.dao.processor.TypeCheckerProcessor
 
 abstract class ReturnTypeCheckerProcessor(
-    private val psiDaoMethod: PsiDaoMethod,
+    psiDaoMethod: PsiDaoMethod,
     private val shortName: String,
 ) : TypeCheckerProcessor(psiDaoMethod) {
-    protected val returningFqn = DomaClassName.RETURNING.className
     protected val returnType = psiDaoMethod.psiMethod.returnType
 
     abstract fun checkReturnType(): ValidationResult?
-
-    protected fun hasReturingOption(): Boolean {
-        val methodAnnotation: PsiAnnotation =
-            getAnnotation(psiDaoMethod.daoType.fqdn) ?: return false
-        val returningOption: PsiAnnotation? = getDaoAnnotationOption(methodAnnotation, "returning")
-        return returningOption?.nameReferenceElement?.qualifiedName == returningFqn
-    }
 
     protected fun generatePsiTypeReturnTypeResult(methodOtherReturnType: PsiType): ValidationResult? =
         if (returnType != methodOtherReturnType) {

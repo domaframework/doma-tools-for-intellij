@@ -49,7 +49,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         super.setUp()
         settingJdk()
         setDirectoryRoot()
-        addLibrary("doma-core-3.8.0.jar", "doma-core")
+        addLibrary("doma-core-3.11.0.jar", "doma-core")
 
         addEntityJavaFile("User.java")
         addEntityJavaFile("UserSummary.java")

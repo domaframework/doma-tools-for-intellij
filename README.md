@@ -42,6 +42,8 @@ The plugin also provides quick fixes for DAO methods where the required SQL file
   ![returnTypeInspection.png](images/returnTypeInspection.png)
 - Checks that parameters of DAO method matches the expected type based on its annotation.
   ![paramTypeInspection.png](images/paramTypeInspection.png)
+- Checks the validity of `include` and `exclude` options in `@Update`, `@BatchUpdate`, `@Insert`, `@BatchInsert`,`@MultiInsert`  and `@Returning`annotations:
+  ![inspectionAnnotationOptions.png](images/inspectionAnnotationOptions.png)
 - Checks for undefined bind variable names.
 - Checks the class name and package name for static property calls.
   ![inspectionPackageName.png](images/inspectionPackageName.png)
