@@ -14,8 +14,8 @@ import java.util.List;
 public interface AnnotationOptionTestDao {
     
     // Valid include option
-    @Update(include = {"name", "location"})
-    int updateWithValidInclude(Department department);
+    @Insert(include = {"name", "location"})
+    int insertWithValidInclude(Department department);
 
     // Invalid include option
     @Update(include = {"name", "invalidField"})
@@ -26,8 +26,8 @@ public interface AnnotationOptionTestDao {
     int updateWithValidExclude(Department department);
     
     // Invalid exclude option  
-    @Update(exclude = {"salary", "location"})
-    int updateWithInvalidExclude(Department department);
+    @Insert(exclude = {"salary", "location"})
+    int insertWithInvalidExclude(Department department);
     
     // Mixed valid and invalid
     @Update(include = {"name"}, exclude = {"bonus"})
@@ -42,8 +42,8 @@ public interface AnnotationOptionTestDao {
     int batchUpdateWithInvalidInclude(List<Department> departments);
     
     // BatchUpdate with valid exclude
-    @BatchUpdate(exclude = {"id", "managerCount"})
-    int batchUpdateWithValidExclude(List<Department> departments);
+    @BatchInsert(exclude = {"id", "managerCount"})
+    int batchInsertWithValidExclude(List<Department> departments);
     
     // Non-entity parameter - no validation
     @Update(include = {"name"})
@@ -54,8 +54,8 @@ public interface AnnotationOptionTestDao {
     int updateEmbedded(Department department);
 
     // Valid Embedded Property specification
-    @Update(include = {"embeddableEntity.age", "embeddableEntity.id"})
-    int updateEmbeddedWithProperties(Department department);
+    @Insert(include = {"embeddableEntity.age", "embeddableEntity.id"})
+    int insertEmbeddedWithProperties(Department department);
 
     // Valid returning options
     @Update(returning = @Returning(include = {"embeddableEntity.name"}))
