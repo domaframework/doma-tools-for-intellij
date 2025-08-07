@@ -56,7 +56,7 @@ interface DaoMethodVariableInspectionTestDao {
   @Sql("SELECT * FROM project WHERE name = /* searchName */'test'")
   Project selectHogeOption(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,
       String searchName,
-      HogeSelectOptions options);
+      HogeSelectOptions <error descr="There are unused parameters in the SQL [options]">options</error>);
 
   @Select(strategy = SelectType.COLLECT)
   Project collectDoesNotCauseError(Employee <error descr="There are unused parameters in the SQL [employee]">employee</error>,
