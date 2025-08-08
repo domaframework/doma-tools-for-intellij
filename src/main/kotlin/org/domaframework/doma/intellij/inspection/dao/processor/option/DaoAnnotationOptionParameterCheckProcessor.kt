@@ -94,12 +94,19 @@ class DaoAnnotationOptionParameterCheckProcessor(
         entityClass: PsiClass,
         holder: ProblemsHolder,
     ) {
-        val arrayValues =
+        val expression =
             annotation.parameterList.attributes
                 .find { it.name == optionName }
                 ?.value
-                ?.children
-                ?.filter { it is PsiLiteralExpression } ?: return
+
+        val arrayValues =
+            if (expression is PsiLiteralExpression) {
+                listOf(expression)
+            } else {
+                expression
+                    ?.children
+                    ?.filter { it is PsiLiteralExpression } ?: return
+            }
         if (arrayValues.isEmpty()) return
 
         val project = method.project
