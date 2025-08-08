@@ -32,7 +32,7 @@ fun PsiParameter.isIgnoreUsageCheck(): Boolean =
         when (type) {
             DomaClassName.SELECT_OPTIONS -> {
                 // Only ignore the exact SelectOptions class, not its subtypes
-                val clazzType = this.typeElement?.type as? PsiClassType
+                val clazzType = this.type as? PsiClassType
                 clazzType?.rawType()?.canonicalText == type.className
             }
             else -> getSuperClassType(type) != null
@@ -40,7 +40,7 @@ fun PsiParameter.isIgnoreUsageCheck(): Boolean =
     }
 
 fun PsiParameter.getSuperClassType(superClassType: DomaClassName): PsiClassType? {
-    val clazzType = this.typeElement?.type as? PsiClassType
+    val clazzType = this.type as? PsiClassType
     var superCollection: PsiClassType? = clazzType
     while (superCollection != null &&
         !superClassType.isTargetClassNameStartsWith(superCollection.canonicalText)
