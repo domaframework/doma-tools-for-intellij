@@ -11,6 +11,8 @@ public class Department {
     public String location;
     public Integer managerCount;
 
+    int subId;
+
     @Embedded
     public ClientUser embeddableEntity;
     @Embedded

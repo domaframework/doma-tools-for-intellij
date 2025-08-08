@@ -77,4 +77,18 @@ public interface AnnotationOptionTestDao {
     @MultiInsert(returning = @Returning(include = {<error descr="Field [email] specified in [include] option does not exist in \"Department\". Available fields: [id, name, location, managerCount, embeddableEntity, embeddableEntity2] ">"email"},
                                         exclude = {<error descr="Field [salary] specified in [exclude] option does not exist in \"ClientUser\". Available fields: [id, name, location, managerCount, embeddableEntity, embeddableEntity2] ">"embeddableEntity.salary"</error>}))
     List<Department> multiInsertReturning(List<Department> departments);
+
+    // Dont array properties
+    @Update(returning = @Returning(include = "embeddableEntity.age"))
+    Department updateSingleInclude(Department department);
+
+    @Insert(returning = @Returning(exclude = <error descr="Field [age] specified in [include] option does not exist in \"ClientUser\". Available fields: [id, name, number, childEmbedded, childEmbedded2] ">"embeddableEntity"</error>))
+    Department insertSingleExclude(Department department);
+
+    // Primitive types
+    @Update(include = "embeddableEntity.subId")
+    int updatePrimitiveProperty(Department department);
+
+    @Insert(exclude = <error descr="Field path [subId. get] specified in [exclude] option is invalid. Field [get] is a primitive type and does not have nested properties ">"embeddableEntity.subId.get"</error>)
+    int insertPrimitiveProperty(Department department);
 }
