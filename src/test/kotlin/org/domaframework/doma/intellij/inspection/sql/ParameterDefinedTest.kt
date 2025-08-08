@@ -24,7 +24,7 @@ import org.domaframework.doma.intellij.inspection.sql.inspector.SqlLoopDirective
  * A test that inspects whether a bind variable's parameters are defined.
  */
 class ParameterDefinedTest : DomaSqlTest() {
-    private val testDaoName = "EmployeeSummaryDao"
+    private val testDaoName = "inspection/ParamDefinedTestDao"
 
     override fun setUp() {
         super.setUp()

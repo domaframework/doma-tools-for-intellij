@@ -18,7 +18,11 @@ package org.domaframework.doma.intellij.extension.psi
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiParameter
 
-fun PsiMethod.findParameter(searchName: String): PsiParameter? = this.methodParameters.firstOrNull { it.name == searchName }
+fun PsiMethod.findParameter(searchName: String): PsiParameter? =
+    this.methodParameters.firstOrNull {
+        it.name == searchName &&
+            !it.isIgnoreUsageCheck()
+    }
 
 val PsiMethod.methodParameters: List<PsiParameter>
     get() = this.parameterList.parameters.toList()

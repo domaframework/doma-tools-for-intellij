@@ -1,4 +1,4 @@
-package doma.example.dao;
+package doma.example.dao.inspection;
 
 import doma.example.entity.*:
 import org.seasar.doma.*;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 @Dao
-interface EmployeeSummaryDao {
+interface ParamDefinedTestDao {
 
   @Select
   EmployeeSummary bindVariableForNonEntityClass(EmployeeSummary employee, User user);
