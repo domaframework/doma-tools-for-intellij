@@ -99,7 +99,7 @@ abstract class TypeCheckerProcessor(
             val paramClassType = paramType as? PsiClassType ?: return false
             val optionalParam = paramClassType.parameters.firstOrNull()
             return optionalParam?.let {
-                val optionalParamClass = project.getJavaClazz(it.canonicalText)
+                val optionalParamClass = project.getJavaClazz(it)
                 optionalParamClass?.isDomain() == true || optionalParamClass?.isDataType() == true || PsiTypeChecker.isBaseClassType(it)
             } == true
         }

@@ -49,7 +49,7 @@ object TypeUtil {
         type: PsiType?,
         project: Project,
     ): Boolean {
-        val clazz = type?.canonicalText?.let { project.getJavaClazz(it) }
+        val clazz = type?.let { project.getJavaClazz(type) }
         return clazz?.isEntity() == true
     }
 

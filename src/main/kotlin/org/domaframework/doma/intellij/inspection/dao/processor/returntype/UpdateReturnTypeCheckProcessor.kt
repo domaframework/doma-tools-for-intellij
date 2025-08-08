@@ -90,7 +90,7 @@ class UpdateReturnTypeCheckProcessor(
 
         val checkReturnType =
             PsiClassTypeUtil.convertOptionalType(returnType, project)
-        val returnTypeClass = project.getJavaClazz(checkReturnType.canonicalText)
+        val returnTypeClass = project.getJavaClazz(checkReturnType)
 
         return if (!validateReturnType(returnTypeClass, paramClass)) {
             ValidationReturnTypeUpdateReturningResult(

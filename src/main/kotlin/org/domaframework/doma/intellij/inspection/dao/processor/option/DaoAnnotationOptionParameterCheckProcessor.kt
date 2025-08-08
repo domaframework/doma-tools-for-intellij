@@ -62,7 +62,7 @@ class DaoAnnotationOptionParameterCheckProcessor(
             }
         }
 
-        val entityClass = project.getJavaClazz(entityType.canonicalText) ?: return
+        val entityClass = project.getJavaClazz(entityType) ?: return
         if (!entityClass.isEntity()) {
             return
         }
@@ -110,7 +110,7 @@ class DaoAnnotationOptionParameterCheckProcessor(
                     ?.find { property -> isOptionTargetProperty(property, field, project) }
                     ?.let { f ->
                         preSearchParamClass = searchParamClass
-                        searchParamClass = project.getJavaClazz(f.type.canonicalText) ?: return@map
+                        searchParamClass = project.getJavaClazz(f.type) ?: return@map
                     }
                     ?: run {
                         ValidationAnnotationOptionParameterResult(

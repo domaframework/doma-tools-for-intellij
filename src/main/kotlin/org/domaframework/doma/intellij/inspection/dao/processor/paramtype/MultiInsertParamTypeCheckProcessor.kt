@@ -72,7 +72,7 @@ class MultiInsertParamTypeCheckProcessor(
                 shortName,
             )
 
-        project.getJavaClazz(param.type.canonicalText)?.let { paramClass ->
+        project.getJavaClazz(param.type)?.let { paramClass ->
             val paramClassType = paramClass.psiClassType
             if (!PsiClassTypeUtil.isIterableType(
                     paramClassType,
@@ -87,7 +87,7 @@ class MultiInsertParamTypeCheckProcessor(
         val iterableClassType = param.type as? PsiClassType
         iterableClassType?.parameters?.firstOrNull()?.let { iterableParam ->
             project
-                .getJavaClazz(iterableParam.canonicalText)
+                .getJavaClazz(iterableParam)
                 ?.let {
                     if (!it.isEntity()) {
                         resultParamType.highlightElement(holder)

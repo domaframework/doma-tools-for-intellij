@@ -44,7 +44,7 @@ class ProcedureFunctionResultSetParamAnnotationTypeChecker(
             val paramClassType = paramType as? PsiClassType ?: return false
             val optionalParam = paramClassType.parameters.firstOrNull()
             return optionalParam?.let {
-                val optionalParamClass = project.getJavaClazz(it.canonicalText)
+                val optionalParamClass = project.getJavaClazz(it)
                 optionalParamClass?.isDomain() == true ||
                     optionalParamClass?.isEntity() == true ||
                     optionalParamClass?.isDataType() == true ||
@@ -54,7 +54,7 @@ class ProcedureFunctionResultSetParamAnnotationTypeChecker(
             } == true
         }
 
-        val paramClass = project.getJavaClazz(paramType.canonicalText)
+        val paramClass = project.getJavaClazz(paramType)
         return paramClass?.isDomain() == true || paramClass?.isDataType() == true
     }
 
@@ -101,7 +101,7 @@ class ProcedureFunctionResultSetParamAnnotationTypeChecker(
             return
         }
 
-        val paramClass = project.getJavaClazz(listParamType.canonicalText)
+        val paramClass = project.getJavaClazz(listParamType)
 
         if (checkParamType(listParamType) || paramClass?.isEntity() == true || paramClass?.isDataType() == true) return
         result.highlightElement(holder)
