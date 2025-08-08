@@ -22,7 +22,6 @@ import org.domaframework.doma.intellij.DomaSqlTest
  */
 class SqlCompleteTest : DomaSqlTest() {
     private val testDaoName = "SqlCompleteTestDao"
-    private val testSpecificDaoName = "SpecificParamTypeCompletionDao"
 
     override fun setUp() {
         super.setUp()

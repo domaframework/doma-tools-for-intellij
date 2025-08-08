@@ -1,4 +1,4 @@
-package doma.example.dao;
+package doma.example.dao.completion;
 
 import doma.example.collector.HogeCollector;
 import doma.example.entity.*;
@@ -16,7 +16,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 @Dao
-public interface SpecificParamTypeCompletionDao {
+public interface SpecificParamTypeCompletionTestDao {
 
   /**
    * SelectOptions do not cause errors even when unused
