@@ -22,14 +22,18 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLiteralExpression
+import com.intellij.psi.PsiPrimitiveType
+import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationAnnotationOptionEmbeddableResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationAnnotationOptionParameterResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationAnnotationOptionPrimitiveFieldResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 import org.domaframework.doma.intellij.extension.psi.isEmbeddable
 import org.domaframework.doma.intellij.extension.psi.isEntity
+import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.inspection.dao.processor.TypeCheckerProcessor
 
 /**
@@ -101,32 +105,47 @@ class DaoAnnotationOptionParameterCheckProcessor(
         val project = method.project
         arrayValues.map { fields ->
             val valueFields = fields.text.replace("\"", "").split(".")
-            var searchParamClass: PsiClass? = entityClass
-            var preSearchParamClass: PsiClass? = entityClass
+            var searchParamType: PsiType = entityClass.psiClassType
+            var searchParamClass: PsiClass? = project.getJavaClazz(searchParamType)
             var hasError = false
-            valueFields.map { field ->
-                searchParamClass
-                    ?.fields
-                    ?.find { property -> isOptionTargetProperty(property, field, project) }
-                    ?.let { f ->
-                        preSearchParamClass = searchParamClass
-                        searchParamClass = project.getJavaClazz(f.type) ?: return@map
-                    }
-                    ?: run {
+
+            valueFields.forEachIndexed { index, field ->
+                val currentField =
+                    searchParamClass
+                        ?.fields
+                        ?.find { property -> isOptionTargetProperty(property, field, project) }
+                if (searchParamType is PsiPrimitiveType) {
+                    // This is a primitive/basic type but there are more fields after it
+                    ValidationAnnotationOptionPrimitiveFieldResult(
+                        fields,
+                        shortName,
+                        fields.text.replace("\"", ""),
+                        field,
+                        optionName,
+                        field,
+                    ).highlightElement(holder)
+                    hasError = true
+                    return@map
+                } else {
+                    if (currentField != null) {
+                        searchParamType = currentField.type
+                        searchParamClass = project.getJavaClazz(searchParamType)
+                    } else {
                         ValidationAnnotationOptionParameterResult(
                             fields,
                             shortName,
                             field,
                             optionName,
                             searchParamClass?.name ?: "Unknown",
-                            getTargetOptionProperties(preSearchParamClass),
+                            getTargetOptionProperties(searchParamClass),
                         ).highlightElement(holder)
                         hasError = true
                         return@map
                     }
+                }
             }
             // Error if the last field is Embeddable
-            if (!hasError && searchParamClass?.isEmbeddable() == true) {
+            if (searchParamClass?.isEmbeddable() == true) {
                 ValidationAnnotationOptionEmbeddableResult(
                     fields,
                     shortName,

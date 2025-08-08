@@ -77,4 +77,18 @@ public interface AnnotationOptionTestDao {
     @MultiInsert(returning = @Returning(include = {"email"},
                                         exclude = {"embeddableEntity.salary"}))
     List<Department> multiInsertReturning(List<Department> departments);
+
+    // Dont array properties
+    @Update(returning = @Returning(include = "embeddableEntity.age"))
+    Department updateSingleInclude(Department department);
+
+    @Insert(returning = @Returning(exclude = "embeddableEntity"))
+    Department insertSingleExclude(Department department);
+
+    // Primitive types
+    @Update(include = "embeddableEntity.subId")
+    int updatePrimitiveProperty(Department department);
+
+    @Insert(exclude = "embeddableEntity.subId.get")
+    int insertPrimitiveProperty(Department department);
 }
