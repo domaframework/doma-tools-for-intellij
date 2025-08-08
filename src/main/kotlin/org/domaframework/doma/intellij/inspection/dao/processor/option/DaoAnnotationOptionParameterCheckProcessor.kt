@@ -18,8 +18,10 @@ package org.domaframework.doma.intellij.inspection.dao.processor.option
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiAnnotation
+import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiPrimitiveType
@@ -98,15 +100,9 @@ class DaoAnnotationOptionParameterCheckProcessor(
             annotation.parameterList.attributes
                 .find { it.name == optionName }
                 ?.value
+                ?: return
 
-        val arrayValues =
-            if (expression is PsiLiteralExpression) {
-                listOf(expression)
-            } else {
-                expression
-                    ?.children
-                    ?.filter { it is PsiLiteralExpression } ?: return
-            }
+        val arrayValues = extractArrayValues(expression)
         if (arrayValues.isEmpty()) return
 
         val project = method.project
@@ -121,6 +117,8 @@ class DaoAnnotationOptionParameterCheckProcessor(
                     searchParamClass
                         ?.fields
                         ?.find { property -> isOptionTargetProperty(property, field, project) }
+                // Given that the first `searchParamType` is assumed to contain the type of  Entity class,
+                // checking the index for a primitive type is unnecessary.
                 if (searchParamType is PsiPrimitiveType) {
                     // This is a primitive/basic type but there are more fields after it
                     ValidationAnnotationOptionPrimitiveFieldResult(
@@ -163,6 +161,15 @@ class DaoAnnotationOptionParameterCheckProcessor(
             }
         }
     }
+
+    private fun extractArrayValues(expression: PsiAnnotationMemberValue): List<PsiElement> =
+        if (expression is PsiLiteralExpression) {
+            listOf(expression)
+        } else {
+            expression
+                .children
+                .filter { it is PsiLiteralExpression }
+        }
 
     private fun getTargetOptionProperties(paramClass: PsiClass?) =
         paramClass?.fields?.filter { isOptionTargetProperty(it, it.name, project) }?.joinToString(", ") { it.name.substringAfter(":") }
