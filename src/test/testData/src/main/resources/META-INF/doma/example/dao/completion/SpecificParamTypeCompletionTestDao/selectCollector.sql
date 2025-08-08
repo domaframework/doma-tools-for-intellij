@@ -1,2 +1,2 @@
 SELECT *
-  FROM employee whwew salary > /* <caret> */1000
+  FROM employee WHERE salary > /* <caret> */1000
