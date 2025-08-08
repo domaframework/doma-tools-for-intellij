@@ -31,7 +31,6 @@ class ValidationAnnotationOptionPrimitiveFieldResult(
     private val fieldPath: String,
     private val primitiveFieldName: String,
     private val optionName: String,
-    private val fieldType: String, // Keep for potential future use but not used in message
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,

@@ -129,7 +129,6 @@ class DaoAnnotationOptionParameterCheckProcessor(
                         fields.text.replace("\"", ""),
                         field,
                         optionName,
-                        field,
                     ).highlightElement(holder)
                     hasError = true
                     return@map
