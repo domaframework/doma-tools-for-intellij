@@ -7,7 +7,7 @@ pluginVerifier = "1.391"
 
 # plugins
 changelog = "2.4.0"
-intelliJPlatform = "2.7.0"
+intelliJPlatform = "2.7.1"
 kotlin = "2.2.0"
 kover = "0.9.1"
 qodana = "2024.3.4"
