@@ -3,7 +3,7 @@
 junit = "4.13.2"
 doma = "3.2.0"
 logback = "1.5.18"
-pluginVerifier = "1.391"
+pluginVerifier = "1.393"
 
 # plugins
 changelog = "2.4.0"
