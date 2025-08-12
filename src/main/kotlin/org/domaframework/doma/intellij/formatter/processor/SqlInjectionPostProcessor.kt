@@ -81,11 +81,11 @@ class SqlInjectionPostProcessor : SqlPostProcessor() {
         val host = InjectionSqlUtil.getLiteralExpressionHost(source) ?: return
         val originalText = host.value?.toString() ?: return
 
-        val visitor = DaoInjectionSqlVisitor(source.project)
+        val injectionFormatter = InjectionSqlFormatter(source.project)
         val formattingTask = FormattingTask(host, originalText, host.isTextBlock)
 
-        visitor.convertExpressionToTextBlock(formattingTask.expression)
-        visitor.processFormattingTask(formattingTask) { text ->
+        injectionFormatter.convertExpressionToTextBlock(formattingTask.expression)
+        injectionFormatter.processFormattingTask(formattingTask) { text ->
             processDocumentText(text)
         }
     }
