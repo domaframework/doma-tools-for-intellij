@@ -82,7 +82,7 @@
       implementationClass="org.domaframework.doma.intellij.setting.SqlFileType"
       fieldName="INSTANCE"
       language="DomaSql"
-      extensions="sql"/>
+      extensions="sql;script"/>
     <lang.parserDefinition
       language="DomaSql"
       implementationClass="org.domaframework.doma.intellij.setting.SqlParserDefinition"/>
