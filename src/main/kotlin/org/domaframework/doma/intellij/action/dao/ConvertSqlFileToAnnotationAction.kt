@@ -54,6 +54,8 @@ class ConvertSqlFileToAnnotationAction : PsiElementBaseIntentionAction() {
         val supportedTypes =
             listOf(
                 DomaAnnotationType.Select,
+                DomaAnnotationType.Script,
+                DomaAnnotationType.SqlProcessor,
                 DomaAnnotationType.Insert,
                 DomaAnnotationType.Update,
                 DomaAnnotationType.Delete,

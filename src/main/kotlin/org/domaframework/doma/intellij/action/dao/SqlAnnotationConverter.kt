@@ -29,6 +29,7 @@ import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNameValuePair
 import com.intellij.psi.codeStyle.JavaCodeStyleManager
+import org.domaframework.doma.intellij.common.dao.jumpToDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.InjectionSqlUtil
 import org.domaframework.doma.intellij.common.util.StringUtil
@@ -97,6 +98,8 @@ class SqlAnnotationConverter(
         val supportedTypes =
             listOf(
                 DomaAnnotationType.Select,
+                DomaAnnotationType.Script,
+                DomaAnnotationType.SqlProcessor,
                 DomaAnnotationType.Insert,
                 DomaAnnotationType.Update,
                 DomaAnnotationType.Delete,
@@ -119,8 +122,6 @@ class SqlAnnotationConverter(
         annotation: PsiAnnotation,
         value: Boolean,
     ) {
-        // Add new attribute
-        val attributeText = "sqlFile = $value"
         val useSqlFileOptionAnnotationList =
             listOf(
                 DomaAnnotationType.Insert,
@@ -130,23 +131,33 @@ class SqlAnnotationConverter(
                 DomaAnnotationType.BatchUpdate,
                 DomaAnnotationType.BatchDelete,
             )
-        val newAttribute =
-            if (useSqlFileOptionAnnotationList.contains(psiDaoMethod.daoType)) {
+
+        if (useSqlFileOptionAnnotationList.contains(psiDaoMethod.daoType)) {
+            val existingAttribute =
+                annotation.parameterList.attributes
+                    .find { it.name == "sqlFile" }
+
+            if (value) {
+                // Add or update sqlFile = true
+                val attributeText = "sqlFile = true"
                 val dummyAnnotation =
                     elementFactory.createAnnotationFromText(
                         "@Dummy($attributeText)",
                         null,
                     )
-                dummyAnnotation.parameterList.attributes[0]
+                val newAttribute = dummyAnnotation.parameterList.attributes[0]
+
+                if (existingAttribute != null) {
+                    existingAttribute.replace(newAttribute)
+                } else {
+                    annotation.parameterList.add(newAttribute)
+                }
             } else {
-                null
+                // Remove sqlFile parameter when value is false
+                existingAttribute?.delete()
             }
-        if (newAttribute != null) {
-            annotation.parameterList.attributes
-                .find { it.name == "sqlFile" }
-                ?.replace(newAttribute)
-                ?: annotation.parameterList.add(newAttribute)
         }
+
         val psiFile = annotation.containingFile
         val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
         if (document != null) {
@@ -183,6 +194,7 @@ class SqlAnnotationConverter(
         }
         // Add import if needed
         val containingFile = method.containingFile
+        // TODO Support Kotlin files in the future
         if (containingFile is PsiJavaFile) {
             val importList = containingFile.importList
             val sqlImport = DomaAnnotationType.Sql.fqdn
@@ -201,8 +213,21 @@ class SqlAnnotationConverter(
                         ) ?: return,
                     )
                 importList?.add(importStatement)
+                val psiFile = method.containingFile
+                val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
+                if (document != null) {
+                    PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(document)
+                }
             }
         }
+
+        // Jump to method
+        val newDaoFile = method.containingFile
+        val newDocument = PsiDocumentManager.getInstance(project).getDocument(newDaoFile)
+        if (newDocument != null) {
+            PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(newDocument)
+        }
+        jumpToDaoMethod(project, psiDaoMethod.sqlFile?.name ?: return, newDaoFile.virtualFile)
     }
 
     private fun generateSqlFileWithContent(content: String) {
