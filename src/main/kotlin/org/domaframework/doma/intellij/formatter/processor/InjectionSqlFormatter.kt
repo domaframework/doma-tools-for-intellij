@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.processor
 
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
@@ -76,10 +77,8 @@ class InjectionSqlFormatter(
         removeSpace: (String) -> String,
     ) {
         val result = SqlFormatPreProcessor().updateDocument(sqlFile, sqlFile.textRange)
-        val formattedText = result.document?.text ?: return
-
-        val tmpFormatted = formatAsTemporarySqlFile(formattedText)
-        val document = documentManager.getDocument(sqlFile) ?: return
+        val document = result.document ?: return
+        val tmpFormatted = formatAsTemporarySqlFile(document)
         document.replaceString(
             sqlFile.textRange.startOffset,
             sqlFile.textRange.endOffset,
@@ -105,6 +104,23 @@ class InjectionSqlFormatter(
      * Formats SQL text by creating a temporary SQL file and applying code style.
      * Returns original text if formatting fails.
      */
+    private fun formatAsTemporarySqlFile(document: Document): String =
+        runCatching {
+            val tempFileName = "${TEMP_FILE_PREFIX}${SQL_FILE_EXTENSION}"
+            val fileType = fileTypeManager.getFileTypeByExtension("sql")
+            val tempSqlFile =
+                PsiFileFactory
+                    .getInstance(project)
+                    .createFileFromText(tempFileName, fileType, document.text)
+
+            document.setText(tempSqlFile.text)
+            documentManager.commitDocument(document)
+            val psiFile = documentManager.getPsiFile(document) ?: return@runCatching tempSqlFile.text
+
+            codeStyleManager.reformatText(psiFile, 0, tempSqlFile.textLength)
+            psiFile.text
+        }.getOrDefault(document.text)
+
     private fun formatAsTemporarySqlFile(sqlText: String): String =
         runCatching {
             val tempFileName = "${TEMP_FILE_PREFIX}${SQL_FILE_EXTENSION}"

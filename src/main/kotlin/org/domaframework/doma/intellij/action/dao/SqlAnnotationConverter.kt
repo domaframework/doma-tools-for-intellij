@@ -186,7 +186,6 @@ class SqlAnnotationConverter(
             // Add at the beginning
             modifierList.add(sqlAnnotation)
         }
-        // PSI変更をコミットしてロック解除
         val psiFile = method.containingFile
         val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
         if (document != null) {
@@ -241,11 +240,13 @@ class SqlAnnotationConverter(
                 val newPsiDaoMethod = PsiDaoMethod(project, method)
                 val sqlFile = newPsiDaoMethod.sqlFile ?: return@runWriteCommandAction
                 val psiFile = project.findFile(sqlFile) ?: return@runWriteCommandAction
-                val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return@runWriteCommandAction
+
+                val documentManager = PsiDocumentManager.getInstance(project)
+                val document = documentManager.getDocument(psiFile) ?: return@runWriteCommandAction
 
                 // Replace the default content with the actual SQL content
                 document.setText(content)
-                PsiDocumentManager.getInstance(project).commitDocument(document)
+                documentManager.commitDocument(document)
 
                 // Format Sql
                 formatSql(psiFile)
