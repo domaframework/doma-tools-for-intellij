@@ -15,7 +15,9 @@
  */
 package org.domaframework.doma.intellij.action.dao
 
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.psi.PsiDocumentManager
 import org.domaframework.doma.intellij.DomaSqlTest
 
 class ConvertSqlAnnotationToFileActionTest : DomaSqlTest() {
@@ -25,74 +27,87 @@ class ConvertSqlAnnotationToFileActionTest : DomaSqlTest() {
 
     fun testIntentionAvailableForSelectWithSqlAnnotation() {
         val daoName = "SelectWithSqlAnnotationDao"
-        doTest(daoName, "generateSqlFile")
+        val sqlFileName = "generateSqlFile"
+        doTest(daoName, sqlFileName)
+        doTestSqlFormat(daoName, sqlFileName)
     }
 
     fun testIntentionAvailableForSelectTextBlockWithSqlAnnotation() {
         val daoName = "SelectTextBlockWithSqlAnnotationDao"
-        doTest(daoName, "generateSqlFileByTextBlock")
+        val sqlFileName = "generateSqlFileByTextBlock"
+        doTest(daoName, sqlFileName)
+        doTestSqlFormat(daoName, sqlFileName)
     }
 
     fun testIntentionAvailableForSelectHasAnyOptWithSqlAnnotation() {
         val daoName = "SelectHasAnyOptionWithSqlAnnotationDao"
-        doTest(daoName, "generateSqlFileHasAnyOption")
+        val sqlFileName = "generateSqlFileHasAnyOption"
+        doTest(daoName, sqlFileName)
+        doTestSqlFormat(daoName, sqlFileName)
     }
 
     fun testIntentionAvailableForInsertWithSqlAnnotation() {
         val daoName = "InsertWithSqlAnnotationDao"
-        doTest(daoName, "insert")
+        val sqlFileName = "insert"
+        doTest(daoName, sqlFileName)
+        doTestSqlFormat(daoName, sqlFileName)
     }
 
     fun testIntentionAvailableForUpdateWithSqlAnnotation() {
         val daoName = "UpdateReturningWithSqlAnnotationDao"
-        doTest(daoName, "updateEmployeeReturning")
+        val sqlFileName = "updateEmployeeReturning"
+        doTest(daoName, sqlFileName)
+        doTestSqlFormat(daoName, sqlFileName)
     }
 
     fun testIntentionAvailableForDeleteWithSqlAnnotation() {
         val daoName = "DeleteWithSqlAnnotationDao"
-        doTest(daoName, "deleteEmployeeHasSqlFile")
+        val sqlFileName = "deleteEmployeeHasSqlFile"
+        doTest(daoName, sqlFileName)
+        doTestSqlFormat(daoName, sqlFileName)
     }
 
     fun testIntentionAvailableForScriptWithSqlAnnotation() {
         val daoName = "ScriptWithSqlAnnotationDao"
-        doTest(daoName, "createTable", true)
+        val sqlFileName = "createTable"
+        doTest(daoName, sqlFileName, true)
+        doTestSqlFormat(daoName, sqlFileName, true)
     }
 
     fun testIntentionAvailableForBatchInsertWithSqlAnnotation() {
         val daoName = "BatchInsertWithSqlAnnotationDao"
-        doTest(daoName, "batchInsert")
+        val sqlFileName = "batchInsert"
+        doTest(daoName, sqlFileName)
+        doTestSqlFormat(daoName, sqlFileName)
     }
 
     fun testIntentionAvailableForBatchUpdateWithSqlAnnotation() {
         val daoName = "BatchUpdateWithSqlAnnotationDao"
-        doTest(daoName, "batchUpdate")
+        val sqlFileName = "batchUpdate"
+        doTest(daoName, sqlFileName)
+        doTestSqlFormat(daoName, sqlFileName)
     }
 
     fun testIntentionAvailableForBatchDeleteWithSqlAnnotation() {
         val daoName = "BatchDeleteWithSqlAnnotationDao"
-        doTest(daoName, "batchDelete")
+        val sqlFileName = "batchDelete"
+        doTest(daoName, sqlFileName)
+        doTestSqlFormat(daoName, sqlFileName)
     }
 
     fun testIntentionAvailableForSqlProcessorWithSqlAnnotation() {
         val daoName = "SqlProcessorWithSqlAnnotationDao"
-        doTest(daoName, "executeProcessor")
+        val sqlFileName = "executeProcessor"
+        doTest(daoName, sqlFileName)
+        doTestSqlFormat(daoName, sqlFileName)
     }
 
     fun testIntentionOverrideSqlFile() {
         val daoName = "SelectOverrideSqlFileDao"
-        doTest(daoName, "overrideSqlFile")
-
         val sqlFileName = "overrideSqlFile"
-        val openedEditor = FileEditorManager.getInstance(project).selectedEditors
-        val sqlFile = openedEditor.find { it.file.name == sqlFileName.substringAfter("/").plus(".sql") }
-
-        if (sqlFile == null) {
-            fail("SQL file $sqlFileName should be opened after conversion")
-            return
-        }
-
-        myFixture.configureFromExistingVirtualFile(sqlFile.file)
-        myFixture.checkResultByFile("resources/META-INF/doma/example/dao/$sqlConversionPackage/$daoName/$sqlFileName.after.sql")
+        addResourceEmptySqlFile("$sqlConversionPackage/$daoName/$sqlFileName.sql")
+        doTest(daoName, sqlFileName)
+        doTestSqlFormat(daoName, sqlFileName)
     }
 
     fun testIntentionNotAvailableForMethodWithoutSqlAnnotation() {
@@ -150,5 +165,29 @@ class ConvertSqlAnnotationToFileActionTest : DomaSqlTest() {
 
         val generatedSql = findSqlFile("$sqlConversionPackage/$daoName/$sqlFile")
         assertTrue("Not Found SQL File [$sqlFile]", generatedSql != null)
+    }
+
+    private fun doTestSqlFormat(
+        daoName: String,
+        sqlFileName: String,
+        isScript: Boolean = false,
+    ) {
+        val openedEditor = FileEditorManager.getInstance(project).selectedEditors
+        val extension = if (isScript) "script" else "sql"
+        val sqlFile = openedEditor.find { it.file.name == sqlFileName.substringAfter("/").plus(".$extension") }
+
+        if (sqlFile == null) {
+            fail("SQL file $sqlFileName.$extension should be opened after conversion")
+            return
+        }
+        // If the generated `PsiFile` has an associated `Document`, explicitly reload it to ensure memory–disk consistency.
+        // If not reloaded, the test may produce: *Unexpected memory–disk conflict in tests for*.
+        val fdm = FileDocumentManager.getInstance()
+        fdm.saveAllDocuments()
+        PsiDocumentManager.getInstance(project).commitAllDocuments()
+        fdm.getDocument(sqlFile.file)?.let { fdm.reloadFromDisk(it) }
+
+        myFixture.configureFromExistingVirtualFile(sqlFile.file)
+        myFixture.checkResultByFile("resources/META-INF/doma/example/dao/$sqlConversionPackage/$daoName/$sqlFileName.after.$extension")
     }
 }
