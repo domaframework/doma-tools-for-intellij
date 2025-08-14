@@ -15,6 +15,19 @@ such as generating SQL template files, navigating between files, and inspecting 
 
 # Features
 
+## Intention Action
+
+Provides Intention Action features for automatically generating SQL templates between SQL annotations and SQL files bidirectionally.
+
+- **Generate corresponding SQL file from SQL annotation on DAO method**
+  - When a DAO method has an `@Sql` annotation but the corresponding SQL template file does not exist, you can automatically generate it from the intention action (Alt+Enter).
+- **Generate corresponding SQL annotation from SQL file**
+  - When a SQL file exists but the corresponding DAO method doesn't have an `@Sql` annotation, you can automatically add the annotation from the intention action (Alt+Enter) on the SQL file.
+
+![IntentionAction](images/gif/IntentionAction.gif)
+
+This streamlines the association between DAOs and SQL files and makes template creation more efficient.
+
 ## Actions
 The plugin adds several actions and gutter icons.
 Shortcut keys can be used for these actions.
