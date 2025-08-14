@@ -68,7 +68,6 @@ class InjectionSqlFormatter(
                 ?.firstOrNull()
                 ?.first as? PsiFile ?: return
 
-        // format(task.isOriginalTextBlock, task.formattedText, injectionFile, removeSpace)
         val formattedText =
             if (!task.isOriginalTextBlock) {
                 val result =

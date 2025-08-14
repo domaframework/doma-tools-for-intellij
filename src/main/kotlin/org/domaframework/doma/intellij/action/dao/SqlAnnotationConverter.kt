@@ -238,7 +238,7 @@ class SqlAnnotationConverter(
         if (newDocument != null) {
             documentManager.doPostponedOperationsAndUnblockDocument(newDocument)
         }
-        jumpToDaoMethod(project, psiDaoMethod.sqlFile?.name ?: return, newDaoFile.virtualFile)
+        jumpToDaoMethod(project, psiDaoMethod.sqlFile?.nameWithoutExtension ?: return, newDaoFile.virtualFile)
     }
 
     private fun generateSqlFileWithContent(content: String) {
@@ -274,7 +274,7 @@ class SqlAnnotationConverter(
         }
 
         // Delete the file
-        virtualFile.delete(project)
+        virtualFile.delete(null)
     }
 
     private fun formatSql(sqlFile: PsiFile) {
