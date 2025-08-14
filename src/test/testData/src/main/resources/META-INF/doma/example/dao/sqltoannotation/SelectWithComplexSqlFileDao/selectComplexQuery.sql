@@ -1,0 +1,1 @@
+select e.id, e.name, e.age, d.depa<caret>rtment_name, p.project_name from employee e join department d on e.department_id = d.id left join employee_project ep on e.id = ep.employee_id left join project p on ep.project_id = p.id where d.department_name = /* department */'Sales' and e.age between /* minAge */25 and /* maxAge */35 order by e.name, p.project_name

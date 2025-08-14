@@ -1,0 +1,1 @@
+insert into em<caret>ployee (id, name, age) values (/* employees.id */1, /* employees.name */'John', /* employees.age */30)

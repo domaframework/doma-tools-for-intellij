@@ -21,7 +21,7 @@ import com.intellij.psi.PsiDocumentManager
 import org.domaframework.doma.intellij.DomaSqlTest
 
 class ConvertSqlAnnotationToFileActionTest : DomaSqlTest() {
-    private val sqlConversionPackage = "sqlconversion"
+    private val sqlConversionPackage = "sqltofile"
     private val convertActionName = "Convert to SQL file (set sqlFile=true)"
     private val convertFamilyName = "Convert @Sql annotation to SQL file"
 

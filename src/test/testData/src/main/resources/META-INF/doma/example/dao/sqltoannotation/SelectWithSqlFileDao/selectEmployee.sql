@@ -1,0 +1,1 @@
+select * from employee where <caret> id = /* id */1

@@ -1,0 +1,1 @@
+update employee set na<caret>me = /* employee.name */'John', age = /* employee.age */30 where id = /* employee.id */1
