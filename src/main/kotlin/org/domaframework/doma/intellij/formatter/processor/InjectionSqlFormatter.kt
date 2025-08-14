@@ -15,11 +15,13 @@
  */
 package org.domaframework.doma.intellij.formatter.processor
 
+import com.intellij.application.options.CodeStyle
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.project.Project
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
@@ -36,18 +38,24 @@ class InjectionSqlFormatter(
         private const val SQL_FILE_EXTENSION = ".sql"
         private const val TRIPLE_QUOTE = "\"\"\""
         private const val WRITE_COMMAND_NAME = "Format Injected SQL"
-        private const val BASE_INDENT = "\t\t\t"
         private val COMMENT_START_REGEX = Regex("^[ \t]*/[*][ \t]*\\*")
+    }
+
+    private val baseIndent = createSpaceIndent(project)
+
+    private fun createSpaceIndent(project: Project): String {
+        val settings = CodeStyle.getSettings(project)
+        val java = settings.indentOptions
+        val indentSize = java.INDENT_SIZE
+        val prefixLen = "@Sql(\"\"\"".length
+        return StringUtil.SINGLE_SPACE.repeat(indentSize.plus(prefixLen))
     }
 
     private val injectionManager by lazy { InjectedLanguageManager.getInstance(project) }
     private val documentManager by lazy { PsiDocumentManager.getInstance(project) }
     private val codeStyleManager by lazy { CodeStyleManager.getInstance(project) }
     private val fileTypeManager by lazy { FileTypeManager.getInstance() }
-    private val elementFactory by lazy {
-        com.intellij.psi.JavaPsiFacade
-            .getElementFactory(project)
-    }
+    private val elementFactory by lazy { JavaPsiFacade.getElementFactory(project) }
 
     fun processFormattingTask(
         task: FormattingTask,
@@ -188,10 +196,8 @@ class InjectionSqlFormatter(
                 when {
                     line.isBlank() -> line
                     else ->
-                        BASE_INDENT +
-                            line.removePrefix(
-                                BASE_INDENT,
-                            )
+                        baseIndent +
+                            line
                 }
             }
 
