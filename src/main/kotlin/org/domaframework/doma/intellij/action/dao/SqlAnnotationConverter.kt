@@ -122,6 +122,7 @@ class SqlAnnotationConverter(
         annotation: PsiAnnotation,
         value: Boolean,
     ) {
+        var existsAnnotation = annotation
         val useSqlFileOptionAnnotationList =
             listOf(
                 DomaAnnotationType.Insert,
@@ -132,6 +133,7 @@ class SqlAnnotationConverter(
                 DomaAnnotationType.BatchDelete,
             )
 
+        val documentManager = PsiDocumentManager.getInstance(project)
         if (useSqlFileOptionAnnotationList.contains(psiDaoMethod.daoType)) {
             val existingAttribute =
                 annotation.parameterList.attributes
@@ -153,17 +155,26 @@ class SqlAnnotationConverter(
                     annotation.parameterList.add(newAttribute)
                 }
             } else {
-                // Remove sqlFile parameter when value is false
                 existingAttribute?.delete()
+                // If no attributes remain, recreate annotation without parentheses
+                if (annotation.parameterList.attributes.isEmpty()) {
+                    val annotationName = annotation.qualifiedName
+                    val newAnnotationText = "@$annotationName"
+                    val newAnnotation = elementFactory.createAnnotationFromText(newAnnotationText, annotation)
+                    val modifierList = method.modifierList
+                    modifierList.addBefore(newAnnotation, annotation)
+                    annotation.delete()
+                    existsAnnotation = newAnnotation
+                }
             }
         }
 
         val psiFile = annotation.containingFile
-        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
+        val document = documentManager.getDocument(psiFile)
         if (document != null) {
-            PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(document)
+            documentManager.doPostponedOperationsAndUnblockDocument(document)
         }
-        JavaCodeStyleManager.getInstance(project).shortenClassReferences(annotation)
+        JavaCodeStyleManager.getInstance(project).shortenClassReferences(existsAnnotation)
     }
 
     private fun addSqlAnnotation(sqlContent: String) {
@@ -187,9 +198,10 @@ class SqlAnnotationConverter(
             modifierList.add(sqlAnnotation)
         }
         val psiFile = method.containingFile
-        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
+        val documentManager = PsiDocumentManager.getInstance(project)
+        val document = documentManager.getDocument(psiFile)
         if (document != null) {
-            PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(document)
+            documentManager.doPostponedOperationsAndUnblockDocument(document)
         }
         // Add import if needed
         val containingFile = method.containingFile
@@ -213,18 +225,18 @@ class SqlAnnotationConverter(
                     )
                 importList?.add(importStatement)
                 val psiFile = method.containingFile
-                val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
+                val document = documentManager.getDocument(psiFile)
                 if (document != null) {
-                    PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(document)
+                    documentManager.doPostponedOperationsAndUnblockDocument(document)
                 }
             }
         }
 
         // Jump to method
         val newDaoFile = method.containingFile
-        val newDocument = PsiDocumentManager.getInstance(project).getDocument(newDaoFile)
+        val newDocument = documentManager.getDocument(newDaoFile)
         if (newDocument != null) {
-            PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(newDocument)
+            documentManager.doPostponedOperationsAndUnblockDocument(newDocument)
         }
         jumpToDaoMethod(project, psiDaoMethod.sqlFile?.name ?: return, newDaoFile.virtualFile)
     }
