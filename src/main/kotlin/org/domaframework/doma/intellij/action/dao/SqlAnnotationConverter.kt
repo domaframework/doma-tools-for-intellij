@@ -274,7 +274,7 @@ class SqlAnnotationConverter(
         }
 
         // Delete the file
-        virtualFile.delete(this)
+        virtualFile.delete(project)
     }
 
     private fun formatSql(sqlFile: PsiFile) {
