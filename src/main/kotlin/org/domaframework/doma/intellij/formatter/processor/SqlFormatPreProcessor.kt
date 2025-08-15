@@ -71,6 +71,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         if (source.language != SqlLanguage.INSTANCE && !isInjectedSqlFile(source)) {
             return rangeToReformat
         }
+        logging()
 
         // Do not execute processor processing in single-line text state
         if (isInjectedSqlFile(source)) {
@@ -85,8 +86,6 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         source: PsiFile,
         rangeToReformat: TextRange,
     ): ProcessResult {
-        logging()
-
         val visitor = SqlFormatVisitor()
         source.accept(visitor)
 

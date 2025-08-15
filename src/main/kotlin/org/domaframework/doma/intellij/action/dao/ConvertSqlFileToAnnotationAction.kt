@@ -25,6 +25,7 @@ import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 
 /**
@@ -84,9 +85,18 @@ class ConvertSqlFileToAnnotationAction : PsiElementBaseIntentionAction() {
         if (!isSupportFileType(element.containingFile)) return
 
         val daoMethod = findDaoMethod(element.containingFile) ?: return
+
+        val startTime = System.nanoTime()
         val converter = SqlAnnotationConverter(project, daoMethod)
         WriteCommandAction.runWriteCommandAction(project) {
             converter.convertToSqlAnnotation()
         }
+
+        PluginLoggerUtil.countLogging(
+            className = this::class.java.simpleName,
+            actionName = "convertSqlFileToAnnotation",
+            inputName = "IntentionAction",
+            start = startTime,
+        )
     }
 }

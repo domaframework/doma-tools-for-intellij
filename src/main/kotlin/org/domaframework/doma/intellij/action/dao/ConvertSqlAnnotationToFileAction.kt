@@ -27,6 +27,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
+import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 
 /**
@@ -81,9 +82,18 @@ class ConvertSqlAnnotationToFileAction : PsiElementBaseIntentionAction() {
         // Do nothing when previewing
         if (IntentionPreviewUtils.isIntentionPreviewActive()) return
         val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
+
+        val startTime = System.nanoTime()
         val converter = SqlAnnotationConverter(project, method)
         WriteCommandAction.runWriteCommandAction(project) {
             converter.convertToSqlFile()
         }
+
+        PluginLoggerUtil.countLogging(
+            className = this::class.java.simpleName,
+            actionName = "convertSqlAnnotationToFile",
+            inputName = "IntentionAction",
+            start = startTime,
+        )
     }
 }
