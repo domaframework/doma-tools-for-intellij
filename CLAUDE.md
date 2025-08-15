@@ -117,6 +117,28 @@ Action functionality for navigating between DAO files and SQL files
 Class names should have `Action` as a suffix.
 Classes should not have properties; necessary information should be obtained within functions.
 
+#### Intention Actions for SQL/Annotation Conversion
+
+**ConvertSqlFileToAnnotationAction**: Converts SQL file content to @Sql annotation
+- Extends `PsiElementBaseIntentionAction` for context-sensitive availability
+- Available when:
+  - Current file is a SQL file with corresponding DAO method
+  - DAO method doesn't have @Sql annotation
+  - DAO method has supported annotation (@Select, @Insert, @Update, @Delete, etc.) with sqlFile=true
+- Uses `SqlAnnotationConverter` to perform the conversion
+- Invoked via Alt+Enter on SQL file
+
+**ConvertSqlAnnotationToFileAction**: Converts @Sql annotation to SQL file
+- Extends `PsiElementBaseIntentionAction` for context-sensitive availability
+- Available when:
+  - Cursor is on a DAO method with @Sql annotation
+  - Method has supported annotation (@Select, @Insert, @Update, @Delete, etc.)
+- Uses `SqlAnnotationConverter` to perform the conversion
+- Creates SQL file in appropriate directory structure (META-INF/...)
+- Invoked via Alt+Enter on DAO method with @Sql annotation
+
+Both actions use `WriteCommandAction` to ensure changes are undoable and properly tracked by IntelliJ's local history.
+
 ### LineMarker
 Line marker functionality for DAO methods and DOMA directives in SQL
 

@@ -82,7 +82,7 @@
       implementationClass="org.domaframework.doma.intellij.setting.SqlFileType"
       fieldName="INSTANCE"
       language="DomaSql"
-      extensions="sql"/>
+      extensions="sql;script"/>
     <lang.parserDefinition
       language="DomaSql"
       implementationClass="org.domaframework.doma.intellij.setting.SqlParserDefinition"/>
@@ -91,6 +91,20 @@
       implementationClass="org.domaframework.doma.intellij.highlighter.SqlSyntaxHighlighterFactory"/>
     <colorSettingsPage
       implementation="org.domaframework.doma.intellij.highlighter.SqlColorSettingsPage"/>
+
+    <!-- Intention Actions -->
+    <intentionAction>
+      <language>JAVA</language>
+      <className>org.domaframework.doma.intellij.action.dao.ConvertSqlAnnotationToFileAction</className>
+      <category>Doma tools</category>
+      <skipBeforeAfter>true</skipBeforeAfter>
+    </intentionAction>
+    <intentionAction>
+      <language>DomaSql</language>
+      <className>org.domaframework.doma.intellij.action.dao.ConvertSqlFileToAnnotationAction</className>
+      <category>Doma tools</category>
+      <skipBeforeAfter>true</skipBeforeAfter>
+    </intentionAction>
   </extensions>
 
   <extensions defaultExtensionNs="org.intellij.intelliLang">

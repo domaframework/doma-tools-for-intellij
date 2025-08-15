@@ -1,0 +1,1 @@
+delete from empl<caret>oyee where id = /* employees.id */1

@@ -1,0 +1,1 @@
+delete fr<caret>om employee where id = /* employee.id */1

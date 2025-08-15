@@ -81,7 +81,9 @@ fun findUseSqlDaoMethod(
             val targetMethod =
                 methods.firstOrNull { method ->
                     val psiDaoMethod = PsiDaoMethod(file.project, method)
-                    psiDaoMethod.isUseSqlFileMethod()
+                    // When jumping after generating an annotation from an SQL file,
+                    // since the SQL annotation is already present, allow jumping even if the SQL file also exists.
+                    psiDaoMethod.isUseSqlFileMethod() || (psiDaoMethod.useSqlAnnotation() && psiDaoMethod.sqlFile != null)
                 }
             return targetMethod
             break
