@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [2.1.1] - 2025-08-15
+
+### Dependency Updates
+
+- Update actions/checkout action to v5 ([#381])
+
+[#381]:https://github.com/domaframework/doma-tools-for-intellij/pull/381
+
+
 ## [2.1.0] - 2025-08-08
 
 ### New Features
@@ -469,3 +478,4 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[2.1.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.1.0...2.1.1
