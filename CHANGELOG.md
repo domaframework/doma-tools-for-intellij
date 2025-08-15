@@ -2,6 +2,47 @@
 
 ## [Unreleased]
 
+## [2.1.0] - 2025-08-15
+
+### New Features
+
+-  Add bidirectional conversion between SQL files and @Sql annotations ([#383])
+- Check for Disallowed Parameter Types Used as SQL Bind Variables ([#377])
+- Exclude Specific DAO Parameter Types from SQL Bind Variable Suggestions ([#373])
+- Enhance annotation option parameter validation for embedded properties ([#368])
+
+### Bug Fixes
+
+- Fixes to Annotation Option Validation ([#378])
+- Fix DAO parameter type select options handling ([#371])
+- Formatting Support for Single-Line Injected SQL in @Sql Annotations ([#364])
+
+### Dependency Updates
+
+- Update dependency org.jetbrains.intellij.platform to v2.7.2 ([#385])
+- Update dependency org.jetbrains.kotlin.jvm to v2.2.10 ([#384])
+- Update dependency org.jetbrains.intellij.plugins:verifier-cli to v1.393 ([#382])
+- Update dependency org.jetbrains.intellij.platform to v2.7.1 ([#380])
+- Update dependency org.jetbrains.intellij.plugins:verifier-cli to v1.391 ([#379])
+- Update dependency gradle to v9 ([#354])
+- Update dependency org.jetbrains.changelog to v2.4.0 ([#365])
+
+[#383]:https://github.com/domaframework/doma-tools-for-intellij/pull/383
+[#377]:https://github.com/domaframework/doma-tools-for-intellij/pull/377
+[#373]:https://github.com/domaframework/doma-tools-for-intellij/pull/373
+[#368]:https://github.com/domaframework/doma-tools-for-intellij/pull/368
+[#378]:https://github.com/domaframework/doma-tools-for-intellij/pull/378
+[#371]:https://github.com/domaframework/doma-tools-for-intellij/pull/371
+[#364]:https://github.com/domaframework/doma-tools-for-intellij/pull/364
+[#385]:https://github.com/domaframework/doma-tools-for-intellij/pull/385
+[#384]:https://github.com/domaframework/doma-tools-for-intellij/pull/384
+[#382]:https://github.com/domaframework/doma-tools-for-intellij/pull/382
+[#380]:https://github.com/domaframework/doma-tools-for-intellij/pull/380
+[#379]:https://github.com/domaframework/doma-tools-for-intellij/pull/379
+[#354]:https://github.com/domaframework/doma-tools-for-intellij/pull/354
+[#365]:https://github.com/domaframework/doma-tools-for-intellij/pull/365
+
+
 ## [2.0.0] - 2025-08-04
 
 ### New Features
@@ -441,3 +482,4 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[2.1.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.0.0...2.1.0
