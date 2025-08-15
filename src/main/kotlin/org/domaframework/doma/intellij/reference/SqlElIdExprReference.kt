@@ -140,7 +140,7 @@ class SqlElIdExprReference(
     ): PsiElement? {
         val searchText = cleanString(targetElement.text)
         val reference =
-            topParentClass.findField(searchText) ?: topParentClass.findMethod(searchText)
+            topParentClass.findField(searchText) ?: topParentClass.findMethod(targetElement)
         if (reference != null) {
             PluginLoggerUtil.countLogging(
                 this::class.java.simpleName,

@@ -49,14 +49,13 @@ class SqlBindVariableInspectionVisitor(
     override fun visitElStaticFieldAccessExpr(element: SqlElStaticFieldAccessExpr) {
         super.visitElStaticFieldAccessExpr(element)
         val processor = InspectionStaticFieldAccessVisitorProcessor(this.shortName)
-        processor.check(element, holder)
+        processor.checkBindVariableDefine(element, holder)
     }
 
     override fun visitElFieldAccessExpr(element: SqlElFieldAccessExpr) {
         super.visitElFieldAccessExpr(element)
-        val file = element.containingFile ?: return
         val processor = InspectionFieldAccessVisitorProcessor(shortName, element)
-        processor.check(holder, file)
+        processor.checkBindVariableDefine(holder)
     }
 
     override fun visitElPrimaryExpr(element: SqlElPrimaryExpr) {

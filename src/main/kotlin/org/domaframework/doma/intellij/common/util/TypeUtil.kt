@@ -43,6 +43,19 @@ object TypeUtil {
     }
 
     /**
+     * Checks if the actual type is the same as the expected type, ignoring boxing.
+     */
+    fun sameTypeIgnoringBoxing(
+        actual: PsiType,
+        expect: PsiType?,
+    ): Boolean {
+        val au = expect?.let { actual.isAssignableFrom(it) }
+        val eu = expect?.isAssignableFrom(actual)
+
+        return au == true && eu == true
+    }
+
+    /**
      * Checks if the given type is an entity.
      */
     fun isEntity(

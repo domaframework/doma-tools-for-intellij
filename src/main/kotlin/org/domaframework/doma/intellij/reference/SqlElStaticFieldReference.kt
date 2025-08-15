@@ -62,7 +62,7 @@ class SqlElStaticFieldReference(
                 ForDirectiveUtil.getFieldAccessLastPropertyClassType(
                     targetElements,
                     staticAccessParent.project,
-                    it,
+                    it.parent,
                     dropLastIndex = 1,
                 )
             }
