@@ -108,7 +108,6 @@ class FieldMethodResolver {
 
             val paramTypes =
                 parametersExpr.extractParameterTypes(
-                    parametersExpr.elExprList,
                     PsiManager.getInstance(project),
                 )
 
@@ -143,7 +142,6 @@ class FieldMethodResolver {
         ): ResolveResult {
             val paramTypes =
                 paramExpr.extractParameterTypes(
-                    paramExpr.elExprList,
                     PsiManager.getInstance(project),
                 )
 

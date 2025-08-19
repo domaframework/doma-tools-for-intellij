@@ -89,6 +89,8 @@ class MethodMatcher {
         private fun areTypesCompatible(
             expectedType: PsiType,
             actualType: PsiType?,
-        ): Boolean = expectedType == actualType || TypeUtil.sameTypeIgnoringBoxing(expectedType, actualType)
+        ): Boolean =
+            expectedType == actualType || TypeUtil.sameTypeIgnoringBoxing(expectedType, actualType) ||
+                actualType?.superTypes?.any { it == expectedType } == true
     }
 }
