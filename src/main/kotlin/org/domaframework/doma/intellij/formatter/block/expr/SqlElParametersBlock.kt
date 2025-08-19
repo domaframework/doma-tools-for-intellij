@@ -63,14 +63,16 @@ class SqlElParametersBlock(
         val childBlock1 = child1 as? SqlBlock
         val childBlock2 = child2 as? SqlBlock
 
-        if (childBlock1 == null) return SqlCustomSpacingBuilder.nonSpacing
+        if (childBlock1 == null || childBlock1.node.elementType == SqlTypes.LEFT_PAREN) {
+            return SqlCustomSpacingBuilder.nonSpacing
+        }
         if (childBlock2 != null) {
             if (childBlock2.node.elementType == SqlTypes.RIGHT_PAREN) {
                 return SqlCustomSpacingBuilder.nonSpacing
             }
             return when (childBlock1) {
-                is SqlElSymbolBlock -> SqlCustomSpacingBuilder.nonSpacing
                 is SqlElCommaBlock -> SqlCustomSpacingBuilder.normalSpacing
+                is SqlElSymbolBlock -> SqlCustomSpacingBuilder.nonSpacing
                 else -> SqlCustomSpacingBuilder.nonSpacing
             }
         }

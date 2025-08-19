@@ -26,7 +26,7 @@ AS nearest
           WHERE p.TYPE = 'Star'
              -- Line3
              OR ( p.flags & FPHOTOFLAGS('EDGE') = 0 AND (p.psfmag_g - p.extinction_g) BETWEEN 15 AND 20)
-            /*%if status == 2 */
+            /*%if status == 2 && employee.employeeParams(1,null, true ,"A") */
             -- Line4
             and u.propermotion > 2.0
             /** And  Group */

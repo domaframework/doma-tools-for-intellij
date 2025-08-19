@@ -22,7 +22,6 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlElClass
@@ -56,7 +55,7 @@ class SqlElStaticFieldAccessBlock(
                 SqlElIdentifierBlock(child, context)
 
             SqlTypes.EL_PARAMETERS ->
-                SqlParallelListBlock(child, context)
+                SqlElParametersBlock(child, context)
 
             else -> SqlUnknownBlock(child, context)
         }
