@@ -18,15 +18,35 @@ package org.domaframework.doma.intellij.formatter.block.expr
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElPrimaryBlock(
     node: ASTNode,
-    context: SqlBlockFormattingContext,
+    private val context: SqlBlockFormattingContext,
 ) : SqlExprBlock(
         node,
         context,
     ) {
+    override fun getBlock(child: ASTNode): SqlBlock =
+        when (child.elementType) {
+            SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN ->
+                SqlElSymbolBlock(child, context)
+
+            SqlTypes.EL_PRIMARY_EXPR ->
+                SqlElPrimaryBlock(child, context)
+
+            SqlTypes.COMMA ->
+                SqlElCommaBlock(child, context)
+
+            SqlTypes.EL_PRIMARY_EXPR, SqlTypes.EL_NUMBER, SqlTypes.EL_STRING, SqlTypes.BOOLEAN, SqlTypes.EL_NULL ->
+                SqlElPrimaryBlock(child, context)
+
+            else -> SqlUnknownBlock(child, context)
+        }
+
     override fun getSpacing(
         child1: Block?,
         child2: Block,

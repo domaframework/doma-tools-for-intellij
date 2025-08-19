@@ -15,9 +15,12 @@
  */
 package org.domaframework.doma.intellij.formatter.block.expr
 
+import com.intellij.formatting.Block
+import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
+import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
@@ -39,8 +42,39 @@ class SqlElParametersBlock(
             SqlTypes.COMMA ->
                 SqlElCommaBlock(child, context)
 
+            SqlTypes.EL_FIELD_ACCESS_EXPR ->
+                SqlElFieldAccessBlock(child, context)
+
+            SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR ->
+                SqlElStaticFieldAccessBlock(child, context)
+
+            SqlTypes.EL_PRIMARY_EXPR ->
+                SqlElPrimaryBlock(child, context)
+
             else -> SqlUnknownBlock(child, context)
         }
 
     override fun isLeaf(): Boolean = false
+
+    override fun getSpacing(
+        child1: Block?,
+        child2: Block,
+    ): Spacing? {
+        val childBlock1 = child1 as? SqlBlock
+        val childBlock2 = child2 as? SqlBlock
+
+        if (childBlock1 == null) return SqlCustomSpacingBuilder.nonSpacing
+        if (childBlock2 != null) {
+            if (childBlock2.node.elementType == SqlTypes.RIGHT_PAREN) {
+                return SqlCustomSpacingBuilder.nonSpacing
+            }
+            return when (childBlock1) {
+                is SqlElSymbolBlock -> SqlCustomSpacingBuilder.nonSpacing
+                is SqlElCommaBlock -> SqlCustomSpacingBuilder.normalSpacing
+                else -> return SqlCustomSpacingBuilder.normalSpacing
+            }
+        }
+
+        return SqlCustomSpacingBuilder.normalSpacing
+    }
 }

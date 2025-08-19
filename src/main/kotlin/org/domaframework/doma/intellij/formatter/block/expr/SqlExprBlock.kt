@@ -21,6 +21,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 abstract class SqlExprBlock(
@@ -39,8 +40,7 @@ abstract class SqlExprBlock(
         var child = node.firstChildNode
         while (child != null) {
             if (child !is PsiWhiteSpace) {
-                val block = getBlock(child)
-                blocks.add(block)
+                blocks.add(getBlock(child))
             }
             child = child.treeNext
         }
@@ -50,5 +50,5 @@ abstract class SqlExprBlock(
     override fun getSpacing(
         child1: Block?,
         child2: Block,
-    ): Spacing? = null
+    ): Spacing? = SqlCustomSpacingBuilder.nonSpacing
 }
