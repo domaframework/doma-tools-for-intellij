@@ -14,12 +14,6 @@
 - Update dependency org.jetbrains.intellij.plugins:verifier-cli to v1.394 ([#389])
 - Update actions/checkout action to v5 ([#381])
 
-[#394]:https://github.com/domaframework/doma-tools-for-intellij/pull/394
-[#396]:https://github.com/domaframework/doma-tools-for-intellij/pull/396
-[#389]:https://github.com/domaframework/doma-tools-for-intellij/pull/389
-[#381]:https://github.com/domaframework/doma-tools-for-intellij/pull/381
-
-
 ## [2.1.0] - 2025-08-08
 
 ### New Features
@@ -328,7 +322,8 @@
   - Rename SQL file directory when renaming DAO
   - Change DAO package name or SQL file directory configuration when changing configuration
 
-[Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v1.1.1...v2.0.0
 [1.1.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v1.1.0...v1.1.1
@@ -377,6 +372,10 @@
 [#48]: https://github.com/domaframework/doma-tools-for-intellij/pull/48
 [#45]: https://github.com/domaframework/doma-tools-for-intellij/pull/45
 [#43]: https://github.com/domaframework/doma-tools-for-intellij/pull/43
+[#396]: https://github.com/domaframework/doma-tools-for-intellij/pull/396
+[#394]: https://github.com/domaframework/doma-tools-for-intellij/pull/394
+[#389]: https://github.com/domaframework/doma-tools-for-intellij/pull/389
+[#381]: https://github.com/domaframework/doma-tools-for-intellij/pull/381
 [#378]: https://github.com/domaframework/doma-tools-for-intellij/pull/378
 [#377]: https://github.com/domaframework/doma-tools-for-intellij/pull/377
 [#373]: https://github.com/domaframework/doma-tools-for-intellij/pull/373
@@ -487,4 +486,3 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
-[2.1.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.1.0...2.1.1
