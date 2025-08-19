@@ -19,6 +19,7 @@ import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlLiteralBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -41,8 +42,8 @@ class SqlElPrimaryBlock(
             SqlTypes.COMMA ->
                 SqlElCommaBlock(child, context)
 
-            SqlTypes.EL_PRIMARY_EXPR, SqlTypes.EL_NUMBER, SqlTypes.EL_STRING, SqlTypes.BOOLEAN, SqlTypes.EL_NULL ->
-                SqlElPrimaryBlock(child, context)
+            SqlTypes.EL_NUMBER, SqlTypes.EL_STRING, SqlTypes.BOOLEAN, SqlTypes.EL_NULL ->
+                SqlLiteralBlock(child, context)
 
             else -> SqlUnknownBlock(child, context)
         }

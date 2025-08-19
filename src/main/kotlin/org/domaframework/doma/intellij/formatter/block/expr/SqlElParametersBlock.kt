@@ -71,7 +71,7 @@ class SqlElParametersBlock(
             return when (childBlock1) {
                 is SqlElSymbolBlock -> SqlCustomSpacingBuilder.nonSpacing
                 is SqlElCommaBlock -> SqlCustomSpacingBuilder.normalSpacing
-                else -> return SqlCustomSpacingBuilder.normalSpacing
+                else -> return SqlCustomSpacingBuilder.nonSpacing
             }
         }
 
