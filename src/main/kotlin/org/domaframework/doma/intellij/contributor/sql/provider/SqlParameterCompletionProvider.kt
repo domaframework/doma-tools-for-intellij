@@ -189,7 +189,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         val daoMethod = findDaoMethod(originalFile)
         val searchText = cleanString(getSearchElementText(position))
         var topElementType: PsiType? = null
-        if (elements.isEmpty() && daoMethod != null) {
+        if (elements.isEmpty()) {
             getElementTypeByFieldAccess(originalFile, position, elements, daoMethod, result)
             return
         }
@@ -303,15 +303,15 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         originalFile: PsiFile,
         position: PsiElement,
         elements: List<PsiElement>,
-        daoMethod: PsiMethod,
+        daoMethod: PsiMethod?,
         result: CompletionResultSet,
     ): PsiType? {
         val topElement = elements.firstOrNull()
         val topText = cleanString(getSearchElementText(topElement))
-        val matchParams = daoMethod.searchParameter(topText)
-        val findParam = matchParams.find { it.name == topText }
+        val matchParams = daoMethod?.searchParameter(topText)
+        val findParam = matchParams?.find { it.name == topText }
         if (elements.size <= 1 && findParam == null) {
-            matchParams.map { match ->
+            matchParams?.map { match ->
                 result.addElement(LookupElementBuilder.create(match.name))
             }
             // Add ForDirective Items

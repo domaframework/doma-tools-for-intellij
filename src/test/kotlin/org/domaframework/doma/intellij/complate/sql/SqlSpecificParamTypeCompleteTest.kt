@@ -92,7 +92,6 @@ class SqlSpecificParamTypeCompleteTest : DomaSqlTest() {
         myFixture.configureFromExistingVirtualFile(sqlFile)
         val lookupElements = myFixture.completeBasic()
         val suggestions = lookupElements.map { it.lookupString }
-        println(suggestions.map { it })
         expectedSuggestions.forEach { expected ->
             assertTrue(
                 "Expected '$expected' in completion suggestions: $suggestions",
