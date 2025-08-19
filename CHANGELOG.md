@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## [2.1.1] - 2025-08-19
+
+### Bug Fixes
+
+- Fix: Freeze During SQL Formatting ([#394])
+- Fix error on code completion for SQL file with unrecognized DAO method ([#396])
+
+### Dependency Updates
+
+- Update dependency org.jetbrains.intellij.plugins:verifier-cli to v1.394 ([#389])
+- Update actions/checkout action to v5 ([#381])
+
+[#394]:https://github.com/domaframework/doma-tools-for-intellij/pull/394
+[#396]:https://github.com/domaframework/doma-tools-for-intellij/pull/396
+[#389]:https://github.com/domaframework/doma-tools-for-intellij/pull/389
+[#381]:https://github.com/domaframework/doma-tools-for-intellij/pull/381
+
+
 ## [2.1.0] - 2025-08-08
 
 ### New Features
@@ -469,3 +487,4 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[2.1.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.1.0...2.1.1
