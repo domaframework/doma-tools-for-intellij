@@ -249,11 +249,16 @@ class SqlElConditionLoopCommentBlock(
                     // At this point, it's not possible to determine whether the parent keyword group appears before or after this block based solely on the parent-child relationship.
                     // Therefore, determine the position directly using the text offset.
                     return if (!isBeforeParentBlock()) {
-                        // The child branch applies in cases where a conditional directive is included as a child of this block.
-                        val questOffset = if (parent is SqlWithQueryGroupBlock) 0 else 1
-                        parent.indent.groupIndentLen
-                            .plus(openConditionLoopDirectiveCount * 2)
-                            .plus(questOffset)
+                        val lastBlockConditionLoopCommentBlock: SqlElConditionLoopCommentBlock? = getLastBlockHasConditionLoopDirective()
+                        if (lastBlockConditionLoopCommentBlock != null && lastBlockConditionLoopCommentBlock.conditionEnd != null) {
+                            lastBlockConditionLoopCommentBlock.indent.indentLen
+                        } else {
+                            // The child branch applies in cases where a conditional directive is included as a child of this block.
+                            val questOffset = if (parent is SqlWithQueryGroupBlock) 0 else 1
+                            parent.indent.groupIndentLen
+                                .plus(openConditionLoopDirectiveCount * 2)
+                                .plus(questOffset)
+                        }
                     } else {
                         parent.indent.indentLen.plus(openConditionLoopDirectiveCount * 2)
                     }
