@@ -28,6 +28,7 @@ import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
@@ -112,9 +113,9 @@ open class SqlBlock(
      *
      * @example
      * ```sql
-     * WHERE
-     *      /*%if status == "pending" */
-     *      status = 'pending'
+     * WHERE -- grand
+     *      /*%if status == "pending" */ -- parent
+     *      status = 'pending' -- child
      * ```
      */
     protected fun isElementAfterConditionLoopDirective(): Boolean =
@@ -123,15 +124,27 @@ open class SqlBlock(
                 (parent.parentBlock is SqlNewGroupBlock || parent.parentBlock is SqlElConditionLoopCommentBlock)
         } == true
 
+    protected fun isElementAfterConditionLoopEnd(): Boolean =
+        (
+            prevBlocks
+                .lastOrNull()
+                ?.childBlocks
+                ?.firstOrNull() as? SqlElConditionLoopCommentBlock
+        )?.conditionEnd != null
+
     protected fun isFirstChildConditionLoopDirective(): Boolean = childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock
 
     fun getChildBlocksDropLast(
         dropIndex: Int = 1,
         skipCommentBlock: Boolean = true,
+        skipConditionLoopCommentBlock: Boolean = true,
     ): List<SqlBlock> {
-        val children = childBlocks.dropLast(dropIndex)
+        var children = childBlocks.dropLast(dropIndex)
         if (skipCommentBlock) {
-            return children.filter { it !is SqlDefaultCommentBlock }
+            children = children.filter { it !is SqlDefaultCommentBlock }
+        }
+        if (skipConditionLoopCommentBlock) {
+            children = children.filter { it !is SqlElConditionLoopCommentBlock }
         }
         return children
     }
@@ -175,7 +188,8 @@ open class SqlBlock(
     private fun shouldSaveSpaceForConditionLoop(): Boolean =
         isConditionLoopDirectiveRegisteredBeforeParent() ||
             isElementAfterConditionLoopDirective() ||
-            isFirstChildConditionLoopDirective()
+            isFirstChildConditionLoopDirective() ||
+            isElementAfterConditionLoopEnd()
 
     private fun shouldSaveSpaceForNewGroup(parent: SqlNewGroupBlock): Boolean {
         val prevWord = prevBlocks.lastOrNull { it !is SqlCommentBlock }
@@ -201,6 +215,9 @@ open class SqlBlock(
         return lastPrevBlock is SqlElConditionLoopCommentBlock &&
             lastPrevBlock.node.psi.startOffset > parent.node.psi.startOffset
     }
+
+    protected fun getLastBlockHasConditionLoopDirective(): SqlElConditionLoopCommentBlock? =
+        (prevBlocks.lastOrNull()?.childBlocks?.firstOrNull() as? SqlElConditionLoopCommentBlock)
 
     /**
      * Creates the indentation length for the block.

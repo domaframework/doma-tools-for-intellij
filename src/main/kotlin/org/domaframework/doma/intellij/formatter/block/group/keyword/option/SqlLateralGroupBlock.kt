@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword.condition
+package org.domaframework.doma.intellij.formatter.block.group.keyword.option
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlSecondOptionKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-/**
- * Keywords representing conditions such as `AND` or `OR`
- */
-class SqlConditionKeywordGroupBlock(
+class SqlLateralGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlSecondOptionKeywordGroupBlock(
+) : SqlKeywordGroupBlock(
         node,
+        IndentType.OPTIONS,
         context,
     ) {
-    var conditionalExpressionGroupBlock: SqlConditionalExpressionGroupBlock? = null
+    var subQueryGroupBlock: SqlSubGroupBlock? = null
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
@@ -41,26 +41,20 @@ class SqlConditionKeywordGroupBlock(
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-        if (lastGroup is SqlConditionalExpressionGroupBlock) {
-            lastGroup.conditionKeywordGroupBlocks.add(this)
+        if (lastGroup is SqlFromGroupBlock) {
+            if (lastGroup.tableBlocks.isEmpty()) lastGroup.tableBlocks.add(this)
         }
     }
 
-    // If AND appears after OR, change it so that it is right-justified.
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            val groupLen = parent.indent.groupIndentLen
-            return if (parent is SqlElConditionLoopCommentBlock) {
-                parent.indent.groupIndentLen
-            } else if (parent is SqlSubGroupBlock) {
-                if (getNodeText() == "and") {
-                    groupLen
-                } else {
-                    groupLen.plus(1)
-                }
-            } else {
-                return parent.indent.groupIndentLen.minus(getNodeText().length)
-            }
-        } ?: return 1
+            if (parent is SqlElConditionLoopCommentBlock) return parent.indent.groupIndentLen
+            return parent.indent.groupIndentLen.plus(1)
+        }
+        return 0
     }
+
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
 }

@@ -21,14 +21,14 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlInGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlJoinQueriesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithColumnGroupBlock
@@ -122,11 +122,14 @@ abstract class SqlSubGroupBlock(
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         lastGroup?.let { lastBlock ->
             if (lastBlock is SqlJoinQueriesGroupBlock) return true
-            val prevBlock = prevChildren?.dropLast(1)?.lastOrNull()
-            if (prevBlock is SqlKeywordBlock) {
-                if (prevBlock.getNodeText() == "in") return false
-            }
+            if (lastGroup is SqlInGroupBlock) return false
             if (lastGroup is SqlElConditionLoopCommentBlock) return true
+            val grand = lastBlock.parentBlock
+            if (grand is SqlElConditionLoopCommentBlock) {
+                if (grand.conditionType.isElse()) {
+                    return false
+                }
+            }
             return TypeUtil.isExpectedClassType(NEW_LINE_EXPECTED_TYPES, lastBlock.parentBlock)
         }
         return false

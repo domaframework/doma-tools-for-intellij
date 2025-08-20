@@ -41,7 +41,7 @@ abstract class SqlTopQueryGroupBlock(
                 SqlWithQuerySubGroupBlock::class,
                 SqlElConditionLoopCommentBlock::class,
             )
-        private val offset = 0
+        private const val OFFSET = 0
     }
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
@@ -55,7 +55,7 @@ abstract class SqlTopQueryGroupBlock(
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            if (parent.indent.indentLevel == IndentType.FILE) return offset
+            if (parent.indent.indentLevel == IndentType.FILE) return OFFSET
             if (parent is SqlElConditionLoopCommentBlock) {
                 return createIndentLenInConditionLoopDirective(parent)
             }
@@ -84,7 +84,7 @@ abstract class SqlTopQueryGroupBlock(
                 // align with the indent of that parent's parent
                 prevGroupBlock?.let { prev ->
                     if (prev.indent.indentLevel >= indent.indentLevel) {
-                        p.indent.indentLen = prev.parentBlock?.indent?.indentLen ?: offset
+                        p.indent.indentLen = prev.parentBlock?.indent?.indentLen ?: OFFSET
                     }
                 }
             } else {
