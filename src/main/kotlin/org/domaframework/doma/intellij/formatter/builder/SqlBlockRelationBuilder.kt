@@ -138,11 +138,27 @@ class SqlBlockRelationBuilder(
         val context = SetParentContext(childBlock, blockBuilder)
         if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
             handleConditionLoopParent(lastGroupBlock, context, childBlock)
-        } else if (childBlock.indent.indentLevel == IndentType.TOP) {
-            handleTopLevelKeyword(lastGroupBlock, childBlock, context)
-        } else {
-            handleNonTopLevelKeyword(lastGroupBlock, lastIndentLevel, childBlock, context)
+            return
         }
+        if (childBlock.indent.indentLevel == IndentType.TOP) {
+            handleTopLevelKeyword(lastGroupBlock, childBlock, context)
+            return
+        }
+        if (lastGroupBlock !is SqlSubGroupBlock) {
+            if (lastIndentLevel > childBlock.indent.indentLevel) {
+                val findLastGroup =
+                    blockBuilder.getGroupTopNodeIndexHistory().findLast {
+                        it.indent.indentLevel < childBlock.indent.indentLevel ||
+                            it is
+                                SqlElConditionLoopCommentBlock
+                    }
+                if (findLastGroup is SqlElConditionLoopCommentBlock) {
+                    handleConditionLoopParent(findLastGroup, context, childBlock)
+                    return
+                }
+            }
+        }
+        handleNonTopLevelKeyword(lastGroupBlock, lastIndentLevel, childBlock, context)
     }
 
     private fun handleConditionLoopParent(

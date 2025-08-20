@@ -15,9 +15,10 @@ SELECT *
    /*%end*/
    /*%if status != null */
      /*%if status == "available" */
-     AND p.stock_quantity > IN /* quantitys */(0, 1, 2)
-     AND p.is_active = true
+     AND p.stock_quantitys IN /* quantitys */(0, 1, 2)
+     OR p.is_active = true
      /*%elseif status == "outofstock" */
+     OR p.is_active = true
      AND p.stock_quantitys IN /* quantitys */(0, 1, 2)
      /*%else*/
      AND p.is_active = false

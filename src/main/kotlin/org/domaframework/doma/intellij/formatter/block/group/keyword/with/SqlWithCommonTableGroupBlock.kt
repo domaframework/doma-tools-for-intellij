@@ -77,7 +77,7 @@ class SqlWithCommonTableGroupBlock(
         parentBlock?.let { parent ->
             val prevBlock =
                 parent
-                    .getChildBlocksDropLast()
+                    .getChildBlocksDropLast(skipConditionLoopCommentBlock = false)
                     .lastOrNull()
             return if (prevBlock is SqlElConditionLoopCommentBlock) 4 else 0
         }
