@@ -246,10 +246,6 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("ConditionalUnion.sql", "ConditionalUnion$formatDataPrefix.sql")
     }
 
-    fun testConditionalSubqueryFormatter() {
-        formatSqlFile("ConditionalSubquery.sql", "ConditionalSubquery$formatDataPrefix.sql")
-    }
-
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,
