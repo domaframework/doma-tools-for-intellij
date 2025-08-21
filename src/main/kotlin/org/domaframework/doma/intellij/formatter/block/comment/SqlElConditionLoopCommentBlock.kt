@@ -221,20 +221,17 @@ class SqlElConditionLoopCommentBlock(
                 is SqlKeywordGroupBlock -> {
                     // At this point, it's not possible to determine whether the parent keyword group appears before or after this block based solely on the parent-child relationship.
                     // Therefore, determine the position directly using the text offset.
-                    return if (!isBeforeParentBlock()) {
-                        val lastBlockConditionLoopCommentBlock: SqlElConditionLoopCommentBlock? = getLastBlockHasConditionLoopDirective()
-                        if (lastBlockConditionLoopCommentBlock != null && lastBlockConditionLoopCommentBlock.conditionEnd != null) {
-                            lastBlockConditionLoopCommentBlock.indent.indentLen
-                        } else {
-                            // The child branch applies in cases where a conditional directive is included as a child of this block.
-                            val questOffset = if (parent is SqlWithQueryGroupBlock) 0 else 1
-                            parent.indent.groupIndentLen
-                                .plus(openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP)
-                                .plus(questOffset)
-                        }
-                    } else {
-                        parent.indent.indentLen.plus(openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP)
+                    if (isBeforeParentBlock()) {
+                        return parent.indent.indentLen + openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP
                     }
+                    getLastBlockHasConditionLoopDirective()?.let { lastBlock ->
+                        if (lastBlock.conditionEnd != null) {
+                            return lastBlock.indent.indentLen
+                        }
+                    }
+                    return parent.indent.groupIndentLen +
+                        openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP +
+                        if (parent !is SqlWithQueryGroupBlock) 1 else 0
                 }
                 else -> return parent.indent.indentLen.plus(openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP)
             }
