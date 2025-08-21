@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
@@ -95,7 +96,11 @@ open class SqlKeywordBlock(
             }
 
             else -> {
-                parentBlock?.indent?.groupIndentLen ?: 1
+                if (parentBlock is SqlElConditionLoopCommentBlock) {
+                    parentBlock?.indent?.groupIndentLen ?: 1
+                } else {
+                    parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+                }
             }
         }
 }

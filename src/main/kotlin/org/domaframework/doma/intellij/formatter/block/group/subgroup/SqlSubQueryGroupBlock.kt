@@ -66,11 +66,7 @@ open class SqlSubQueryGroupBlock(
                 is SqlJoinQueriesGroupBlock -> return parent.indent.indentLen
                 is SqlJoinGroupBlock -> return parent.indent.groupIndentLen.plus(1)
                 else -> {
-                    val children =
-                        prevChildren?.filter {
-                            it !is SqlDefaultCommentBlock &&
-                                (parent as? SqlKeywordGroupBlock)?.topKeywordBlocks?.contains(it) == false
-                        }
+                    val children = prevChildren?.filter { shouldIncludeChildBlock(it, parent) }
                     // Retrieve the list of child blocks excluding the conditional directive that appears immediately before this block,
                     // as it is already included as a child block.
                     val sumChildren =
@@ -89,6 +85,13 @@ open class SqlSubQueryGroupBlock(
                 }
             }
         } ?: offset
+
+    private fun shouldIncludeChildBlock(
+        block: SqlBlock,
+        parent: SqlBlock,
+    ): Boolean =
+        block !is SqlDefaultCommentBlock &&
+            (parent as? SqlKeywordGroupBlock)?.topKeywordBlocks?.contains(block) == false
 
     override fun createGroupIndentLen(): Int {
         parentBlock?.let { parent ->

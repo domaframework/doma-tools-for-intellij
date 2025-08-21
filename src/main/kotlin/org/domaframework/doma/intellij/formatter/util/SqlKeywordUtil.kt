@@ -292,6 +292,15 @@ class SqlKeywordUtil {
 
         fun isWithOptionKeyword(keyword: String): Boolean = WITH_OPTION_KEYWORDS.contains(keyword.lowercase())
 
+        private val EXISTS_KEYWORDS =
+            setOf(
+                "if",
+                "exists",
+                "not",
+            )
+
+        fun isExistsKeyword(keyword: String): Boolean = EXISTS_KEYWORDS.contains(keyword.lowercase())
+
         private val SET_LINE_KEYWORDS =
             mapOf(
                 "into" to setOf("insert"),
@@ -307,6 +316,7 @@ class SqlKeywordUtil {
                 "by" to setOf("group", "order", "first"),
                 "and" to setOf("between"),
                 "if" to setOf("table", "create"),
+                "exists" to setOf("if", "where"),
                 "conflict" to setOf("on"),
                 "nothing" to setOf("do"),
                 "constraint" to setOf("on"),
