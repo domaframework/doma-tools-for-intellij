@@ -25,10 +25,11 @@ import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlInGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
@@ -62,6 +63,7 @@ class SqlBlockRelationBuilder(
                 SqlInlineSecondGroupBlock::class,
                 SqlColumnDefinitionRawGroupBlock::class,
                 SqlLateralGroupBlock::class,
+                SqlInGroupBlock::class,
             )
 
         private val TOP_LEVEL_EXPECTED_TYPES =
@@ -136,11 +138,27 @@ class SqlBlockRelationBuilder(
         val context = SetParentContext(childBlock, blockBuilder)
         if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
             handleConditionLoopParent(lastGroupBlock, context, childBlock)
-        } else if (childBlock.indent.indentLevel == IndentType.TOP) {
-            handleTopLevelKeyword(lastGroupBlock, childBlock, context)
-        } else {
-            handleNonTopLevelKeyword(lastGroupBlock, lastIndentLevel, childBlock, context)
+            return
         }
+        if (childBlock.indent.indentLevel == IndentType.TOP) {
+            handleTopLevelKeyword(lastGroupBlock, childBlock, context)
+            return
+        }
+        if (lastGroupBlock !is SqlSubGroupBlock) {
+            if (lastIndentLevel > childBlock.indent.indentLevel) {
+                val findLastGroup =
+                    blockBuilder.getGroupTopNodeIndexHistory().findLast {
+                        it.indent.indentLevel < childBlock.indent.indentLevel ||
+                            it is
+                                SqlElConditionLoopCommentBlock
+                    }
+                if (findLastGroup is SqlElConditionLoopCommentBlock) {
+                    handleConditionLoopParent(findLastGroup, context, childBlock)
+                    return
+                }
+            }
+        }
+        handleNonTopLevelKeyword(lastGroupBlock, lastIndentLevel, childBlock, context)
     }
 
     private fun handleConditionLoopParent(

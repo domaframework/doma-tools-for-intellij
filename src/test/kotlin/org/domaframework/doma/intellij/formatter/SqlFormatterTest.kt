@@ -230,8 +230,20 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("WithOptional.sql", "WithOptional$formatDataPrefix.sql")
     }
 
-    fun testCalculationDirectivesFormatter() {
-        formatSqlFile("CalculationDirectives.sql", "CalculationDirectives$formatDataPrefix.sql")
+    fun testConditionalInClauseFormatter() {
+        formatSqlFile("ConditionalInClause.sql", "ConditionalInClause$formatDataPrefix.sql")
+    }
+
+    fun testConditionalJoinClauseFormatter() {
+        formatSqlFile("ConditionalJoinClause.sql", "ConditionalJoinClause$formatDataPrefix.sql")
+    }
+
+    fun testConditionalWhereClauseFormatter() {
+        formatSqlFile("ConditionalWhereClause.sql", "ConditionalWhereClause$formatDataPrefix.sql")
+    }
+
+    fun testConditionalUnionFormatter() {
+        formatSqlFile("ConditionalUnion.sql", "ConditionalUnion$formatDataPrefix.sql")
     }
 
     private fun formatSqlFile(

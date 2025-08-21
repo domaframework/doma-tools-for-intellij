@@ -37,8 +37,6 @@ import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlo
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlLateralGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
@@ -47,9 +45,13 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlC
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlInGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlLateralGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlSecondKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlWhereGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlDeleteQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlJoinQueriesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
@@ -139,6 +141,12 @@ class SqlBlockGenerator(
                 }
                 if (keywordText == "lateral") {
                     return SqlLateralGroupBlock(child, sqlBlockFormattingCtx)
+                }
+                if (keywordText == "in") {
+                    return SqlInGroupBlock(
+                        child,
+                        sqlBlockFormattingCtx,
+                    )
                 }
             }
 
@@ -260,6 +268,12 @@ class SqlBlockGenerator(
                     }
                     "from" -> {
                         SqlFromGroupBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+                    }
+                    "where" -> {
+                        SqlWhereGroupBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )

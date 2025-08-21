@@ -2,7 +2,7 @@
 WITH 
 /*%for cte : cteDefinitions */
 /* cte.name */user_stats AS (
-/* cte.query */SELECT user_id, COUNT(*) as order_count FROM orders GROUP BY user_id
+/*# cte.query */SELECT user_id, COUNT(*) as order_count FROM orders GROUP BY user_id
 )
   /*%if cte_has_next */,/*%end*/
 /*%end*/

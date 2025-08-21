@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword
+package org.domaframework.doma.intellij.formatter.block.group.keyword.option
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
+import org.domaframework.doma.intellij.psi.SqlTypes
 
-class SqlLateralGroupBlock(
+class SqlInGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(
@@ -31,29 +32,45 @@ class SqlLateralGroupBlock(
         IndentType.OPTIONS,
         context,
     ) {
-    var subQueryGroupBlock: SqlSubGroupBlock? = null
-
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-        if (lastGroup is SqlFromGroupBlock) {
-            if (lastGroup.tableBlocks.isEmpty()) lastGroup.tableBlocks.add(this)
-        }
-    }
-
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             if (parent is SqlElConditionLoopCommentBlock) return parent.indent.groupIndentLen
-            return parent.indent.groupIndentLen.plus(1)
+            val prevChildren = this.prevBlocks
+            val children = prevChildren.filter { it !is SqlDefaultCommentBlock }
+            val firstChild = children.firstOrNull()
+            val sumChildren =
+                if (firstChild is SqlElConditionLoopCommentBlock) {
+                    children.drop(1).dropLastWhile { it == this }
+                } else {
+                    children
+                }
+
+            val dotCount = sumChildren.count { it.node.elementType == SqlTypes.DOT }
+            return sumChildren
+                .sumOf { prev ->
+                    prev
+                        .getChildrenTextLen()
+                        .plus(prev.getNodeText().length.plus(1))
+                }.minus(dotCount * 2)
+                .plus(parent.indent.groupIndentLen)
+                .plus(1)
         }
         return 0
     }
 
     override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        if (lastGroup is SqlElConditionLoopCommentBlock) {
+            if (lastGroup.conditionType.isElse()) return false
+            return !lastGroup.isBeforeParentBlock()
+        }
+        return false
+    }
 }

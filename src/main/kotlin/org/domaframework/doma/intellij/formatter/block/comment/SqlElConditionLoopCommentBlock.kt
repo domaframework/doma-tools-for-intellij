@@ -248,14 +248,17 @@ class SqlElConditionLoopCommentBlock(
                 is SqlKeywordGroupBlock -> {
                     // At this point, it's not possible to determine whether the parent keyword group appears before or after this block based solely on the parent-child relationship.
                     // Therefore, determine the position directly using the text offset.
-                    return if (parent.node.startOffset <
-                        node.startOffset
-                    ) {
-                        // The child branch applies in cases where a conditional directive is included as a child of this block.
-                        val questOffset = if (parent is SqlWithQueryGroupBlock) 0 else 1
-                        parent.indent.groupIndentLen
-                            .plus(openConditionLoopDirectiveCount * 2)
-                            .plus(questOffset)
+                    return if (!isBeforeParentBlock()) {
+                        val lastBlockConditionLoopCommentBlock: SqlElConditionLoopCommentBlock? = getLastBlockHasConditionLoopDirective()
+                        if (lastBlockConditionLoopCommentBlock != null && lastBlockConditionLoopCommentBlock.conditionEnd != null) {
+                            lastBlockConditionLoopCommentBlock.indent.indentLen
+                        } else {
+                            // The child branch applies in cases where a conditional directive is included as a child of this block.
+                            val questOffset = if (parent is SqlWithQueryGroupBlock) 0 else 1
+                            parent.indent.groupIndentLen
+                                .plus(openConditionLoopDirectiveCount * 2)
+                                .plus(questOffset)
+                        }
                     } else {
                         parent.indent.indentLen.plus(openConditionLoopDirectiveCount * 2)
                     }
@@ -284,5 +287,15 @@ class SqlElConditionLoopCommentBlock(
         val endDirectives = conditionLoopDirectives.count { it.conditionType.isEnd() }
         val diffCount = startDirectives.minus(endDirectives)
         return if (diffCount > 0) diffCount.minus(1) else 0
+    }
+
+    /**
+     * Determine if this conditional loop directive block is positioned before its parent block.
+     */
+    fun isBeforeParentBlock(): Boolean {
+        parentBlock?.let { parent ->
+            return parent.node.startOffset > node.startOffset
+        }
+        return false
     }
 }
