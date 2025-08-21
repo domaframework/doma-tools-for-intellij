@@ -34,7 +34,8 @@ class SqlEscapeBlock(
     }
 
     override fun createBlockIndentLen(): Int {
-        isEndEscape = parentBlock?.childBlocks?.count { it is SqlEscapeBlock }?.let { it % 2 == 0 } == true || getNodeText() == "]"
+        val hasEvenEscapeBlocks = parentBlock?.childBlocks?.count { it is SqlEscapeBlock }?.let { it % 2 == 0 } == true
+        isEndEscape = hasEvenEscapeBlocks || getNodeText() == "]"
         return if (isEndEscape) {
             0
         } else {

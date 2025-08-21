@@ -618,19 +618,24 @@ open class SqlFileBlock(
             return SqlCustomSpacingBuilder.normalSpacing
         }
 
-        if (childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElSymbolBlock ||
-            childBlock1 is SqlElAtSignBlock && childBlock2 is SqlElSymbolBlock ||
-            childBlock1 is SqlOtherBlock && childBlock2 is SqlElSymbolBlock ||
-            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElAtSignBlock ||
-            childBlock1 is SqlOtherBlock && childBlock2 is SqlOtherBlock ||
-            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlOtherBlock
-        ) {
+        if (isNonSpacingPair(childBlock1, childBlock2)) {
             return SqlCustomSpacingBuilder.nonSpacing
         }
 
         val spacing: Spacing? = customSpacingBuilder?.getCustomSpacing(childBlock1, childBlock2)
         return spacing ?: spacingBuilder.getSpacing(this, childBlock1, childBlock2)
     }
+
+    private fun isNonSpacingPair(
+        childBlock1: SqlBlock?,
+        childBlock2: SqlBlock,
+    ): Boolean =
+        childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElSymbolBlock ||
+            childBlock1 is SqlElAtSignBlock && childBlock2 is SqlElSymbolBlock ||
+            childBlock1 is SqlOtherBlock && childBlock2 is SqlElSymbolBlock ||
+            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElAtSignBlock ||
+            childBlock1 is SqlOtherBlock && childBlock2 is SqlOtherBlock ||
+            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlOtherBlock
 
     override fun isLeaf(): Boolean = false
 

@@ -67,21 +67,28 @@ open class SqlBlock(
     open val childBlocks = mutableListOf<SqlBlock>()
     open var prevBlocks = emptyList<SqlBlock>()
 
+    companion object {
+        private const val DEFAULT_INDENT_SIZE = 4
+        private const val DEFAULT_TEXT_LENGTH_INCREMENT = 1
+        private val EXCLUDED_FROM_TEXT_LENGTH = setOf(SqlTypes.DOT, SqlTypes.RIGHT_PAREN)
+        private val SPACING_ONE = Spacing.createSpacing(1, 1, 0, true, 0)
+        private val SPACING_ZERO = Spacing.createSpacing(0, 0, 0, true, 0)
+        private val SPACING_ONE_NO_KEEP = Spacing.createSpacing(1, 1, 0, false, 0)
+    }
+
     fun getChildrenTextLen(): Int = childBlocks.sumOf { child -> calculateChildTextLength(child) }
 
     private fun calculateChildTextLength(child: SqlBlock): Int {
         val nonCommentChildren = child.childBlocks.filterNot { it is SqlDefaultCommentBlock }
 
-        if (nonCommentChildren.isNotEmpty()) {
-            return child.getChildrenTextLen() + child.getNodeText().length
+        return when {
+            nonCommentChildren.isNotEmpty() -> child.getChildrenTextLen() + child.getNodeText().length
+            isExcludedFromTextLength(child) -> 0
+            else -> child.getNodeText().length + DEFAULT_TEXT_LENGTH_INCREMENT
         }
-        if (isExcludedFromTextLength(child)) {
-            return 0
-        }
-        return child.getNodeText().length + 1
     }
 
-    private fun isExcludedFromTextLength(block: SqlBlock): Boolean = block.node.elementType in setOf(SqlTypes.DOT, SqlTypes.RIGHT_PAREN)
+    private fun isExcludedFromTextLength(block: SqlBlock): Boolean = block.node.elementType in EXCLUDED_FROM_TEXT_LENGTH
 
     /**
      * Checks if a conditional loop directive is registered before the parent block.
@@ -185,10 +192,8 @@ open class SqlBlock(
     open fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
         when (lastGroup) {
             is SqlNewGroupBlock -> shouldSaveSpaceForNewGroup(lastGroup)
-            else -> {
-                shouldSaveSpaceForConditionLoop()
-            }
-        } == true
+            else -> shouldSaveSpaceForConditionLoop()
+        }
 
     private fun shouldSaveSpaceForConditionLoop(): Boolean =
         isConditionLoopDirectiveRegisteredBeforeParent() ||
@@ -203,15 +208,22 @@ open class SqlBlock(
             return false
         }
 
-        return isFollowedByConditionLoop() || isPrecededByConditionLoop(parent)
+        return hasConditionLoopAround(parent)
     }
 
     private fun isNonBreakingKeywordCombination(
         parent: SqlNewGroupBlock,
         prevWord: SqlBlock?,
-    ): Boolean =
-        SqlKeywordUtil.isSetLineKeyword(getNodeText(), parent.getNodeText()) ||
-            SqlKeywordUtil.isSetLineKeyword(getNodeText(), prevWord?.getNodeText() ?: "")
+    ): Boolean {
+        val currentText = getNodeText()
+        val parentText = parent.getNodeText()
+        val prevText = prevWord?.getNodeText() ?: ""
+
+        return SqlKeywordUtil.isSetLineKeyword(currentText, parentText) ||
+            SqlKeywordUtil.isSetLineKeyword(currentText, prevText)
+    }
+
+    private fun hasConditionLoopAround(parent: SqlNewGroupBlock): Boolean = isFollowedByConditionLoop() || isPrecededByConditionLoop(parent)
 
     private fun isFollowedByConditionLoop(): Boolean = childBlocks.lastOrNull() is SqlElConditionLoopCommentBlock
 
@@ -271,157 +283,66 @@ open class SqlBlock(
     /**
      * Creates a spacing builder specifically for directive block comments.
      */
-    protected open fun createBlockDirectiveCommentSpacingBuilder(): SqlCustomSpacingBuilder =
-        SqlCustomSpacingBuilder()
-            .withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
+    protected open fun createBlockDirectiveCommentSpacingBuilder(): SqlCustomSpacingBuilder {
+        val builder = SqlCustomSpacingBuilder()
+
+        // Types that need spacing after BLOCK_COMMENT_START
+        val typesNeedingSpaceAfterStart =
+            listOf(
                 SqlTypes.EL_ID_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
                 SqlTypes.EL_PRIMARY_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
                 SqlTypes.EL_STRING,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
                 SqlTypes.EL_NUMBER,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
                 SqlTypes.BOOLEAN,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
                 SqlTypes.EL_NULL,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
                 SqlTypes.EL_FIELD_ACCESS_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
                 SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
-                SqlTypes.HASH,
-                Spacing.createSpacing(0, 0, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.HASH,
-                SqlTypes.EL_ID_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.HASH,
-                SqlTypes.EL_PRIMARY_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.HASH,
-                SqlTypes.EL_STRING,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.HASH,
-                SqlTypes.EL_NUMBER,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.HASH,
-                SqlTypes.BOOLEAN,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.HASH,
-                SqlTypes.EL_NULL,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.HASH,
-                SqlTypes.EL_FIELD_ACCESS_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.HASH,
-                SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
-                SqlTypes.CARET,
-                Spacing.createSpacing(0, 0, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.CARET,
-                SqlTypes.EL_ID_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.CARET,
-                SqlTypes.EL_PRIMARY_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.CARET,
-                SqlTypes.EL_STRING,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.CARET,
-                SqlTypes.EL_NUMBER,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.CARET,
-                SqlTypes.BOOLEAN,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.CARET,
-                SqlTypes.EL_NULL,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.CARET,
-                SqlTypes.EL_FIELD_ACCESS_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.CARET,
-                SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_CONTENT,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(0, 0, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.EL_FIELD_ACCESS_EXPR,
-                SqlTypes.OTHER,
-                Spacing.createSpacing(1, 1, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
-                SqlTypes.OTHER,
-                Spacing.createSpacing(1, 1, 0, false, 0),
-            ).withSpacing(
-                SqlTypes.EL_ID_EXPR,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.EL_PRIMARY_EXPR,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.STRING,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.EL_NUMBER,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.EL_NULL,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BOOLEAN,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.EL_FIELD_ACCESS_EXPR,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(1, 1, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(1, 1, 0, true, 0),
             )
+
+        // Types that need spacing before BLOCK_COMMENT_END
+        val typesNeedingSpaceBeforeEnd =
+            listOf(
+                SqlTypes.EL_ID_EXPR,
+                SqlTypes.EL_PRIMARY_EXPR,
+                SqlTypes.STRING,
+                SqlTypes.EL_NUMBER,
+                SqlTypes.EL_NULL,
+                SqlTypes.BOOLEAN,
+                SqlTypes.EL_FIELD_ACCESS_EXPR,
+                SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
+            )
+
+        // Add spacing rules for BLOCK_COMMENT_START
+        typesNeedingSpaceAfterStart.forEach { type ->
+            builder.withSpacing(SqlTypes.BLOCK_COMMENT_START, type, SPACING_ONE)
+        }
+
+        // Special cases for BLOCK_COMMENT_START
+        builder.withSpacing(SqlTypes.BLOCK_COMMENT_START, SqlTypes.HASH, SPACING_ZERO)
+        builder.withSpacing(SqlTypes.BLOCK_COMMENT_START, SqlTypes.CARET, SPACING_ZERO)
+
+        // Add spacing rules for HASH
+        typesNeedingSpaceAfterStart.forEach { type ->
+            builder.withSpacing(SqlTypes.HASH, type, SPACING_ONE)
+        }
+
+        // Add spacing rules for CARET
+        typesNeedingSpaceAfterStart.forEach { type ->
+            builder.withSpacing(SqlTypes.CARET, type, SPACING_ONE)
+        }
+
+        // Special spacing rules
+        builder.withSpacing(SqlTypes.BLOCK_COMMENT_CONTENT, SqlTypes.BLOCK_COMMENT_END, SPACING_ZERO)
+        builder.withSpacing(SqlTypes.EL_FIELD_ACCESS_EXPR, SqlTypes.OTHER, SPACING_ONE_NO_KEEP)
+        builder.withSpacing(SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR, SqlTypes.OTHER, SPACING_ONE_NO_KEEP)
+
+        // Add spacing rules before BLOCK_COMMENT_END
+        typesNeedingSpaceBeforeEnd.forEach { type ->
+            builder.withSpacing(type, SqlTypes.BLOCK_COMMENT_END, SPACING_ONE)
+        }
+
+        return builder
+    }
 
     /**
      * Returns the child indentation for the block.
@@ -434,10 +355,6 @@ open class SqlBlock(
         } else {
             Indent.getSpaceIndent(0)
         }
-
-    companion object {
-        private const val DEFAULT_INDENT_SIZE = 4
-    }
 
     /**
      * Determines whether the block is a leaf node.

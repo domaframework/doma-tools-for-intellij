@@ -48,7 +48,11 @@ open class SqlArrayWordBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createBlockIndentLen(): Int = (parentBlock as? SqlElConditionLoopCommentBlock)?.indent?.groupIndentLen ?: 1
+    override fun createBlockIndentLen(): Int =
+        when (val parent = parentBlock) {
+            is SqlElConditionLoopCommentBlock -> parent.indent.groupIndentLen
+            else -> 1
+        }
 
     override fun createGroupIndentLen(): Int =
         parentBlock
