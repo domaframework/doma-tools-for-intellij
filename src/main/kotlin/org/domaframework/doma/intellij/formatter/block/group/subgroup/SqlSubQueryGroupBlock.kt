@@ -21,6 +21,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlJoinQueriesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -65,7 +66,11 @@ open class SqlSubQueryGroupBlock(
                 is SqlJoinQueriesGroupBlock -> return parent.indent.indentLen
                 is SqlJoinGroupBlock -> return parent.indent.groupIndentLen.plus(1)
                 else -> {
-                    val children = prevChildren?.filter { it !is SqlDefaultCommentBlock }
+                    val children =
+                        prevChildren?.filter {
+                            it !is SqlDefaultCommentBlock &&
+                                (parent as? SqlKeywordGroupBlock)?.topKeywordBlocks?.contains(it) == false
+                        }
                     // Retrieve the list of child blocks excluding the conditional directive that appears immediately before this block,
                     // as it is already included as a child block.
                     val sumChildren =

@@ -40,7 +40,11 @@ class SqlInGroupBlock(
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) return parent.indent.groupIndentLen
+            if (parent is SqlElConditionLoopCommentBlock &&
+                parent.checkConditionLoopDirectiveParentBlock(this)
+            ) {
+                return parent.indent.indentLen
+            }
             val prevChildren = this.prevBlocks
             val children = prevChildren.filter { it !is SqlDefaultCommentBlock }
             val firstChild = children.firstOrNull()
@@ -52,6 +56,8 @@ class SqlInGroupBlock(
                 }
 
             val dotCount = sumChildren.count { it.node.elementType == SqlTypes.DOT }
+            val parentText = (parent as? SqlElConditionLoopCommentBlock)?.parentBlock?.getNodeText()?.length ?: 0
+
             return sumChildren
                 .sumOf { prev ->
                     prev
@@ -59,6 +65,7 @@ class SqlInGroupBlock(
                         .plus(prev.getNodeText().length.plus(1))
                 }.minus(dotCount * 2)
                 .plus(parent.indent.groupIndentLen)
+                .plus(parentText)
                 .plus(1)
         }
         return 0
