@@ -123,7 +123,10 @@ abstract class SqlSubGroupBlock(
         lastGroup?.let { lastBlock ->
             if (lastBlock is SqlJoinQueriesGroupBlock) return true
             if (lastGroup is SqlInGroupBlock) return false
-            if (lastGroup is SqlElConditionLoopCommentBlock) return true
+            if (lastGroup is SqlElConditionLoopCommentBlock) {
+                return lastGroup.checkConditionLoopDirectiveParentBlock(this) ||
+                    lastGroup.conditionType.isElse()
+            }
             val grand = lastBlock.parentBlock
             if (grand is SqlElConditionLoopCommentBlock) {
                 if (grand.conditionType.isElse()) {
