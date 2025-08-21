@@ -32,6 +32,7 @@ import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultComment
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElAtSignBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElSymbolBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
@@ -519,7 +520,7 @@ open class SqlFileBlock(
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
-        if (childBlock2 is SqlOtherBlock) {
+        if (childBlock1 !is SqlElSymbolBlock && childBlock1 !is SqlOtherBlock && childBlock2 is SqlOtherBlock) {
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
@@ -576,6 +577,16 @@ open class SqlFileBlock(
 
         if (childBlock1 is SqlTableBlock || childBlock1 is SqlAliasBlock) {
             return SqlCustomSpacingBuilder.normalSpacing
+        }
+
+        if (childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElSymbolBlock ||
+            childBlock1 is SqlElAtSignBlock && childBlock2 is SqlElSymbolBlock ||
+            childBlock1 is SqlOtherBlock && childBlock2 is SqlElSymbolBlock ||
+            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElAtSignBlock ||
+            childBlock1 is SqlOtherBlock && childBlock2 is SqlOtherBlock ||
+            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlOtherBlock
+        ) {
+            return SqlCustomSpacingBuilder.nonSpacing
         }
 
         val spacing: Spacing? = customSpacingBuilder?.getCustomSpacing(childBlock1, childBlock2)
