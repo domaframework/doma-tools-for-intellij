@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.option
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
@@ -32,13 +33,18 @@ class SqlExistsGroupBlock(
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+    override fun createBlockIndentLen(): Int {
+        parentBlock?.let { parent ->
+            if (parent.parentBlock is SqlElConditionLoopCommentBlock) {
+                return parent.indent.groupIndentLen
+            }
+        }
+        return parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+    }
 
     override fun createGroupIndentLen(): Int {
-        parentBlock?.let { parent ->
-            return parent.indent.groupIndentLen.plus(topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) })
-        }
-        return topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.minus(1)
+        val parentGroupIndent = parentBlock?.indent?.groupIndentLen ?: 0
+        return topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.plus(parentGroupIndent).minus(1)
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {

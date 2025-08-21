@@ -45,6 +45,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlC
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlExistsGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlInGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlSecondOptionKeywordGroupBlock
@@ -147,6 +148,24 @@ class SqlBlockGenerator(
                         child,
                         sqlBlockFormattingCtx,
                     )
+                }
+
+                if (SqlKeywordUtil.isExistsKeyword(keywordText)) {
+                    if (lastGroupBlock is SqlExistsGroupBlock) {
+                        return SqlKeywordBlock(
+                            child,
+                            indentLevel,
+                            sqlBlockFormattingCtx,
+                        )
+                    }
+                    if (lastGroupBlock is SqlElConditionLoopCommentBlock && lastGroupBlock.conditionType.isElse() ||
+                        keywordText == "not" && (lastGroupBlock !is SqlConditionKeywordGroupBlock && lastGroupBlock !is SqlWhereGroupBlock)
+                    ) {
+                        return SqlExistsGroupBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+                    }
                 }
             }
 

@@ -1,7 +1,10 @@
 SELECT e.id
        , e.name
        , d.department_name
-  FROM employees e
+  FROM employees e        /*%if join */
+INNER JOIN separators spr
+ON EXISTS ( SELECT id FROM spr )
+       /*%end */
  WHERE
 /*%if isNot*/
 NOT
