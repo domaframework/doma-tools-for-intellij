@@ -250,6 +250,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("ConditionalSubquery.sql", "ConditionalSubquery$formatDataPrefix.sql")
     }
 
+    fun testConditionalExistsFormatter() {
+        formatSqlFile("ConditionalExists.sql", "ConditionalExists$formatDataPrefix.sql")
+    }
+
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,

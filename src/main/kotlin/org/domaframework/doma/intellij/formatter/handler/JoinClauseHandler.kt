@@ -30,7 +30,7 @@ object JoinClauseHandler {
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,
     ): SqlBlock =
-        if (SqlKeywordUtil.Companion.isJoinKeyword(keywordText)) {
+        if (SqlKeywordUtil.isJoinKeyword(keywordText)) {
             SqlJoinGroupBlock(
                 child,
                 sqlBlockFormattingCtx,

@@ -28,6 +28,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordG
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlExistsGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlInGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
@@ -64,6 +65,7 @@ class SqlBlockRelationBuilder(
                 SqlColumnDefinitionRawGroupBlock::class,
                 SqlLateralGroupBlock::class,
                 SqlInGroupBlock::class,
+                SqlExistsGroupBlock::class,
             )
 
         private val TOP_LEVEL_EXPECTED_TYPES =
