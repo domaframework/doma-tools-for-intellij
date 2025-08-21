@@ -30,7 +30,6 @@ import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBl
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
-import org.domaframework.doma.intellij.formatter.block.conflict.OnConflictKeywordType
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
@@ -41,13 +40,8 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.S
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlExistsGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlInGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlSecondKeywordBlock
@@ -100,12 +94,12 @@ class SqlBlockGenerator(
             formatMode,
         )
 
+    private val keywordBlockFactory = SqlKeywordBlockFactory(sqlBlockFormattingCtx)
+
     fun getKeywordBlock(
         child: ASTNode,
         lastGroupBlock: SqlBlock?,
     ): SqlBlock {
-        // Because we haven't yet set the parent-child relationship of the block,
-        // the parent group references groupTopNodeIndexHistory.
         val keywordText = child.text.lowercase()
         val indentLevel = SqlKeywordUtil.getIndentType(keywordText)
 
@@ -113,74 +107,13 @@ class SqlBlockGenerator(
             return getKeywordGroupBlock(indentLevel, keywordText, child, lastGroupBlock)
         }
 
-        when (indentLevel) {
-            IndentType.INLINE -> {
-                if (!SqlKeywordUtil.isSetLineKeyword(
-                        child.text,
-                        lastGroupBlock?.getNodeText() ?: "",
-                    )
-                ) {
-                    return SqlInlineGroupBlock(child, sqlBlockFormattingCtx)
-                }
-            }
-
-            IndentType.ATTACHED -> {
-                if (lastGroupBlock is SqlCreateKeywordGroupBlock) {
-                    lastGroupBlock.setCreateQueryType(child.text)
-                    return SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
-                }
-            }
-
-            IndentType.OPTIONS -> {
-                if (keywordText == "as") {
-                    val parentCreateBlock =
-                        lastGroupBlock as? SqlCreateKeywordGroupBlock
-                            ?: lastGroupBlock?.parentBlock as? SqlCreateKeywordGroupBlock
-                    if (parentCreateBlock != null && parentCreateBlock.createType == CreateQueryType.VIEW) {
-                        return SqlCreateViewGroupBlock(child, sqlBlockFormattingCtx)
-                    }
-                }
-                if (keywordText == "lateral") {
-                    return SqlLateralGroupBlock(child, sqlBlockFormattingCtx)
-                }
-                if (keywordText == "in") {
-                    return SqlInGroupBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
-                }
-
-                if (SqlKeywordUtil.isExistsKeyword(keywordText)) {
-                    if (lastGroupBlock is SqlExistsGroupBlock) {
-                        return SqlKeywordBlock(
-                            child,
-                            indentLevel,
-                            sqlBlockFormattingCtx,
-                        )
-                    }
-                    if (lastGroupBlock is SqlElConditionLoopCommentBlock && lastGroupBlock.conditionType.isElse() ||
-                        keywordText == "not" && (lastGroupBlock !is SqlConditionKeywordGroupBlock && lastGroupBlock !is SqlWhereGroupBlock)
-                    ) {
-                        return SqlExistsGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-                    }
-                }
-            }
-
-            IndentType.CONFLICT -> {
-                if (lastGroupBlock is SqlConflictClauseBlock) {
-                    lastGroupBlock.conflictType = OnConflictKeywordType.of(keywordText)
-                    return SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
-                } else {
-                    return SqlConflictClauseBlock(child, sqlBlockFormattingCtx)
-                }
-            }
-
-            else -> return SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
+        return when (indentLevel) {
+            IndentType.INLINE -> keywordBlockFactory.createInlineBlock(child, lastGroupBlock)
+            IndentType.ATTACHED -> keywordBlockFactory.createAttachedBlock(child, lastGroupBlock)
+            IndentType.OPTIONS -> keywordBlockFactory.createOptionsBlock(keywordText, child, lastGroupBlock)
+            IndentType.CONFLICT -> keywordBlockFactory.createConflictBlock(keywordText, child, lastGroupBlock)
+            else -> SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
         }
-        return SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
     }
 
     private fun getKeywordGroupBlock(
