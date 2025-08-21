@@ -13,25 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.other
+package org.domaframework.doma.intellij.formatter.block.word
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElDotBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlArrayListGroupBlock
+import org.domaframework.doma.intellij.formatter.block.other.SqlOtherBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-open class SqlOtherBlock(
+open class SqlArrayWordBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlBlock(
+) : SqlWordBlock(
         node,
-        context.wrap,
-        context.alignment,
-        context.spacingBuilder,
-        context.enableFormat,
-        context.formatMode,
+        context,
     ) {
+    var arrayParams: SqlArrayListGroupBlock? = null
+
     override val indent =
         ElementIndent(
             IndentType.NONE,
@@ -41,16 +43,22 @@ open class SqlOtherBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLevel = IndentType.NONE
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun isLeaf(): Boolean = true
+    override fun createBlockIndentLen(): Int = (parentBlock as? SqlElConditionLoopCommentBlock)?.indent?.groupIndentLen ?: 1
 
-    override fun createBlockIndentLen(): Int = 1
-
-    override fun createGroupIndentLen(): Int = 0
+    override fun createGroupIndentLen(): Int =
+        parentBlock
+            ?.getChildBlocksDropLast()
+            ?.sumOf {
+                when (it) {
+                    is SqlOtherBlock, is SqlElDotBlock -> it.getNodeText().length
+                    else -> it.getNodeText().length.plus(1)
+                }
+            }?.plus(parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1)
+            ?.plus(getNodeText().length.plus(1))
+            ?: getNodeText().length.plus(1)
 }

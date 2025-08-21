@@ -75,9 +75,7 @@ abstract class SqlSubGroupBlock(
         prevChildren = parentBlock?.childBlocks?.toList()
         indent.indentLevel = indent.indentLevel
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = parentBlock?.let { parent ->
-            parent.indent.indentLen.plus(parent.getNodeText().length.plus(1))
-        } ?: indent.indentLen.plus(getNodeText().length)
+        indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
@@ -112,11 +110,14 @@ abstract class SqlSubGroupBlock(
     }
 
     override fun createGroupIndentLen(): Int {
-        parentBlock?.let { parent ->
-            // The parent groupIndent includes the number of characters in the group itself.
-            val baseGroupLen = parent.indent.groupIndentLen
-            return if (parent is SqlSubGroupBlock) baseGroupLen.plus(2) else baseGroupLen
-        } ?: return 1
+        return parentBlock?.let { parent ->
+            parent.indent.indentLen.plus(parent.getNodeText().length.plus(1))
+        } ?: indent.indentLen.plus(getNodeText().length)
+//        parentBlock?.let { parent ->
+//            // The parent groupIndent includes the number of characters in the group itself.
+//            val baseGroupLen = parent.indent.groupIndentLen
+//            return if (parent is SqlSubGroupBlock) baseGroupLen.plus(2) else baseGroupLen
+//        } ?: return 1
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {

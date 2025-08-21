@@ -16,7 +16,10 @@
 package org.domaframework.doma.intellij.formatter.block.comment
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
+import com.intellij.psi.util.PsiTreeUtil
+import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
@@ -33,11 +36,16 @@ abstract class SqlCommentBlock(
         context.enableFormat,
         context.formatMode,
     ) {
+    companion object {
+        const val DEFAULT_INDENT = 0
+        const val SINGLE_INDENT = 1
+    }
+
     override val indent =
         ElementIndent(
             IndentType.NONE,
-            0,
-            0,
+            DEFAULT_INDENT,
+            DEFAULT_INDENT,
         )
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
@@ -53,14 +61,29 @@ abstract class SqlCommentBlock(
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            if (parent.parentBlock !is SqlSubGroupBlock ||
-                parent.parentBlock?.childBlocks?.size != 1
-            ) {
+            if (shouldInheritParentIndent(parent)) {
                 return parent.indent.indentLen
             }
         }
-        return 0
+        return DEFAULT_INDENT
     }
 
     override fun createGroupIndentLen(): Int = indent.indentLen
+
+    protected open fun shouldInheritParentIndent(parent: SqlBlock): Boolean =
+        parent.parentBlock !is SqlSubGroupBlock || parent.parentBlock?.childBlocks?.size != 1
+
+    fun hasLineBreakBefore(): Boolean = PsiTreeUtil.prevLeaf(node.psi)?.text?.contains(StringUtil.LINE_SEPARATE) == true
+
+    protected fun buildChildBlocks(blockProvider: (ASTNode) -> SqlBlock): MutableList<AbstractBlock> {
+        val blocks = mutableListOf<AbstractBlock>()
+        var child = node.firstChildNode
+        while (child != null) {
+            if (child !is PsiWhiteSpace) {
+                blocks.add(blockProvider(child))
+            }
+            child = child.treeNext
+        }
+        return blocks
+    }
 }

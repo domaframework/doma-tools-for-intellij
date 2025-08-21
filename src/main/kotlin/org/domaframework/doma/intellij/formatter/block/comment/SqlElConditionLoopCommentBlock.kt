@@ -18,11 +18,9 @@ package org.domaframework.doma.intellij.formatter.block.comment
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
-import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
@@ -34,6 +32,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlC
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlArrayListGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -44,7 +43,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElConditionLoopCommentBlock(
     node: ASTNode,
-    private val context: SqlBlockFormattingContext,
+    override val context: SqlBlockFormattingContext,
     override val customSpacingBuilder: SqlCustomSpacingBuilder?,
 ) : SqlElBlockCommentBlock(
         node,
@@ -67,7 +66,7 @@ class SqlElConditionLoopCommentBlock(
     }
 
     companion object {
-        private const val DIRECTIVE_INDENT_STEP = 2
+        const val DIRECTIVE_INDENT_STEP = 2
         private const val DEFAULT_INDENT_OFFSET = 1
 
         private val LINE_BREAK_PARENT_TYPES =
@@ -124,9 +123,9 @@ class SqlElConditionLoopCommentBlock(
         childBlocks.forEach { child ->
             if (child is SqlElConditionLoopCommentBlock && child.conditionType.isStartDirective()) {
                 // If the child is a condition loop directive, align its indentation with the parent directive
-                child.indent.indentLen = indent.indentLen.plus(DIRECTIVE_INDENT_STEP)
+                child.indent.indentLen = indent.indentLen + DIRECTIVE_INDENT_STEP
             } else if (child is SqlLineCommentBlock) {
-                if (PsiTreeUtil.prevLeaf(child.node.psi, false)?.text?.contains(StringUtil.LINE_SEPARATE) == true) {
+                if (child.hasLineBreakBefore()) {
                     child.indent.indentLen = indent.groupIndentLen
                 } else {
                     child.indent.indentLen = 1
@@ -143,18 +142,7 @@ class SqlElConditionLoopCommentBlock(
         }
     }
 
-    override fun buildChildren(): MutableList<AbstractBlock> {
-        val blocks = mutableListOf<AbstractBlock>()
-        var child = node.firstChildNode
-        while (child != null) {
-            if (child !is PsiWhiteSpace) {
-                val block = getBlock(child)
-                blocks.add(block)
-            }
-            child = child.treeNext
-        }
-        return blocks
-    }
+    override fun buildChildren(): MutableList<AbstractBlock> = buildChildBlocks { getBlock(it) }
 
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
@@ -214,7 +202,7 @@ class SqlElConditionLoopCommentBlock(
                     } else if (conditionType.isElse()) {
                         return parent.indent.indentLen
                     } else {
-                        return parent.indent.indentLen.plus(DIRECTIVE_INDENT_STEP)
+                        return parent.indent.indentLen + DIRECTIVE_INDENT_STEP
                     }
                 }
 
@@ -233,7 +221,7 @@ class SqlElConditionLoopCommentBlock(
                         openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP +
                         if (parent !is SqlWithQueryGroupBlock) 1 else 0
                 }
-                else -> return parent.indent.indentLen.plus(openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP)
+                else -> return parent.indent.indentLen + openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP
             }
         }
         return 0
@@ -255,8 +243,8 @@ class SqlElConditionLoopCommentBlock(
         val startDirectives =
             conditionLoopDirectives.count { it.conditionType.isStartDirective() }
         val endDirectives = conditionLoopDirectives.count { it.conditionType.isEnd() }
-        val diffCount = startDirectives.minus(endDirectives)
-        return if (diffCount > 0) diffCount.minus(1) else 0
+        val diffCount = startDirectives - endDirectives
+        return if (diffCount > 0) diffCount - 1 else 0
     }
 
     /**
@@ -278,32 +266,36 @@ class SqlElConditionLoopCommentBlock(
         val parentGroupIndentLen = parent.indent.groupIndentLen
         val grand = parent.parentBlock
 
+        if (parent is SqlArrayListGroupBlock) {
+            return parent.indent.groupIndentLen
+        }
+
         grand?.let { grandParent ->
             when (grandParent) {
                 is SqlCreateKeywordGroupBlock -> {
                     val grandIndentLen = grandParent.indent.groupIndentLen
-                    return grandIndentLen.plus(parentGroupIndentLen).minus(DEFAULT_INDENT_OFFSET)
+                    return grandIndentLen + parentGroupIndentLen - DEFAULT_INDENT_OFFSET
                 }
                 is SqlInsertQueryGroupBlock -> return parentGroupIndentLen
                 is SqlColumnRawGroupBlock -> {
                     val grandIndentLen = grandParent.indent.groupIndentLen
                     val prevTextLen = calculatePreviousTextLength(parent)
-                    return grandIndentLen.plus(prevTextLen)
+                    return grandIndentLen + prevTextLen
                 }
             }
         }
 
         return if (shouldNotIndent(parent)) {
-            parentGroupIndentLen.plus(openDirectiveCount * DIRECTIVE_INDENT_STEP)
+            parentGroupIndentLen + openDirectiveCount * DIRECTIVE_INDENT_STEP
         } else {
-            parentGroupIndentLen.plus(openDirectiveCount * DIRECTIVE_INDENT_STEP).plus(DEFAULT_INDENT_OFFSET)
+            parentGroupIndentLen + openDirectiveCount * DIRECTIVE_INDENT_STEP + DEFAULT_INDENT_OFFSET
         }
     }
 
     private fun calculatePreviousTextLength(parent: SqlSubGroupBlock): Int {
         var prevTextLen = DEFAULT_INDENT_OFFSET
         parent.prevChildren?.dropLast(1)?.forEach { prev ->
-            prevTextLen = prevTextLen.plus(prev.getNodeText().length)
+            prevTextLen += prev.getNodeText().length
         }
         return prevTextLen
     }

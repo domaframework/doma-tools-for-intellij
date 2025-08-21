@@ -13,24 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.other
+package org.domaframework.doma.intellij.formatter.block.comma
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-open class SqlOtherBlock(
+class SqlArrayCommaBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlBlock(
+) : SqlCommaBlock(
         node,
-        context.wrap,
-        context.alignment,
-        context.spacingBuilder,
-        context.enableFormat,
-        context.formatMode,
+        context,
     ) {
     override val indent =
         ElementIndent(
@@ -48,9 +46,9 @@ open class SqlOtherBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun isLeaf(): Boolean = true
+    override fun createBlockIndentLen(): Int = 0
 
-    override fun createBlockIndentLen(): Int = 1
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(1)
 
-    override fun createGroupIndentLen(): Int = 0
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = parentBlock is SqlElConditionLoopCommentBlock
 }

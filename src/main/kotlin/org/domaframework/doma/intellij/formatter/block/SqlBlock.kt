@@ -123,13 +123,19 @@ open class SqlBlock(
                 (parent.parentBlock is SqlNewGroupBlock || parent.parentBlock is SqlElConditionLoopCommentBlock)
         } == true
 
-    protected fun isElementAfterConditionLoopEnd(): Boolean =
-        (
+    protected fun isElementAfterConditionLoopEnd(): Boolean {
+        val prevChildren =
             prevBlocks
-                .lastOrNull()
+                .firstOrNull()
                 ?.childBlocks
-                ?.firstOrNull() as? SqlElConditionLoopCommentBlock
-        )?.conditionEnd != null
+
+        val firstConditionBlock = (prevChildren?.firstOrNull() as? SqlElConditionLoopCommentBlock)
+        val endBlock = firstConditionBlock?.conditionEnd
+        if (endBlock == null) return false
+        val lastBlock = prevChildren.lastOrNull()
+
+        return endBlock.node.startOffset > (lastBlock?.node?.startOffset ?: 0)
+    }
 
     protected fun isFirstChildConditionLoopDirective(): Boolean = childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock
 
@@ -265,7 +271,7 @@ open class SqlBlock(
     /**
      * Creates a spacing builder specifically for directive block comments.
      */
-    protected fun createBlockDirectiveCommentSpacingBuilder(): SqlCustomSpacingBuilder =
+    protected open fun createBlockDirectiveCommentSpacingBuilder(): SqlCustomSpacingBuilder =
         SqlCustomSpacingBuilder()
             .withSpacing(
                 SqlTypes.BLOCK_COMMENT_START,

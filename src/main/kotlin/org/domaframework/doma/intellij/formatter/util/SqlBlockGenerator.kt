@@ -58,6 +58,7 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTyp
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlArrayWordBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
@@ -379,6 +380,12 @@ class SqlBlockGenerator(
         lastGroup: SqlBlock?,
         child: ASTNode,
     ): SqlBlock {
+        if (child.text.lowercase() == "array") {
+            return SqlArrayWordBlock(
+                child,
+                sqlBlockFormattingCtx,
+            )
+        }
         when (lastGroup) {
             is SqlKeywordGroupBlock -> {
                 when {
