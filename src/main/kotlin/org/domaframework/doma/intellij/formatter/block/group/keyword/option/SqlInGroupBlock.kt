@@ -69,7 +69,7 @@ class SqlInGroupBlock(
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         if (lastGroup is SqlElConditionLoopCommentBlock) {
             return if (lastGroup.conditionType.isElse()) {
-                return false
+                false
             } else {
                 !lastGroup.isBeforeParentBlock()
             }
