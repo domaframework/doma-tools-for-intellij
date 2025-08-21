@@ -51,7 +51,17 @@ open class SqlSubQueryGroupBlock(
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
             return when (parent) {
-                is SqlElConditionLoopCommentBlock, is SqlWithQuerySubGroupBlock -> return parent.indent.groupIndentLen
+                is SqlElConditionLoopCommentBlock -> {
+                    return if (parent.isBeforeParentBlock()) {
+                        parent.parentBlock
+                            ?.indent
+                            ?.groupIndentLen
+                            ?.plus(1) ?: 1
+                    } else {
+                        parent.indent.indentLen
+                    }
+                }
+                is SqlWithQuerySubGroupBlock -> return parent.indent.groupIndentLen
                 is SqlJoinQueriesGroupBlock -> return parent.indent.indentLen
                 is SqlJoinGroupBlock -> return parent.indent.groupIndentLen.plus(1)
                 else -> {

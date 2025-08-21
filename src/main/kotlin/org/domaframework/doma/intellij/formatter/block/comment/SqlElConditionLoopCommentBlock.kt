@@ -67,6 +67,9 @@ class SqlElConditionLoopCommentBlock(
     }
 
     companion object {
+        private const val DIRECTIVE_INDENT_STEP = 2
+        private const val DEFAULT_INDENT_OFFSET = 1
+        
         private val LINE_BREAK_PARENT_TYPES =
             listOf(
                 SqlSubGroupBlock::class,
@@ -121,7 +124,7 @@ class SqlElConditionLoopCommentBlock(
         childBlocks.forEach { child ->
             if (child is SqlElConditionLoopCommentBlock && child.conditionType.isStartDirective()) {
                 // If the child is a condition loop directive, align its indentation with the parent directive
-                child.indent.indentLen = indent.indentLen.plus(2)
+                child.indent.indentLen = indent.indentLen.plus(DIRECTIVE_INDENT_STEP)
             } else if (child is SqlLineCommentBlock) {
                 if (PsiTreeUtil.prevLeaf(child.node.psi, false)?.text?.contains(StringUtil.LINE_SEPARATE) == true) {
                     child.indent.indentLen = indent.groupIndentLen
@@ -201,37 +204,7 @@ class SqlElConditionLoopCommentBlock(
             }
             val openConditionLoopDirectiveCount = getOpenDirectiveCount(parent)
             when (parent) {
-                is SqlSubGroupBlock -> {
-                    val parentGroupIndentLen = parent.indent.groupIndentLen
-                    val grand = parent.parentBlock
-                    grand?.let { grand ->
-                        if (grand is SqlCreateKeywordGroupBlock) {
-                            val grandIndentLen = grand.indent.groupIndentLen
-                            return grandIndentLen.plus(parentGroupIndentLen).minus(1)
-                        }
-                        if (grand is SqlInsertQueryGroupBlock) {
-                            return parentGroupIndentLen
-                        }
-                        if (grand is SqlColumnRawGroupBlock) {
-                            val grandIndentLen = grand.indent.groupIndentLen
-                            var prevTextLen = 1
-                            parent.prevChildren?.dropLast(1)?.forEach { prev ->
-                                prevTextLen = prevTextLen.plus(prev.getNodeText().length)
-                            }
-                            return grandIndentLen.plus(prevTextLen)
-                        }
-                    }
-                    return if (TypeUtil.isExpectedClassType(
-                            SqlRightPatternBlock.NOT_INDENT_EXPECTED_TYPES,
-                            parent,
-                        ) ||
-                        parent is SqlWithCommonTableGroupBlock
-                    ) {
-                        parentGroupIndentLen.plus(openConditionLoopDirectiveCount * 2)
-                    } else {
-                        parentGroupIndentLen.plus(openConditionLoopDirectiveCount * 2).plus(1)
-                    }
-                }
+                is SqlSubGroupBlock -> return calculateSubGroupBlockIndent(parent, openConditionLoopDirectiveCount)
 
                 is SqlElConditionLoopCommentBlock -> {
                     if (conditionType.isEnd()) {
@@ -241,7 +214,7 @@ class SqlElConditionLoopCommentBlock(
                     } else if (conditionType.isElse()) {
                         return parent.indent.indentLen
                     } else {
-                        return parent.indent.indentLen.plus(2)
+                        return parent.indent.indentLen.plus(DIRECTIVE_INDENT_STEP)
                     }
                 }
 
@@ -256,14 +229,14 @@ class SqlElConditionLoopCommentBlock(
                             // The child branch applies in cases where a conditional directive is included as a child of this block.
                             val questOffset = if (parent is SqlWithQueryGroupBlock) 0 else 1
                             parent.indent.groupIndentLen
-                                .plus(openConditionLoopDirectiveCount * 2)
+                                .plus(openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP)
                                 .plus(questOffset)
                         }
                     } else {
-                        parent.indent.indentLen.plus(openConditionLoopDirectiveCount * 2)
+                        parent.indent.indentLen.plus(openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP)
                     }
                 }
-                else -> return parent.indent.indentLen.plus(openConditionLoopDirectiveCount * 2)
+                else -> return parent.indent.indentLen.plus(openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP)
             }
         }
         return 0
@@ -298,4 +271,44 @@ class SqlElConditionLoopCommentBlock(
         }
         return false
     }
+
+    fun checkConditionLoopDirectiveParentBlock(block: SqlBlock): Boolean = isBeforeParentBlock() && parentBlock == block
+    
+    private fun calculateSubGroupBlockIndent(parent: SqlSubGroupBlock, openDirectiveCount: Int): Int {
+        val parentGroupIndentLen = parent.indent.groupIndentLen
+        val grand = parent.parentBlock
+        
+        grand?.let { grandParent ->
+            when (grandParent) {
+                is SqlCreateKeywordGroupBlock -> {
+                    val grandIndentLen = grandParent.indent.groupIndentLen
+                    return grandIndentLen.plus(parentGroupIndentLen).minus(DEFAULT_INDENT_OFFSET)
+                }
+                is SqlInsertQueryGroupBlock -> return parentGroupIndentLen
+                is SqlColumnRawGroupBlock -> {
+                    val grandIndentLen = grandParent.indent.groupIndentLen
+                    val prevTextLen = calculatePreviousTextLength(parent)
+                    return grandIndentLen.plus(prevTextLen)
+                }
+            }
+        }
+        
+        return if (shouldNotIndent(parent)) {
+            parentGroupIndentLen.plus(openDirectiveCount * DIRECTIVE_INDENT_STEP)
+        } else {
+            parentGroupIndentLen.plus(openDirectiveCount * DIRECTIVE_INDENT_STEP).plus(DEFAULT_INDENT_OFFSET)
+        }
+    }
+    
+    private fun calculatePreviousTextLength(parent: SqlSubGroupBlock): Int {
+        var prevTextLen = DEFAULT_INDENT_OFFSET
+        parent.prevChildren?.dropLast(1)?.forEach { prev ->
+            prevTextLen = prevTextLen.plus(prev.getNodeText().length)
+        }
+        return prevTextLen
+    }
+    
+    private fun shouldNotIndent(parent: SqlSubGroupBlock): Boolean =
+        TypeUtil.isExpectedClassType(SqlRightPatternBlock.NOT_INDENT_EXPECTED_TYPES, parent) ||
+        parent is SqlWithCommonTableGroupBlock
 }
