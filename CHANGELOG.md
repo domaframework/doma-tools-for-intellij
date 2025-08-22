@@ -6,17 +6,6 @@
 
 ### Bug Fixes
 
-- Fix Last Column Non Line Break ([#417])
-- Fix: SQL Formatter ([#411])
-
-[#417]:https://github.com/domaframework/doma-tools-for-intellij/pull/417
-[#411]:https://github.com/domaframework/doma-tools-for-intellij/pull/411
-
-
-## [2.1.2] - 2025-08-22
-
-### Bug Fixes
-
 - Fix: SQL Formatter ([#411])
 
 ## [2.1.1] - 2025-08-19
@@ -390,6 +379,7 @@
 [#48]: https://github.com/domaframework/doma-tools-for-intellij/pull/48
 [#45]: https://github.com/domaframework/doma-tools-for-intellij/pull/45
 [#43]: https://github.com/domaframework/doma-tools-for-intellij/pull/43
+[#417]: https://github.com/domaframework/doma-tools-for-intellij/pull/417
 [#411]: https://github.com/domaframework/doma-tools-for-intellij/pull/411
 [#396]: https://github.com/domaframework/doma-tools-for-intellij/pull/396
 [#394]: https://github.com/domaframework/doma-tools-for-intellij/pull/394
@@ -505,4 +495,3 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
-[2.1.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.1.1...2.1.2
