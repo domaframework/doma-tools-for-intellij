@@ -18,10 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.comment
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
-import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
@@ -36,18 +33,7 @@ open class SqlBlockCommentBlock(
         node,
         context,
     ) {
-    override fun buildChildren(): MutableList<AbstractBlock> {
-        val blocks = mutableListOf<AbstractBlock>()
-        var child = node.firstChildNode
-        while (child != null) {
-            if (child !is PsiWhiteSpace) {
-                val block = getBlock(child)
-                blocks.add(block)
-            }
-            child = child.treeNext
-        }
-        return blocks
-    }
+    override fun buildChildren(): MutableList<AbstractBlock> = buildChildBlocks { getBlock(it) }
 
     override fun getBlock(child: ASTNode): SqlBlock {
         val elementType = child.elementType
@@ -59,8 +45,7 @@ open class SqlBlockCommentBlock(
         }
     }
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
-        PsiTreeUtil.prevLeaf(node.psi)?.text?.contains(StringUtil.LINE_SEPARATE) == true
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = hasLineBreakBefore()
 
     override fun getSpacing(
         child1: Block?,

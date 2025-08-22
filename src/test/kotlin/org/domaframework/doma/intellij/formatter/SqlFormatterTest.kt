@@ -254,6 +254,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("ConditionalExists.sql", "ConditionalExists$formatDataPrefix.sql")
     }
 
+    fun testComparisonOperatorsFormatter() {
+        formatSqlFile("ComparisonOperators.sql", "ComparisonOperators$formatDataPrefix.sql")
+    }
+
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,
