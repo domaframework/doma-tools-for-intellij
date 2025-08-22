@@ -10,7 +10,7 @@
   <depends>org.intellij.intelliLang</depends>
   <depends>org.toml.lang</depends>
   <depends optional="true" config-file="kotlin.xml">org.jetbrains.kotlin</depends>
-  <idea-version since-build="231"/>
+  <idea-version since-build="233"/>
 
   <resource-bundle>messages.DomaToolsBundle</resource-bundle>
   <resource-bundle>messages.LLMInstallerBundle</resource-bundle>
@@ -22,6 +22,7 @@
   </projectListeners>
 
   <extensions defaultExtensionNs="com.intellij">
+    <errorHandler implementation="com.intellij.diagnostic.JetBrainsMarketplaceErrorReportSubmitter"/>
     <postStartupActivity implementation="org.domaframework.doma.intellij.setting.DomaToolStartupActivity"/>
 
     <applicationService

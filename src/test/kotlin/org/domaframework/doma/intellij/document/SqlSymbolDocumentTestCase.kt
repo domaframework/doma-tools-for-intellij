@@ -205,6 +205,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
             return forDirective.elExprList.firstOrNull { it.text == searchElementName }
         }
 
-        return fieldAccessExpr.accessElements.firstOrNull { it?.text == searchElementName }
+        val accesses = fieldAccessExpr.accessElements
+        return accesses.firstOrNull { it?.text == searchElementName }
     }
 }
