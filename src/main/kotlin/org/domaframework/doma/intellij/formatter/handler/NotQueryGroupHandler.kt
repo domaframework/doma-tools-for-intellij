@@ -17,7 +17,7 @@ package org.domaframework.doma.intellij.formatter.handler
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictExpressionSubGroupBlock
