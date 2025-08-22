@@ -13,33 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.other
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlArrayListGroupBlock
+import org.domaframework.doma.intellij.formatter.block.other.SqlEscapeBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlArrayWordBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-class SqlEscapeBlock(
+class SqlArrayListGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlOtherBlock(node, context) {
-    // If the number of escape characters, including itself, is even
-    var isEndEscape = false
+) : SqlSubGroupBlock(
+        node,
+        context,
+    ) {
+    var endSymbol: SqlEscapeBlock? = null
+    var arrayBlock: SqlArrayWordBlock? = null
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-        if (parentBlock is SqlArrayListGroupBlock) {
-            (parentBlock as SqlArrayListGroupBlock).endSymbol = this
-        }
+        arrayBlock = parentBlock?.getChildBlocksDropLast()?.findLast { it is SqlArrayWordBlock } as SqlArrayWordBlock?
+        arrayBlock?.arrayParams = this
     }
 
-    override fun createBlockIndentLen(): Int {
-        val hasEvenEscapeBlocks = parentBlock?.childBlocks?.count { it is SqlEscapeBlock }?.let { it % 2 == 0 } == true
-        isEndEscape = hasEvenEscapeBlocks || getNodeText() == "]"
-        return if (isEndEscape) {
-            0
-        } else {
-            1
-        }
-    }
+    override fun createBlockIndentLen(): Int = arrayBlock?.indent?.groupIndentLen ?: 1
+
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(1)
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
 }

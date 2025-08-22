@@ -13,48 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword.top
+package org.domaframework.doma.intellij.formatter.block.comma
 
 import com.intellij.lang.ASTNode
+import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlFileBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
+import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-/**
- *  Join Queries Keyword Group Block
- *  [UNION, INTERSECT, EXCEPT]
- */
-class SqlJoinQueriesGroupBlock(
+class SqlArrayCommaBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlTopQueryGroupBlock(node, context) {
-    // TODO Customize offset
-    private val offset = 0
+) : SqlCommaBlock(
+        node,
+        context,
+    ) {
+    override val indent =
+        ElementIndent(
+            IndentType.NONE,
+            0,
+            0,
+        )
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
+        indent.indentLevel = IndentType.NONE
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun createBlockIndentLen(): Int {
-        parentBlock?.let { parent ->
-            return when (parent) {
-                is SqlFileBlock -> 0
-                is SqlWithQuerySubGroupBlock -> parent.indent.groupIndentLen
-                is SqlElConditionLoopCommentBlock -> createIndentLenInConditionLoopDirective(parent)
-                else -> parent.indent.groupIndentLen.plus(1)
-            }
-        }
-        return offset
-    }
+    override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createGroupIndentLen(): Int =
-        topKeywordBlocks
-            .sumOf { it.getNodeText().length.plus(1) }
-            .plus(indent.indentLen)
+    override fun createBlockIndentLen(): Int = 0
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(1)
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = parentBlock is SqlElConditionLoopCommentBlock
 }

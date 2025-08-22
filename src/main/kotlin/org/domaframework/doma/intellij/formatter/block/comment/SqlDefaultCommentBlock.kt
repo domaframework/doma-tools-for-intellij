@@ -17,8 +17,6 @@ package org.domaframework.doma.intellij.formatter.block.comment
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
-import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -27,6 +25,10 @@ abstract class SqlDefaultCommentBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlCommentBlock(node, context) {
+    companion object {
+        private const val FILE_TOP_THRESHOLD = 2
+    }
+
     /**
      * If this block is the last element, the indentation update process is not called,
      * so set the default indentation to 1.
@@ -34,8 +36,8 @@ abstract class SqlDefaultCommentBlock(
     override val indent =
         ElementIndent(
             IndentType.NONE,
-            1,
-            1,
+            SINGLE_INDENT,
+            SINGLE_INDENT,
         )
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
@@ -50,16 +52,18 @@ abstract class SqlDefaultCommentBlock(
         baseBlock: SqlBlock,
         groupBlockCount: Int,
     ) {
-        indent.indentLen =
-            if (isSaveSpace(parentBlock)) {
-                baseBlock.indent.indentLen
-            } else if (groupBlockCount <= 2) {
-                // If it is the top of the file, the indent number should be 0.
-                0
-            } else {
-                1
-            }
+        indent.indentLen = calculateIndentForUpdate(baseBlock, groupBlockCount)
     }
 
-    override fun isSaveSpace(lastGroup: SqlBlock?) = PsiTreeUtil.prevLeaf(node.psi)?.text?.contains(StringUtil.LINE_SEPARATE) == true
+    private fun calculateIndentForUpdate(
+        baseBlock: SqlBlock,
+        groupBlockCount: Int,
+    ): Int =
+        when {
+            isSaveSpace(parentBlock) -> baseBlock.indent.indentLen
+            groupBlockCount <= FILE_TOP_THRESHOLD -> DEFAULT_INDENT
+            else -> SINGLE_INDENT
+        }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?) = hasLineBreakBefore()
 }

@@ -21,6 +21,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlJoinQueriesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -51,11 +52,21 @@ open class SqlSubQueryGroupBlock(
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
             return when (parent) {
-                is SqlElConditionLoopCommentBlock, is SqlWithQuerySubGroupBlock -> return parent.indent.groupIndentLen
+                is SqlElConditionLoopCommentBlock -> {
+                    return if (parent.isBeforeParentBlock()) {
+                        parent.parentBlock
+                            ?.indent
+                            ?.groupIndentLen
+                            ?.plus(1) ?: 1
+                    } else {
+                        parent.indent.indentLen
+                    }
+                }
+                is SqlWithQuerySubGroupBlock -> return parent.indent.groupIndentLen
                 is SqlJoinQueriesGroupBlock -> return parent.indent.indentLen
                 is SqlJoinGroupBlock -> return parent.indent.groupIndentLen.plus(1)
                 else -> {
-                    val children = prevChildren?.filter { it !is SqlDefaultCommentBlock }
+                    val children = prevChildren?.filter { shouldIncludeChildBlock(it, parent) }
                     // Retrieve the list of child blocks excluding the conditional directive that appears immediately before this block,
                     // as it is already included as a child block.
                     val sumChildren =
@@ -74,6 +85,13 @@ open class SqlSubQueryGroupBlock(
                 }
             }
         } ?: offset
+
+    private fun shouldIncludeChildBlock(
+        block: SqlBlock,
+        parent: SqlBlock,
+    ): Boolean =
+        block !is SqlDefaultCommentBlock &&
+            (parent as? SqlKeywordGroupBlock)?.topKeywordBlocks?.contains(block) == false
 
     override fun createGroupIndentLen(): Int {
         parentBlock?.let { parent ->

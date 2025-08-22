@@ -2,7 +2,7 @@
 WITH
     /*%for cte : cteDefinitions */
     /* cte.name */ user_stats AS (
-    /* cte.query */
+    /*# cte.query */
     SELECT user_id
            , COUNT(*) AS order_count
       FROM orders

@@ -13,47 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword
+package org.domaframework.doma.intellij.formatter.block.group.keyword.option
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-class SqlLateralGroupBlock(
+class SqlExistsGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlKeywordGroupBlock(
-        node,
-        IndentType.OPTIONS,
-        context,
-    ) {
-    var subQueryGroupBlock: SqlSubGroupBlock? = null
-
+) : SqlKeywordGroupBlock(node, IndentType.OPTIONS, context) {
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-        if (lastGroup is SqlFromGroupBlock) {
-            if (lastGroup.tableBlocks.isEmpty()) lastGroup.tableBlocks.add(this)
-        }
-    }
-
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) return parent.indent.groupIndentLen
-            return parent.indent.groupIndentLen.plus(1)
+            if (parent.parentBlock is SqlElConditionLoopCommentBlock) {
+                return parent.indent.groupIndentLen
+            }
         }
-        return 0
+        return parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
     }
 
-    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
+    override fun createGroupIndentLen(): Int {
+        val parentGroupIndent = parentBlock?.indent?.groupIndentLen ?: 0
+        return topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.plus(parentGroupIndent).minus(1)
+    }
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        if (lastGroup is SqlCreateTableColumnDefinitionRawGroupBlock) {
+            return false
+        }
+        return super.isSaveSpace(lastGroup)
+    }
 }

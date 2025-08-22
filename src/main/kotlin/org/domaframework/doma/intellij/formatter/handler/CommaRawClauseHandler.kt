@@ -17,11 +17,13 @@ package org.domaframework.doma.intellij.formatter.handler
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.comma.SqlArrayCommaBlock
+import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlArrayListGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -68,6 +70,7 @@ object CommaRawClauseHandler {
         sqlBlockFormattingCtx: SqlBlockFormattingContext,
     ): SqlBlock =
         when {
+            lastGroup is SqlArrayListGroupBlock -> SqlArrayCommaBlock(child, sqlBlockFormattingCtx)
             shouldCreateColumnRawBlock(lastGroup) ->
                 SqlColumnRawGroupBlock(
                     child,

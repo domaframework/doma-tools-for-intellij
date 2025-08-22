@@ -17,11 +17,13 @@ package org.domaframework.doma.intellij.formatter.handler
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictExpressionSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlInGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
@@ -31,10 +33,8 @@ import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 
 object NotQueryGroupHandler {
-    private const val IN_KEYWORD = "in"
     private const val RETURNING_KEYWORD = "returning"
 
     /**
@@ -75,13 +75,7 @@ object NotQueryGroupHandler {
     /**
      * Checks if the last group has an 'IN' keyword as its last option keyword.
      */
-    private fun hasInKeyword(lastGroup: SqlBlock?): Boolean {
-        val lastKeyword =
-            lastGroup
-                ?.childBlocks
-                ?.lastOrNull { SqlKeywordUtil.isOptionSqlKeyword(it.getNodeText()) }
-        return lastKeyword?.getNodeText()?.lowercase() == IN_KEYWORD
-    }
+    private fun hasInKeyword(lastGroup: SqlBlock?): Boolean = lastGroup is SqlInGroupBlock
 
     /**
      * Creates a conditional expression group block.
@@ -94,7 +88,20 @@ object NotQueryGroupHandler {
     /**
      * Checks if the last group has a word block context that requires function or alias handling.
      */
-    private fun hasFunctionOrAliasContext(lastGroup: SqlBlock?): Boolean = lastGroup?.childBlocks?.lastOrNull() is SqlWordBlock
+    private fun hasFunctionOrAliasContext(lastGroup: SqlBlock?): Boolean {
+        val lastChild = lastGroup?.childBlocks?.lastOrNull()
+        if (lastChild != null) {
+            when (lastChild) {
+                is SqlElConditionLoopCommentBlock -> {
+                    if (lastChild.isBeforeParentBlock()) {
+                        return lastChild.parentBlock is SqlWordBlock
+                    }
+                }
+                else -> return lastGroup.childBlocks.lastOrNull() is SqlWordBlock
+            }
+        }
+        return false
+    }
 
     /**
      * Creates either a function parameter block or values parameter block based on the previous child type.

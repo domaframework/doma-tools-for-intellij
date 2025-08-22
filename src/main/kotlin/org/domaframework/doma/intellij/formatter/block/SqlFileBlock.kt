@@ -26,12 +26,18 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
+import com.intellij.psi.util.nextLeaf
+import com.intellij.psi.util.nextLeafs
 import org.domaframework.doma.intellij.common.util.TypeUtil
+import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElBlockCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlLineCommentBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElAtSignBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElSymbolBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
@@ -47,6 +53,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlU
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlArrayListGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
@@ -54,6 +61,7 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQuer
 import org.domaframework.doma.intellij.formatter.block.other.SqlEscapeBlock
 import org.domaframework.doma.intellij.formatter.block.other.SqlOtherBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlArrayWordBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
@@ -105,14 +113,14 @@ open class SqlFileBlock(
         if (isLeaf) return mutableListOf()
 
         var child = node.firstChildNode
-        var prevNonWhiteSpaceNode: ASTNode? = null
+        var prevNonWhiteSpaceNode: SqlBlock? = null
         blockBuilder.addGroupTopNodeIndexHistory(this)
         while (child != null) {
             val lastBlock = blocks.lastOrNull()
             val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
             if (child !is PsiWhiteSpace) {
-                val childBlock = getBlock(child)
-                prevNonWhiteSpaceNode = child
+                val childBlock = getBlock(child, prevNonWhiteSpaceNode)
+                prevNonWhiteSpaceNode = childBlock
                 updateCommentParentAndIdent(childBlock)
                 updateBlockParentAndLAddGroup(childBlock)
                 updateWhiteSpaceInclude(lastBlock, childBlock, lastGroup)
@@ -140,7 +148,10 @@ open class SqlFileBlock(
     /**
      * Creates a block for the given child AST node.
      */
-    override fun getBlock(child: ASTNode): SqlBlock {
+    private fun getBlock(
+        child: ASTNode,
+        prevBlock: SqlBlock?,
+    ): SqlBlock {
         val defaultFormatCtx =
             SqlBlockFormattingContext(
                 wrap,
@@ -181,10 +192,17 @@ open class SqlFileBlock(
                 } else {
                     val escapeStrings = listOf("\"", "`", "[", "]")
                     if (escapeStrings.contains(child.text)) {
-                        SqlEscapeBlock(
-                            child,
-                            defaultFormatCtx,
-                        )
+                        if (child.text == "[" && prevBlock is SqlArrayWordBlock) {
+                            SqlArrayListGroupBlock(
+                                child,
+                                defaultFormatCtx,
+                            )
+                        } else {
+                            SqlEscapeBlock(
+                                child,
+                                defaultFormatCtx,
+                            )
+                        }
                     } else {
                         SqlOtherBlock(
                             child,
@@ -207,8 +225,23 @@ open class SqlFileBlock(
                 }
             }
 
-            SqlTypes.FUNCTION_NAME ->
-                return SqlFunctionGroupBlock(child, defaultFormatCtx)
+            SqlTypes.FUNCTION_NAME -> {
+                val notWhiteSpaceElement =
+                    child.psi.nextLeafs
+                        .takeWhile { it is PsiWhiteSpace }
+                        .lastOrNull()
+                        ?.nextLeaf(true)
+                if (notWhiteSpaceElement?.elementType == SqlTypes.LEFT_PAREN ||
+                    PsiTreeUtil.nextLeaf(child.psi)?.elementType == SqlTypes.LEFT_PAREN
+                ) {
+                    return SqlFunctionGroupBlock(child, defaultFormatCtx)
+                }
+                return SqlKeywordBlock(
+                    child,
+                    IndentType.ATTACHED,
+                    defaultFormatCtx,
+                )
+            }
 
             SqlTypes.WORD -> {
                 return if (lastGroup is SqlWithQueryGroupBlock) {
@@ -378,6 +411,25 @@ open class SqlFileBlock(
                 )
             }
 
+            is SqlEscapeBlock -> {
+                val index =
+                    if (lastGroupBlock is SqlArrayListGroupBlock) {
+                        blockBuilder.getGroupTopNodeIndex {
+                            it is SqlArrayListGroupBlock
+                        }
+                    } else {
+                        -1
+                    }
+                blockRelationBuilder.updateGroupBlockParentAndAddGroup(
+                    childBlock,
+                )
+                if (lastGroupBlock is SqlArrayListGroupBlock) {
+                    if (index >= 0) {
+                        blockBuilder.clearSubListGroupTopNodeIndexHistory(index)
+                    }
+                }
+            }
+
             is SqlWordBlock, is SqlOtherBlock -> {
                 blockRelationBuilder.updateGroupBlockParentAndAddGroup(
                     childBlock,
@@ -461,6 +513,10 @@ open class SqlFileBlock(
             )
         }
 
+        if (childBlock1 is SqlArrayWordBlock && childBlock2 is SqlArrayListGroupBlock) {
+            return SqlCustomSpacingBuilder.nonSpacing
+        }
+
         if (childBlock2 is SqlWithColumnGroupBlock) {
             return SqlCustomSpacingBuilder.normalSpacing
         }
@@ -494,6 +550,10 @@ open class SqlFileBlock(
                     SqlCustomSpacingBuilder().getSpacing(childBlock2)
                 }
 
+                is SqlArrayListGroupBlock -> {
+                    SqlCustomSpacingBuilder.nonSpacing
+                }
+
                 else -> SqlCustomSpacingBuilder.normalSpacing
             }
         }
@@ -519,7 +579,7 @@ open class SqlFileBlock(
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
-        if (childBlock2 is SqlOtherBlock) {
+        if (childBlock1 !is SqlElSymbolBlock && childBlock1 !is SqlOtherBlock && childBlock2 is SqlOtherBlock) {
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
@@ -578,9 +638,24 @@ open class SqlFileBlock(
             return SqlCustomSpacingBuilder.normalSpacing
         }
 
+        if (isNonSpacingPair(childBlock1, childBlock2)) {
+            return SqlCustomSpacingBuilder.nonSpacing
+        }
+
         val spacing: Spacing? = customSpacingBuilder?.getCustomSpacing(childBlock1, childBlock2)
         return spacing ?: spacingBuilder.getSpacing(this, childBlock1, childBlock2)
     }
+
+    private fun isNonSpacingPair(
+        childBlock1: SqlBlock?,
+        childBlock2: SqlBlock,
+    ): Boolean =
+        childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElSymbolBlock ||
+            childBlock1 is SqlElAtSignBlock && childBlock2 is SqlElSymbolBlock ||
+            childBlock1 is SqlOtherBlock && childBlock2 is SqlElSymbolBlock ||
+            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElAtSignBlock ||
+            childBlock1 is SqlOtherBlock && childBlock2 is SqlOtherBlock ||
+            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlOtherBlock
 
     override fun isLeaf(): Boolean = false
 

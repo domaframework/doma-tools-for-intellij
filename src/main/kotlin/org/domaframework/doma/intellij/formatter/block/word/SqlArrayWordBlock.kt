@@ -13,58 +13,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword
+package org.domaframework.doma.intellij.formatter.block.word
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlLateralGroupBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElDotBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlArrayListGroupBlock
+import org.domaframework.doma.intellij.formatter.block.other.SqlOtherBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-open class SqlJoinGroupBlock(
+open class SqlArrayWordBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlKeywordGroupBlock(
+) : SqlWordBlock(
         node,
-        IndentType.JOIN,
         context,
     ) {
+    var arrayParams: SqlArrayListGroupBlock? = null
+
     override val indent =
         ElementIndent(
-            IndentType.JOIN,
+            IndentType.NONE,
             0,
             0,
         )
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        parentBlock = lastGroup
-        parentBlock?.childBlocks?.add(this)
-        indent.indentLevel = IndentType.JOIN
-        indent.indentLen = createBlockIndentLen()
+        super.setParentGroupBlock(lastGroup)
         indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createBlockIndentLen(): Int {
-        return parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) {
-                return parent.indent.groupIndentLen
-            }
-            return parent.indent.groupIndentLen.plus(1)
-        } ?: 1
-    }
+    override fun createBlockIndentLen(): Int =
+        when (val parent = parentBlock) {
+            is SqlElConditionLoopCommentBlock -> parent.indent.groupIndentLen
+            else -> 1
+        }
 
     override fun createGroupIndentLen(): Int =
-        indent.indentLen
-            .plus(
-                topKeywordBlocks
-                    .drop(1)
-                    .filter { it !is SqlLateralGroupBlock }
-                    .sumOf { it.getNodeText().length.plus(1) },
-            ).plus(getNodeText().length)
-
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
+        parentBlock
+            ?.getChildBlocksDropLast()
+            ?.sumOf {
+                when (it) {
+                    is SqlOtherBlock, is SqlElDotBlock -> it.getNodeText().length
+                    else -> it.getNodeText().length.plus(1)
+                }
+            }?.plus(parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1)
+            ?.plus(getNodeText().length.plus(1))
+            ?: getNodeText().length.plus(1)
 }

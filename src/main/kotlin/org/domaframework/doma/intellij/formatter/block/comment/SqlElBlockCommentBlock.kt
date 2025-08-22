@@ -18,7 +18,6 @@ package org.domaframework.doma.intellij.formatter.block.comment
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
-import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
@@ -40,7 +39,7 @@ import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlElBlockCommentBlock(
     node: ASTNode,
-    private val context: SqlBlockFormattingContext,
+    protected open val context: SqlBlockFormattingContext,
     open val customSpacingBuilder: SqlCustomSpacingBuilder?,
 ) : SqlCommentBlock(node, context) {
     enum class SqlElCommentDirectiveType {
@@ -82,18 +81,7 @@ open class SqlElBlockCommentBlock(
         return SqlElCommentDirectiveType.NORMAL
     }
 
-    override fun buildChildren(): MutableList<AbstractBlock> {
-        val blocks = mutableListOf<AbstractBlock>()
-        var child = node.firstChildNode
-        while (child != null) {
-            if (child !is PsiWhiteSpace) {
-                val block = getBlock(child)
-                blocks.add(block)
-            }
-            child = child.treeNext
-        }
-        return blocks
-    }
+    override fun buildChildren(): MutableList<AbstractBlock> = buildChildBlocks { getBlock(it) }
 
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
@@ -147,6 +135,8 @@ open class SqlElBlockCommentBlock(
                 SqlTypes.BLOCK_COMMENT_CONTENT,
                 Spacing.createSpacing(1, 1, 0, false, 0),
             )
+
+    override fun createBlockDirectiveCommentSpacingBuilder(): SqlCustomSpacingBuilder = createBlockCommentSpacingBuilder()
 
     override fun getSpacing(
         child1: Block?,

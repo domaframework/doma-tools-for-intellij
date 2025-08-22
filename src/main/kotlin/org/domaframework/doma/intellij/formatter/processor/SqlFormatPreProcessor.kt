@@ -111,7 +111,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                     }
 
                     SqlTypes.LEFT_PAREN -> {
-                        newKeyword = getNewLineString(it.prevSibling, getUpperText(it))
+                        newKeyword = getNewLineLeftParenString(it.prevSibling, getUpperText(it))
                     }
 
                     SqlTypes.RIGHT_PAREN -> {
@@ -232,6 +232,22 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             getUpperText(element)
         }
     }
+
+    private fun getNewLineLeftParenString(
+        prevElement: PsiElement?,
+        text: String,
+    ): String =
+        if (prevElement?.elementType == SqlTypes.BLOCK_COMMENT ||
+            (
+                prevElement?.text?.contains(LINE_SEPARATE) == false &&
+                    prevElement.prevSibling != null &&
+                    prevElement.elementType != SqlTypes.FUNCTION_NAME
+            )
+        ) {
+            "$LINE_SEPARATE$text"
+        } else {
+            text
+        }
 
     private fun getNewLineString(
         prevElement: PsiElement?,

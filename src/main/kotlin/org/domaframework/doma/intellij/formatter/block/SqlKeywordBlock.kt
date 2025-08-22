@@ -96,13 +96,11 @@ open class SqlKeywordBlock(
             }
 
             else -> {
-                parentBlock?.let { parent ->
-                    if (parent is SqlElConditionLoopCommentBlock) {
-                        parent.indent.groupIndentLen
-                    } else {
-                        1
-                    }
-                } ?: 1
+                if (parentBlock is SqlElConditionLoopCommentBlock) {
+                    parentBlock?.indent?.groupIndentLen ?: 1
+                } else {
+                    parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+                }
             }
         }
 }
