@@ -76,7 +76,7 @@ open class SqlBlock(
         private val SPACING_ONE_NO_KEEP = Spacing.createSpacing(1, 1, 0, false, 0)
     }
 
-    fun getChildrenTextLen(): Int = childBlocks.sumOf { child -> calculateChildTextLength(child).plus(1) }
+    fun getChildrenTextLen(): Int = childBlocks.sumOf { child -> calculateChildTextLength(child) }
 
     private fun calculateChildTextLength(child: SqlBlock): Int {
         val nonCommentChildren = child.childBlocks.filterNot { it is SqlDefaultCommentBlock }

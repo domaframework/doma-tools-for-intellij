@@ -106,12 +106,6 @@ class SqlFunctionParamBlock(
         val consecutiveSymbolCount =
             calculateConsecutiveSymbolCount(prevChildrenDropLast)
         val spaces = prevChildrenDropLast.count().minus(consecutiveSymbolCount)
-
-//        parentFunctionName?.let { parent ->
-//            return parentGroupIndent
-//                .plus(prevLength)
-//        }
-
         return prevLength.plus(spaces).plus(parentText.length).plus(parentGroupIndent)
     }
 
