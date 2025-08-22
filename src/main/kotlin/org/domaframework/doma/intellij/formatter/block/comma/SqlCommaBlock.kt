@@ -60,7 +60,6 @@ open class SqlCommaBlock(
                 SqlFunctionParamBlock::class,
                 SqlWithColumnGroupBlock::class,
                 SqlKeywordGroupBlock::class,
-                SqlFunctionParamBlock::class,
                 SqlElConditionLoopCommentBlock::class,
             )
 
