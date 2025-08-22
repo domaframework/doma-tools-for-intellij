@@ -3,6 +3,14 @@ SELECT employee_id
        , salary
        , salary * /* yearBonusRate */1.2 AS yearly_bonus
        , salary + (salary * /* @raiseRate() */0.05) AS new_salary
+       , /*%if parent*/
+         number1.d
+          ,
+         /*%else*/
+         number2.e
+          ,
+         /*%end*/
+         number.x
   FROM employee
  WHERE department_id = /* departmentId */1
    /*%if  @minSalary() + extraAmount*/
