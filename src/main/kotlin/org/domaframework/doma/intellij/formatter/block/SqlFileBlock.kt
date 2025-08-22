@@ -26,6 +26,10 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
+import com.intellij.psi.util.nextLeaf
+import com.intellij.psi.util.nextLeafs
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
@@ -221,8 +225,23 @@ open class SqlFileBlock(
                 }
             }
 
-            SqlTypes.FUNCTION_NAME ->
-                return SqlFunctionGroupBlock(child, defaultFormatCtx)
+            SqlTypes.FUNCTION_NAME -> {
+                val notWhiteSpaceElement =
+                    child.psi.nextLeafs
+                        .takeWhile { it is PsiWhiteSpace }
+                        .lastOrNull()
+                        ?.nextLeaf(true)
+                if (notWhiteSpaceElement?.elementType == SqlTypes.LEFT_PAREN ||
+                    PsiTreeUtil.nextLeaf(child.psi)?.elementType == SqlTypes.LEFT_PAREN
+                ) {
+                    return SqlFunctionGroupBlock(child, defaultFormatCtx)
+                }
+                return SqlKeywordBlock(
+                    child,
+                    IndentType.ATTACHED,
+                    defaultFormatCtx,
+                )
+            }
 
             SqlTypes.WORD -> {
                 return if (lastGroup is SqlWithQueryGroupBlock) {

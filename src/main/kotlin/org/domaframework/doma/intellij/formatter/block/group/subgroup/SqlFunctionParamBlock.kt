@@ -19,6 +19,9 @@ import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElAtSignBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElSymbolBlock
+import org.domaframework.doma.intellij.formatter.block.other.SqlOtherBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -79,22 +82,51 @@ class SqlFunctionParamBlock(
     }
 
     override fun createGroupIndentLen(): Int {
-        val parentFunctionName = parentBlock as? SqlFunctionGroupBlock
-        parentFunctionName?.let { parent ->
-            return parent.indent.groupIndentLen
-                .plus(getNodeText().length)
-        }
-
+        val parentGroupIndent = parentBlock?.indent?.groupIndentLen ?: 0
         val prevChildrenDropLast =
             prevChildren?.dropLast(1)?.filter {
                 it !is SqlDefaultCommentBlock &&
                     it.node.elementType != SqlTypes.DOT
             }
                 ?: emptyList()
+        val parentText =
+            if (parentBlock is SqlElConditionLoopCommentBlock) {
+                val grand = parentBlock?.parentBlock
+                grand?.getNodeText() ?: ""
+            } else {
+                ""
+            }
         val prevLength =
             prevChildrenDropLast
-                .sumOf { it.getNodeText().length }
-                .plus(getNodeText().length)
-        return prevLength.plus(prevChildrenDropLast.count()).plus(1)
+                .sumOf {
+                    it.getChildrenTextLen().plus(it.getNodeText().length)
+                }.plus(getNodeText().length)
+
+        // Avoid unnecessary spaces when operators are consecutive
+        val consecutiveSymbolCount =
+            calculateConsecutiveSymbolCount(prevChildrenDropLast)
+        val spaces = prevChildrenDropLast.count().minus(consecutiveSymbolCount)
+
+//        parentFunctionName?.let { parent ->
+//            return parentGroupIndent
+//                .plus(prevLength)
+//        }
+
+        return prevLength.plus(spaces).plus(parentText.length).plus(parentGroupIndent)
+    }
+
+    private fun calculateConsecutiveSymbolCount(prevChildrenDropLast: List<SqlBlock>): Int {
+        var count = 0
+        var total = 0
+        for (block in prevChildrenDropLast) {
+            if (block is SqlOtherBlock || block is SqlElAtSignBlock || block is SqlElSymbolBlock) {
+                count++
+            } else {
+                if (count > 1) total++
+                count = 0
+            }
+        }
+        if (count > 1) total += count
+        return total
     }
 }

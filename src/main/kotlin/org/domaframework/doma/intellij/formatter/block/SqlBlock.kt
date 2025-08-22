@@ -76,7 +76,7 @@ open class SqlBlock(
         private val SPACING_ONE_NO_KEEP = Spacing.createSpacing(1, 1, 0, false, 0)
     }
 
-    fun getChildrenTextLen(): Int = childBlocks.sumOf { child -> calculateChildTextLength(child) }
+    fun getChildrenTextLen(): Int = childBlocks.sumOf { child -> calculateChildTextLength(child).plus(1) }
 
     private fun calculateChildTextLength(child: SqlBlock): Int {
         val nonCommentChildren = child.childBlocks.filterNot { it is SqlDefaultCommentBlock }
@@ -139,7 +139,7 @@ open class SqlBlock(
         val firstConditionBlock = (prevChildren?.firstOrNull() as? SqlElConditionLoopCommentBlock)
         val endBlock = firstConditionBlock?.conditionEnd
         if (endBlock == null) return false
-        val lastBlock = prevChildren.lastOrNull()
+        val lastBlock = prevBlocks.lastOrNull()
 
         return endBlock.node.startOffset > (lastBlock?.node?.startOffset ?: 0)
     }
