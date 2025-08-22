@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [2.1.3] - 2025-08-22
+
+
+
 ## [2.1.2] - 2025-08-22
 
 ### Bug Fixes
@@ -494,3 +498,4 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[2.1.3]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.1.2...2.1.3
