@@ -137,7 +137,7 @@ class SqlElConditionLoopCommentBlock(
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-        if (lastGroup is SqlElConditionLoopCommentBlock && conditionType.isEnd()) {
+        if (lastGroup is SqlElConditionLoopCommentBlock && !conditionType.isStartDirective()) {
             lastGroup.conditionEnd = this
         }
     }
@@ -195,7 +195,7 @@ class SqlElConditionLoopCommentBlock(
                 is SqlSubGroupBlock -> return calculateSubGroupBlockIndent(parent, openConditionLoopDirectiveCount)
 
                 is SqlElConditionLoopCommentBlock -> {
-                    if (conditionType.isEnd()) {
+                    if (!conditionType.isStartDirective()) {
                         parent.conditionEnd = this
                         conditionStart = parent
                         return parent.indent.indentLen

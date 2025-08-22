@@ -136,13 +136,24 @@ open class SqlBlock(
                 .firstOrNull()
                 ?.childBlocks
 
-        val firstConditionBlock = (prevChildren?.firstOrNull() as? SqlElConditionLoopCommentBlock)
-        val endBlock = firstConditionBlock?.conditionEnd
+        val firstConditionBlock = prevChildren?.firstOrNull { it is SqlElConditionLoopCommentBlock } as? SqlElConditionLoopCommentBlock
+        val endBlock =
+            findConditionEndBlock(firstConditionBlock)
         if (endBlock == null) return false
         val lastBlock = prevBlocks.lastOrNull()
 
         return endBlock.node.startOffset > (lastBlock?.node?.startOffset ?: 0)
     }
+
+    private fun findConditionEndBlock(firstConditionBlock: SqlElConditionLoopCommentBlock?): SqlElConditionLoopCommentBlock? =
+        (
+            firstConditionBlock?.conditionEnd
+                ?: (
+                    firstConditionBlock?.childBlocks?.lastOrNull {
+                        it is SqlElConditionLoopCommentBlock
+                    } as? SqlElConditionLoopCommentBlock
+                )?.conditionEnd
+        )
 
     protected fun isFirstChildConditionLoopDirective(): Boolean = childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock
 
