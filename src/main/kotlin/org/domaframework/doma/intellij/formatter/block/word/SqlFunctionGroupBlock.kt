@@ -37,7 +37,10 @@ class SqlFunctionGroupBlock(
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun createBlockIndentLen(): Int {
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen ?: 0
+
+    override fun createGroupIndentLen(): Int {
+        var baseIndent = 0
         parentBlock?.let { parent ->
             val children = prevChildren.dropLast(1).filter { it !is SqlDefaultCommentBlock }
             val prevBlocksLength =
@@ -55,15 +58,14 @@ class SqlFunctionGroupBlock(
                                 },
                             )
                     }.plus(parent.indent.groupIndentLen)
-            return if (parent is SqlSubGroupBlock) {
-                // parent.indent.groupIndentLen
-                prevBlocksLength
-            } else {
-                prevBlocksLength.plus(1)
-            }
+            baseIndent =
+                if (parent is SqlSubGroupBlock) {
+                    // parent.indent.groupIndentLen
+                    prevBlocksLength
+                } else {
+                    prevBlocksLength.plus(1)
+                }
         }
-        return 0
+        return baseIndent.plus(getNodeText().length)
     }
-
-    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
 }

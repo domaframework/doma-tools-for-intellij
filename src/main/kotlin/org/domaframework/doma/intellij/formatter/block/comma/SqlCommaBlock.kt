@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block
+package org.domaframework.doma.intellij.formatter.block.comma
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil
+import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
@@ -135,8 +136,15 @@ open class SqlCommaBlock(
                 }
                 return parentIndentLen.plus(1)
             } else {
-                if (parent is SqlValuesGroupBlock) return parent.indent.indentLen
-                return parent.indent.groupIndentLen.plus(1)
+                return when (parent) {
+                    is SqlValuesGroupBlock -> parent.indent.indentLen
+                    is SqlElConditionLoopCommentBlock -> {
+                        val firstChild = parent.childBlocks.findLast { it is SqlFunctionParamBlock && it.endPatternBlock == null }
+                        val parentIndent = firstChild?.indent ?: parent.indent
+                        parentIndent.groupIndentLen.plus(1)
+                    }
+                    else -> parent.indent.groupIndentLen.plus(1)
+                }
             }
         }
         return 1

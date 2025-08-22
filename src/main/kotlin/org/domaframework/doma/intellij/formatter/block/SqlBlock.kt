@@ -139,7 +139,7 @@ open class SqlBlock(
         val firstConditionBlock = (prevChildren?.firstOrNull() as? SqlElConditionLoopCommentBlock)
         val endBlock = firstConditionBlock?.conditionEnd
         if (endBlock == null) return false
-        val lastBlock = prevChildren.lastOrNull()
+        val lastBlock = prevBlocks.lastOrNull()
 
         return endBlock.node.startOffset > (lastBlock?.node?.startOffset ?: 0)
     }

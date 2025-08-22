@@ -220,10 +220,18 @@ class SqlBlockGenerator(
                         }
                     }
                     "from" -> {
-                        SqlFromGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
+                        if (lastGroupBlock is SqlSubGroupBlock) {
+                            SqlKeywordBlock(
+                                child,
+                                IndentType.ATTACHED,
+                                sqlBlockFormattingCtx,
+                            )
+                        } else {
+                            SqlFromGroupBlock(
+                                child,
+                                sqlBlockFormattingCtx,
+                            )
+                        }
                     }
                     "where" -> {
                         SqlWhereGroupBlock(

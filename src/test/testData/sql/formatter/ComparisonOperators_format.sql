@@ -35,7 +35,7 @@ SELECT id
          -- Range operators
          date_range @> current_date AS in_range
        , int_range && int4range(1
-                          , 10) AS overlaps_range
+                                , 10) AS overlaps_range
        ,
          -- Geometric operators
          point <-> point '(0,0)' AS distance_from_origin
