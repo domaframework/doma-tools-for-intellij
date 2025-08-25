@@ -28,6 +28,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.codeStyle.CodeStyleManager
+import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.formatter.visitor.FormattingTask
 
@@ -42,13 +43,13 @@ class InjectionSqlFormatter(
         private val COMMENT_START_REGEX = Regex("^[ \t]*/[*][ \t]*\\*")
     }
 
-    private val baseIndent = createSpaceIndent(project)
+    private var baseIndent = createSpaceIndent(project)
 
     private fun createSpaceIndent(project: Project): String {
         val settings = CodeStyle.getSettings(project)
         val java = settings.getIndentOptions(JavaFileType.INSTANCE)
         val indentSize = java.INDENT_SIZE
-        val prefixLen = "@Sql(\"\"\"".length
+        val prefixLen = "@Sql(${TRIPLE_QUOTE}".length
         return StringUtil.SINGLE_SPACE.repeat(indentSize.plus(prefixLen))
     }
 
@@ -166,10 +167,42 @@ class InjectionSqlFormatter(
 
         // Create properly aligned literal text
         val literalText = createFormattedLiteralText(processedSql)
+        updateBaseIndent(task)
+
         val normalizedText = normalizeIndentation(literalText)
 
         val newLiteral = elementFactory.createExpressionFromText(normalizedText, task.expression)
         return newLiteral.text
+    }
+
+    /**
+     * When formatting styles other than Java code style change the indentation of a text block,
+     * reset the base indent using the number of spaces before the PsiLiteralExpression.
+     */
+    private fun updateBaseIndent(task: FormattingTask) {
+        val input = PsiTreeUtil.prevLeaf(task.expression)?.text
+        val prevTexts = countCharsToLineBreak(task.expression).plus(TRIPLE_QUOTE.length)
+        if (input != null) {
+            val matches = StringUtil.SINGLE_SPACE.repeat(prevTexts)
+            baseIndent = matches
+        }
+    }
+
+    private fun countCharsToLineBreak(expression: PsiLiteralExpression): Int {
+        var count = 0
+        var leaf = PsiTreeUtil.prevLeaf(expression)
+        while (leaf != null) {
+            val text = leaf.text
+            for (i in text.length - 1 downTo 0) {
+                val c = text[i]
+                if (c == '\n' || c == '\r') {
+                    return count
+                }
+                count++
+            }
+            leaf = PsiTreeUtil.prevLeaf(leaf)
+        }
+        return count
     }
 
     /**
