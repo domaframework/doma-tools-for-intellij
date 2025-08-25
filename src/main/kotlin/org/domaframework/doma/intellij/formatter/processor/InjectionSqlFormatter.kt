@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.processor
 
 import com.intellij.application.options.CodeStyle
+import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Document
@@ -45,7 +46,7 @@ class InjectionSqlFormatter(
 
     private fun createSpaceIndent(project: Project): String {
         val settings = CodeStyle.getSettings(project)
-        val java = settings.indentOptions
+        val java = settings.getIndentOptions(JavaFileType.INSTANCE)
         val indentSize = java.INDENT_SIZE
         val prefixLen = "@Sql(\"\"\"".length
         return StringUtil.SINGLE_SPACE.repeat(indentSize.plus(prefixLen))
