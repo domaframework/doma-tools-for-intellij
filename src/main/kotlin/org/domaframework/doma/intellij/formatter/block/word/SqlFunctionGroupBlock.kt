@@ -40,32 +40,48 @@ class SqlFunctionGroupBlock(
     override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen ?: 0
 
     override fun createGroupIndentLen(): Int {
-        var baseIndent = 0
-        parentBlock?.let { parent ->
-            val children = prevChildren.dropLast(1).filter { it !is SqlDefaultCommentBlock }
-            val prevBlocksLength =
-                children
-                    .sumOf { prev ->
-                        prev
-                            .getChildrenTextLen()
-                            .plus(
-                                if (prev.node.elementType == SqlTypes.DOT ||
-                                    prev.node.elementType == SqlTypes.RIGHT_PAREN
-                                ) {
-                                    0
-                                } else {
-                                    prev.getNodeText().length.plus(1)
-                                },
-                            )
-                    }.plus(parent.indent.groupIndentLen)
-            baseIndent =
-                if (parent is SqlSubGroupBlock) {
-                    // parent.indent.groupIndentLen
-                    prevBlocksLength
-                } else {
-                    prevBlocksLength.plus(1)
-                }
-        }
+        val baseIndent =
+            parentBlock?.let { parent ->
+                val children = prevChildren.dropLast(1).filter { it !is SqlDefaultCommentBlock }
+                val prevBlocksLength = calculatePrevBlocksLength(children, parent)
+                calculateBaseIndent(parent, prevBlocksLength)
+            } ?: 0
         return baseIndent.plus(getNodeText().length)
     }
+
+    private fun calculatePrevBlocksLength(
+        children: List<SqlBlock>,
+        parent: SqlBlock,
+    ): Int =
+        children
+            .sumOf { prev ->
+                prev
+                    .getChildrenTextLen()
+                    .plus(
+                        if (prev.node.elementType == SqlTypes.DOT ||
+                            prev.node.elementType == SqlTypes.RIGHT_PAREN
+                        ) {
+                            0
+                        } else {
+                            prev.getNodeText().length.plus(1)
+                        },
+                    )
+            }.plus(parent.indent.groupIndentLen)
+
+    private fun calculateBaseIndent(
+        parent: SqlBlock,
+        prevBlocksLength: Int,
+    ): Int =
+        when (parent) {
+            is SqlSubGroupBlock ->
+                prevBlocksLength
+
+            is SqlElConditionLoopCommentBlock -> {
+                val directiveParent = parentBlock?.parentBlock
+                val directiveParentLen = directiveParent?.getNodeText()?.length?.plus(1) ?: 1
+                prevBlocksLength.plus(directiveParentLen)
+            }
+
+            else -> prevBlocksLength.plus(1)
+        }
 }

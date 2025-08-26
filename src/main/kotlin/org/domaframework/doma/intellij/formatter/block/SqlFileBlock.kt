@@ -236,11 +236,12 @@ open class SqlFileBlock(
                 ) {
                     return SqlFunctionGroupBlock(child, defaultFormatCtx)
                 }
-                return SqlKeywordBlock(
-                    child,
-                    IndentType.ATTACHED,
-                    defaultFormatCtx,
-                )
+                // If it is not followed by a left parenthesis, treat it as a word block
+                return if (lastGroup is SqlWithQueryGroupBlock) {
+                    SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
+                } else {
+                    blockUtil.getWordBlock(lastGroup, child)
+                }
             }
 
             SqlTypes.WORD -> {

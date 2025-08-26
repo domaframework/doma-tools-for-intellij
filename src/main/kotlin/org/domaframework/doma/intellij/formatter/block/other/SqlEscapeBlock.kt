@@ -17,7 +17,9 @@ package org.domaframework.doma.intellij.formatter.block.other
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlArrayListGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 class SqlEscapeBlock(
@@ -34,12 +36,53 @@ class SqlEscapeBlock(
     }
 
     override fun createBlockIndentLen(): Int {
-        val hasEvenEscapeBlocks = parentBlock?.childBlocks?.count { it is SqlEscapeBlock }?.let { it % 2 == 0 } == true
+        val parentEscapeBlock =
+            if (parentBlock is SqlElConditionLoopCommentBlock) {
+                if (parentBlock?.parentBlock is SqlEscapeBlock)1 else 0
+            } else {
+                0
+            }
+        val prevBlocks = parentBlock?.childBlocks?.count { it is SqlEscapeBlock }?.plus(parentEscapeBlock) ?: 0
+
+        val hasEvenEscapeBlocks = prevBlocks.let { it % 2 == 0 } == true
         isEndEscape = hasEvenEscapeBlocks || getNodeText() == "]"
         return if (isEndEscape) {
             0
         } else {
-            1
+            calculateIndentLen()
         }
     }
+
+    private fun calculateIndentLen(): Int {
+        parentBlock?.let { parent ->
+            when (parent) {
+                is SqlSubQueryGroupBlock -> {
+                    val parentIndentLen = parent.indent.groupIndentLen
+                    val grand = parent.parentBlock
+                    if (grand != null && grand.getNodeText().lowercase() == "create") {
+                        val grandIndentLen = grand.indent.groupIndentLen
+                        return grandIndentLen.plus(parentIndentLen).plus(1)
+                    }
+                    return parentIndentLen.plus(1)
+                }
+
+                is SqlElConditionLoopCommentBlock -> {
+                    return parent.indent.groupIndentLen
+                }
+
+                else -> {
+                    if (isSaveSpace(parentBlock))return parentBlock?.indent?.groupIndentLen ?: 1
+                    return 1
+                }
+            }
+        }
+        return 1
+    }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
+        if (isEndEscape) {
+            false
+        } else {
+            super.isSaveSpace(lastGroup)
+        }
 }
