@@ -27,9 +27,21 @@ import org.domaframework.doma.intellij.extension.psi.isDataType
 import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import kotlin.reflect.KClass
 
 object TypeUtil {
+    private val TOP_LEVEL_EXPECTED_TYPES =
+        listOf(
+            SqlSubGroupBlock::class,
+            SqlCommaBlock::class,
+            SqlWithQuerySubGroupBlock::class,
+            SqlCreateViewGroupBlock::class,
+        )
+
     /**
      * Unwraps the type parameter from Optional if present, otherwise returns the original type.
      */
@@ -117,6 +129,8 @@ object TypeUtil {
         if (type == null) return false
         return PsiTypeChecker.isBaseClassType(type) || DomaClassName.isOptionalWrapperType(type.canonicalText)
     }
+
+    fun isTopLevelExpectedType(childBlock: SqlBlock?): Boolean = isExpectedClassType(TOP_LEVEL_EXPECTED_TYPES, childBlock)
 
     /**
      * Determines whether the specified class instance matches.

@@ -68,12 +68,6 @@ class SqlBlockRelationBuilder(
                 SqlExistsGroupBlock::class,
             )
 
-        private val TOP_LEVEL_EXPECTED_TYPES =
-            listOf(
-                SqlSubGroupBlock::class,
-                SqlCreateViewGroupBlock::class,
-            )
-
         private val COLUMN_RAW_EXPECTED_TYPES =
             listOf(
                 SqlColumnRawGroupBlock::class,
@@ -179,7 +173,7 @@ class SqlBlockRelationBuilder(
         context: SetParentContext,
     ) {
         val parentBlock =
-            if (TypeUtil.isExpectedClassType(TOP_LEVEL_EXPECTED_TYPES, lastGroupBlock)) {
+            if (TypeUtil.isTopLevelExpectedType(lastGroupBlock)) {
                 lastGroupBlock
             } else if (childBlock is SqlUpdateQueryGroupBlock) {
                 UpdateClauseHandler.getParentGroupBlock(blockBuilder, childBlock)

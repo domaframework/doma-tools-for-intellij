@@ -22,7 +22,11 @@ import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiComment
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
+import com.intellij.psi.util.nextLeaf
+import com.intellij.psi.util.nextLeafs
 import org.domaframework.doma.intellij.extension.expr.isConditionOrLoopDirective
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
@@ -57,6 +61,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWit
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.other.SqlEscapeBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlArrayWordBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
@@ -102,6 +107,7 @@ class SqlBlockGenerator(
         lastGroupBlock: SqlBlock?,
     ): SqlBlock {
         val keywordText = child.text.lowercase()
+
         val indentLevel = SqlKeywordUtil.getIndentType(keywordText)
 
         if (indentLevel.isNewLineGroup()) {
@@ -382,6 +388,47 @@ class SqlBlockGenerator(
             ?.let { return it }
 
         return CommaRawClauseHandler.getCommaBlock(lastGroup, child, sqlBlockFormattingCtx)
+    }
+
+    fun hasEscapeBeforeWhiteSpace(
+        lastEscapeBlock: SqlBlock?,
+        start: ASTNode,
+    ): Boolean {
+        if (lastEscapeBlock == null ||
+            (lastEscapeBlock as? SqlEscapeBlock)?.isEndEscape == true
+        ) {
+            return false
+        }
+        var node = start.treeNext
+        while (node != null) {
+            if (node.elementType == SqlTypes.OTHER &&
+                listOf("\"", "`", "]").contains(node.text)
+            ) {
+                return true
+            }
+            if (node.psi is PsiWhiteSpace) {
+                return false
+            }
+            node = node.treeNext
+        }
+        return false
+    }
+
+    fun getFunctionName(
+        child: ASTNode,
+        defaultFormatCtx: SqlBlockFormattingContext,
+    ): SqlBlock? {
+        val notWhiteSpaceElement =
+            child.psi.nextLeafs
+                .takeWhile { it is PsiWhiteSpace }
+                .lastOrNull()
+                ?.nextLeaf(true)
+        if (notWhiteSpaceElement?.elementType == SqlTypes.LEFT_PAREN ||
+            PsiTreeUtil.nextLeaf(child.psi)?.elementType == SqlTypes.LEFT_PAREN
+        ) {
+            return SqlFunctionGroupBlock(child, defaultFormatCtx)
+        }
+        return null
     }
 
     fun getWordBlock(

@@ -99,4 +99,14 @@ abstract class SqlTopQueryGroupBlock(
 
         return parent.indent.indentLen
     }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        if (TypeUtil.isTopLevelExpectedType(lastGroup) &&
+            lastGroup !is SqlWithQuerySubGroupBlock &&
+            lastGroup !is SqlCreateViewGroupBlock
+        ) {
+            return false
+        }
+        return super.isSaveSpace(lastGroup)
+    }
 }

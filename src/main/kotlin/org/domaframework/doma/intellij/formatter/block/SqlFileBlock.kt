@@ -26,10 +26,6 @@ import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
-import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.elementType
-import com.intellij.psi.util.nextLeaf
-import com.intellij.psi.util.nextLeafs
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
@@ -62,7 +58,6 @@ import org.domaframework.doma.intellij.formatter.block.other.SqlEscapeBlock
 import org.domaframework.doma.intellij.formatter.block.other.SqlOtherBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlArrayWordBlock
-import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
@@ -161,9 +156,16 @@ open class SqlFileBlock(
                 formatMode,
             )
         val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
+
         val lastGroupFilteredDirective = blockBuilder.getLastGroupFilterDirective()
         return when (child.elementType) {
             SqlTypes.KEYWORD -> {
+                if (blockUtil.hasEscapeBeforeWhiteSpace(blocks.lastOrNull() as? SqlBlock?, child)) {
+                    return SqlWordBlock(
+                        child,
+                        defaultFormatCtx,
+                    )
+                }
                 return blockUtil.getKeywordBlock(
                     child,
                     blockBuilder.getLastGroupTopNodeIndexHistory(),
@@ -226,15 +228,9 @@ open class SqlFileBlock(
             }
 
             SqlTypes.FUNCTION_NAME -> {
-                val notWhiteSpaceElement =
-                    child.psi.nextLeafs
-                        .takeWhile { it is PsiWhiteSpace }
-                        .lastOrNull()
-                        ?.nextLeaf(true)
-                if (notWhiteSpaceElement?.elementType == SqlTypes.LEFT_PAREN ||
-                    PsiTreeUtil.nextLeaf(child.psi)?.elementType == SqlTypes.LEFT_PAREN
-                ) {
-                    return SqlFunctionGroupBlock(child, defaultFormatCtx)
+                val block = blockUtil.getFunctionName(child, defaultFormatCtx)
+                if (block != null) {
+                    return block
                 }
                 // If it is not followed by a left parenthesis, treat it as a word block
                 return if (lastGroup is SqlWithQueryGroupBlock) {
