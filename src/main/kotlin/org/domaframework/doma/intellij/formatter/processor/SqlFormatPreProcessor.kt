@@ -254,6 +254,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         text: String,
     ): String =
         if (prevElement?.elementType == SqlTypes.BLOCK_COMMENT ||
+            prevElement?.elementType == SqlTypes.BLOCK_COMMENT_END ||
             (
                 prevElement?.text?.contains(LINE_SEPARATE) == false &&
                     prevElement.prevSibling != null
