@@ -49,7 +49,18 @@ class SqlConditionalExpressionGroupBlock(
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
             if (parent is SqlElConditionLoopCommentBlock) {
-                parent.indent.groupIndentLen
+                val groupIndentLen = parent.indent.groupIndentLen
+                val grand = parent.parentBlock
+                val directiveParentTextLen =
+                    if (grand !is SqlElConditionLoopCommentBlock) {
+                        grand
+                            ?.getNodeText()
+                            ?.length
+                            ?.plus(1) ?: 0
+                    } else {
+                        0
+                    }
+                groupIndentLen + directiveParentTextLen
             } else {
                 parent.indent.groupIndentLen.plus(1)
             }

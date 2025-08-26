@@ -27,6 +27,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElFieldAccessBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElFunctionCallBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElStaticFieldAccessBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
@@ -168,6 +169,7 @@ open class SqlElBlockCommentBlock(
                     }
                 }
                 is SqlValuesGroupBlock -> parent.indent.indentLen
+                is SqlKeywordGroupBlock -> parent.indent.groupIndentLen.plus(1)
                 else -> parent.indent.groupIndentLen
             }
         }

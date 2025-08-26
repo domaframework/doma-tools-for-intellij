@@ -555,7 +555,19 @@ open class SqlFileBlock(
                     SqlCustomSpacingBuilder.nonSpacing
                 }
 
-                else -> SqlCustomSpacingBuilder.normalSpacing
+                is SqlSubGroupBlock -> {
+                    val includeSpaceRight = childBlock1.endPatternBlock?.isPreSpaceRight()
+
+                    if (includeSpaceRight == false) {
+                        SqlCustomSpacingBuilder.nonSpacing
+                    } else {
+                        SqlCustomSpacingBuilder.normalSpacing
+                    }
+                }
+
+                else -> {
+                    SqlCustomSpacingBuilder.normalSpacing
+                }
             }
         }
 

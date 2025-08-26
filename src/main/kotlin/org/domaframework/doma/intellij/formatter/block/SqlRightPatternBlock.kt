@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
+import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictExpressionSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
@@ -26,6 +27,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlC
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
@@ -60,6 +62,9 @@ open class SqlRightPatternBlock(
     }
 
     private var preSpaceRight = false
+
+    fun isPreSpaceRight() = preSpaceRight
+
     var lineBreakAndSpacingType: LineBreakAndSpacingType = LineBreakAndSpacingType.NONE
 
     companion object {
@@ -77,7 +82,6 @@ open class SqlRightPatternBlock(
                 SqlInsertColumnGroupBlock::class,
                 SqlWithQuerySubGroupBlock::class,
                 SqlConflictExpressionSubGroupBlock::class,
-                SqlConditionalExpressionGroupBlock::class,
             )
 
         val NEW_LINE_EXPECTED_TYPES =
@@ -103,11 +107,21 @@ open class SqlRightPatternBlock(
      */
     private fun enableLastRight() {
         parentBlock?.let { parent ->
+            val isFirstChildQuery =
+                parent.childBlocks.firstOrNull {
+                    it !is SqlCommentBlock
+                } is SqlTopQueryGroupBlock
             // Check if parent is in the notInsertSpaceClassList
             if (isExpectedClassType(NOT_INDENT_EXPECTED_TYPES, parent)) {
                 preSpaceRight = false
                 return
             }
+
+            if (parent is SqlConditionalExpressionGroupBlock) {
+                preSpaceRight = isFirstChildQuery
+                return
+            }
+
             if (isExpectedClassType(
                     INDENT_EXPECTED_TYPES,
                     parent,

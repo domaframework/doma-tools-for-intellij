@@ -102,7 +102,9 @@ open class SqlBlock(
     protected fun isConditionLoopDirectiveRegisteredBeforeParent(): Boolean {
         val firstPrevBlock = (prevBlocks.lastOrNull() as? SqlElConditionLoopCommentBlock)
         parentBlock?.let { parent ->
-            return firstPrevBlock != null &&
+
+            return (childBlocks.firstOrNull() as? SqlElConditionLoopCommentBlock)?.isBeforeParentBlock() == true ||
+                firstPrevBlock != null &&
                 firstPrevBlock.conditionEnd != null &&
                 firstPrevBlock.node.startOffset > parent.node.startOffset
         }
