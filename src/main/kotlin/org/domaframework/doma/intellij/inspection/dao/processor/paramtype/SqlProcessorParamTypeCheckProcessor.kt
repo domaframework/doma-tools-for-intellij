@@ -15,7 +15,6 @@
  */
 package org.domaframework.doma.intellij.inspection.dao.processor.paramtype
 
-import androidx.compose.compiler.plugins.kotlin.lower.fastForEachIndexed
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiType
@@ -64,7 +63,7 @@ class SqlProcessorParamTypeCheckProcessor(
 
         val biFunctionClassType = (biFunctionParam.type as? PsiClassType)
         val identifier = biFunctionParam.nameIdentifier ?: return
-        biFunctionClassType?.parameters?.fastForEachIndexed { index, param ->
+        biFunctionClassType?.parameters?.forEachIndexed { index, param ->
             if (param == null || !checkBiFunctionParam(index, param)) {
                 ValidationMethodBiFunctionParamResult(
                     identifier,
