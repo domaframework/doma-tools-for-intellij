@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.group.column
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.other.SqlEscapeBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
@@ -32,11 +33,24 @@ open class SqlColumnDefinitionRawGroupBlock(
         node,
         context,
     ) {
-    // TODO Customize indentation within an inline group
-    open val defaultOffset = 0
-    val isFirstColumnRaw = node.elementType != SqlTypes.COMMA
+    companion object {
+        private const val DEFAULT_OFFSET = 0
+        private const val ESCAPE_CHARS_LENGTH = 2
+        private const val FIRST_COLUMN_INDENT = 1
+    }
 
+    val isFirstColumnRaw = node.elementType != SqlTypes.COMMA
     open var columnBlock: SqlBlock? = if (isFirstColumnRaw) this else null
+
+    fun getColumnNameLength(): Int {
+        val columnNameLength = columnBlock?.getNodeText()?.length ?: 0
+        val hasEscapeCharacters = columnBlock?.prevBlocks?.firstOrNull() is SqlEscapeBlock
+        return if (hasEscapeCharacters) {
+            columnNameLength + ESCAPE_CHARS_LENGTH
+        } else {
+            columnNameLength
+        }
+    }
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
@@ -47,9 +61,12 @@ open class SqlColumnDefinitionRawGroupBlock(
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
     /**
-     * Right-justify the longest column name in the column definition.
+     * Calculate indent length for column definition.
+     * First column has an indent of 1, others use default offset.
      */
-    override fun createBlockIndentLen(): Int = if (isFirstColumnRaw) 1 else defaultOffset
+    private fun calculateIndentLength(): Int = if (isFirstColumnRaw) FIRST_COLUMN_INDENT else DEFAULT_OFFSET
+
+    override fun createBlockIndentLen(): Int = calculateIndentLength()
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

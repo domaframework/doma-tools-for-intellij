@@ -24,10 +24,15 @@ import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlo
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.other.SqlEscapeBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 object CreateClauseHandler {
+    private const val COLUMN_DEFINITION_OFFSET = 5
+    private const val COMMA_OFFSET = 2
+    private const val SINGLE_SPACE = 1
+
     fun getCreateTableClauseSubGroup(
         lastGroup: SqlBlock,
         child: ASTNode,
@@ -61,44 +66,70 @@ object CreateClauseHandler {
     fun getColumnDefinitionRawGroupSpacing(
         child1: Block?,
         child2: Block,
-    ): Spacing? {
-        // TODO Customize indentation
-        val offset = 5
-
-        // Top Column Definition Group Block
-        if (child1 is SqlWhitespaceBlock && child2 is SqlCreateTableColumnDefinitionRawGroupBlock) {
-            val columnDefinitionGroupBlock =
-                child2.parentBlock as? SqlCreateTableColumnDefinitionGroupBlock ?: return null
-
-            if (child2.node.elementType == SqlTypes.COMMA) {
-                // If the child2 is a comma, it is not a column definition raw group block.
-                return Spacing.createSpacing(offset, offset, 0, false, 0, 0)
+    ): Spacing? =
+        when {
+            child1 is SqlWhitespaceBlock && child2 is SqlCreateTableColumnDefinitionRawGroupBlock -> {
+                calculateColumnDefinitionSpacing(child2)
             }
-
-            val maxColumnName = columnDefinitionGroupBlock.getMaxColumnNameLength()
-            val diffColumnNameLen =
-                maxColumnName.minus(child2.columnBlock?.getNodeText()?.length ?: 0)
-            // If the longest column name is not in the top row, add two spaces for the "," to match the row with a comma.
-            var indentLen = offset.plus(diffColumnNameLen)
-            val maxColumnNameRaw =
-                columnDefinitionGroupBlock.columnRawGroupBlocks
-                    .findLast { raw -> raw.columnBlock?.getNodeText()?.length == maxColumnName }
-            if (maxColumnNameRaw?.isFirstColumnRaw != true) {
-                indentLen = indentLen.plus(2)
+            child1 is SqlCreateTableColumnDefinitionRawGroupBlock &&
+                (child2 is SqlColumnBlock || child2 is SqlEscapeBlock) -> {
+                calculateColumnSpacing(child1, child2)
             }
-
-            return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
+            else -> null
         }
 
-        if (child1 is SqlCreateTableColumnDefinitionRawGroupBlock && child2 is SqlColumnBlock) {
-            val columnDefinitionGroupBlock =
-                child1.parentBlock as? SqlCreateTableColumnDefinitionGroupBlock ?: return null
+    private fun calculateColumnDefinitionSpacing(columnDefBlock: SqlCreateTableColumnDefinitionRawGroupBlock): Spacing? {
+        val columnDefinitionGroupBlock =
+            columnDefBlock.parentBlock as? SqlCreateTableColumnDefinitionGroupBlock ?: return null
 
-            val maxColumnName = columnDefinitionGroupBlock.getMaxColumnNameLength()
-            val diffColumnNameLen = maxColumnName.minus(child2.getNodeText().length)
-            var indentLen = diffColumnNameLen.plus(1)
-            return Spacing.createSpacing(indentLen, indentLen, 0, false, 0, 0)
+        // If the child is a comma, it is not a column definition raw group block.
+        if (columnDefBlock.node.elementType == SqlTypes.COMMA) {
+            return createFixedSpacing(COLUMN_DEFINITION_OFFSET)
         }
-        return null
+
+        val maxColumnNameLength = columnDefinitionGroupBlock.getMaxColumnNameLength()
+        val currentColumnLength = columnDefBlock.getColumnNameLength()
+        val columnDifference = maxColumnNameLength - currentColumnLength
+
+        var indentLen = COLUMN_DEFINITION_OFFSET + columnDifference
+
+        // If the longest column name is not in the top row, add comma offset
+        if (!isMaxColumnInFirstRow(columnDefinitionGroupBlock, maxColumnNameLength)) {
+            indentLen += COMMA_OFFSET
+        }
+
+        return createFixedSpacing(indentLen)
     }
+
+    private fun calculateColumnSpacing(
+        rawGroupBlock: SqlCreateTableColumnDefinitionRawGroupBlock,
+        columnBlock: Block,
+    ): Spacing? {
+        val columnDefinitionGroupBlock =
+            rawGroupBlock.parentBlock as? SqlCreateTableColumnDefinitionGroupBlock ?: return null
+
+        val maxColumnNameLength = columnDefinitionGroupBlock.getMaxColumnNameLength()
+        val columnLength =
+            when (columnBlock) {
+                is SqlColumnBlock -> columnBlock.getNodeText().length
+                else -> rawGroupBlock.getColumnNameLength()
+            }
+
+        val columnDifference = maxColumnNameLength - columnLength
+        val indentLen = columnDifference + SINGLE_SPACE
+
+        return createFixedSpacing(indentLen)
+    }
+
+    private fun isMaxColumnInFirstRow(
+        columnDefinitionGroupBlock: SqlCreateTableColumnDefinitionGroupBlock,
+        maxColumnNameLength: Int,
+    ): Boolean {
+        val maxColumnNameRaw =
+            columnDefinitionGroupBlock.columnRawGroupBlocks
+                .findLast { raw -> raw.columnBlock?.getNodeText()?.length == maxColumnNameLength }
+        return maxColumnNameRaw?.isFirstColumnRaw == true
+    }
+
+    private fun createFixedSpacing(spaces: Int): Spacing = Spacing.createSpacing(spaces, spaces, 0, false, 0, 0)
 }
