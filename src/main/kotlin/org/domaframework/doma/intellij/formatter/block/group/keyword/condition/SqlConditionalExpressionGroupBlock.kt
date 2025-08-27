@@ -62,7 +62,7 @@ class SqlConditionalExpressionGroupBlock(
                     }
                 groupIndentLen + directiveParentTextLen
             } else {
-                parent.indent.groupIndentLen.plus(1)
+                calculatePrevBlocksLength(prevBlocks, parent).plus(1)
             }
         }
             ?: offset

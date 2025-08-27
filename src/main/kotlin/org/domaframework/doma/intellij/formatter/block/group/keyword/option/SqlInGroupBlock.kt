@@ -17,12 +17,10 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.option
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlInGroupBlock(
     node: ASTNode,
@@ -45,28 +43,7 @@ class SqlInGroupBlock(
             ) {
                 return parent.indent.indentLen
             }
-            val prevChildren = this.prevBlocks
-            val children = prevChildren.filter { it !is SqlDefaultCommentBlock }
-            val firstChild = children.firstOrNull()
-            val sumChildren =
-                if (firstChild is SqlElConditionLoopCommentBlock) {
-                    children.drop(1).dropLastWhile { it == this }
-                } else {
-                    children
-                }
-
-            val dotCount = sumChildren.count { it.node.elementType == SqlTypes.DOT }
-            val parentText = (parent as? SqlElConditionLoopCommentBlock)?.parentBlock?.getNodeText()?.length ?: 0
-
-            return sumChildren
-                .sumOf { prev ->
-                    prev
-                        .getChildrenTextLen()
-                        .plus(prev.getNodeText().length.plus(1))
-                }.minus(dotCount * 2)
-                .plus(parent.indent.groupIndentLen)
-                .plus(parentText)
-                .plus(1)
+            return calculatePrevBlocksLength(prevBlocks, parent).plus(1)
         }
         return 0
     }
