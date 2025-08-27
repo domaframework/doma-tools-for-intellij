@@ -12,7 +12,7 @@ public interface ScriptWithSqlFileDao {
               (
                      id INTEGER PRIMARY KEY
                  , name VARCHAR(100)
-                 , age INTEGER
+                 ,  age INTEGER
               ) ;
             CREATE INDEX idx_employee_name
             ON employee(name) ;

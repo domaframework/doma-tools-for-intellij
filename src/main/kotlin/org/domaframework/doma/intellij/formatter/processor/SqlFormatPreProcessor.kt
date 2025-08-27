@@ -28,6 +28,7 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.impl.source.codeStyle.PreFormatProcessor
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import com.intellij.psi.util.prevLeafs
 import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.util.StringUtil.LINE_SEPARATE
@@ -97,45 +98,51 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         var index = keywordList.size
         var keywordIndex = replaceKeywordList.size
 
-        visitor.replaces.asReversed().forEach {
-            val textRangeStart = it.startOffset
-            val textRangeEnd = textRangeStart + it.text.length
-            if (it.elementType != TokenType.WHITE_SPACE) {
+        visitor.replaces.asReversed().forEach { current ->
+            val textRangeStart = current.startOffset
+            val textRangeEnd = textRangeStart + current.text.length
+            if (current.elementType != TokenType.WHITE_SPACE) {
                 // Add a newline before any element that needs a newline+indent, without overlapping if there is already a newline
                 index--
-                var newKeyword = getUpperText(it)
-                when (it.elementType) {
+                var newKeyword = getUpperText(current)
+                when (current.elementType) {
                     SqlTypes.KEYWORD -> {
                         keywordIndex--
-                        newKeyword = getKeywordNewText(it)
+                        // Escape-enclosed keywords are treated as regular words and are not converted to uppercase.
+                        val escapes = current.prevLeafs.filter { it.elementType == SqlTypes.OTHER }.toList()
+                        if (hasEscapeBeforeWhiteSpace(escapes, current.node)) {
+                            newKeyword = current.text
+                        } else {
+                            newKeyword = getKeywordNewText(current)
+                        }
                     }
 
                     SqlTypes.LEFT_PAREN -> {
-                        newKeyword = getNewLineLeftParenString(it.prevSibling, getUpperText(it))
+                        newKeyword = getNewLineLeftParenString(current.prevSibling, getUpperText(current))
                     }
 
                     SqlTypes.RIGHT_PAREN -> {
                         newKeyword =
-                            getRightPatternNewText(it)
+                            getRightPatternNewText(current)
                     }
 
                     SqlTypes.WORD, SqlTypes.FUNCTION_NAME -> {
-                        newKeyword = getWordNewText(it, newKeyword)
+                        newKeyword = getWordNewText(current, newKeyword)
                     }
 
                     SqlTypes.COMMA, SqlTypes.OTHER -> {
-                        newKeyword = getNewLineString(it.prevSibling, getUpperText(it))
+                        newKeyword = getNewLineString(current.prevSibling, getUpperText(current))
                     }
 
                     SqlTypes.BLOCK_COMMENT_START -> {
                         newKeyword =
-                            getNewLineString(PsiTreeUtil.prevLeaf(it), getUpperText(it))
+                            getNewLineString(PsiTreeUtil.prevLeaf(current), getUpperText(current))
                     }
                 }
                 document.deleteString(textRangeStart, textRangeEnd)
                 document.insertString(textRangeStart, newKeyword)
             } else {
-                removeSpacesAroundNewline(document, it as PsiWhiteSpace)
+                removeSpacesAroundNewline(document, current as PsiWhiteSpace)
             }
         }
 
@@ -186,6 +193,29 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                 }
         }
         document.replaceString(range.startOffset, range.endOffset, newText)
+    }
+
+    private fun hasEscapeBeforeWhiteSpace(
+        prevBlocks: List<PsiElement>,
+        start: ASTNode,
+    ): Boolean {
+        val countEscape = prevBlocks.filter { it.elementType == SqlTypes.OTHER && it.text in listOf("\"", "[", "`", "]") }
+        if (countEscape.count() % 2 == 0) {
+            return false
+        }
+        var node = start.treeNext
+        while (node != null) {
+            if (node.elementType == SqlTypes.OTHER &&
+                listOf("\"", "`", "]").contains(node.text)
+            ) {
+                return true
+            }
+            if (node.psi is PsiWhiteSpace) {
+                return false
+            }
+            node = node.treeNext
+        }
+        return false
     }
 
     /**
@@ -254,6 +284,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         text: String,
     ): String =
         if (prevElement?.elementType == SqlTypes.BLOCK_COMMENT ||
+            prevElement?.elementType == SqlTypes.BLOCK_COMMENT_END ||
             (
                 prevElement?.text?.contains(LINE_SEPARATE) == false &&
                     prevElement.prevSibling != null

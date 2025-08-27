@@ -23,6 +23,8 @@ import org.domaframework.doma.intellij.formatter.block.conflict.OnConflictKeywor
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlExistsGroupBlock
@@ -123,6 +125,8 @@ class SqlKeywordBlockFactory(
         val shouldCreateExistsGroup =
             when {
                 lastGroupBlock is SqlElConditionLoopCommentBlock && lastGroupBlock.conditionType.isElse() -> true
+                lastGroupBlock is SqlCreateTableColumnDefinitionGroupBlock ||
+                    lastGroupBlock is SqlCreateTableColumnDefinitionRawGroupBlock -> false
                 keywordText == "not" && !isInConditionContext(lastGroupBlock) -> true
                 else -> false
             }

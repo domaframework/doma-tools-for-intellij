@@ -42,6 +42,11 @@ class SqlFormatVisitor : PsiRecursiveElementVisitor() {
         }
 
         if (PsiTreeUtil.getParentOfType(element, SqlBlockComment::class.java) == null) {
+            val prevElement = PsiTreeUtil.prevLeaf(element)
+            if (prevElement.elementType == SqlTypes.BLOCK_COMMENT_END && element !is PsiWhiteSpace) {
+                replaces.add(element)
+                return
+            }
             when (element.elementType) {
                 SqlTypes.KEYWORD, SqlTypes.COMMA, SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN, SqlTypes.WORD, SqlTypes.FUNCTION_NAME -> {
                     replaces.add(element)

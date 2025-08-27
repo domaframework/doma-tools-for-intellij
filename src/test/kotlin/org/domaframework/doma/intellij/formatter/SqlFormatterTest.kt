@@ -262,6 +262,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("FunctionKeywordInConditionDirective.sql", "FunctionKeywordInConditionDirective$formatDataPrefix.sql")
     }
 
+    fun testFunctionNameColumnFormatter() {
+        formatSqlFile("FunctionNameColumn.sql", "FunctionNameColumn$formatDataPrefix.sql")
+    }
+
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,

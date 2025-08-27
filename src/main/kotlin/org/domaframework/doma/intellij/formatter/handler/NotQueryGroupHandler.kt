@@ -26,6 +26,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.S
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlInGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlWhereGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlValuesParamGroupBlock
@@ -55,7 +56,9 @@ object NotQueryGroupHandler {
             else -> null
         }
 
-    private fun lastGroupParentConditionKeywordGroup(lastGroup: SqlBlock?): Boolean = lastGroup is SqlConditionKeywordGroupBlock
+    private fun lastGroupParentConditionKeywordGroup(lastGroup: SqlBlock?): Boolean =
+        lastGroup is SqlConditionKeywordGroupBlock ||
+            lastGroup is SqlWhereGroupBlock
 
     /**
      * Creates a keyword group block for specific keywords.

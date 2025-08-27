@@ -28,6 +28,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -217,9 +218,9 @@ class SqlElConditionLoopCommentBlock(
                             return lastBlock.indent.indentLen
                         }
                     }
-                    return parent.indent.groupIndentLen +
-                        openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP +
-                        if (parent !is SqlWithQueryGroupBlock) 1 else 0
+                    val withQuerySpace = if (parent !is SqlWithQueryGroupBlock) 1 else 0
+                    return parent.indent.groupIndentLen.plus(withQuerySpace) +
+                        openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP
                 }
                 else -> return parent.indent.indentLen + openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP
             }
@@ -302,5 +303,6 @@ class SqlElConditionLoopCommentBlock(
 
     private fun shouldNotIndent(parent: SqlSubGroupBlock): Boolean =
         TypeUtil.isExpectedClassType(SqlRightPatternBlock.NOT_INDENT_EXPECTED_TYPES, parent) ||
-            parent is SqlWithCommonTableGroupBlock
+            parent is SqlWithCommonTableGroupBlock ||
+            parent is SqlConditionalExpressionGroupBlock
 }

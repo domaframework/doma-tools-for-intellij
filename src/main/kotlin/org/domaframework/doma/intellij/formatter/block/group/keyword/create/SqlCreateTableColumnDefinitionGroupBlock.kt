@@ -41,20 +41,23 @@ class SqlCreateTableColumnDefinitionGroupBlock(
         node,
         context,
     ) {
-    // TODO Customize indentation
-    override val offset = 2
-    private val groupOffset = 5
+    companion object {
+        private const val COLUMN_INDENT_OFFSET = 2
+        private const val GROUP_INDENT_OFFSET = 5
+    }
+
+    override val offset = COLUMN_INDENT_OFFSET
     val columnRawGroupBlocks = mutableListOf<SqlColumnDefinitionRawGroupBlock>()
 
     fun getMaxColumnNameLength(): Int =
         columnRawGroupBlocks.maxOfOrNull { raw ->
-            raw.columnBlock?.getNodeText()?.length ?: 0
+            raw.getColumnNameLength()
         } ?: 0
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(groupOffset)
+        indent.groupIndentLen = indent.indentLen.plus(GROUP_INDENT_OFFSET)
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
