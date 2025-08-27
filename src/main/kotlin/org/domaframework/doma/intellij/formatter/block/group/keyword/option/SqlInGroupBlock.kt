@@ -56,17 +56,9 @@ class SqlInGroupBlock(
                 }
 
             val dotCount = sumChildren.count { it.node.elementType == SqlTypes.DOT }
-            val parentText = (parent as? SqlElConditionLoopCommentBlock)?.parentBlock?.getNodeText()?.length ?: 0
+            val parentText = prevChildren.dropLast(1).filter { it !is SqlDefaultCommentBlock }
 
-            return sumChildren
-                .sumOf { prev ->
-                    prev
-                        .getChildrenTextLen()
-                        .plus(prev.getNodeText().length.plus(1))
-                }.minus(dotCount * 2)
-                .plus(parent.indent.groupIndentLen)
-                .plus(parentText)
-                .plus(1)
+            return calculatePrevBlocksLength(parentText, parent)
         }
         return 0
     }

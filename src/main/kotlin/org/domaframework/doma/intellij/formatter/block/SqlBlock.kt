@@ -357,6 +357,25 @@ open class SqlBlock(
         return builder
     }
 
+    protected fun calculatePrevBlocksLength(
+        children: List<SqlBlock>,
+        parent: SqlBlock,
+    ): Int =
+        children
+            .sumOf { prev ->
+                prev
+                    .getChildrenTextLen()
+                    .plus(
+                        if (prev.node.elementType == SqlTypes.DOT ||
+                            prev.node.elementType == SqlTypes.RIGHT_PAREN
+                        ) {
+                            0
+                        } else {
+                            prev.getNodeText().length.plus(1)
+                        },
+                    )
+            }.plus(parent.indent.groupIndentLen)
+
     /**
      * Returns the child indentation for the block.
      *
