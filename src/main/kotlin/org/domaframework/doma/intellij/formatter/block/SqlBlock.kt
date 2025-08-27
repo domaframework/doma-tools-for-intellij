@@ -360,8 +360,19 @@ open class SqlBlock(
     protected fun calculatePrevBlocksLength(
         children: List<SqlBlock>,
         parent: SqlBlock,
-    ): Int =
-        children
+    ): Int {
+        // Add the parent's text length to the indentation if the parent is a conditional loop directive.
+        val directiveParentIndent =
+            if (parent is SqlElConditionLoopCommentBlock) {
+                parent.parentBlock
+                    ?.getNodeText()
+                    ?.length ?: 0
+            } else {
+                0
+            }
+
+        return children
+            .filter { it !is SqlDefaultCommentBlock && it !is SqlElConditionLoopCommentBlock }
             .sumOf { prev ->
                 prev
                     .getChildrenTextLen()
@@ -375,6 +386,8 @@ open class SqlBlock(
                         },
                     )
             }.plus(parent.indent.groupIndentLen)
+            .plus(directiveParentIndent)
+    }
 
     /**
      * Returns the child indentation for the block.
