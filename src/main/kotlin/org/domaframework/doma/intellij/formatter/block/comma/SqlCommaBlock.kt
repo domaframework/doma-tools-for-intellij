@@ -26,6 +26,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.S
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlSecondKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
@@ -143,7 +144,14 @@ open class SqlCommaBlock(
                         val parentIndent = firstChild?.indent ?: parent.indent
                         parentIndent.groupIndentLen.plus(1)
                     }
-                    else -> parent.indent.groupIndentLen.plus(1)
+                    else -> {
+                        // No indent after ORDER BY within function parameters
+                        if (parent is SqlSecondKeywordBlock && parent.parentBlock is SqlFunctionParamBlock) {
+                            0
+                        } else {
+                            parent.indent.groupIndentLen.plus(1)
+                        }
+                    }
                 }
             }
         }
@@ -153,7 +161,14 @@ open class SqlCommaBlock(
     override fun createGroupIndentLen(): Int = indent.indentLen.plus(1)
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        if (parentBlock is SqlConditionalExpressionGroupBlock) return false
-        return TypeUtil.isExpectedClassType(EXPECTED_TYPES, parentBlock)
+        parentBlock?.let { parent ->
+            if (parent is SqlConditionalExpressionGroupBlock) return false
+            // Don't allow line breaks after ORDER BY within function parameters
+            if (parent.parentBlock is SqlFunctionParamBlock) {
+                return false
+            }
+            return TypeUtil.isExpectedClassType(EXPECTED_TYPES, parent)
+        }
+        return false
     }
 }

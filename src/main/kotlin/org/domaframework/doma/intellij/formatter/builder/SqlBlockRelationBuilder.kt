@@ -234,7 +234,10 @@ class SqlBlockRelationBuilder(
             }
             else -> {
                 setParentGroups(context) { history ->
-                    history.lastOrNull { it.indent.indentLevel < childBlock.indent.indentLevel }
+                    history.lastOrNull {
+                        it.indent.indentLevel < childBlock.indent.indentLevel ||
+                            TypeUtil.isTopLevelExpectedType(it)
+                    }
                 }
             }
         }

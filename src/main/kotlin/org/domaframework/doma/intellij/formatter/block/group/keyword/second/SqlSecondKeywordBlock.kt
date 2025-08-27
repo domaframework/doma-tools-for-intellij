@@ -22,9 +22,9 @@ import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoo
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 
 open class SqlSecondKeywordBlock(
     node: ASTNode,
@@ -38,6 +38,7 @@ open class SqlSecondKeywordBlock(
         indent.groupIndentLen = createGroupIndentLen()
     }
 
+    // TODO Calculate indent for ORDER BY within function parameters
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             val groupLen = parent.indent.groupIndentLen
@@ -56,11 +57,14 @@ open class SqlSecondKeywordBlock(
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         lastGroup?.let { last ->
-            val prevKeyword = last.childBlocks.findLast { it is SqlKeywordBlock }
-            prevKeyword?.let { prev ->
-                return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), prev.getNodeText()) && last !is SqlFunctionParamBlock
-            }
-            return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), last.getNodeText())
+            val isFirstGroup =
+                if (lastGroup is SqlFunctionParamBlock || lastGroup is SqlSubQueryGroupBlock) {
+                    val firstKeywordParam = lastGroup.childBlocks.firstOrNull { it is SqlKeywordGroupBlock || it is SqlKeywordBlock }
+                    firstKeywordParam == this
+                } else {
+                    false
+                }
+            return super.isSaveSpace(parentBlock) && !isFirstGroup
         }
         return true
     }

@@ -314,7 +314,7 @@ class SqlKeywordUtil {
                 "outer" to setOf("left", "right"),
                 "inner" to setOf("left", "right"),
                 "by" to setOf("group", "order", "first"),
-                "and" to setOf("between"),
+                "and" to setOf("between", "preceding"),
                 "if" to setOf("table", "create"),
                 "exists" to setOf("if", "where"),
                 "conflict" to setOf("on"),

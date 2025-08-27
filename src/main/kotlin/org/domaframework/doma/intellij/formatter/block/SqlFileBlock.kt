@@ -495,9 +495,10 @@ open class SqlFileBlock(
         }
 
         if (childBlock1 is SqlSubGroupBlock) {
-            if (childBlock2 is SqlSubGroupBlock) {
+            if (childBlock2 is SqlSubGroupBlock || childBlock1 is SqlFunctionParamBlock) {
                 return SqlCustomSpacingBuilder.nonSpacing
             }
+
             if (childBlock1 is SqlInsertValueGroupBlock ||
                 childBlock1 is SqlUpdateValueGroupBlock
             ) {
