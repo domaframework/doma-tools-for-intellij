@@ -19,7 +19,6 @@ import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
-import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
@@ -37,7 +36,9 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQ
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.handler.UpdateClauseHandler
 import org.domaframework.doma.intellij.formatter.util.IndentType
@@ -264,13 +265,25 @@ class SqlBlockRelationBuilder(
                     // to support cases like WITHIN GROUP used in column lines.
                     TypeUtil.isTopLevelExpectedType(it)
             }
+        if (lastGroupBlock == null) return lastGroupBlock
 
-        if (lastGroupBlock is SqlCommaBlock) {
-            val lastGroupParentLevel = lastGroupBlock.parentBlock?.indent?.indentLevel ?: IndentType.NONE
+        if (lastGroupBlock.indent.indentLevel > childBlock.indent.indentLevel && lastGroupBlock !is SqlSubGroupBlock) {
+            val lastParent = lastGroupBlock.parentBlock
+            val lastGroupParentLevel = lastParent?.indent?.indentLevel ?: IndentType.NONE
+            val lastKeyword =
+                lastGroupBlock.childBlocks
+                    .lastOrNull {
+                        it is SqlKeywordBlock || it is SqlKeywordGroupBlock
+                    }?.getNodeText() ?: ""
+            val setKeyword = SqlKeywordUtil.isSetLineKeyword(childBlock.getNodeText(), lastKeyword)
             if (lastGroupParentLevel < childBlock.indent.indentLevel) {
-                return lastGroupBlock.parentBlock
+                return if (setKeyword) {
+                    lastGroupBlock
+                } else {
+                    lastParent
+                }
             }
-            return lastGroupBlock.parentBlock?.parentBlock
+            return lastParent?.parentBlock
         }
         return lastGroupBlock
     }
@@ -281,8 +294,13 @@ class SqlBlockRelationBuilder(
         context: SetParentContext,
     ) {
         val prevKeyword = lastGroupBlock.childBlocks.findLast { it is SqlKeywordBlock }
-        if (prevKeyword != null && SqlKeywordUtil.Companion.isSetLineKeyword(childBlock.getNodeText(), prevKeyword.getNodeText())) {
-            updateGroupBlockLastGroupParentAddGroup(lastGroupBlock, childBlock)
+        if (prevKeyword != null &&
+            SqlKeywordUtil.isSetLineKeyword(
+                childBlock.getNodeText(),
+                prevKeyword.getNodeText(),
+            )
+        ) {
+            updateGroupBlockLastGroupParentAddGroup(prevKeyword, childBlock)
             return
         }
 
@@ -497,7 +515,8 @@ class SqlBlockRelationBuilder(
                 return@setParentGroups history[paramIndex]
             }
 
-            if (blockBuilder.getGroupTopNodeIndexHistory()[paramIndex] is SqlWithQuerySubGroupBlock) {
+            val parentSubGroup = blockBuilder.getGroupTopNodeIndexHistory()[paramIndex]
+            if (parentSubGroup is SqlWithQuerySubGroupBlock) {
                 val withCommonBlockIndex =
                     blockBuilder.getGroupTopNodeIndex { block ->
                         block is SqlWithCommonTableGroupBlock
@@ -505,9 +524,21 @@ class SqlBlockRelationBuilder(
                 if (withCommonBlockIndex >= 0) {
                     blockBuilder.clearSubListGroupTopNodeIndexHistory(withCommonBlockIndex)
                 }
-            } else {
-                blockBuilder.clearSubListGroupTopNodeIndexHistory(paramIndex)
+                return
             }
+            if (parentSubGroup is SqlFunctionParamBlock) {
+                // If the parent is a function parameter group, remove up to the parent function name and keyword group.
+                val parent = blockBuilder.getGroupTopNodeIndexHistory()[paramIndex].parentBlock
+                val functionParent =
+                    blockBuilder.getGroupTopNodeIndex {
+                        it == parent
+                    }
+                if (functionParent >= 0) {
+                    blockBuilder.clearSubListGroupTopNodeIndexHistory(functionParent)
+                    return
+                }
+            }
+            blockBuilder.clearSubListGroupTopNodeIndexHistory(paramIndex)
         }
     }
 
@@ -516,7 +547,7 @@ class SqlBlockRelationBuilder(
         childBlock: SqlSubGroupBlock,
     ) {
         val prevBlock = lastGroupBlock.childBlocks.lastOrNull()
-        if (prevBlock is SqlFunctionGroupBlock) {
+        if (prevBlock is SqlFunctionGroupBlock || prevBlock is SqlAliasBlock) {
             setParentGroups(
                 SetParentContext(
                     childBlock,

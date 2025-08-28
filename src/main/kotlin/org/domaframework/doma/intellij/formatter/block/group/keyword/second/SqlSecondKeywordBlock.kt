@@ -67,8 +67,9 @@ open class SqlSecondKeywordBlock(
                 val firstKeywordParam =
                     parent.childBlocks.firstOrNull { it is SqlNewGroupBlock }
                 return firstKeywordParam != null && firstKeywordParam != this
+            } else {
+                return super.isSaveSpace(lastGroup)
             }
-            return super.isSaveSpace(parent)
         }
         return true
     }
