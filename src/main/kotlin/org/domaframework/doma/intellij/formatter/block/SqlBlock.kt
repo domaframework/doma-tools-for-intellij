@@ -83,7 +83,7 @@ open class SqlBlock(
 
         return when {
             nonCommentChildren.isNotEmpty() -> child.getChildrenTextLen() + child.getNodeText().length
-            isExcludedFromTextLength(child) -> 0
+            isExcludedFromTextLength(child) -> if (childBlocks.firstOrNull() == child) child.getNodeText().length else 0
             else -> child.getNodeText().length + DEFAULT_TEXT_LENGTH_INCREMENT
         }
     }
