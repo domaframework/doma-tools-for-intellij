@@ -179,8 +179,15 @@ open class SqlKeywordGroupBlock(
     override fun createGroupIndentLen(): Int = indent.indentLen.plus(topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.minus(1))
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        val conditionLastGroup =
+            if (parentBlock is SqlElConditionLoopCommentBlock) {
+                parentBlock?.parentBlock
+            } else {
+                lastGroup
+            }
         val prevWord = prevBlocks.findLast { it is SqlKeywordBlock || it is SqlKeywordGroupBlock }
         return !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), prevWord?.getNodeText() ?: "") &&
+            !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), conditionLastGroup?.getNodeText() ?: "") &&
             !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), lastGroup?.getNodeText() ?: "") &&
             lastGroup !is SqlFunctionParamBlock
     }

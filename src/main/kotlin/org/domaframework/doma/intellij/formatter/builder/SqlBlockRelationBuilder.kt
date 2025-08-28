@@ -529,9 +529,15 @@ class SqlBlockRelationBuilder(
             if (parentSubGroup is SqlFunctionParamBlock) {
                 // If the parent is a function parameter group, remove up to the parent function name and keyword group.
                 val parent = blockBuilder.getGroupTopNodeIndexHistory()[paramIndex].parentBlock
+                val searchFunctionName =
+                    if (parent is SqlElConditionLoopCommentBlock) {
+                        parent.parentBlock
+                    } else {
+                        parent
+                    }
                 val functionParent =
                     blockBuilder.getGroupTopNodeIndex {
-                        it == parent
+                        it == searchFunctionName
                     }
                 if (functionParent >= 0) {
                     blockBuilder.clearSubListGroupTopNodeIndexHistory(functionParent)

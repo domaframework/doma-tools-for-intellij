@@ -146,7 +146,14 @@ open class SqlCommaBlock(
                     }
                     else -> {
                         // No indent after ORDER BY within function parameters
-                        if (parent is SqlSecondKeywordBlock && parent.parentBlock is SqlFunctionParamBlock) {
+                        val grand = parent.parentBlock
+                        val conditionParent =
+                            if (grand is SqlElConditionLoopCommentBlock) {
+                                grand.parentBlock
+                            } else {
+                                grand
+                            }
+                        if (parent is SqlSecondKeywordBlock && conditionParent is SqlFunctionParamBlock) {
                             0
                         } else {
                             parent.indent.groupIndentLen.plus(1)
@@ -164,7 +171,14 @@ open class SqlCommaBlock(
         parentBlock?.let { parent ->
             if (parent is SqlConditionalExpressionGroupBlock) return false
             // Don't allow line breaks after ORDER BY within function parameters
-            if (parent.parentBlock is SqlFunctionParamBlock) {
+            val grand = parent.parentBlock
+            val conditionParent =
+                if (grand is SqlElConditionLoopCommentBlock) {
+                    grand.parentBlock
+                } else {
+                    grand
+                }
+            if (conditionParent is SqlFunctionParamBlock) {
                 return false
             }
             return TypeUtil.isExpectedClassType(EXPECTED_TYPES, parent)

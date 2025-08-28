@@ -39,7 +39,7 @@ class SqlFunctionGroupBlock(
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen ?: 0
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 0
 
     override fun createGroupIndentLen(): Int {
         val baseIndent =

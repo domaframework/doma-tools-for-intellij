@@ -63,9 +63,15 @@ open class SqlSecondKeywordBlock(
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         parentBlock?.let { parent ->
-            if (parent is SqlFunctionParamBlock) {
+            val conditionParent =
+                if (parent is SqlElConditionLoopCommentBlock) {
+                    parent.parentBlock
+                } else {
+                    parent
+                }
+            if (conditionParent is SqlFunctionParamBlock) {
                 val firstKeywordParam =
-                    parent.childBlocks.firstOrNull { it is SqlNewGroupBlock }
+                    conditionParent.childBlocks.firstOrNull { it is SqlNewGroupBlock }
                 return firstKeywordParam != null && firstKeywordParam != this
             } else {
                 return super.isSaveSpace(lastGroup)
