@@ -19,6 +19,7 @@ import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
+import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
@@ -234,13 +235,44 @@ class SqlBlockRelationBuilder(
             }
             else -> {
                 setParentGroups(context) { history ->
-                    history.lastOrNull {
-                        it.indent.indentLevel < childBlock.indent.indentLevel ||
-                            TypeUtil.isTopLevelExpectedType(it)
-                    }
+                    getLastGroupKeywordText(history, childBlock) ?: history.lastOrNull()
                 }
             }
         }
+    }
+
+    /**
+     * Searches for the most recent group block with a lower indent level than the current block
+     * and returns it as a candidate for the parent block.
+     *
+     * @note
+     * If the most recent group block is a comma, it checks its parent and grandparent blocks
+     * to determine the appropriate parent block.
+     *
+     * @example
+     *  OVER(ORDER BY e.id, e.manager_id, created_at
+     *       ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+     */
+    private fun getLastGroupKeywordText(
+        history: MutableList<SqlBlock>,
+        childBlock: SqlBlock,
+    ): SqlBlock? {
+        val lastGroupBlock =
+            history.lastOrNull {
+                it.indent.indentLevel < childBlock.indent.indentLevel ||
+                    // Add [SqlColumnRawGroupBlock] as a parent block candidate
+                    // to support cases like WITHIN GROUP used in column lines.
+                    TypeUtil.isTopLevelExpectedType(it)
+            }
+
+        if (lastGroupBlock is SqlCommaBlock) {
+            val lastGroupParentLevel = lastGroupBlock.parentBlock?.indent?.indentLevel ?: IndentType.NONE
+            if (lastGroupParentLevel < childBlock.indent.indentLevel) {
+                return lastGroupBlock.parentBlock
+            }
+            return lastGroupBlock.parentBlock?.parentBlock
+        }
+        return lastGroupBlock
     }
 
     private fun handleSameLevelKeyword(

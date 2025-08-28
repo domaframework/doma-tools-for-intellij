@@ -38,6 +38,7 @@ public class OracleFunctionToken {
               "length",
               "lengthb",
               "length4",
+              "listagg",
               "cast",
               "numtodsinterval",
               "numtoyminterval",

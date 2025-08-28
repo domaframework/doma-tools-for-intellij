@@ -107,6 +107,7 @@ public class SqlKeywordTokenUtil {
             "then",
             "to",
             "truncate",
+            "unbounded",
             "union",
             "unique",
             "update",
@@ -115,7 +116,8 @@ public class SqlKeywordTokenUtil {
             "view",
             "when",
             "where",
-            "with"));
+            "with",
+            "within"));
   }
 
   public static Set<String> getTokens() {

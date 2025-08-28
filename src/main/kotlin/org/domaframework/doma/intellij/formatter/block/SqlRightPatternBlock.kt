@@ -210,6 +210,8 @@ open class SqlRightPatternBlock(
                 val firstChild =
                     parent.getChildBlocksDropLast().firstOrNull()
                 if (firstChild is SqlKeywordGroupBlock) {
+                    //  For subgroups other than function parameters, if the first element is a keyword group, add a line break before the closing parenthesis except at the top level.
+                    //  For subgroups created by WITHIN GROUP (), do not add a line break.
                     val lineBreak =
                         firstChild.indent.indentLevel != IndentType.TOP &&
                             !isExpectedClassType(NOT_NEW_LINE_EXPECTED_TYPES, parent)

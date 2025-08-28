@@ -16,13 +16,14 @@
 package org.domaframework.doma.intellij.formatter.block.group.keyword.second
 
 import com.intellij.lang.ASTNode
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -38,14 +39,19 @@ open class SqlSecondKeywordBlock(
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    // TODO Calculate indent for ORDER BY within function parameters
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             val groupLen = parent.indent.groupIndentLen
             return if (parent.indent.indentLevel == IndentType.FILE) {
                 offset
             } else if (parent is SqlSubGroupBlock) {
-                groupLen.plus(1)
+                val space =
+                    if (TypeUtil.isExpectedClassType(SqlRightPatternBlock.NOT_INDENT_EXPECTED_TYPES, parent)) {
+                        0
+                    } else {
+                        1
+                    }
+                groupLen.plus(space)
             } else if (parent is SqlElConditionLoopCommentBlock) {
                 groupLen
             } else {
@@ -56,15 +62,13 @@ open class SqlSecondKeywordBlock(
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        lastGroup?.let { last ->
-            val isFirstGroup =
-                if (lastGroup is SqlFunctionParamBlock || lastGroup is SqlSubQueryGroupBlock) {
-                    val firstKeywordParam = lastGroup.childBlocks.firstOrNull { it is SqlKeywordGroupBlock || it is SqlKeywordBlock }
-                    firstKeywordParam == this
-                } else {
-                    false
-                }
-            return super.isSaveSpace(parentBlock) && !isFirstGroup
+        parentBlock?.let { parent ->
+            if (parent is SqlFunctionParamBlock) {
+                val firstKeywordParam =
+                    parent.childBlocks.firstOrNull { it is SqlNewGroupBlock }
+                return firstKeywordParam != null && firstKeywordParam != this
+            }
+            return super.isSaveSpace(parent)
         }
         return true
     }

@@ -28,6 +28,7 @@ import org.domaframework.doma.intellij.extension.psi.isDomain
 import org.domaframework.doma.intellij.extension.psi.isEntity
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
@@ -38,6 +39,7 @@ object TypeUtil {
         listOf(
             SqlSubGroupBlock::class,
             SqlCommaBlock::class,
+            SqlColumnRawGroupBlock::class,
             SqlWithQuerySubGroupBlock::class,
             SqlCreateViewGroupBlock::class,
         )
