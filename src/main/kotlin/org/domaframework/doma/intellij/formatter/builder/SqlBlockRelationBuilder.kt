@@ -575,31 +575,64 @@ class SqlBlockRelationBuilder(
         getParentGroup: (MutableList<SqlBlock>) -> SqlBlock?,
     ) {
         val parentGroup =
-            getParentGroup(context.blockBuilder.getGroupTopNodeIndexHistory() as MutableList<SqlBlock>)
-
+            getParentGroup(
+                context.blockBuilder.getGroupTopNodeIndexHistory() as MutableList<SqlBlock>,
+            )
         val targetChildBlock = context.childBlock
 
-        if (targetChildBlock is SqlDefaultCommentBlock) return
+        if (shouldSkipParentSetting(targetChildBlock)) return
 
-        // The parent block for SqlElConditionLoopCommentBlock will be set later
-        if (targetChildBlock is SqlElConditionLoopCommentBlock && targetChildBlock.conditionType.isStartDirective()) {
-            targetChildBlock.tempParentBlock = parentGroup
-            if ((parentGroup is SqlElConditionLoopCommentBlock || parentGroup is SqlSubGroupBlock) && parentGroup.parentBlock != null) {
-                targetChildBlock.setParentGroupBlock(parentGroup)
+        assignParentGroup(targetChildBlock, parentGroup)
+        registerAsNewGroupIfNeeded(targetChildBlock, context.blockBuilder)
+        updateBlockIndents(targetChildBlock, context.blockBuilder)
+    }
+
+    private fun shouldSkipParentSetting(block: SqlBlock) = block is SqlDefaultCommentBlock
+
+    private fun assignParentGroup(
+        targetChildBlock: SqlBlock,
+        parentGroup: SqlBlock?,
+    ) {
+        when {
+            isStartDirectiveConditionLoop(targetChildBlock) -> {
+                val conditionLoop = targetChildBlock as SqlElConditionLoopCommentBlock
+                conditionLoop.tempParentBlock = parentGroup
+                if (shouldSetParentImmediately(parentGroup)) {
+                    conditionLoop.setParentGroupBlock(parentGroup)
+                }
             }
-        } else {
-            targetChildBlock.setParentGroupBlock(parentGroup)
+            else -> targetChildBlock.setParentGroupBlock(parentGroup)
         }
+    }
 
-        if (isNewGroup(targetChildBlock, context.blockBuilder) ||
-            TypeUtil.isExpectedClassType(NEW_GROUP_EXPECTED_TYPES, targetChildBlock)
-        ) {
-            context.blockBuilder.addGroupTopNodeIndexHistory(targetChildBlock)
+    private fun isStartDirectiveConditionLoop(block: SqlBlock) =
+        block is SqlElConditionLoopCommentBlock && block.conditionType.isStartDirective()
+
+    private fun shouldSetParentImmediately(parentGroup: SqlBlock?) =
+        (parentGroup is SqlElConditionLoopCommentBlock || parentGroup is SqlSubGroupBlock) &&
+            parentGroup.parentBlock != null
+
+    private fun registerAsNewGroupIfNeeded(
+        targetChildBlock: SqlBlock,
+        blockBuilder: SqlBlockBuilder,
+    ) {
+        if (shouldRegisterAsNewGroup(targetChildBlock, blockBuilder)) {
+            blockBuilder.addGroupTopNodeIndexHistory(targetChildBlock)
         }
+    }
 
-        context.blockBuilder.updateCommentBlockIndent(targetChildBlock)
-        // Set parent-child relationship and indent for preceding comment at beginning of block group
-        context.blockBuilder.updateConditionLoopBlockIndent(targetChildBlock)
+    private fun shouldRegisterAsNewGroup(
+        block: SqlBlock,
+        blockBuilder: SqlBlockBuilder,
+    ) = isNewGroup(block, blockBuilder) ||
+        TypeUtil.isExpectedClassType(NEW_GROUP_EXPECTED_TYPES, block)
+
+    private fun updateBlockIndents(
+        targetChildBlock: SqlBlock,
+        blockBuilder: SqlBlockBuilder,
+    ) {
+        blockBuilder.updateCommentBlockIndent(targetChildBlock)
+        blockBuilder.updateConditionLoopBlockIndent(targetChildBlock)
     }
 
     /**
@@ -634,7 +667,7 @@ class SqlBlockRelationBuilder(
             }
 
         val isSetLineGroup =
-            SqlKeywordUtil.Companion.isSetLineKeyword(
+            SqlKeywordUtil.isSetLineKeyword(
                 childBlock.getNodeText(),
                 lastKeywordText,
             )
