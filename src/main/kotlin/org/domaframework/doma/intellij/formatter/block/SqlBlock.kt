@@ -81,6 +81,9 @@ open class SqlBlock(
     private fun calculateChildTextLength(child: SqlBlock): Int {
         val nonCommentChildren = child.childBlocks.filterNot { it is SqlDefaultCommentBlock }
 
+        // True only on the first loop iteration when the current element is the first child.
+        // If the subgroup is empty, return the length of “)”;
+        // otherwise DEFAULT_TEXT_LENGTH_INCREMENT already adds a space, so “)” needs no extra length.
         return when {
             nonCommentChildren.isNotEmpty() -> child.getChildrenTextLen() + child.getNodeText().length
             isExcludedFromTextLength(child) -> if (childBlocks.firstOrNull() == child) child.getNodeText().length else 0
