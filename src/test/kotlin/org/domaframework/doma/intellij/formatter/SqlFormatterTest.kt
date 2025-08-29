@@ -270,6 +270,14 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("FunctionNameColumn.sql", "FunctionNameColumn$formatDataPrefix.sql")
     }
 
+    fun testOrderByGroupFormatter() {
+        formatSqlFile("OrderByGroup.sql", "OrderByGroup$formatDataPrefix.sql")
+    }
+
+    fun testOrderByGroupWithConditionDirectiveFormatter() {
+        formatSqlFile("OrderByGroupWithConditionDirective.sql", "OrderByGroupWithConditionDirective$formatDataPrefix.sql")
+    }
+
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,

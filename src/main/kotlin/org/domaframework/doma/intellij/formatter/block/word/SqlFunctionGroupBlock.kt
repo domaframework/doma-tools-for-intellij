@@ -22,7 +22,8 @@ import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoo
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import org.domaframework.doma.intellij.psi.SqlTypes
+import kotlin.collections.emptyList
+import kotlin.collections.toList
 
 class SqlFunctionGroupBlock(
     node: ASTNode,
@@ -38,7 +39,7 @@ class SqlFunctionGroupBlock(
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen ?: 0
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 0
 
     override fun createGroupIndentLen(): Int {
         val baseIndent =

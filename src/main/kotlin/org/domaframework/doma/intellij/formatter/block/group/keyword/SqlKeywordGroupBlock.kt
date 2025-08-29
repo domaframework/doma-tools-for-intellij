@@ -24,6 +24,7 @@ import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoo
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -178,8 +179,16 @@ open class SqlKeywordGroupBlock(
     override fun createGroupIndentLen(): Int = indent.indentLen.plus(topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.minus(1))
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        val prevWord = prevBlocks.lastOrNull()
+        val conditionLastGroup =
+            if (parentBlock is SqlElConditionLoopCommentBlock) {
+                parentBlock?.parentBlock
+            } else {
+                lastGroup
+            }
+        val prevWord = prevBlocks.findLast { it is SqlKeywordBlock || it is SqlKeywordGroupBlock }
         return !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), prevWord?.getNodeText() ?: "") &&
-            !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), lastGroup?.getNodeText() ?: "")
+            !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), conditionLastGroup?.getNodeText() ?: "") &&
+            !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), lastGroup?.getNodeText() ?: "") &&
+            lastGroup !is SqlFunctionParamBlock
     }
 }

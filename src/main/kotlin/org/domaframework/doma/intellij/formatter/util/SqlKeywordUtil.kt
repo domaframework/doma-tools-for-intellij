@@ -131,6 +131,7 @@ class SqlKeywordUtil {
                 "group",
                 "having",
                 "order",
+                "rows",
             )
 
         fun isSelectSecondOptionKeyword(keyword: String): Boolean = SELECT_SECOND_OPTION_KEYWORD.contains(keyword.lowercase())
@@ -301,6 +302,11 @@ class SqlKeywordUtil {
 
         fun isExistsKeyword(keyword: String): Boolean = EXISTS_KEYWORDS.contains(keyword.lowercase())
 
+        private val HAS_FILTER_PARAM =
+            setOf("group", "in", "over", "into", "values", "filter", "references", "using")
+
+        fun hasFilterParam(keyword: String): Boolean = HAS_FILTER_PARAM.contains(keyword.lowercase())
+
         private val SET_LINE_KEYWORDS =
             mapOf(
                 "into" to setOf("insert"),
@@ -313,8 +319,9 @@ class SqlKeywordUtil {
                 "join" to setOf("outer", "inner", "left", "right"),
                 "outer" to setOf("left", "right"),
                 "inner" to setOf("left", "right"),
-                "by" to setOf("group", "order", "first"),
-                "and" to setOf("between"),
+                "group" to setOf("within"),
+                "by" to setOf("group", "order", "first", "partition"),
+                "and" to setOf("between", "preceding"),
                 "if" to setOf("table", "create"),
                 "exists" to setOf("if", "where"),
                 "conflict" to setOf("on"),
@@ -322,7 +329,7 @@ class SqlKeywordUtil {
                 "constraint" to setOf("on"),
                 "update" to setOf("do"),
                 "set" to setOf("by", "cycle"),
-                "order" to setOf("partition", "by"),
+                "order" to setOf("partition"),
                 "select" to setOf("if", "exists"),
             )
 

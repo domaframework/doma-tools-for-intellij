@@ -224,7 +224,9 @@ class SqlFormatPreProcessor : PreFormatProcessor {
     private fun getKeywordNewText(element: PsiElement): String {
         val keywordText = element.text.lowercase()
         val upperText = getUpperText(element)
-        return if (SqlKeywordUtil.getIndentType(keywordText).isNewLineGroup()) {
+        return if (SqlKeywordUtil.getIndentType(keywordText).isNewLineGroup() ||
+            element.prevSibling.elementType == SqlTypes.BLOCK_COMMENT
+        ) {
             val prevElement = element.prevSibling
             getNewLineString(prevElement, upperText)
         } else {

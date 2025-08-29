@@ -34,6 +34,7 @@ import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
+import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 
 object NotQueryGroupHandler {
     private const val RETURNING_KEYWORD = "returning"
@@ -53,6 +54,7 @@ object NotQueryGroupHandler {
             hasFunctionOrAliasContext(lastGroup) -> createFunctionOrValueBlock(lastGroup, child, sqlBlockFormattingCtx)
             lastGroup is SqlConflictClauseBlock -> SqlConflictExpressionSubGroupBlock(child, sqlBlockFormattingCtx)
             hasValuesContext(lastGroup) -> SqlValuesParamGroupBlock(child, sqlBlockFormattingCtx)
+            hasParameterKeyword(lastGroup) -> SqlFunctionParamBlock(child, sqlBlockFormattingCtx)
             else -> null
         }
 
@@ -105,6 +107,8 @@ object NotQueryGroupHandler {
         }
         return false
     }
+
+    private fun hasParameterKeyword(lastGroup: SqlBlock?): Boolean = SqlKeywordUtil.hasFilterParam(lastGroup?.getNodeText() ?: "")
 
     /**
      * Creates either a function parameter block or values parameter block based on the previous child type.

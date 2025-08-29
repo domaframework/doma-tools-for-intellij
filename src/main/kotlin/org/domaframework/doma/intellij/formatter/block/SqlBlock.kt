@@ -81,9 +81,12 @@ open class SqlBlock(
     private fun calculateChildTextLength(child: SqlBlock): Int {
         val nonCommentChildren = child.childBlocks.filterNot { it is SqlDefaultCommentBlock }
 
+        // True only on the first loop iteration when the current element is the first child.
+        // If the subgroup is empty, return the length of “)”;
+        // otherwise DEFAULT_TEXT_LENGTH_INCREMENT already adds a space, so “)” needs no extra length.
         return when {
             nonCommentChildren.isNotEmpty() -> child.getChildrenTextLen() + child.getNodeText().length
-            isExcludedFromTextLength(child) -> 0
+            isExcludedFromTextLength(child) -> if (childBlocks.firstOrNull() == child) child.getNodeText().length else 0
             else -> child.getNodeText().length + DEFAULT_TEXT_LENGTH_INCREMENT
         }
     }
@@ -371,23 +374,49 @@ open class SqlBlock(
                 0
             }
 
+        var prevBlock: SqlBlock? = null
         return children
             .filter { it !is SqlDefaultCommentBlock && it !is SqlElConditionLoopCommentBlock }
             .sumOf { prev ->
-                prev
-                    .getChildrenTextLen()
-                    .plus(
-                        if (prev.node.elementType == SqlTypes.DOT ||
-                            prev.node.elementType == SqlTypes.RIGHT_PAREN
-                        ) {
-                            0
-                        } else {
-                            prev.getNodeText().length.plus(1)
-                        },
-                    )
+                val sum =
+                    prev
+                        .getChildrenTextLen()
+                        .plus(
+                            if (prev.node.elementType == SqlTypes.DOT ||
+                                prev.node.elementType == SqlTypes.RIGHT_PAREN
+                            ) {
+                                0
+                            } else if (prev.isOperationSymbol() && prevBlock?.isOperationSymbol() == true) {
+                                // When operators appear consecutively, the first symbol includes the text length for the last space.
+                                // Subsequent symbols add only their own symbol length.
+                                prev.getNodeText().length
+                            } else {
+                                prev.getNodeText().length.plus(1)
+                            },
+                        )
+                prevBlock = prev
+                return@sumOf sum
             }.plus(parent.indent.groupIndentLen)
             .plus(directiveParentIndent)
     }
+
+    fun isOperationSymbol(): Boolean =
+        node.elementType in
+            listOf(
+                SqlTypes.PLUS,
+                SqlTypes.MINUS,
+                SqlTypes.ASTERISK,
+                SqlTypes.AT_SIGN,
+                SqlTypes.SLASH,
+                SqlTypes.HASH,
+                SqlTypes.LE,
+                SqlTypes.LT,
+                SqlTypes.EL_EQ,
+                SqlTypes.EL_NE,
+                SqlTypes.GE,
+                SqlTypes.GT,
+                SqlTypes.OTHER,
+            )
 
     /**
      * Returns the child indentation for the block.

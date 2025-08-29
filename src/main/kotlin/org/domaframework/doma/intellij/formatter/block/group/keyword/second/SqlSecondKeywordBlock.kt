@@ -16,15 +16,16 @@
 package org.domaframework.doma.intellij.formatter.block.group.keyword.second
 
 import com.intellij.lang.ASTNode
+import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 
 open class SqlSecondKeywordBlock(
     node: ASTNode,
@@ -44,7 +45,13 @@ open class SqlSecondKeywordBlock(
             return if (parent.indent.indentLevel == IndentType.FILE) {
                 offset
             } else if (parent is SqlSubGroupBlock) {
-                groupLen.plus(1)
+                val space =
+                    if (TypeUtil.isExpectedClassType(SqlRightPatternBlock.NOT_INDENT_EXPECTED_TYPES, parent)) {
+                        0
+                    } else {
+                        1
+                    }
+                groupLen.plus(space)
             } else if (parent is SqlElConditionLoopCommentBlock) {
                 groupLen
             } else {
@@ -55,12 +62,20 @@ open class SqlSecondKeywordBlock(
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        lastGroup?.let { last ->
-            val prevKeyword = last.childBlocks.findLast { it is SqlKeywordBlock }
-            prevKeyword?.let { prev ->
-                return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), prev.getNodeText()) && last !is SqlFunctionParamBlock
+        parentBlock?.let { parent ->
+            val conditionParent =
+                if (parent is SqlElConditionLoopCommentBlock) {
+                    parent.parentBlock
+                } else {
+                    parent
+                }
+            if (conditionParent is SqlFunctionParamBlock) {
+                val firstKeywordParam =
+                    conditionParent.childBlocks.firstOrNull { it is SqlNewGroupBlock }
+                return firstKeywordParam != null && firstKeywordParam != this
+            } else {
+                return super.isSaveSpace(lastGroup)
             }
-            return !SqlKeywordUtil.isSetLineKeyword(getNodeText(), last.getNodeText())
         }
         return true
     }

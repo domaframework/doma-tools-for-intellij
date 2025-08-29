@@ -495,9 +495,10 @@ open class SqlFileBlock(
         }
 
         if (childBlock1 is SqlSubGroupBlock) {
-            if (childBlock2 is SqlSubGroupBlock) {
+            if (childBlock2 is SqlSubGroupBlock || childBlock1 is SqlFunctionParamBlock) {
                 return SqlCustomSpacingBuilder.nonSpacing
             }
+
             if (childBlock1 is SqlInsertValueGroupBlock ||
                 childBlock1 is SqlUpdateValueGroupBlock
             ) {
@@ -586,7 +587,15 @@ open class SqlFileBlock(
                     }
                 }
 
-                is SqlDataTypeParamBlock, is SqlFunctionParamBlock -> return SqlCustomSpacingBuilder.nonSpacing
+                is SqlFunctionParamBlock -> {
+                    return if (childBlock1?.node?.elementType in listOf(SqlTypes.FUNCTION_NAME, SqlTypes.WORD)) {
+                        SqlCustomSpacingBuilder.nonSpacing
+                    } else {
+                        SqlCustomSpacingBuilder.normalSpacing
+                    }
+                }
+
+                is SqlDataTypeParamBlock -> return SqlCustomSpacingBuilder.nonSpacing
             }
         }
 
@@ -647,7 +656,8 @@ open class SqlFileBlock(
             childBlock1 is SqlOtherBlock && childBlock2 is SqlElSymbolBlock ||
             childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElAtSignBlock ||
             childBlock1 is SqlOtherBlock && childBlock2 is SqlOtherBlock ||
-            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlOtherBlock
+            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlOtherBlock ||
+            childBlock1?.isOperationSymbol() == true && childBlock2.isOperationSymbol()
 
     override fun isLeaf(): Boolean = false
 

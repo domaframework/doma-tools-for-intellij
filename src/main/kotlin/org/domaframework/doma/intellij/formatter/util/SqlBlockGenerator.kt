@@ -455,6 +455,11 @@ class SqlBlockGenerator(
                         child,
                         sqlBlockFormattingCtx,
                     )
+
+                    lastGroup is SqlInsertQueryGroupBlock -> return SqlTableBlock(
+                        child,
+                        sqlBlockFormattingCtx,
+                    )
                 }
             }
 
@@ -478,6 +483,8 @@ class SqlBlockGenerator(
         if (lastGroup is SqlFromGroupBlock || lastGroup?.parentBlock is SqlFromGroupBlock) {
             return SqlAliasBlock(child, sqlBlockFormattingCtx)
         }
+        val functionNameBlock = getFunctionName(child, sqlBlockFormattingCtx)
+        if (functionNameBlock != null) return functionNameBlock
         return SqlWordBlock(child, sqlBlockFormattingCtx)
     }
 

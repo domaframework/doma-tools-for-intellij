@@ -74,7 +74,6 @@ class SqlElConditionLoopCommentBlock(
             listOf(
                 SqlSubGroupBlock::class,
                 SqlColumnRawGroupBlock::class,
-                SqlElConditionLoopCommentBlock::class,
             )
     }
 
@@ -173,10 +172,14 @@ class SqlElConditionLoopCommentBlock(
         if (conditionType.isEnd() || conditionType.isElse()) {
             return true
         }
-        if (TypeUtil.isExpectedClassType(LINE_BREAK_PARENT_TYPES, lastGroup)) {
-            return lastGroup?.childBlocks?.dropLast(1)?.isNotEmpty() == true || lastGroup is SqlElConditionLoopCommentBlock
+        if (lastGroup is SqlElConditionLoopCommentBlock) {
+            return true
         }
-        return lastGroup?.childBlocks?.firstOrNull() != this
+        val firstChild = lastGroup?.childBlocks?.firstOrNull()
+        if (TypeUtil.isExpectedClassType(LINE_BREAK_PARENT_TYPES, lastGroup)) {
+            return firstChild != null && firstChild != this
+        }
+        return firstChild == null || firstChild != this
     }
 
     /**

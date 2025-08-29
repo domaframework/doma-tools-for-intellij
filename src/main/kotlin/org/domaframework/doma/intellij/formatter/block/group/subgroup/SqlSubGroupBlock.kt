@@ -128,7 +128,14 @@ abstract class SqlSubGroupBlock(
                     return false
                 }
             }
-            return TypeUtil.isExpectedClassType(NEW_LINE_EXPECTED_TYPES, lastBlock.parentBlock)
+            val lastParent = lastBlock.parentBlock
+            val expectedParent =
+                if (lastParent is SqlElConditionLoopCommentBlock) {
+                    lastParent.parentBlock?.parentBlock
+                } else {
+                    lastBlock.parentBlock
+                }
+            return TypeUtil.isExpectedClassType(NEW_LINE_EXPECTED_TYPES, expectedParent)
         }
         return false
     }
