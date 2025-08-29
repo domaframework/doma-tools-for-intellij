@@ -1,6 +1,6 @@
 SELECT e.id
         -- with condition
-         , ROW_NUMBER() OVER(/*%if order */ORDER BY e.manager_id DESC/*%end*/) AS row_num
+         , ROW_NUMBER() /*%if order */OVER(ORDER BY e.manager_id DESC)/*%end*/ AS row_num
        , RANK() OVER(PARTITION BY department_id
 /*%if order */ORDER BY e.manager_id DESC/*%end */
 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS rank_num

@@ -16,7 +16,7 @@ SELECT e.id
                            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS bottom_salary
        , COUNT(*) FILTER(WHERE gender = 'F') AS female_count
        , LISTAGG(e.name
-                 , ', ') WITHIN GROUP(ORDER BY name DESC)
+                 , ', ') WITHIN GROUP (ORDER BY name DESC)
   FROM employees e
  WHERE e.status = 1
  ORDER BY e.id
