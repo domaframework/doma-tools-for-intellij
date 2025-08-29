@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+## [2.2.0] - 2025-08-29
+
+### New Features
+
+- Exception Analyzer Support ([#419])
+
+### Bug Fixes
+
+- Fix SQL formatter issues with ORDER BY/GROUP BY clauses and improve block indentation handling ([#431])
+- Handle Blocks with the Same Name as Functions or Keywords as Word Blocks ([#426])
+- Fix: Subquery Indentation ([#429])
+- Fix Indentation Issues for Injected SQL and Correct Java Indent Size Retrieval ([#422])
+
+### Dependency Updates
+
+- Update dependency org.jetbrains.intellij.plugins:verifier-cli to v1.395 ([#424])
+
+[#419]:https://github.com/domaframework/doma-tools-for-intellij/pull/419
+[#431]:https://github.com/domaframework/doma-tools-for-intellij/pull/431
+[#426]:https://github.com/domaframework/doma-tools-for-intellij/pull/426
+[#429]:https://github.com/domaframework/doma-tools-for-intellij/pull/429
+[#422]:https://github.com/domaframework/doma-tools-for-intellij/pull/422
+[#424]:https://github.com/domaframework/doma-tools-for-intellij/pull/424
+
+
 ## [2.1.2] - 2025-08-22
 
 ### Bug Fixes
@@ -495,3 +520,4 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[2.2.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.1.2...2.2.0
