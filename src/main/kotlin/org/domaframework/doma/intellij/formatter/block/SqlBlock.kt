@@ -371,23 +371,50 @@ open class SqlBlock(
                 0
             }
 
+        var prevBlock: SqlBlock? = null
         return children
             .filter { it !is SqlDefaultCommentBlock && it !is SqlElConditionLoopCommentBlock }
             .sumOf { prev ->
-                prev
-                    .getChildrenTextLen()
-                    .plus(
-                        if (prev.node.elementType == SqlTypes.DOT ||
-                            prev.node.elementType == SqlTypes.RIGHT_PAREN
-                        ) {
-                            0
-                        } else {
-                            prev.getNodeText().length.plus(1)
-                        },
-                    )
+                val sum =
+                    prev
+                        .getChildrenTextLen()
+                        .plus(
+                            if (prev.node.elementType == SqlTypes.DOT ||
+                                prev.node.elementType == SqlTypes.RIGHT_PAREN
+                            ) {
+                                0
+                            } else if (prev.isOperationSymbol() && prevBlock?.isOperationSymbol() == true) {
+                                // When operators appear consecutively, the first symbol includes the text length for the last space.
+                                // Subsequent symbols add only their own symbol length.
+                                prev.getNodeText().length
+                            } else {
+                                prev.getNodeText().length.plus(1)
+                            },
+                        )
+                prevBlock = prev
+                return@sumOf sum
             }.plus(parent.indent.groupIndentLen)
             .plus(directiveParentIndent)
     }
+
+    fun isOperationSymbol(): Boolean =
+        node.elementType in
+            listOf(
+                SqlTypes.PLUS,
+                SqlTypes.MINUS,
+                SqlTypes.ASTERISK,
+                SqlTypes.AT_SIGN,
+                SqlTypes.SLASH,
+                SqlTypes.HASH,
+                SqlTypes.LE,
+                SqlTypes.LT,
+                SqlTypes.EL_EQ,
+                SqlTypes.EL_NE,
+                SqlTypes.GE,
+                SqlTypes.GT,
+                SqlTypes.TILDE,
+                SqlTypes.OTHER,
+            )
 
     /**
      * Returns the child indentation for the block.

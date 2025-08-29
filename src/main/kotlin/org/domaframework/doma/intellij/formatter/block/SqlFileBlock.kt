@@ -648,7 +648,8 @@ open class SqlFileBlock(
             childBlock1 is SqlOtherBlock && childBlock2 is SqlElSymbolBlock ||
             childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElAtSignBlock ||
             childBlock1 is SqlOtherBlock && childBlock2 is SqlOtherBlock ||
-            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlOtherBlock
+            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlOtherBlock ||
+            childBlock1?.isOperationSymbol() == true && childBlock2.isOperationSymbol()
 
     override fun isLeaf(): Boolean = false
 
