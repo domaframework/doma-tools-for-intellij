@@ -587,7 +587,15 @@ open class SqlFileBlock(
                     }
                 }
 
-                is SqlDataTypeParamBlock, is SqlFunctionParamBlock -> return SqlCustomSpacingBuilder.nonSpacing
+                is SqlFunctionParamBlock -> {
+                    return if (childBlock1?.node?.elementType in listOf(SqlTypes.FUNCTION_NAME, SqlTypes.WORD)) {
+                        SqlCustomSpacingBuilder.nonSpacing
+                    } else {
+                        SqlCustomSpacingBuilder.normalSpacing
+                    }
+                }
+
+                is SqlDataTypeParamBlock -> return SqlCustomSpacingBuilder.nonSpacing
             }
         }
 
