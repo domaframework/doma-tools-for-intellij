@@ -412,7 +412,6 @@ open class SqlBlock(
                 SqlTypes.EL_NE,
                 SqlTypes.GE,
                 SqlTypes.GT,
-                SqlTypes.TILDE,
                 SqlTypes.OTHER,
             )
 
