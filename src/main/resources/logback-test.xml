@@ -2,7 +2,7 @@
 <configuration scan="true">
   <property resource="logback.properties" />
   <property name="LOG_FILE_BASE_DIR" value="${org.domaframework.doma.intellij.log.path:-/doma-tools}" />
-  <property name="LOG_FILE_VERSION" value="${org.domaframework.doma.intellij.plugin.version:-2.2.0}" />
+  <property name="LOG_FILE_VERSION" value="${org.domaframework.doma.intellij.plugin.version:-2.2.1-beta}" />
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
