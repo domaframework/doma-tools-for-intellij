@@ -13,6 +13,7 @@ ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING/*%end */) AS dense_rank
        , COUNT(*) OVER(ORDER BY e.id, e.manager_id, created_at
     /*%if rows */
 ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING/*%end*/)
+ , COUNT(*) FILTER(WHERE gender = 'F' AND id > 10) AS female_count
        , FIRST_VALUE(salary) IGNORE NULLS OVER(PARTITION BY department_id
 ORDER BY e.id ASC, e.manager_id ASC, created_at DESC)
        , LAST_VALUE() OVER(ORDER BY e.manager_id ASC

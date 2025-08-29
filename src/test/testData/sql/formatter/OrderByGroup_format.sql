@@ -15,6 +15,8 @@ SELECT e.id
        , LAST_VALUE() OVER(ORDER BY e.manager_id ASC
                            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS bottom_salary
        , COUNT(*) FILTER(WHERE gender = 'F') AS female_count
+       , COUNT(*) FILTER(WHERE gender = 'F'
+                           AND id > 10) AS female_count
        , LISTAGG(e.name
                  , ', ') WITHIN GROUP (ORDER BY name DESC)
   FROM employees e
