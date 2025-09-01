@@ -47,6 +47,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlC
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlExistsGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlSecondKeywordBlock
@@ -310,17 +311,32 @@ class SqlBlockGenerator(
                             child,
                             sqlBlockFormattingCtx,
                         )
-                    } else {
+                    } else if ( rootBlock is SqlExistsGroupBlock){
+                        SqlKeywordBlock(
+                            child,
+                            IndentType.ATTACHED,
+                            sqlBlockFormattingCtx,
+                        )
+                    }
+                    else {
                         SqlConflictClauseBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
                     }
                 } else if (SqlKeywordUtil.isConditionKeyword(keywordText)) {
-                    SqlConditionKeywordGroupBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
+                   if(lastGroupBlock is SqlCreateKeywordGroupBlock){
+                       SqlKeywordBlock(
+                            child,
+                            IndentType.ATTACHED,
+                            sqlBlockFormattingCtx,
+                       )
+                   }else {
+                       SqlConditionKeywordGroupBlock(
+                           child,
+                           sqlBlockFormattingCtx,
+                       )
+                   }
                 } else {
                     SqlSecondOptionKeywordGroupBlock(
                         child,

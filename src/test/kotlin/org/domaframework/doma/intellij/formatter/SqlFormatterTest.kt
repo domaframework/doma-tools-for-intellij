@@ -90,6 +90,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("CreateView.sql", "CreateView$formatDataPrefix.sql")
     }
 
+    fun testCreateViewOrReplaceFormatter() {
+        formatSqlFile("CreateViewOrReplace.sql", "CreateViewOrReplace$formatDataPrefix.sql")
+    }
+
     fun testInsertFormatter() {
         formatSqlFile("Insert.sql", "Insert$formatDataPrefix.sql")
     }

@@ -334,7 +334,7 @@ class SqlKeywordUtil {
                 "group" to setOf("within"),
                 "by" to setOf("group", "order", "first", "partition"),
                 "and" to setOf("between", "preceding"),
-                "if" to setOf("table", "create"),
+               // "if" to setOf("table", "index","view"),
                 "exists" to setOf("if", "where"),
                 "conflict" to setOf("on"),
                 "nothing" to setOf("do"),

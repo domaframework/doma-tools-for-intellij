@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.condition
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlWhereGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
@@ -30,9 +31,9 @@ class SqlConditionKeywordGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlSecondOptionKeywordGroupBlock(
-        node,
-        context,
-    ) {
+    node,
+    context,
+) {
     var conditionalExpressionGroupBlock: SqlConditionalExpressionGroupBlock? = null
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
@@ -73,5 +74,12 @@ class SqlConditionKeywordGroupBlock(
             return super.createGroupIndentLen()
         }
         return 0
+    }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        if (lastGroup is SqlCreateKeywordGroupBlock) {
+            return false
+        }
+        return super.isSaveSpace(lastGroup)
     }
 }
