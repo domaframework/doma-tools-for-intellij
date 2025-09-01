@@ -20,6 +20,8 @@ import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTableModificationKeyword
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -44,11 +46,13 @@ class SqlExistsGroupBlock(
 
     override fun createGroupIndentLen(): Int {
         val parentGroupIndent = parentBlock?.indent?.groupIndentLen ?: 0
-        return topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.plus(parentGroupIndent).minus(1)
+        return getTotalTopKeywordLength().plus(parentGroupIndent)
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        if (lastGroup is SqlCreateTableColumnDefinitionRawGroupBlock) {
+        if (lastGroup is SqlCreateTableColumnDefinitionRawGroupBlock ||
+            lastGroup is SqlTableModifySecondGroupBlock
+        ) {
             return false
         }
         return super.isSaveSpace(lastGroup)

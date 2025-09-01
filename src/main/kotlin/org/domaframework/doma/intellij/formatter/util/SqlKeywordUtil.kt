@@ -99,6 +99,17 @@ class SqlKeywordUtil {
 
         fun isSecondKeyword(keyword: String): Boolean = SECOND_KEYWORD.contains(keyword.lowercase())
 
+        private val TABLE_MODIFY_KEYWORD =
+            setOf(
+                "add",
+                "drop",
+                "rename",
+                "modify",
+                "references",
+            )
+
+        fun isTableModifyKeyword(keyword: String): Boolean = TABLE_MODIFY_KEYWORD.contains(keyword.lowercase())
+
         private val SECOND_OPTION_KEYWORD =
             setOf(
                 "and",
@@ -310,6 +321,7 @@ class SqlKeywordUtil {
         private val SET_LINE_KEYWORDS =
             mapOf(
                 "into" to setOf("insert"),
+                "column" to setOf("add", "modify", "drop"),
                 "from" to setOf("delete", "distinct", "year"),
                 "distinct" to setOf("select"),
                 "table" to setOf("create", "alter", "rename", "truncate", "drop"),
@@ -344,7 +356,8 @@ class SqlKeywordUtil {
             val keyword = keywordText.lowercase()
             return when {
                 isTopKeyword(keyword) -> IndentType.TOP
-                isSecondKeyword(keyword) || isSelectSecondOptionKeyword(keyword) || isWithOptionKeyword(keyword) -> IndentType.SECOND
+                isSecondKeyword(keyword) || isSelectSecondOptionKeyword(keyword) || isWithOptionKeyword(keyword) ||
+                    isTableModifyKeyword(keyword) -> IndentType.SECOND
                 isSecondOptionKeyword(keyword) || isConditionKeyword(keyword) -> IndentType.SECOND_OPTION
                 isJoinKeyword(keyword) || isJoinAttachedKeyword(keyword) -> IndentType.JOIN
                 isAttachedKeyword(keyword) -> IndentType.ATTACHED

@@ -27,6 +27,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlI
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlSecondKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
@@ -144,6 +145,16 @@ open class SqlCommaBlock(
                         val parentIndent = firstChild?.indent ?: parent.indent
                         parentIndent.groupIndentLen.plus(1)
                     }
+                    is SqlTableModifySecondGroupBlock -> {
+                        val grand = parent.parentBlock
+                        if (grand is SqlElConditionLoopCommentBlock ||
+                            parent.childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock
+                        ) {
+                            parent.indent.indentLen.plus(2)
+                        } else {
+                            parent.indent.indentLen
+                        }
+                    }
                     else -> {
                         // No indent after ORDER BY within function parameters
                         val grand = parent.parentBlock
@@ -181,7 +192,8 @@ open class SqlCommaBlock(
             if (conditionParent is SqlFunctionParamBlock) {
                 return false
             }
-            return TypeUtil.isExpectedClassType(EXPECTED_TYPES, parent)
+            return TypeUtil.isExpectedClassType(EXPECTED_TYPES, parent) ||
+                childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock
         }
         return false
     }

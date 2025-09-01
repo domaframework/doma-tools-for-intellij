@@ -17,6 +17,8 @@ package org.domaframework.doma.intellij.formatter.block.group.column
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQueryGroupBlock
@@ -56,15 +58,31 @@ class SqlColumnRawGroupBlock(
     }
 
     override fun createBlockIndentLen(): Int =
-        if (parentBlock is SqlWithQueryGroupBlock) {
-            parentBlock
-                ?.childBlocks
-                ?.dropLast(1)
-                ?.lastOrNull()
-                ?.indent
-                ?.indentLen ?: offset
-        } else {
-            parentBlock?.indent?.groupIndentLen?.plus(1) ?: offset
+        when (parentBlock) {
+            is SqlWithQueryGroupBlock -> {
+                parentBlock
+                    ?.childBlocks
+                    ?.dropLast(1)
+                    ?.lastOrNull()
+                    ?.indent
+                    ?.indentLen ?: offset
+            }
+
+            is SqlTableModifySecondGroupBlock -> {
+                parentBlock?.let { parent ->
+                    val grand = parent.parentBlock
+                    if (grand is SqlElConditionLoopCommentBlock ||
+                        parent.childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock
+                    ) {
+                        parent.indent.indentLen.plus(2)
+                    } else {
+                        parent.indent.indentLen
+                    }
+                } ?: offset
+            }
+
+            else ->
+                parentBlock?.indent?.groupIndentLen?.plus(1) ?: offset
         }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = !isFirstColumnGroup

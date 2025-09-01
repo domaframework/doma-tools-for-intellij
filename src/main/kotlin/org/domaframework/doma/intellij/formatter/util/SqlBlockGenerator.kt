@@ -38,6 +38,7 @@ import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClaus
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
@@ -49,6 +50,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlI
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlSecondKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlWhereGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlDeleteQueryGroupBlock
@@ -197,10 +199,19 @@ class SqlBlockGenerator(
                         )
 
                     else -> {
-                        SqlTableModificationKeyword(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
+                        if (lastGroupBlock !is SqlColumnRawGroupBlock &&
+                            lastGroupBlock !is SqlTableModificationKeyword
+                        ) {
+                            SqlTableModificationKeyword(
+                                child,
+                                sqlBlockFormattingCtx,
+                            )
+                        } else {
+                            SqlTableModifySecondGroupBlock(
+                                child,
+                                sqlBlockFormattingCtx,
+                            )
+                        }
                     }
                 }
             }
@@ -266,10 +277,17 @@ class SqlBlockGenerator(
                         if (lastGroupBlock is SqlFunctionGroupBlock) {
                             return SqlKeywordBlock(child, IndentType.NONE, sqlBlockFormattingCtx)
                         }
-                        SqlSecondKeywordBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
+                        if (SqlKeywordUtil.isTableModifyKeyword(child.text)) {
+                            SqlTableModifySecondGroupBlock(
+                                child,
+                                sqlBlockFormattingCtx,
+                            )
+                        } else {
+                            SqlSecondKeywordBlock(
+                                child,
+                                sqlBlockFormattingCtx,
+                            )
+                        }
                     }
                 }
             }
@@ -279,10 +297,25 @@ class SqlBlockGenerator(
                     lastGroupBlock !is SqlJoinGroupBlock &&
                     lastGroupBlock?.parentBlock !is SqlJoinGroupBlock
                 ) {
-                    SqlConflictClauseBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
+                    val rootBlock =
+                        if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
+                            lastGroupBlock.tempParentBlock
+                        } else {
+                            lastGroupBlock
+                        }
+                    if (rootBlock is SqlTableModifySecondGroupBlock ||
+                        rootBlock is SqlTableModificationKeyword
+                    ) {
+                        SqlTableModifySecondGroupBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+                    } else {
+                        SqlConflictClauseBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+                    }
                 } else if (SqlKeywordUtil.isConditionKeyword(keywordText)) {
                     SqlConditionKeywordGroupBlock(
                         child,

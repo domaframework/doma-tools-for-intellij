@@ -47,7 +47,11 @@ class SqlKeywordBlockFactory(
                 lastGroupBlock?.getNodeText() ?: "",
             )
         ) {
-            SqlInlineGroupBlock(child, sqlBlockFormattingCtx)
+            if (SqlKeywordUtil.isExistsKeyword(child.text)) {
+                SqlExistsGroupBlock(child, sqlBlockFormattingCtx)
+            } else {
+                SqlInlineGroupBlock(child, sqlBlockFormattingCtx)
+            }
         } else {
             SqlKeywordBlock(child, IndentType.INLINE, sqlBlockFormattingCtx)
         }
