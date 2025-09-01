@@ -462,6 +462,10 @@ open class SqlFileBlock(
         val childBlock1: SqlBlock? = child1 as? SqlBlock
         val childBlock2: SqlBlock = child2 as SqlBlock
 
+        if (childBlock1 == null) {
+            return SqlCustomSpacingBuilder.nonSpacing
+        }
+
         // The end of a line comment element is a newline, so just add a space for the indent.
         if (childBlock1 is SqlLineCommentBlock) {
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
@@ -544,7 +548,7 @@ open class SqlFileBlock(
             }
         }
 
-        if (childBlock1?.node?.elementType == SqlTypes.DOT ||
+        if (childBlock1.node.elementType == SqlTypes.DOT ||
             childBlock2.node.elementType == SqlTypes.DOT
         ) {
             return SqlCustomSpacingBuilder.nonSpacing
@@ -588,7 +592,7 @@ open class SqlFileBlock(
                 }
 
                 is SqlFunctionParamBlock -> {
-                    return if (childBlock1?.node?.elementType in listOf(SqlTypes.FUNCTION_NAME, SqlTypes.WORD)) {
+                    return if (childBlock1.node.elementType in listOf(SqlTypes.FUNCTION_NAME, SqlTypes.WORD)) {
                         SqlCustomSpacingBuilder.nonSpacing
                     } else {
                         SqlCustomSpacingBuilder.normalSpacing
@@ -617,7 +621,7 @@ open class SqlFileBlock(
                     ?.let { return it }
         }
 
-        if (childBlock1 is SqlBlock && (childBlock2 is SqlCommaBlock || childBlock2 is SqlColumnRawGroupBlock)) {
+        if (childBlock2 is SqlCommaBlock || childBlock2 is SqlColumnRawGroupBlock) {
             SqlCustomSpacingBuilder()
                 .getSpacingWithIndentComma(childBlock1, childBlock2)
                 ?.let { return it }

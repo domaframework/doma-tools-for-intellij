@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.condition
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlWhereGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
@@ -49,21 +50,22 @@ class SqlConditionKeywordGroupBlock(
 
     // If AND appears after OR, change it so that it is right-justified.
     override fun createBlockIndentLen(): Int {
-        parentBlock?.let { parent ->
-            val groupLen = parent.indent.groupIndentLen
-            return if (parent is SqlElConditionLoopCommentBlock) {
-                parent.indent.groupIndentLen
-            } else if (parent is SqlSubGroupBlock) {
-                if (getNodeText() == "and") {
-                    groupLen
-                } else {
-                    groupLen.plus(1)
-                }
-            } else {
-                return parent.indent.groupIndentLen.minus(getNodeText().length)
-            }
-        } ?: return 1
+        val parent = parentBlock ?: return 1
+        val groupLen = parent.indent.groupIndentLen
+
+        return when (parent) {
+            is SqlElConditionLoopCommentBlock -> parent.indent.groupIndentLen
+            is SqlSubGroupBlock -> calculateSubGroupIndent(groupLen)
+            else -> parent.indent.groupIndentLen - getNodeText().length
+        }
     }
+
+    private fun calculateSubGroupIndent(groupLen: Int): Int =
+        if (getNodeText() == "and") {
+            groupLen
+        } else {
+            groupLen + 1
+        }
 
     override fun createGroupIndentLen(): Int {
         parentBlock?.let { parent ->
@@ -73,5 +75,12 @@ class SqlConditionKeywordGroupBlock(
             return super.createGroupIndentLen()
         }
         return 0
+    }
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        if (lastGroup is SqlCreateKeywordGroupBlock) {
+            return false
+        }
+        return super.isSaveSpace(lastGroup)
     }
 }

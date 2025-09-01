@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword.option
+package org.domaframework.doma.intellij.formatter.block.group.keyword.top
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTableModificationKeyword
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-class SqlExistsGroupBlock(
+class SqlTableModificationKeyword(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlKeywordGroupBlock(node, IndentType.OPTIONS, context) {
+) : SqlTopQueryGroupBlock(
+        node,
+        context,
+    ) {
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLen = createBlockIndentLen()
@@ -36,26 +36,30 @@ class SqlExistsGroupBlock(
     }
 
     override fun createBlockIndentLen(): Int {
-        parentBlock?.let { parent ->
-            if (parent.parentBlock is SqlElConditionLoopCommentBlock) {
-                return parent.indent.groupIndentLen
+        return parentBlock?.let { parent ->
+            val rootBlock =
+                if (parent is SqlElConditionLoopCommentBlock) {
+                    parent.tempParentBlock
+                } else if (parent.indent.indentLevel == IndentType.FILE) {
+                    null
+                } else {
+                    parent
+                }
+
+            return if (rootBlock is SqlKeywordGroupBlock) {
+                rootBlock.getTotalTopKeywordLength().minus(getNodeText().length)
+            } else {
+                rootBlock?.indent?.groupIndentLen ?: 0
             }
-        }
-        return parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+        } ?: 0
     }
 
-    override fun createGroupIndentLen(): Int {
-        val parentGroupIndent = parentBlock?.indent?.groupIndentLen ?: 0
-        return getTotalTopKeywordLength().plus(parentGroupIndent)
-    }
-
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        if (lastGroup is SqlTableModificationKeyword ||
-            lastGroup is SqlTableModifySecondGroupBlock ||
-            lastGroup is SqlCreateKeywordGroupBlock
-        ) {
-            return false
-        }
-        return super.isSaveSpace(lastGroup)
-    }
+    override fun createGroupIndentLen(): Int =
+        parentBlock?.let { parent ->
+            if (parent is SqlElConditionLoopCommentBlock) {
+                parent.indent.indentLen
+            } else {
+                getTotalTopKeywordLength()
+            }
+        } ?: getTotalTopKeywordLength()
 }

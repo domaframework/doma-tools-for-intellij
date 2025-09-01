@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.handler
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
@@ -52,7 +53,8 @@ object UpdateClauseHandler {
         var parentBlock: SqlBlock? = null
         val topKeywordIndex =
             blockBuilder.getGroupTopNodeIndex { block ->
-                block.indent.indentLevel == IndentType.TOP || block is SqlDoGroupBlock
+                block.indent.indentLevel == IndentType.TOP || block is SqlDoGroupBlock ||
+                    block is SqlTableModifySecondGroupBlock
             }
         if (topKeywordIndex >= 0) {
             val copyParentBlock =

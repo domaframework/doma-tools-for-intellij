@@ -38,6 +38,7 @@ import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClaus
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
@@ -46,14 +47,17 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlC
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlExistsGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlSecondKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlWhereGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlDeleteQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlJoinQueriesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTableModificationKeyword
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -195,12 +199,7 @@ class SqlBlockGenerator(
                             sqlBlockFormattingCtx,
                         )
 
-                    else ->
-                        SqlKeywordGroupBlock(
-                            child,
-                            indentLevel,
-                            sqlBlockFormattingCtx,
-                        )
+                    else -> createTableModificationBlock(lastGroupBlock, child)
                 }
             }
 
@@ -265,34 +264,23 @@ class SqlBlockGenerator(
                         if (lastGroupBlock is SqlFunctionGroupBlock) {
                             return SqlKeywordBlock(child, IndentType.NONE, sqlBlockFormattingCtx)
                         }
-                        SqlSecondKeywordBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
+                        if (SqlKeywordUtil.isTableModifyKeyword(child.text)) {
+                            SqlTableModifySecondGroupBlock(
+                                child,
+                                sqlBlockFormattingCtx,
+                            )
+                        } else {
+                            SqlSecondKeywordBlock(
+                                child,
+                                sqlBlockFormattingCtx,
+                            )
+                        }
                     }
                 }
             }
 
             IndentType.SECOND_OPTION -> {
-                return if (keywordText == "on" &&
-                    lastGroupBlock !is SqlJoinGroupBlock &&
-                    lastGroupBlock?.parentBlock !is SqlJoinGroupBlock
-                ) {
-                    SqlConflictClauseBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
-                } else if (SqlKeywordUtil.isConditionKeyword(keywordText)) {
-                    SqlConditionKeywordGroupBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
-                } else {
-                    SqlSecondOptionKeywordGroupBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
-                }
+                return createSecondOptionBlock(keywordText, child, lastGroupBlock)
             }
 
             IndentType.CONFLICT -> {
@@ -487,6 +475,77 @@ class SqlBlockGenerator(
         if (functionNameBlock != null) return functionNameBlock
         return SqlWordBlock(child, sqlBlockFormattingCtx)
     }
+
+    private fun createTableModificationBlock(
+        lastGroupBlock: SqlBlock?,
+        child: ASTNode,
+    ): SqlBlock =
+        if (shouldCreateTableModificationKeyword(lastGroupBlock)) {
+            SqlTableModificationKeyword(child, sqlBlockFormattingCtx)
+        } else {
+            SqlTableModifySecondGroupBlock(child, sqlBlockFormattingCtx)
+        }
+
+    private fun shouldCreateTableModificationKeyword(lastGroupBlock: SqlBlock?): Boolean =
+        lastGroupBlock !is SqlColumnRawGroupBlock &&
+            lastGroupBlock !is SqlTableModificationKeyword
+
+    private fun createSecondOptionBlock(
+        keywordText: String,
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock =
+        when {
+            isOnKeywordForNonJoin(keywordText, lastGroupBlock) -> {
+                handleOnKeyword(child, lastGroupBlock)
+            }
+            SqlKeywordUtil.isConditionKeyword(keywordText) -> {
+                createConditionBlock(child, lastGroupBlock)
+            }
+            else -> SqlSecondOptionKeywordGroupBlock(child, sqlBlockFormattingCtx)
+        }
+
+    private fun isOnKeywordForNonJoin(
+        keywordText: String,
+        lastGroupBlock: SqlBlock?,
+    ): Boolean =
+        keywordText == "on" &&
+            lastGroupBlock !is SqlJoinGroupBlock &&
+            lastGroupBlock?.parentBlock !is SqlJoinGroupBlock
+
+    private fun handleOnKeyword(
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock {
+        val rootBlock = getRootBlock(lastGroupBlock)
+        return when {
+            rootBlock is SqlTableModifySecondGroupBlock ||
+                rootBlock is SqlTableModificationKeyword -> {
+                SqlTableModifySecondGroupBlock(child, sqlBlockFormattingCtx)
+            }
+            rootBlock is SqlExistsGroupBlock -> {
+                SqlKeywordBlock(child, IndentType.ATTACHED, sqlBlockFormattingCtx)
+            }
+            else -> SqlConflictClauseBlock(child, sqlBlockFormattingCtx)
+        }
+    }
+
+    private fun getRootBlock(lastGroupBlock: SqlBlock?): SqlBlock? =
+        if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
+            lastGroupBlock.tempParentBlock
+        } else {
+            lastGroupBlock
+        }
+
+    private fun createConditionBlock(
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock =
+        if (lastGroupBlock is SqlCreateKeywordGroupBlock) {
+            SqlKeywordBlock(child, IndentType.ATTACHED, sqlBlockFormattingCtx)
+        } else {
+            SqlConditionKeywordGroupBlock(child, sqlBlockFormattingCtx)
+        }
 
     fun getBlockCommentBlock(
         child: ASTNode,

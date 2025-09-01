@@ -82,9 +82,7 @@ class SqlKeywordUtil {
                 "do",
             )
 
-        fun isTopKeyword(keyword: String): Boolean = TOP_KEYWORDS.contains(keyword.lowercase())
-
-        private val SECOND_KEYWORD =
+        private val SECOND_KEYWORDS: Set<String> =
             setOf(
                 "set",
                 "from",
@@ -97,78 +95,55 @@ class SqlKeywordUtil {
                 "returning",
             )
 
-        fun isSecondKeyword(keyword: String): Boolean = SECOND_KEYWORD.contains(keyword.lowercase())
-
-        private val SECOND_OPTION_KEYWORD =
+        private val TABLE_MODIFY_KEYWORDS: Set<String> =
             setOf(
-                "and",
-                "or",
-                "on",
-            )
-
-        private val CONDITION_KEYWORD =
-            setOf(
-                "and",
-                "or",
-            )
-
-        fun isConditionKeyword(keyword: String): Boolean = CONDITION_KEYWORD.contains(keyword.lowercase())
-
-        fun isSecondOptionKeyword(keyword: String): Boolean = SECOND_OPTION_KEYWORD.contains(keyword.lowercase())
-
-        private val BEFORE_TABLE_KEYWORD =
-            setOf(
-                "from",
-                "update",
+                "add",
                 "drop",
-                "table",
+                "rename",
+                "modify",
+                "references",
             )
 
-        private val SELECT_SECOND_OPTION_KEYWORD =
-            setOf(
-                "from",
-                "where",
-                "group",
-                "having",
-                "order",
-                "rows",
-            )
+        fun isTopKeyword(keyword: String): Boolean = TOP_KEYWORDS.contains(keyword.lowercase())
 
-        fun isSelectSecondOptionKeyword(keyword: String): Boolean = SELECT_SECOND_OPTION_KEYWORD.contains(keyword.lowercase())
+        fun isSecondKeyword(keyword: String): Boolean = SECOND_KEYWORDS.contains(keyword.lowercase())
 
-        fun isBeforeTableKeyword(keyword: String): Boolean = BEFORE_TABLE_KEYWORD.contains(keyword.lowercase())
+        fun isTableModifyKeyword(keyword: String): Boolean = TABLE_MODIFY_KEYWORDS.contains(keyword.lowercase())
 
-        private val JOIN_KEYWORD =
-            setOf(
-                "left",
-                "right",
-                "full",
-                "cross",
-                "natural",
-            )
+        private val SECOND_OPTION_KEYWORDS: Set<String> =
+            setOf("and", "or", "on")
 
-        fun isJoinKeyword(keyword: String): Boolean = JOIN_KEYWORD.contains(keyword.lowercase())
+        private val CONDITION_KEYWORDS: Set<String> =
+            setOf("and", "or")
 
-        private val JOIN_ATTACHED_KEYWORD =
-            setOf(
-                "outer",
-                "inner",
-                "join",
-            )
+        fun isConditionKeyword(keyword: String): Boolean = CONDITION_KEYWORDS.contains(keyword.lowercase())
 
-        fun isJoinAttachedKeyword(keyword: String): Boolean = JOIN_ATTACHED_KEYWORD.contains(keyword.lowercase())
+        fun isSecondOptionKeyword(keyword: String): Boolean = SECOND_OPTION_KEYWORDS.contains(keyword.lowercase())
 
-        private val ATTACHED_KEYWORD =
-            setOf(
-                "distinct",
-                "into",
-                "table",
-                "index",
-                "database",
-                "view",
-            )
+        private val BEFORE_TABLE_KEYWORDS: Set<String> =
+            setOf("from", "update", "drop", "table")
 
-        fun isAttachedKeyword(keyword: String): Boolean = ATTACHED_KEYWORD.contains(keyword.lowercase())
+        private val SELECT_SECOND_OPTION_KEYWORDS: Set<String> =
+            setOf("from", "where", "group", "having", "order", "rows")
+
+        fun isSelectSecondOptionKeyword(keyword: String): Boolean = SELECT_SECOND_OPTION_KEYWORDS.contains(keyword.lowercase())
+
+        fun isBeforeTableKeyword(keyword: String): Boolean = BEFORE_TABLE_KEYWORDS.contains(keyword.lowercase())
+
+        private val JOIN_KEYWORDS: Set<String> =
+            setOf("left", "right", "full", "cross", "natural")
+
+        fun isJoinKeyword(keyword: String): Boolean = JOIN_KEYWORDS.contains(keyword.lowercase())
+
+        private val JOIN_ATTACHED_KEYWORDS: Set<String> =
+            setOf("outer", "inner", "join")
+
+        fun isJoinAttachedKeyword(keyword: String): Boolean = JOIN_ATTACHED_KEYWORDS.contains(keyword.lowercase())
+
+        private val ATTACHED_KEYWORDS: Set<String> =
+            setOf("distinct", "into", "table", "index", "database", "view")
+
+        fun isAttachedKeyword(keyword: String): Boolean = ATTACHED_KEYWORDS.contains(keyword.lowercase())
 
         private val THIRD_KEYWORDS =
             setOf(
@@ -310,6 +285,7 @@ class SqlKeywordUtil {
         private val SET_LINE_KEYWORDS =
             mapOf(
                 "into" to setOf("insert"),
+                "column" to setOf("add", "modify", "drop"),
                 "from" to setOf("delete", "distinct", "year"),
                 "distinct" to setOf("select"),
                 "table" to setOf("create", "alter", "rename", "truncate", "drop"),
@@ -322,7 +298,7 @@ class SqlKeywordUtil {
                 "group" to setOf("within"),
                 "by" to setOf("group", "order", "first", "partition"),
                 "and" to setOf("between", "preceding"),
-                "if" to setOf("table", "create"),
+                // "if" to setOf("table", "index","view"),
                 "exists" to setOf("if", "where"),
                 "conflict" to setOf("on"),
                 "nothing" to setOf("do"),
@@ -344,7 +320,8 @@ class SqlKeywordUtil {
             val keyword = keywordText.lowercase()
             return when {
                 isTopKeyword(keyword) -> IndentType.TOP
-                isSecondKeyword(keyword) || isSelectSecondOptionKeyword(keyword) || isWithOptionKeyword(keyword) -> IndentType.SECOND
+                isSecondKeyword(keyword) || isSelectSecondOptionKeyword(keyword) || isWithOptionKeyword(keyword) ||
+                    isTableModifyKeyword(keyword) -> IndentType.SECOND
                 isSecondOptionKeyword(keyword) || isConditionKeyword(keyword) -> IndentType.SECOND_OPTION
                 isJoinKeyword(keyword) || isJoinAttachedKeyword(keyword) -> IndentType.JOIN
                 isAttachedKeyword(keyword) -> IndentType.ATTACHED

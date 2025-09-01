@@ -32,6 +32,8 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlE
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlInGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTableModificationKeyword
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -135,7 +137,11 @@ class SqlBlockRelationBuilder(
     ) {
         val context = SetParentContext(childBlock, blockBuilder)
         if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
-            handleConditionLoopParent(lastGroupBlock, context, childBlock)
+            if (childBlock is SqlTableModificationKeyword) {
+                handleConditionLoopParentForTableModification(lastGroupBlock, context, childBlock)
+            } else {
+                handleConditionLoopParent(lastGroupBlock, context, childBlock)
+            }
             return
         }
         if (childBlock.indent.indentLevel == IndentType.TOP) {
@@ -166,6 +172,16 @@ class SqlBlockRelationBuilder(
     ) {
         updateParentGroupLastConditionLoop(lastGroupBlock, context) {
             it.indent.indentLevel < childBlock.indent.indentLevel
+        }
+    }
+
+    private fun handleConditionLoopParentForTableModification(
+        lastGroupBlock: SqlElConditionLoopCommentBlock,
+        context: SetParentContext,
+        childBlock: SqlKeywordGroupBlock,
+    ) {
+        updateParentGroupLastConditionLoop(lastGroupBlock, context) {
+            it.indent.indentLevel <= childBlock.indent.indentLevel
         }
     }
 
@@ -234,6 +250,13 @@ class SqlBlockRelationBuilder(
             shouldHandleJoinKeyword(lastIndentLevel, childBlock) -> {
                 updateGroupBlockParentAndAddGroup(childBlock)
             }
+            childBlock is SqlTableModifySecondGroupBlock ->
+                setParentGroups(context) { history ->
+                    history.lastOrNull {
+                        it is SqlColumnRawGroupBlock ||
+                            it.indent.indentLevel < childBlock.indent.indentLevel
+                    }
+                }
             else -> {
                 setParentGroups(context) { history ->
                     getLastGroupKeywordText(history, childBlock) ?: history.lastOrNull()
@@ -317,7 +340,8 @@ class SqlBlockRelationBuilder(
         setParentGroups(context) { history ->
             val lastGroup = history.findLast { it is SqlTopQueryGroupBlock }
             when {
-                lastGroup is SqlUpdateQueryGroupBlock && lastGroup.parentBlock is SqlDoGroupBlock ->
+                lastGroup is SqlUpdateQueryGroupBlock &&
+                    lastGroup.parentBlock is SqlDoGroupBlock ->
                     lastGroup.parentBlock
                 else -> lastGroup
             }
