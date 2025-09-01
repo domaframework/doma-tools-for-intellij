@@ -199,21 +199,7 @@ class SqlBlockGenerator(
                             sqlBlockFormattingCtx,
                         )
 
-                    else -> {
-                        if (lastGroupBlock !is SqlColumnRawGroupBlock &&
-                            lastGroupBlock !is SqlTableModificationKeyword
-                        ) {
-                            SqlTableModificationKeyword(
-                                child,
-                                sqlBlockFormattingCtx,
-                            )
-                        } else {
-                            SqlTableModifySecondGroupBlock(
-                                child,
-                                sqlBlockFormattingCtx,
-                            )
-                        }
-                    }
+                    else -> createTableModificationBlock(lastGroupBlock, child)
                 }
             }
 
@@ -294,55 +280,7 @@ class SqlBlockGenerator(
             }
 
             IndentType.SECOND_OPTION -> {
-                return if (keywordText == "on" &&
-                    lastGroupBlock !is SqlJoinGroupBlock &&
-                    lastGroupBlock?.parentBlock !is SqlJoinGroupBlock
-                ) {
-                    val rootBlock =
-                        if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
-                            lastGroupBlock.tempParentBlock
-                        } else {
-                            lastGroupBlock
-                        }
-                    if (rootBlock is SqlTableModifySecondGroupBlock ||
-                        rootBlock is SqlTableModificationKeyword
-                    ) {
-                        SqlTableModifySecondGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-                    } else if ( rootBlock is SqlExistsGroupBlock){
-                        SqlKeywordBlock(
-                            child,
-                            IndentType.ATTACHED,
-                            sqlBlockFormattingCtx,
-                        )
-                    }
-                    else {
-                        SqlConflictClauseBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-                    }
-                } else if (SqlKeywordUtil.isConditionKeyword(keywordText)) {
-                   if(lastGroupBlock is SqlCreateKeywordGroupBlock){
-                       SqlKeywordBlock(
-                            child,
-                            IndentType.ATTACHED,
-                            sqlBlockFormattingCtx,
-                       )
-                   }else {
-                       SqlConditionKeywordGroupBlock(
-                           child,
-                           sqlBlockFormattingCtx,
-                       )
-                   }
-                } else {
-                    SqlSecondOptionKeywordGroupBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
-                }
+                return createSecondOptionBlock(keywordText, child, lastGroupBlock)
             }
 
             IndentType.CONFLICT -> {
@@ -537,6 +475,77 @@ class SqlBlockGenerator(
         if (functionNameBlock != null) return functionNameBlock
         return SqlWordBlock(child, sqlBlockFormattingCtx)
     }
+
+    private fun createTableModificationBlock(
+        lastGroupBlock: SqlBlock?,
+        child: ASTNode,
+    ): SqlBlock =
+        if (shouldCreateTableModificationKeyword(lastGroupBlock)) {
+            SqlTableModificationKeyword(child, sqlBlockFormattingCtx)
+        } else {
+            SqlTableModifySecondGroupBlock(child, sqlBlockFormattingCtx)
+        }
+
+    private fun shouldCreateTableModificationKeyword(lastGroupBlock: SqlBlock?): Boolean =
+        lastGroupBlock !is SqlColumnRawGroupBlock &&
+            lastGroupBlock !is SqlTableModificationKeyword
+
+    private fun createSecondOptionBlock(
+        keywordText: String,
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock =
+        when {
+            isOnKeywordForNonJoin(keywordText, lastGroupBlock) -> {
+                handleOnKeyword(child, lastGroupBlock)
+            }
+            SqlKeywordUtil.isConditionKeyword(keywordText) -> {
+                createConditionBlock(child, lastGroupBlock)
+            }
+            else -> SqlSecondOptionKeywordGroupBlock(child, sqlBlockFormattingCtx)
+        }
+
+    private fun isOnKeywordForNonJoin(
+        keywordText: String,
+        lastGroupBlock: SqlBlock?,
+    ): Boolean =
+        keywordText == "on" &&
+            lastGroupBlock !is SqlJoinGroupBlock &&
+            lastGroupBlock?.parentBlock !is SqlJoinGroupBlock
+
+    private fun handleOnKeyword(
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock {
+        val rootBlock = getRootBlock(lastGroupBlock)
+        return when {
+            rootBlock is SqlTableModifySecondGroupBlock ||
+                rootBlock is SqlTableModificationKeyword -> {
+                SqlTableModifySecondGroupBlock(child, sqlBlockFormattingCtx)
+            }
+            rootBlock is SqlExistsGroupBlock -> {
+                SqlKeywordBlock(child, IndentType.ATTACHED, sqlBlockFormattingCtx)
+            }
+            else -> SqlConflictClauseBlock(child, sqlBlockFormattingCtx)
+        }
+    }
+
+    private fun getRootBlock(lastGroupBlock: SqlBlock?): SqlBlock? =
+        if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
+            lastGroupBlock.tempParentBlock
+        } else {
+            lastGroupBlock
+        }
+
+    private fun createConditionBlock(
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock =
+        if (lastGroupBlock is SqlCreateKeywordGroupBlock) {
+            SqlKeywordBlock(child, IndentType.ATTACHED, sqlBlockFormattingCtx)
+        } else {
+            SqlConditionKeywordGroupBlock(child, sqlBlockFormattingCtx)
+        }
 
     fun getBlockCommentBlock(
         child: ASTNode,
