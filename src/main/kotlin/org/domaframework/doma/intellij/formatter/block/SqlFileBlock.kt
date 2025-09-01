@@ -462,6 +462,10 @@ open class SqlFileBlock(
         val childBlock1: SqlBlock? = child1 as? SqlBlock
         val childBlock2: SqlBlock = child2 as SqlBlock
 
+        if(childBlock1 == null) {
+            return SqlCustomSpacingBuilder.nonSpacing
+        }
+
         // The end of a line comment element is a newline, so just add a space for the indent.
         if (childBlock1 is SqlLineCommentBlock) {
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)

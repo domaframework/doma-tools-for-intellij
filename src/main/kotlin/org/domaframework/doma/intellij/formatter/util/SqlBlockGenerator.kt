@@ -54,6 +54,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlW
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlDeleteQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlJoinQueriesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTableModificationKeyword
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -195,12 +196,12 @@ class SqlBlockGenerator(
                             sqlBlockFormattingCtx,
                         )
 
-                    else ->
-                        SqlKeywordGroupBlock(
+                    else -> {
+                        SqlTableModificationKeyword(
                             child,
-                            indentLevel,
                             sqlBlockFormattingCtx,
                         )
+                    }
                 }
             }
 
