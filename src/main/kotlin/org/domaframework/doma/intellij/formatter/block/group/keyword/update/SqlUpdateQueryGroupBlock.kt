@@ -18,6 +18,8 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.update
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTableModificationKeyword
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -57,5 +59,7 @@ class SqlUpdateQueryGroupBlock(
         }
     }
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = parentBlock !is SqlDoGroupBlock
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
+        parentBlock !is SqlDoGroupBlock &&
+            parentBlock !is SqlTableModifySecondGroupBlock && parentBlock !is SqlTableModificationKeyword
 }

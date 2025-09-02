@@ -71,6 +71,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("CreateView.sql", "CreateView$formatDataPrefix.sql")
     }
 
+    fun testCreateViewOrReplaceFormatter() {
+        formatSqlFile("CreateViewOrReplace.sql", "CreateViewOrReplace$formatDataPrefix.sql")
+    }
+
     fun testInsertFormatter() {
         formatSqlFile("Insert.sql", "Insert$formatDataPrefix.sql")
     }
@@ -261,6 +265,22 @@ class SqlFormatterTest : BasePlatformTestCase() {
 
     fun testBlockCommentParseFormatter() {
         formatSqlFile("BlockCommentParse.sql", "BlockCommentParse$formatDataPrefix.sql")
+
+    fun testAlterTableAddColumnFormatter() {
+        formatSqlFile("AlterTableAddColumn.sql", "AlterTableAddColumn$formatDataPrefix.sql")
+    }
+
+    fun testAlterTableAddForeignFormatter() {
+        formatSqlFile("AlterTableAddForeign.sql", "AlterTableAddForeign$formatDataPrefix.sql")
+    }
+
+    fun testDropTableFormatter() {
+        formatSqlFile("DropTable.sql", "DropTable$formatDataPrefix.sql")
+    }
+
+    fun testDropTableIfExistsFormatter() {
+        formatSqlFile("DropTableIfExists.sql", "DropTableIfExists$formatDataPrefix.sql")
+   
     }
 
     private fun formatSqlFile(

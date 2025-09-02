@@ -176,7 +176,9 @@ open class SqlKeywordGroupBlock(
         } ?: return 1
     }
 
-    override fun createGroupIndentLen(): Int = indent.indentLen.plus(topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.minus(1))
+    override fun createGroupIndentLen(): Int = indent.indentLen.plus(getTotalTopKeywordLength())
+
+    fun getTotalTopKeywordLength(): Int = topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.minus(1)
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         val conditionLastGroup =

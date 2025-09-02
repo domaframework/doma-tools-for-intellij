@@ -13,47 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.conflict
+package org.domaframework.doma.intellij.formatter.block.group.keyword.second
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
-import org.domaframework.doma.intellij.formatter.util.IndentType
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
-class SqlDoGroupBlock(
+class SqlTableModifySecondGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
-) : SqlKeywordGroupBlock(
+) : SqlSecondKeywordBlock(
         node,
-        IndentType.CONFLICT,
         context,
     ) {
-    /**
-     *  **NOTHING** or **UPDATE**
-     */
-    var doQueryBlock: SqlBlock? = null
-
-    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = getNodeText().length
-    }
-
-    override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
-        if (lastGroup is SqlConflictClauseBlock) {
-            lastGroup.doBlock = this
-        }
-    }
-
     override fun createBlockIndentLen(): Int {
         val prevBlock = prevBlocks.lastOrNull()
         if (prevBlock is SqlTableModifySecondGroupBlock) {
             return prevBlock.indent.indentLen
         }
-        return 0
+
+        return super.createBlockIndentLen()
     }
 
-    override fun isSaveSpace(lastGroup: SqlBlock?) = true
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = parentBlock !is SqlColumnRawGroupBlock
 }
