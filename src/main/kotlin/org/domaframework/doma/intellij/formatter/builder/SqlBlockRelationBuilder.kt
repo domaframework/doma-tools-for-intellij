@@ -89,7 +89,8 @@ class SqlBlockRelationBuilder(
             )
         val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
         if (lastGroup is SqlElConditionLoopCommentBlock) {
-            updateParentGroupLastConditionLoop(lastGroup, context) { block ->
+            updateParentGroupLastConditionLoop(
+                lastGroup, context, false) { block ->
                 block.indent.indentLevel < childBlock.indent.indentLevel
             }
             return
@@ -170,7 +171,7 @@ class SqlBlockRelationBuilder(
         context: SetParentContext,
         childBlock: SqlKeywordGroupBlock,
     ) {
-        updateParentGroupLastConditionLoop(lastGroupBlock, context) {
+        updateParentGroupLastConditionLoop(lastGroupBlock, context, true) {
             it.indent.indentLevel < childBlock.indent.indentLevel
         }
     }
@@ -424,7 +425,7 @@ class SqlBlockRelationBuilder(
         val lastGroupBlock = blockBuilder.getLastGroupTopNodeIndexHistory()
         if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
             updateParentGroupLastConditionLoop(lastGroupBlock, context) {
-                it.indent.indentLevel == IndentType.INLINE_SECOND
+                it.indent.indentLevel == IndentType.INLINE
             }
             return
         }
@@ -458,6 +459,7 @@ class SqlBlockRelationBuilder(
     private fun updateParentGroupLastConditionLoop(
         lastGroupBlock: SqlElConditionLoopCommentBlock,
         context: SetParentContext,
+        findSubGroup: Boolean = false,
         findDefaultParent: (SqlBlock) -> Boolean,
     ) {
         if (lastGroupBlock.parentBlock != null) {
@@ -465,14 +467,14 @@ class SqlBlockRelationBuilder(
             return
         }
 
-        val findParent = findParentForConditionLoop(findDefaultParent)
+        val findParent = findParentForConditionLoop(findDefaultParent, findSubGroup)
         handleConditionLoopParentAssignment(lastGroupBlock, context, findParent)
     }
 
-    private fun findParentForConditionLoop(findDefaultParent: (SqlBlock) -> Boolean): SqlBlock? =
+    private fun findParentForConditionLoop(findDefaultParent: (SqlBlock) -> Boolean,findSubGroup: Boolean =false): SqlBlock? =
         blockBuilder.getGroupTopNodeIndexHistory().lastOrNull { block ->
             findDefaultParent(block) ||
-                block is SqlSubGroupBlock ||
+                    findSubGroup && block is SqlSubGroupBlock ||
                 (block is SqlElConditionLoopCommentBlock && block.parentBlock != null)
         }
 
