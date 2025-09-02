@@ -20,6 +20,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTableModificationKeyword
 import org.domaframework.doma.intellij.formatter.util.IndentType
@@ -45,14 +46,19 @@ class SqlExistsGroupBlock(
     }
 
     override fun createGroupIndentLen(): Int {
+        // If this group is not the top of a line, there must be one space between it and the block before it.
+       val correctionSpace = if(childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock){
+            0
+        }else 1
         val parentGroupIndent = parentBlock?.indent?.groupIndentLen ?: 0
-        return getTotalTopKeywordLength().plus(parentGroupIndent)
+        return getTotalTopKeywordLength().plus(parentGroupIndent).plus(correctionSpace)
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         if (lastGroup is SqlTableModificationKeyword ||
             lastGroup is SqlTableModifySecondGroupBlock ||
-            lastGroup is SqlCreateKeywordGroupBlock
+            lastGroup is SqlCreateKeywordGroupBlock ||
+            lastGroup is SqlInlineSecondGroupBlock
         ) {
             return false
         }
