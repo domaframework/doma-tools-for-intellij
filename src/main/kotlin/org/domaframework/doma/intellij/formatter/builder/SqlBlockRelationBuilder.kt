@@ -429,9 +429,20 @@ class SqlBlockRelationBuilder(
             return
         }
 
+        val caseBlockIndex =
+            blockBuilder.getGroupTopNodeIndex { block ->
+                block.indent.indentLevel == IndentType.INLINE
+            }
+        val caseBlock =
+            if (caseBlockIndex >= 0) {
+                blockBuilder.getGroupTopNodeIndexHistory()[caseBlockIndex]
+            } else {
+                null
+            }
         val inlineSecondIndex =
             blockBuilder.getGroupTopNodeIndex { block ->
-                block.indent.indentLevel == IndentType.INLINE_SECOND
+                (caseBlock?.node?.startOffset ?: 0) < block.node.startOffset &&
+                    block.indent.indentLevel == IndentType.INLINE_SECOND
             }
         if (inlineSecondIndex >= 0) {
             blockBuilder.clearSubListGroupTopNodeIndexHistory(inlineSecondIndex)

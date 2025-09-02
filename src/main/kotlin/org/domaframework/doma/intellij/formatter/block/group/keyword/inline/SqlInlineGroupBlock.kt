@@ -20,6 +20,7 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -50,7 +51,9 @@ open class SqlInlineGroupBlock(
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) {
+            if (parent is SqlElConditionLoopCommentBlock || childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock ||
+                parent is SqlSubGroupBlock
+            ) {
                 parent.indent.groupIndentLen
             } else {
                 parent.indent.groupIndentLen.plus(1)
