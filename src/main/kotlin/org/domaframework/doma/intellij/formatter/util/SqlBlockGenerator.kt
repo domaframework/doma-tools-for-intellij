@@ -17,7 +17,6 @@ package org.domaframework.doma.intellij.formatter.util
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
@@ -93,11 +92,11 @@ class SqlBlockGenerator(
 ) {
     val sqlBlockFormattingCtx =
         SqlBlockFormattingContext(
-            sqlBlock.wrap,
-            sqlBlock.alignment,
-            sqlBlock.spacingBuilder,
-            enableFormat,
-            formatMode,
+            wrap = sqlBlock.wrap,
+            alignment = sqlBlock.alignment,
+            spacingBuilder = sqlBlock.spacingBuilder,
+            enableFormat = enableFormat,
+            formatMode = formatMode,
         )
 
     private val keywordBlockFactory = SqlKeywordBlockFactory(sqlBlockFormattingCtx)
@@ -107,219 +106,147 @@ class SqlBlockGenerator(
         lastGroupBlock: SqlBlock?,
     ): SqlBlock {
         val keywordText = child.text.lowercase()
-
         val indentLevel = SqlKeywordUtil.getIndentType(keywordText)
 
-        if (indentLevel.isNewLineGroup()) {
-            return getKeywordGroupBlock(indentLevel, keywordText, child, lastGroupBlock)
+        return if (indentLevel.isNewLineGroup()) {
+            getKeywordGroupBlock(indentLevel, keywordText, child, lastGroupBlock)
+        } else {
+            getSimpleKeywordBlock(indentLevel, keywordText, child, lastGroupBlock)
         }
+    }
 
-        return when (indentLevel) {
+    private fun getSimpleKeywordBlock(
+        indentLevel: IndentType,
+        keywordText: String,
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock =
+        when (indentLevel) {
             IndentType.INLINE -> keywordBlockFactory.createInlineBlock(child, lastGroupBlock)
             IndentType.ATTACHED -> keywordBlockFactory.createAttachedBlock(child, lastGroupBlock)
             IndentType.OPTIONS -> keywordBlockFactory.createOptionsBlock(keywordText, child, lastGroupBlock)
             IndentType.CONFLICT -> keywordBlockFactory.createConflictBlock(keywordText, child, lastGroupBlock)
             else -> SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
         }
-    }
 
     private fun getKeywordGroupBlock(
         indentLevel: IndentType,
         keywordText: String,
         child: ASTNode,
         lastGroupBlock: SqlBlock?,
-    ): SqlBlock {
+    ): SqlBlock =
         when (indentLevel) {
-            IndentType.JOIN -> {
-                return JoinClauseHandler.getJoinKeywordGroupBlock(
+            IndentType.JOIN ->
+                JoinClauseHandler.getJoinKeywordGroupBlock(
                     lastGroupBlock,
                     keywordText,
                     child,
                     sqlBlockFormattingCtx,
                 )
-            }
 
-            IndentType.INLINE_SECOND -> {
-                return SqlInlineSecondGroupBlock(
-                    child,
-                    sqlBlockFormattingCtx,
-                )
-            }
+            IndentType.INLINE_SECOND -> SqlInlineSecondGroupBlock(child, sqlBlockFormattingCtx)
 
-            IndentType.TOP -> {
-                return when (keywordText) {
-                    "with" ->
-                        SqlWithQueryGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
+            IndentType.TOP -> getTopLevelKeywordBlock(keywordText, child, indentLevel)
 
-                    "select" ->
-                        SqlSelectQueryGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
+            IndentType.SECOND -> getSecondLevelKeywordBlock(keywordText, child, lastGroupBlock)
 
-                    "create" ->
-                        SqlCreateKeywordGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
+            IndentType.SECOND_OPTION -> getSecondOptionKeywordBlock(keywordText, child, lastGroupBlock)
 
-                    "insert" ->
-                        SqlInsertQueryGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-
-                    "do" ->
-                        SqlDoGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-
-                    "update" ->
-                        SqlUpdateQueryGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-
-                    "delete" ->
-                        SqlDeleteQueryGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-                    "union", "intersect", "except" ->
-                        SqlJoinQueriesGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-
-                    else ->
-                        SqlKeywordGroupBlock(
-                            child,
-                            indentLevel,
-                            sqlBlockFormattingCtx,
-                        )
-                }
-            }
-
-            IndentType.SECOND -> {
-                return when (keywordText) {
-                    "set" -> {
-                        if (lastGroupBlock is SqlUpdateQueryGroupBlock) {
-                            SqlUpdateSetGroupBlock(
-                                child,
-                                sqlBlockFormattingCtx,
-                            )
-                        } else {
-                            WithClauseHandler
-                                .getWithClauseKeywordGroup(
-                                    lastGroupBlock,
-                                    child,
-                                    sqlBlockFormattingCtx,
-                                )?.let { return it }
-                            return SqlSecondKeywordBlock(
-                                child,
-                                sqlBlockFormattingCtx,
-                            )
-                        }
-                    }
-                    "from" -> {
-                        if (lastGroupBlock is SqlSubGroupBlock) {
-                            SqlKeywordBlock(
-                                child,
-                                IndentType.ATTACHED,
-                                sqlBlockFormattingCtx,
-                            )
-                        } else {
-                            SqlFromGroupBlock(
-                                child,
-                                sqlBlockFormattingCtx,
-                            )
-                        }
-                    }
-                    "where" -> {
-                        SqlWhereGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-                    }
-
-                    "values" ->
-                        SqlValuesGroupBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-
-                    else -> {
-                        WithClauseHandler
-                            .getWithClauseKeywordGroup(lastGroupBlock, child, sqlBlockFormattingCtx)
-                            ?.let { return it }
-
-                        NotQueryGroupHandler
-                            .getKeywordGroup(
-                                child,
-                                sqlBlockFormattingCtx,
-                            )?.let { return it }
-                        if (lastGroupBlock is SqlFunctionGroupBlock) {
-                            return SqlKeywordBlock(child, IndentType.NONE, sqlBlockFormattingCtx)
-                        }
-                        SqlSecondKeywordBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-                    }
-                }
-            }
-
-            IndentType.SECOND_OPTION -> {
-                return if (keywordText == "on" &&
-                    lastGroupBlock !is SqlJoinGroupBlock &&
-                    lastGroupBlock?.parentBlock !is SqlJoinGroupBlock
-                ) {
-                    SqlConflictClauseBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
-                } else if (SqlKeywordUtil.isConditionKeyword(keywordText)) {
-                    SqlConditionKeywordGroupBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
+            IndentType.CONFLICT ->
+                if (lastGroupBlock is SqlConflictClauseBlock) {
+                    SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
                 } else {
-                    SqlSecondOptionKeywordGroupBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
+                    SqlKeywordGroupBlock(child, indentLevel, sqlBlockFormattingCtx)
                 }
-            }
 
-            IndentType.CONFLICT -> {
-                return if (lastGroupBlock is SqlConflictClauseBlock) {
-                    SqlKeywordBlock(
-                        child,
-                        indentLevel,
-                        sqlBlockFormattingCtx,
-                    )
-                } else {
-                    SqlKeywordGroupBlock(
-                        child,
-                        indentLevel,
-                        sqlBlockFormattingCtx,
-                    )
-                }
-            }
+            else -> SqlKeywordGroupBlock(child, indentLevel, sqlBlockFormattingCtx)
+        }
 
-            else -> {
-                return SqlKeywordGroupBlock(
-                    child,
-                    indentLevel,
-                    sqlBlockFormattingCtx,
-                )
-            }
+    private fun getTopLevelKeywordBlock(
+        keywordText: String,
+        child: ASTNode,
+        indentLevel: IndentType,
+    ): SqlBlock =
+        when (keywordText) {
+            "with" -> SqlWithQueryGroupBlock(child, sqlBlockFormattingCtx)
+            "select" -> SqlSelectQueryGroupBlock(child, sqlBlockFormattingCtx)
+            "create" -> SqlCreateKeywordGroupBlock(child, sqlBlockFormattingCtx)
+            "insert" -> SqlInsertQueryGroupBlock(child, sqlBlockFormattingCtx)
+            "do" -> SqlDoGroupBlock(child, sqlBlockFormattingCtx)
+            "update" -> SqlUpdateQueryGroupBlock(child, sqlBlockFormattingCtx)
+            "delete" -> SqlDeleteQueryGroupBlock(child, sqlBlockFormattingCtx)
+            "union", "intersect", "except" -> SqlJoinQueriesGroupBlock(child, sqlBlockFormattingCtx)
+            else -> SqlKeywordGroupBlock(child, indentLevel, sqlBlockFormattingCtx)
+        }
+
+    private fun getSecondLevelKeywordBlock(
+        keywordText: String,
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock =
+        when (keywordText) {
+            "set" -> processSetKeyword(child, lastGroupBlock)
+            "from" -> processFromKeyword(child, lastGroupBlock)
+            "where" -> SqlWhereGroupBlock(child, sqlBlockFormattingCtx)
+            "values" -> SqlValuesGroupBlock(child, sqlBlockFormattingCtx)
+            else -> processDefaultSecondKeyword(child, lastGroupBlock)
+        }
+
+    private fun processSetKeyword(
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock =
+        if (lastGroupBlock is SqlUpdateQueryGroupBlock) {
+            SqlUpdateSetGroupBlock(child, sqlBlockFormattingCtx)
+        } else {
+            WithClauseHandler.getWithClauseKeywordGroup(lastGroupBlock, child, sqlBlockFormattingCtx)
+                ?: SqlSecondKeywordBlock(child, sqlBlockFormattingCtx)
+        }
+
+    private fun processFromKeyword(
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock =
+        if (lastGroupBlock is SqlSubGroupBlock) {
+            SqlKeywordBlock(child, IndentType.ATTACHED, sqlBlockFormattingCtx)
+        } else {
+            SqlFromGroupBlock(child, sqlBlockFormattingCtx)
+        }
+
+    private fun processDefaultSecondKeyword(
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock {
+        WithClauseHandler
+            .getWithClauseKeywordGroup(lastGroupBlock, child, sqlBlockFormattingCtx)
+            ?.let { return it }
+
+        NotQueryGroupHandler
+            .getKeywordGroup(child, sqlBlockFormattingCtx)
+            ?.let { return it }
+
+        return if (lastGroupBlock is SqlFunctionGroupBlock) {
+            SqlKeywordBlock(child, IndentType.NONE, sqlBlockFormattingCtx)
+        } else {
+            SqlSecondKeywordBlock(child, sqlBlockFormattingCtx)
         }
     }
+
+    private fun getSecondOptionKeywordBlock(
+        keywordText: String,
+        child: ASTNode,
+        lastGroupBlock: SqlBlock?,
+    ): SqlBlock =
+        when {
+            keywordText == "on" && !isJoinRelated(lastGroupBlock) ->
+                SqlConflictClauseBlock(child, sqlBlockFormattingCtx)
+            SqlKeywordUtil.isConditionKeyword(keywordText) ->
+                SqlConditionKeywordGroupBlock(child, sqlBlockFormattingCtx)
+            else -> SqlSecondOptionKeywordGroupBlock(child, sqlBlockFormattingCtx)
+        }
+
+    private fun isJoinRelated(lastGroupBlock: SqlBlock?): Boolean =
+        lastGroupBlock is SqlJoinGroupBlock || lastGroupBlock?.parentBlock is SqlJoinGroupBlock
 
     fun getSubGroupBlock(
         lastGroup: SqlBlock?,
@@ -327,108 +254,114 @@ class SqlBlockGenerator(
         groups: List<SqlBlock>,
     ): SqlBlock {
         val ignoreConditionLoopLastBlock = groups.lastOrNull { it !is SqlElConditionLoopCommentBlock }
-        when (lastGroup) {
-            is SqlKeywordGroupBlock -> {
-                CreateClauseHandler
-                    .getCreateTableClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
-                    ?.let { return it }
 
-                WithClauseHandler
-                    .getWithClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
-                    ?.let { return it }
-
-                InsertClauseHandler
-                    .getInsertClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
-                    ?.let { return it }
-
-                UpdateClauseHandler
-                    .getUpdateClauseSubGroup(
-                        lastGroup,
-                        child,
-                        sqlBlockFormattingCtx,
-                    )?.let { return it }
-
-                // List-type test data for IN clause
-                NotQueryGroupHandler
-                    .getSubGroup(ignoreConditionLoopLastBlock, child, sqlBlockFormattingCtx)
-                    ?.let { return it }
-
-                return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
-            }
-
-            is SqlColumnDefinitionRawGroupBlock ->
-                return SqlDataTypeParamBlock(child, sqlBlockFormattingCtx)
-
-            else -> {
-                if (lastGroup is SqlSubGroupBlock) {
-                    WithClauseHandler
-                        .getWithClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
-                        ?.let { return it }
-                }
-
-                NotQueryGroupHandler
-                    .getSubGroup(ignoreConditionLoopLastBlock, child, sqlBlockFormattingCtx)
-                    ?.let { return it }
-
-                NotQueryGroupHandler
-                    .getSubGroup(lastGroup, child, sqlBlockFormattingCtx)
-                    ?.let { return it }
-
-                return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
-            }
+        return when (lastGroup) {
+            is SqlKeywordGroupBlock -> processKeywordGroupBlock(lastGroup, child, ignoreConditionLoopLastBlock)
+            is SqlColumnDefinitionRawGroupBlock -> SqlDataTypeParamBlock(child, sqlBlockFormattingCtx)
+            else -> processDefaultSubGroup(lastGroup, child, ignoreConditionLoopLastBlock)
         }
+    }
+
+    private fun processKeywordGroupBlock(
+        lastGroup: SqlKeywordGroupBlock,
+        child: ASTNode,
+        ignoreConditionLoopLastBlock: SqlBlock?,
+    ): SqlBlock {
+        CreateClauseHandler
+            .getCreateTableClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+            ?.let { return it }
+
+        WithClauseHandler
+            .getWithClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+            ?.let { return it }
+
+        InsertClauseHandler
+            .getInsertClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+            ?.let { return it }
+
+        UpdateClauseHandler
+            .getUpdateClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+            ?.let { return it }
+
+        NotQueryGroupHandler
+            .getSubGroup(ignoreConditionLoopLastBlock, child, sqlBlockFormattingCtx)
+            ?.let { return it }
+
+        return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
+    }
+
+    private fun processDefaultSubGroup(
+        lastGroup: SqlBlock?,
+        child: ASTNode,
+        ignoreConditionLoopLastBlock: SqlBlock?,
+    ): SqlBlock {
+        if (lastGroup is SqlSubGroupBlock) {
+            WithClauseHandler
+                .getWithClauseSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+                ?.let { return it }
+        }
+
+        NotQueryGroupHandler
+            .getSubGroup(ignoreConditionLoopLastBlock, child, sqlBlockFormattingCtx)
+            ?.let { return it }
+
+        NotQueryGroupHandler
+            .getSubGroup(lastGroup, child, sqlBlockFormattingCtx)
+            ?.let { return it }
+
+        return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
     }
 
     fun getCommaGroupBlock(
         lastGroup: SqlBlock?,
         child: ASTNode,
-    ): SqlBlock {
-        CreateClauseHandler
-            .getColumnRawGroup(lastGroup, child, sqlBlockFormattingCtx)
-            ?.let { return it }
-
-        return CommaRawClauseHandler.getCommaBlock(lastGroup, child, sqlBlockFormattingCtx)
-    }
+    ): SqlBlock =
+        CreateClauseHandler.getColumnRawGroup(lastGroup, child, sqlBlockFormattingCtx)
+            ?: CommaRawClauseHandler.getCommaBlock(lastGroup, child, sqlBlockFormattingCtx)
 
     fun hasEscapeBeforeWhiteSpace(
         lastEscapeBlock: SqlBlock?,
         start: ASTNode,
     ): Boolean {
-        if (lastEscapeBlock == null ||
-            (lastEscapeBlock as? SqlEscapeBlock)?.isEndEscape == true
-        ) {
-            return false
-        }
+        if (!isEscapeActive(lastEscapeBlock)) return false
+
+        return findEscapeEndCharacter(start)
+    }
+
+    private fun isEscapeActive(lastEscapeBlock: SqlBlock?): Boolean =
+        lastEscapeBlock != null && (lastEscapeBlock as? SqlEscapeBlock)?.isEndEscape != true
+
+    private fun findEscapeEndCharacter(start: ASTNode): Boolean {
         var node = start.treeNext
         while (node != null) {
-            if (node.elementType == SqlTypes.OTHER &&
-                listOf("\"", "`", "]").contains(node.text)
-            ) {
-                return true
-            }
-            if (node.psi is PsiWhiteSpace) {
-                return false
+            when {
+                isEscapeEndCharacter(node) -> return true
+                node.psi is PsiWhiteSpace -> return false
             }
             node = node.treeNext
         }
         return false
     }
 
+    private fun isEscapeEndCharacter(node: ASTNode): Boolean = node.elementType == SqlTypes.OTHER && node.text in setOf("\"", "`", "]")
+
     fun getFunctionName(
         child: ASTNode,
         defaultFormatCtx: SqlBlockFormattingContext,
     ): SqlBlock? {
+        val hasLeftParen = isFollowedByLeftParen(child)
+        return if (hasLeftParen) SqlFunctionGroupBlock(child, defaultFormatCtx) else null
+    }
+
+    private fun isFollowedByLeftParen(child: ASTNode): Boolean {
         val notWhiteSpaceElement =
             child.psi.nextLeafs
                 .takeWhile { it is PsiWhiteSpace }
                 .lastOrNull()
                 ?.nextLeaf(true)
-        if (notWhiteSpaceElement?.elementType == SqlTypes.LEFT_PAREN ||
+
+        return notWhiteSpaceElement?.elementType == SqlTypes.LEFT_PAREN ||
             PsiTreeUtil.nextLeaf(child.psi)?.elementType == SqlTypes.LEFT_PAREN
-        ) {
-            return SqlFunctionGroupBlock(child, defaultFormatCtx)
-        }
-        return null
     }
 
     fun getWordBlock(
@@ -436,90 +369,77 @@ class SqlBlockGenerator(
         child: ASTNode,
     ): SqlBlock {
         if (child.text.lowercase() == "array") {
-            return SqlArrayWordBlock(
-                child,
-                sqlBlockFormattingCtx,
-            )
+            return SqlArrayWordBlock(child, sqlBlockFormattingCtx)
         }
+
+        return processWordByContext(lastGroup, child)
+    }
+
+    private fun processWordByContext(
+        lastGroup: SqlBlock?,
+        child: ASTNode,
+    ): SqlBlock {
         when (lastGroup) {
-            is SqlKeywordGroupBlock -> {
-                when {
-                    SqlKeywordUtil.isBeforeTableKeyword(lastGroup.getNodeText()) -> {
-                        return SqlTableBlock(
-                            child,
-                            sqlBlockFormattingCtx,
-                        )
-                    }
+            is SqlKeywordGroupBlock ->
+                getKeywordGroupWordBlock(lastGroup, child)
+                    ?.let { return it }
 
-                    lastGroup is SqlWithQueryGroupBlock -> return SqlWithCommonTableGroupBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
-
-                    lastGroup is SqlInsertQueryGroupBlock -> return SqlTableBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
-                }
-            }
-
-            is SqlCreateTableColumnDefinitionGroupBlock -> {
-                // Top Column Definition Group Block
-                return SqlCreateTableColumnDefinitionRawGroupBlock(
-                    child,
-                    sqlBlockFormattingCtx,
-                )
-            }
+            is SqlCreateTableColumnDefinitionGroupBlock ->
+                return SqlCreateTableColumnDefinitionRawGroupBlock(child, sqlBlockFormattingCtx)
 
             is SqlColumnDefinitionRawGroupBlock -> {
                 if (lastGroup.columnBlock == null) {
-                    return SqlColumnBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
+                    return SqlColumnBlock(child, sqlBlockFormattingCtx)
                 }
             }
         }
+
+        return getDefaultWordBlock(lastGroup, child)
+    }
+
+    private fun getKeywordGroupWordBlock(
+        lastGroup: SqlKeywordGroupBlock,
+        child: ASTNode,
+    ): SqlBlock? =
+        when {
+            SqlKeywordUtil.isBeforeTableKeyword(lastGroup.getNodeText()) ->
+                SqlTableBlock(child, sqlBlockFormattingCtx)
+            lastGroup is SqlWithQueryGroupBlock ->
+                SqlWithCommonTableGroupBlock(child, sqlBlockFormattingCtx)
+            lastGroup is SqlInsertQueryGroupBlock ->
+                SqlTableBlock(child, sqlBlockFormattingCtx)
+            else -> null
+        }
+
+    private fun getDefaultWordBlock(
+        lastGroup: SqlBlock?,
+        child: ASTNode,
+    ): SqlBlock {
         if (lastGroup is SqlFromGroupBlock || lastGroup?.parentBlock is SqlFromGroupBlock) {
             return SqlAliasBlock(child, sqlBlockFormattingCtx)
         }
-        val functionNameBlock = getFunctionName(child, sqlBlockFormattingCtx)
-        if (functionNameBlock != null) return functionNameBlock
-        return SqlWordBlock(child, sqlBlockFormattingCtx)
+
+        return getFunctionName(child, sqlBlockFormattingCtx) ?: SqlWordBlock(child, sqlBlockFormattingCtx)
     }
 
     fun getBlockCommentBlock(
         child: ASTNode,
         blockCommentSpacingBuilder: SqlCustomSpacingBuilder?,
-    ): SqlCommentBlock {
-        if (PsiTreeUtil.getChildOfType(child.psi, PsiComment::class.java) != null) {
-            return SqlBlockCommentBlock(child, createBlockCommentSpacingBuilder(), sqlBlockFormattingCtx)
+    ): SqlCommentBlock =
+        when {
+            hasChildComment(child) -> SqlBlockCommentBlock(child, sqlBlockFormattingCtx)
+            isConditionOrLoopDirective(child) ->
+                SqlElConditionLoopCommentBlock(
+                    child,
+                    sqlBlockFormattingCtx,
+                    blockCommentSpacingBuilder,
+                )
+            else -> SqlElBlockCommentBlock(child, sqlBlockFormattingCtx, blockCommentSpacingBuilder)
         }
-        if (child.psi is SqlCustomElCommentExpr &&
-            (child.psi as SqlCustomElCommentExpr).isConditionOrLoopDirective()
-        ) {
-            return SqlElConditionLoopCommentBlock(
-                child,
-                sqlBlockFormattingCtx,
-                blockCommentSpacingBuilder,
-            )
-        }
-        return SqlElBlockCommentBlock(
-            child,
-            sqlBlockFormattingCtx,
-            blockCommentSpacingBuilder,
-        )
-    }
 
-    private fun createBlockCommentSpacingBuilder(): SqlCustomSpacingBuilder =
-        SqlCustomSpacingBuilder()
-            .withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
-                SqlTypes.BLOCK_COMMENT_CONTENT,
-                Spacing.createSpacing(0, 0, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_CONTENT,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(0, 0, 0, true, 0),
-            )
+    private fun hasChildComment(child: ASTNode): Boolean = PsiTreeUtil.getChildOfType(child.psi, PsiComment::class.java) != null
+
+    private fun isConditionOrLoopDirective(child: ASTNode): Boolean =
+        child.psi is SqlCustomElCommentExpr &&
+            (child.psi as SqlCustomElCommentExpr).isConditionOrLoopDirective()
 }

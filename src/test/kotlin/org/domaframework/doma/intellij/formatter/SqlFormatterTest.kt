@@ -19,8 +19,6 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.util.ThrowableRunnable
-import org.domaframework.doma.intellij.setting.SettingComponent
-import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 
 class SqlFormatterTest : BasePlatformTestCase() {
     override fun getBasePath(): String? = "src/test/testData/sql/formatter"
@@ -31,23 +29,6 @@ class SqlFormatterTest : BasePlatformTestCase() {
 
     override fun setUp() {
         super.setUp()
-        settingSqlFormat(true)
-    }
-
-    private fun settingSqlFormat(enabled: Boolean) {
-        val settings = DomaToolsFormatEnableSettings.getInstance()
-        val component = SettingComponent()
-        component.enableFormat = enabled
-        settings.apply(component)
-        assertEquals(enabled, settings.getState().isEnableSqlFormat)
-    }
-
-    override fun tearDown() {
-        try {
-            settingSqlFormat(false)
-        } finally {
-            super.tearDown()
-        }
     }
 
     fun testSelectFormatter() {
@@ -276,6 +257,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
 
     fun testOrderByGroupWithConditionDirectiveFormatter() {
         formatSqlFile("OrderByGroupWithConditionDirective.sql", "OrderByGroupWithConditionDirective$formatDataPrefix.sql")
+    }
+
+    fun testBlockCommentParseFormatter() {
+        formatSqlFile("BlockCommentParse.sql", "BlockCommentParse$formatDataPrefix.sql")
     }
 
     private fun formatSqlFile(
