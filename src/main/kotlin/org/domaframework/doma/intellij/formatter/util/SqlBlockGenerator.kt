@@ -17,7 +17,6 @@ package org.domaframework.doma.intellij.formatter.util
 
 import com.intellij.formatting.Alignment
 import com.intellij.formatting.FormattingMode
-import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
@@ -518,14 +517,15 @@ class SqlBlockGenerator(
         lastGroupBlock: SqlBlock?,
     ): SqlBlock {
         val rootBlock = getRootBlock(lastGroupBlock)
-        return when {
-            rootBlock is SqlTableModifySecondGroupBlock ||
-                rootBlock is SqlTableModificationKeyword -> {
+        return when (rootBlock) {
+            is SqlTableModifySecondGroupBlock, is SqlTableModificationKeyword -> {
                 SqlTableModifySecondGroupBlock(child, sqlBlockFormattingCtx)
             }
-            rootBlock is SqlExistsGroupBlock -> {
+
+            is SqlExistsGroupBlock -> {
                 SqlKeywordBlock(child, IndentType.ATTACHED, sqlBlockFormattingCtx)
             }
+
             else -> SqlConflictClauseBlock(child, sqlBlockFormattingCtx)
         }
     }
@@ -552,7 +552,7 @@ class SqlBlockGenerator(
         blockCommentSpacingBuilder: SqlCustomSpacingBuilder?,
     ): SqlCommentBlock {
         if (PsiTreeUtil.getChildOfType(child.psi, PsiComment::class.java) != null) {
-            return SqlBlockCommentBlock(child, createBlockCommentSpacingBuilder(), sqlBlockFormattingCtx)
+            return SqlBlockCommentBlock(child, sqlBlockFormattingCtx)
         }
         if (child.psi is SqlCustomElCommentExpr &&
             (child.psi as SqlCustomElCommentExpr).isConditionOrLoopDirective()
@@ -569,16 +569,4 @@ class SqlBlockGenerator(
             blockCommentSpacingBuilder,
         )
     }
-
-    private fun createBlockCommentSpacingBuilder(): SqlCustomSpacingBuilder =
-        SqlCustomSpacingBuilder()
-            .withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
-                SqlTypes.BLOCK_COMMENT_CONTENT,
-                Spacing.createSpacing(0, 0, 0, true, 0),
-            ).withSpacing(
-                SqlTypes.BLOCK_COMMENT_CONTENT,
-                SqlTypes.BLOCK_COMMENT_END,
-                Spacing.createSpacing(0, 0, 0, true, 0),
-            )
 }
