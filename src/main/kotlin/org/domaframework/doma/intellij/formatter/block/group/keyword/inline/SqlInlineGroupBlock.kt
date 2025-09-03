@@ -60,4 +60,11 @@ open class SqlInlineGroupBlock(
         } ?: 1
 
     override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
+
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
+        if (lastGroup is SqlInlineSecondGroupBlock) {
+            return true
+        }
+        return super.isSaveSpace(lastGroup)
+    }
 }

@@ -57,6 +57,7 @@ class SqlConditionKeywordGroupBlock(
         return when (parent) {
             is SqlElConditionLoopCommentBlock -> parent.indent.groupIndentLen
             is SqlSubGroupBlock -> calculateSubGroupIndent(groupLen)
+            is SqlInlineSecondGroupBlock -> calculateInlineSecondIndent(groupLen)
             else -> parent.indent.groupIndentLen - getNodeText().length
         }
     }
@@ -66,6 +67,13 @@ class SqlConditionKeywordGroupBlock(
             groupLen
         } else {
             groupLen + 1
+        }
+
+    private fun calculateInlineSecondIndent(groupLen: Int): Int =
+        if (getNodeText() == "and") {
+            groupLen.plus(1)
+        } else {
+            groupLen.plus(2)
         }
 
     override fun createGroupIndentLen(): Int {
