@@ -24,8 +24,11 @@ import com.intellij.formatting.Spacing
 import com.intellij.formatting.SpacingBuilder
 import com.intellij.formatting.Wrap
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
@@ -262,15 +265,23 @@ open class SqlFileBlock(
                 child,
                 createBlockDirectiveCommentSpacingBuilder(),
             )
-        if (tempBlock !is SqlElConditionLoopCommentBlock) {
-            if (lastGroup is SqlWithQueryGroupBlock || lastGroupFilteredDirective is SqlWithQueryGroupBlock) {
-                return SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
+        val commentType = PsiTreeUtil.getChildrenOfType(child.psi, PsiElement::class.java)?.get(1)?.elementType
+        val defaultBlockComment =
+            commentType == SqlTypes.EL_PARSER_LEVEL_COMMENT || commentType == SqlTypes.BLOCK_COMMENT_CONTENT ||
+                child.elementType == SqlTypes.LINE_COMMENT
+        if (!defaultBlockComment) {
+            if (tempBlock !is SqlElConditionLoopCommentBlock) {
+                if (lastGroup is SqlWithQueryGroupBlock || lastGroupFilteredDirective is SqlWithQueryGroupBlock) {
+                    return SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
+                }
             }
-        }
-        return if (lastGroup is SqlWithCommonTableGroupBlock) {
-            SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
+            return if (lastGroup is SqlWithCommonTableGroupBlock) {
+                SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
+            } else {
+                tempBlock
+            }
         } else {
-            tempBlock
+            return tempBlock
         }
     }
 

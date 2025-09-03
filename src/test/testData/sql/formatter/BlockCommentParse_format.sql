@@ -7,4 +7,5 @@ SELECT *
    * This is Block Comment
    */
    AND column2 = /* value2 */'value2'
+    /** line break */
     OR column3 = /*^ value3 */'value3'
