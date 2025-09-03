@@ -105,7 +105,6 @@ open class SqlBlock(
     protected fun isConditionLoopDirectiveRegisteredBeforeParent(): Boolean {
         val firstPrevBlock = (prevBlocks.lastOrNull() as? SqlElConditionLoopCommentBlock)
         parentBlock?.let { parent ->
-
             return (childBlocks.firstOrNull() as? SqlElConditionLoopCommentBlock)?.isBeforeParentBlock() == true ||
                 firstPrevBlock != null &&
                 firstPrevBlock.conditionEnd != null &&
@@ -132,7 +131,7 @@ open class SqlBlock(
     protected fun isElementAfterConditionLoopDirective(): Boolean =
         (parentBlock as? SqlElConditionLoopCommentBlock)?.let { parent ->
             parent.childBlocks.firstOrNull() == this &&
-                (parent.parentBlock is SqlNewGroupBlock || parent.parentBlock is SqlElConditionLoopCommentBlock)
+                (parent.parentBlock is SqlNewGroupBlock || parent.isParentConditionLoopDirective())
         } == true
 
     protected fun isElementAfterConditionLoopEnd(): Boolean {
@@ -159,6 +158,8 @@ open class SqlBlock(
                     } as? SqlElConditionLoopCommentBlock
                 )?.conditionEnd
         )
+
+    fun isParentConditionLoopDirective(): Boolean = parentBlock is SqlElConditionLoopCommentBlock
 
     protected fun isFirstChildConditionLoopDirective(): Boolean = childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock
 
