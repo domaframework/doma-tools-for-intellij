@@ -116,9 +116,39 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             }
         }
 
+        trimLeadingWhitespaceAtFileHead(document, source, rangeToReformat)
         docManager.commitDocument(document)
 
         return ProcessResult(document, rangeToReformat.grown(visitor.replaces.size))
+    }
+
+    private fun trimLeadingWhitespaceAtFileHead(
+        document: Document,
+        source: PsiFile,
+        rangeToReformat: TextRange,
+    ) {
+        if (rangeToReformat.startOffset != 0) return
+        if (isInjectedSqlFile(source)) return
+
+        val chars = document.charsSequence
+        if (chars.isEmpty()) return
+
+        var start = 0
+        // Save Bom
+        if (chars[0] == '\uFEFF') start = 1
+
+        var i = start
+        while (i < chars.length) {
+            val c = chars[i]
+            if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+                i++
+            } else {
+                break
+            }
+        }
+        if (i > start) {
+            document.deleteString(start, i)
+        }
     }
 
     private fun processNonWhiteSpaceElement(
@@ -145,7 +175,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                 else -> getUpperText(current)
             }
 
-        return if (isFirstElementInFile(current)) getUpperText(current) else newKeyword
+        return newKeyword
     }
 
     private fun processKeyword(current: PsiElement): String {
@@ -163,11 +193,6 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         } else {
             getNewLineString(PsiTreeUtil.prevLeaf(current), getUpperText(current))
         }
-
-    private fun isFirstElementInFile(current: PsiElement): Boolean {
-        val prev = PsiTreeUtil.prevLeaf(current)
-        return prev == null || PsiTreeUtil.prevLeaf(prev) == null
-    }
 
     private fun removeSpacesAroundNewline(
         document: Document,
