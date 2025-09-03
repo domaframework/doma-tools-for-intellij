@@ -22,6 +22,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
@@ -89,8 +90,9 @@ class SqlBlockRelationBuilder(
             )
         val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
         if (lastGroup is SqlElConditionLoopCommentBlock) {
-            updateParentGroupLastConditionLoop(lastGroup, context) { block ->
-                block.indent.indentLevel < childBlock.indent.indentLevel
+            updateParentGroupLastConditionLoop(lastGroup, context, false) { block ->
+                block.indent.indentLevel < childBlock.indent.indentLevel ||
+                    block is SqlNewGroupBlock
             }
             return
         }
@@ -170,7 +172,7 @@ class SqlBlockRelationBuilder(
         context: SetParentContext,
         childBlock: SqlKeywordGroupBlock,
     ) {
-        updateParentGroupLastConditionLoop(lastGroupBlock, context) {
+        updateParentGroupLastConditionLoop(lastGroupBlock, context, true) {
             it.indent.indentLevel < childBlock.indent.indentLevel
         }
     }
@@ -424,14 +426,25 @@ class SqlBlockRelationBuilder(
         val lastGroupBlock = blockBuilder.getLastGroupTopNodeIndexHistory()
         if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
             updateParentGroupLastConditionLoop(lastGroupBlock, context) {
-                it.indent.indentLevel == IndentType.INLINE_SECOND
+                it.indent.indentLevel == IndentType.INLINE
             }
             return
         }
 
+        val caseBlockIndex =
+            blockBuilder.getGroupTopNodeIndex { block ->
+                block.indent.indentLevel == IndentType.INLINE
+            }
+        val caseBlock =
+            if (caseBlockIndex >= 0) {
+                blockBuilder.getGroupTopNodeIndexHistory()[caseBlockIndex]
+            } else {
+                null
+            }
         val inlineSecondIndex =
             blockBuilder.getGroupTopNodeIndex { block ->
-                block.indent.indentLevel == IndentType.INLINE_SECOND
+                (caseBlock?.node?.startOffset ?: 0) < block.node.startOffset &&
+                    block.indent.indentLevel == IndentType.INLINE_SECOND
             }
         if (inlineSecondIndex >= 0) {
             blockBuilder.clearSubListGroupTopNodeIndexHistory(inlineSecondIndex)
@@ -447,6 +460,7 @@ class SqlBlockRelationBuilder(
     private fun updateParentGroupLastConditionLoop(
         lastGroupBlock: SqlElConditionLoopCommentBlock,
         context: SetParentContext,
+        findSubGroup: Boolean = false,
         findDefaultParent: (SqlBlock) -> Boolean,
     ) {
         if (lastGroupBlock.parentBlock != null) {
@@ -454,14 +468,17 @@ class SqlBlockRelationBuilder(
             return
         }
 
-        val findParent = findParentForConditionLoop(findDefaultParent)
+        val findParent = findParentForConditionLoop(findDefaultParent, findSubGroup)
         handleConditionLoopParentAssignment(lastGroupBlock, context, findParent)
     }
 
-    private fun findParentForConditionLoop(findDefaultParent: (SqlBlock) -> Boolean): SqlBlock? =
+    private fun findParentForConditionLoop(
+        findDefaultParent: (SqlBlock) -> Boolean,
+        findSubGroup: Boolean = false,
+    ): SqlBlock? =
         blockBuilder.getGroupTopNodeIndexHistory().lastOrNull { block ->
             findDefaultParent(block) ||
-                block is SqlSubGroupBlock ||
+                findSubGroup && block is SqlSubGroupBlock ||
                 (block is SqlElConditionLoopCommentBlock && block.parentBlock != null)
         }
 

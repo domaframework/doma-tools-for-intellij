@@ -46,7 +46,8 @@ SELECT id
        , quantity >> 10 AS much_greater
        ,
          -- Complex conditions with multiple operators
-         CASE WHEN json_data ->> 'status' <> 'active' THEN 'inactive'
+         CASE
+              WHEN json_data ->> 'status' <> 'active' THEN 'inactive'
               WHEN json_data ->> 'priority' >= '5' THEN 'high'
               ELSE 'normal'
           END AS status_priority

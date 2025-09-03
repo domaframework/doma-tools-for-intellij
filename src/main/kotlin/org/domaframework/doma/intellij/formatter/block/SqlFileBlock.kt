@@ -359,7 +359,6 @@ open class SqlFileBlock(
             }
 
             is SqlInlineGroupBlock -> {
-                // case-end
                 blockRelationBuilder.updateGroupBlockParentAndAddGroup(
                     childBlock,
                 )
@@ -471,7 +470,7 @@ open class SqlFileBlock(
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
-        if (childBlock1 is SqlWhitespaceBlock && childBlock2.parentBlock is SqlElConditionLoopCommentBlock) {
+        if (childBlock1 is SqlWhitespaceBlock && childBlock2.isParentConditionLoopDirective()) {
             val child1 = childBlock2.parentBlock as SqlElConditionLoopCommentBlock
             SqlCustomSpacingBuilder()
                 .getSpacingElDirectiveComment(child1, childBlock2)

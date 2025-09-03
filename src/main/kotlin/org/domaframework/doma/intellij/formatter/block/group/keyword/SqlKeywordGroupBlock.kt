@@ -182,7 +182,7 @@ open class SqlKeywordGroupBlock(
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         val conditionLastGroup =
-            if (parentBlock is SqlElConditionLoopCommentBlock) {
+            if (isParentConditionLoopDirective()) {
                 parentBlock?.parentBlock
             } else {
                 lastGroup

@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.comment
 import com.intellij.formatting.Block
 import com.intellij.formatting.Spacing
 import com.intellij.lang.ASTNode
+import com.intellij.psi.PsiElement
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
@@ -55,32 +56,25 @@ open class SqlElBlockCommentBlock(
     val directiveType: SqlElCommentDirectiveType = initDirectiveType()
 
     private fun initDirectiveType(): SqlElCommentDirectiveType {
-        val element = this.node.psi
+        val element = node.psi
         val contentElement = PsiTreeUtil.firstChild(element).nextSibling
 
-        if (contentElement is SqlElIfDirective ||
+        return when {
+            isConditionOrLoopDirective(contentElement) -> SqlElCommentDirectiveType.CONDITION_LOOP
+            contentElement.elementType == SqlTypes.HASH -> SqlElCommentDirectiveType.EMBEDDED
+            contentElement.elementType == SqlTypes.EL_EXPAND -> SqlElCommentDirectiveType.EXPAND
+            contentElement.elementType == SqlTypes.EL_POPULATE -> SqlElCommentDirectiveType.POPULATE
+            contentElement.elementType == SqlTypes.CARET -> SqlElCommentDirectiveType.LITERAL
+            else -> SqlElCommentDirectiveType.NORMAL
+        }
+    }
+
+    private fun isConditionOrLoopDirective(contentElement: PsiElement?): Boolean =
+        contentElement is SqlElIfDirective ||
             contentElement is SqlElForDirective ||
             contentElement is SqlElElseifDirective ||
             contentElement.elementType == SqlTypes.EL_ELSE ||
             contentElement.elementType == SqlTypes.EL_END
-        ) {
-            return SqlElCommentDirectiveType.CONDITION_LOOP
-        }
-        if (contentElement.elementType == SqlTypes.HASH) {
-            return SqlElCommentDirectiveType.EMBEDDED
-        }
-        if (contentElement.elementType == SqlTypes.EL_EXPAND) {
-            return SqlElCommentDirectiveType.EXPAND
-        }
-        if (contentElement.elementType == SqlTypes.EL_POPULATE) {
-            return SqlElCommentDirectiveType.POPULATE
-        }
-        if (contentElement.elementType == SqlTypes.CARET) {
-            return SqlElCommentDirectiveType.LITERAL
-        }
-
-        return SqlElCommentDirectiveType.NORMAL
-    }
 
     override fun buildChildren(): MutableList<AbstractBlock> = buildChildBlocks { getBlock(it) }
 
@@ -91,51 +85,31 @@ open class SqlElBlockCommentBlock(
             ->
                 SqlOperationBlock(child, context)
 
-            SqlTypes.EL_EQ_EXPR, SqlTypes.EL_NE_EXPR, SqlTypes.EL_GE_EXPR, SqlTypes.EL_GT_EXPR, SqlTypes.EL_LE_EXPR, SqlTypes.EL_LT_EXPR,
-            SqlTypes.EL_AND_EXPR, SqlTypes.EL_OR_EXPR, SqlTypes.EL_NOT_EXPR,
-            SqlTypes.EL_ADD_EXPR, SqlTypes.EL_SUBTRACT_EXPR, SqlTypes.EL_MULTIPLY_EXPR, SqlTypes.EL_DIVIDE_EXPR, SqlTypes.EL_MOD_EXPR,
+            SqlTypes.EL_EQ_EXPR, SqlTypes.EL_NE_EXPR, SqlTypes.EL_GE_EXPR, SqlTypes.EL_GT_EXPR,
+            SqlTypes.EL_LE_EXPR, SqlTypes.EL_LT_EXPR, SqlTypes.EL_AND_EXPR, SqlTypes.EL_OR_EXPR,
+            SqlTypes.EL_NOT_EXPR, SqlTypes.EL_ADD_EXPR, SqlTypes.EL_SUBTRACT_EXPR,
+            SqlTypes.EL_MULTIPLY_EXPR, SqlTypes.EL_DIVIDE_EXPR, SqlTypes.EL_MOD_EXPR,
             ->
-                SqlElBlockCommentBlock(
-                    child,
-                    context,
-                    createBlockDirectiveCommentSpacingBuilder(),
-                )
+                SqlElBlockCommentBlock(child, context, createBlockDirectiveCommentSpacingBuilder())
 
-            SqlTypes.EL_FIELD_ACCESS_EXPR ->
-                SqlElFieldAccessBlock(
-                    child,
-                    context,
-                )
-
+            SqlTypes.EL_FIELD_ACCESS_EXPR -> SqlElFieldAccessBlock(child, context)
             SqlTypes.BLOCK_COMMENT_START -> SqlCommentStartBlock(child, context)
-
             SqlTypes.BLOCK_COMMENT_END -> SqlCommentEndBlock(child, context)
-
-            SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR ->
-                SqlElStaticFieldAccessBlock(
-                    child,
-                    context,
-                )
-
-            SqlTypes.EL_FUNCTION_CALL_EXPR ->
-                SqlElFunctionCallBlock(
-                    child,
-                    context,
-                )
-
-            SqlTypes.BLOCK_COMMENT_CONTENT ->
-                SqlBlockCommentBlock(child, createBlockCommentSpacingBuilder(), context)
-
+            SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR -> SqlElStaticFieldAccessBlock(child, context)
+            SqlTypes.EL_FUNCTION_CALL_EXPR -> SqlElFunctionCallBlock(child, context)
+            SqlTypes.BLOCK_COMMENT_CONTENT -> SqlBlockCommentBlock(child, context)
             else -> SqlUnknownBlock(child, context)
         }
 
-    protected fun createBlockCommentSpacingBuilder(): SqlCustomSpacingBuilder =
-        SqlCustomSpacingBuilder()
-            .withSpacing(
-                SqlTypes.BLOCK_COMMENT_START,
-                SqlTypes.BLOCK_COMMENT_CONTENT,
-                Spacing.createSpacing(1, 1, 0, false, 0),
-            )
+    protected fun createBlockCommentSpacingBuilder(): SqlCustomSpacingBuilder {
+        val noSpacing = Spacing.createSpacing(0, 0, 0, false, 0)
+        val singleSpace = Spacing.createSpacing(1, 1, 0, false, 0)
+
+        return SqlCustomSpacingBuilder()
+            .withSpacing(SqlTypes.BLOCK_COMMENT_START, SqlTypes.BLOCK_COMMENT_CONTENT, singleSpace)
+            .withSpacing(SqlTypes.BLOCK_COMMENT_START, SqlTypes.EL_PARSER_LEVEL_COMMENT, noSpacing)
+            .withSpacing(SqlTypes.EL_PARSER_LEVEL_COMMENT, SqlTypes.BLOCK_COMMENT_CONTENT, noSpacing)
+    }
 
     override fun createBlockDirectiveCommentSpacingBuilder(): SqlCustomSpacingBuilder = createBlockCommentSpacingBuilder()
 
@@ -143,51 +117,35 @@ open class SqlElBlockCommentBlock(
         child1: Block?,
         child2: Block,
     ): Spacing? =
-        customSpacingBuilder?.getCustomSpacing(child1, child2) ?: spacingBuilder.getSpacing(
-            this,
-            child1,
-            child2,
-        )
+        customSpacingBuilder?.getCustomSpacing(child1, child2)
+            ?: spacingBuilder.getSpacing(this, child1, child2)
 
     override fun isLeaf(): Boolean = false
 
-    override fun createBlockIndentLen(): Int {
+    override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
-            return when (parent) {
+            when (parent) {
                 is SqlElConditionLoopCommentBlock -> parent.indent.groupIndentLen
-                is SqlSubQueryGroupBlock -> {
-                    if (parent.getChildBlocksDropLast().isEmpty()) {
-                        if (isConditionLoopDirectiveRegisteredBeforeParent()) {
-                            parent.indent.groupIndentLen
-                        } else {
-                            parent.indent.groupIndentLen
-                        }
-                    } else if (parent.isFirstLineComment) {
-                        parent.indent.groupIndentLen.minus(2)
-                    } else {
-                        parent.indent.groupIndentLen
-                    }
-                }
+                is SqlSubQueryGroupBlock -> calculateSubQueryIndent(parent)
                 is SqlValuesGroupBlock -> parent.indent.indentLen
-                is SqlKeywordGroupBlock -> parent.indent.groupIndentLen.plus(1)
+                is SqlKeywordGroupBlock -> parent.indent.groupIndentLen + 1
                 else -> parent.indent.groupIndentLen
             }
+        } ?: 0
+
+    private fun calculateSubQueryIndent(parent: SqlSubQueryGroupBlock): Int =
+        when {
+            parent.getChildBlocksDropLast().isEmpty() -> parent.indent.groupIndentLen
+            parent.isFirstLineComment -> parent.indent.groupIndentLen - 2
+            else -> parent.indent.groupIndentLen
         }
-        return 0
-    }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
         parentBlock?.let { parent ->
-            isConditionLoopDirectiveRegisteredBeforeParent() ||
-                (
-                    (
-                        parent is SqlWithQuerySubGroupBlock ||
-                            parent is SqlValuesGroupBlock ||
-                            parent is SqlElConditionLoopCommentBlock
-                    ) &&
-                        parent.childBlocks
-                            .dropLast(1)
-                            .none { it !is SqlElConditionLoopCommentBlock }
-                )
+            isConditionLoopDirectiveRegisteredBeforeParent() || isParentWithOnlyConditionLoopBlocks(parent)
         } == true
+
+    private fun isParentWithOnlyConditionLoopBlocks(parent: SqlBlock): Boolean =
+        (parent is SqlWithQuerySubGroupBlock || parent is SqlValuesGroupBlock || parent is SqlElConditionLoopCommentBlock) &&
+            parent.childBlocks.dropLast(1).none { it !is SqlElConditionLoopCommentBlock }
 }

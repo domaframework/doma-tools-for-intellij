@@ -90,7 +90,7 @@ class SqlFunctionParamBlock(
             }
                 ?: emptyList()
         val parentText =
-            if (parentBlock is SqlElConditionLoopCommentBlock) {
+            if (isParentConditionLoopDirective()) {
                 val grand = parentBlock?.parentBlock
                 grand?.getNodeText() ?: ""
             } else {

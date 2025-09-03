@@ -66,6 +66,5 @@ open class SqlInlineSecondGroupBlock(
 
     override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
-        (parentBlock as? SqlInlineGroupBlock)?.inlineConditions?.dropLast(1)?.isEmpty() != true
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

@@ -21,13 +21,13 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
+import org.domaframework.doma.intellij.formatter.block.expr.SqlElSymbolBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlBlockCommentBlock(
     node: ASTNode,
-    private val customSpacingBuilder: SqlCustomSpacingBuilder,
     private val context: SqlBlockFormattingContext,
 ) : SqlDefaultCommentBlock(
         node,
@@ -41,16 +41,15 @@ open class SqlBlockCommentBlock(
             SqlTypes.BLOCK_COMMENT_START -> SqlCommentStartBlock(child, context)
             SqlTypes.BLOCK_COMMENT_END -> SqlCommentEndBlock(child, context)
             SqlTypes.BLOCK_COMMENT_CONTENT -> SqlCommentContentBlock(child, context)
+            SqlTypes.EL_PARSER_LEVEL_COMMENT -> SqlElSymbolBlock(child, context)
             else -> SqlUnknownBlock(child, context)
         }
     }
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = hasLineBreakBefore()
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 
     override fun getSpacing(
         child1: Block?,
         child2: Block,
-    ): Spacing? =
-        customSpacingBuilder.getCustomSpacing(child1, child2)
-            ?: SqlCustomSpacingBuilder.normalSpacing
+    ): Spacing? = SqlCustomSpacingBuilder.nonSpacing
 }

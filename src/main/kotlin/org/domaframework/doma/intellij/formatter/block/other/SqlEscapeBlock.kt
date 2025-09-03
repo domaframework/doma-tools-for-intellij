@@ -37,7 +37,7 @@ class SqlEscapeBlock(
 
     override fun createBlockIndentLen(): Int {
         val parentEscapeBlock =
-            if (parentBlock is SqlElConditionLoopCommentBlock) {
+            if (isParentConditionLoopDirective()) {
                 if (parentBlock?.parentBlock is SqlEscapeBlock)1 else 0
             } else {
                 0

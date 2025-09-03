@@ -298,6 +298,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("DropTableIfExists.sql", "DropTableIfExists$formatDataPrefix.sql")
     }
 
+    fun testBlockCommentParseFormatter() {
+        formatSqlFile("BlockCommentParse.sql", "BlockCommentParse$formatDataPrefix.sql")
+    }
+
     private fun formatSqlFile(
         beforeFile: String,
         afterFile: String,

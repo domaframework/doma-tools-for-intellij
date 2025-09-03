@@ -19,6 +19,7 @@ import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlWhereGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
@@ -56,6 +57,7 @@ class SqlConditionKeywordGroupBlock(
         return when (parent) {
             is SqlElConditionLoopCommentBlock -> parent.indent.groupIndentLen
             is SqlSubGroupBlock -> calculateSubGroupIndent(groupLen)
+            is SqlInlineSecondGroupBlock -> calculateInlineSecondIndent(groupLen)
             else -> parent.indent.groupIndentLen - getNodeText().length
         }
     }
@@ -65,6 +67,13 @@ class SqlConditionKeywordGroupBlock(
             groupLen
         } else {
             groupLen + 1
+        }
+
+    private fun calculateInlineSecondIndent(groupLen: Int): Int =
+        if (getNodeText() == "and") {
+            groupLen.plus(1)
+        } else {
+            groupLen.plus(2)
         }
 
     override fun createGroupIndentLen(): Int {
