@@ -22,6 +22,7 @@ import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
@@ -89,9 +90,9 @@ class SqlBlockRelationBuilder(
             )
         val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
         if (lastGroup is SqlElConditionLoopCommentBlock) {
-            updateParentGroupLastConditionLoop(
-                lastGroup, context, false) { block ->
-                block.indent.indentLevel < childBlock.indent.indentLevel
+            updateParentGroupLastConditionLoop(lastGroup, context, false) { block ->
+                block.indent.indentLevel < childBlock.indent.indentLevel ||
+                    block is SqlNewGroupBlock
             }
             return
         }
@@ -471,10 +472,13 @@ class SqlBlockRelationBuilder(
         handleConditionLoopParentAssignment(lastGroupBlock, context, findParent)
     }
 
-    private fun findParentForConditionLoop(findDefaultParent: (SqlBlock) -> Boolean,findSubGroup: Boolean =false): SqlBlock? =
+    private fun findParentForConditionLoop(
+        findDefaultParent: (SqlBlock) -> Boolean,
+        findSubGroup: Boolean = false,
+    ): SqlBlock? =
         blockBuilder.getGroupTopNodeIndexHistory().lastOrNull { block ->
             findDefaultParent(block) ||
-                    findSubGroup && block is SqlSubGroupBlock ||
+                findSubGroup && block is SqlSubGroupBlock ||
                 (block is SqlElConditionLoopCommentBlock && block.parentBlock != null)
         }
 
