@@ -22,6 +22,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlC
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineSecondGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlSecondOptionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlWhereGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -39,7 +40,6 @@ class SqlConditionKeywordGroupBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -55,7 +55,6 @@ class SqlConditionKeywordGroupBlock(
         val groupLen = parent.indent.groupIndentLen
 
         return when (parent) {
-            is SqlElConditionLoopCommentBlock -> parent.indent.groupIndentLen
             is SqlSubGroupBlock -> calculateSubGroupIndent(groupLen)
             is SqlInlineSecondGroupBlock -> calculateInlineSecondIndent(groupLen)
             else -> parent.indent.groupIndentLen - getNodeText().length

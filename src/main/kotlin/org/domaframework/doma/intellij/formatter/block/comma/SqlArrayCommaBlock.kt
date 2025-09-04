@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.comma
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -38,7 +39,6 @@ class SqlArrayCommaBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.NONE
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -48,5 +48,5 @@ class SqlArrayCommaBlock(
 
     override fun createGroupIndentLen(): Int = indent.indentLen.plus(1)
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = isParentConditionLoopDirective()
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
 }

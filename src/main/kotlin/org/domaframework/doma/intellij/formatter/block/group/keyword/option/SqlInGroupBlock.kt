@@ -32,17 +32,11 @@ class SqlInGroupBlock(
     ) {
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock &&
-                parent.checkConditionLoopDirectiveParentBlock(this)
-            ) {
-                return parent.indent.indentLen
-            }
             return calculatePrevBlocksLength(prevBlocks, parent).plus(1)
         }
         return 0
@@ -50,11 +44,5 @@ class SqlInGroupBlock(
 
     override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        if (lastGroup is SqlElConditionLoopCommentBlock) {
-            if (lastGroup.conditionType.isElse()) return false
-            return !lastGroup.isBeforeParentBlock()
-        }
-        return false
-    }
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
 }

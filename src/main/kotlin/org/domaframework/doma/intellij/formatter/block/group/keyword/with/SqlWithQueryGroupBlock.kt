@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.with
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -49,12 +50,7 @@ class SqlWithQueryGroupBlock(
     override fun createBlockIndentLen(): Int = 0
 
     override fun createGroupIndentLen(): Int {
-        val sumChildren =
-            if (isConditionLoopDirectiveRegisteredBeforeParent()) {
-                childBlocks.drop(1)
-            } else {
-                childBlocks
-            }
+        val sumChildren = childBlocks
         return sumChildren
             .sumOf { it.getNodeText().length.plus(1) }
             .plus(getNodeText().length)

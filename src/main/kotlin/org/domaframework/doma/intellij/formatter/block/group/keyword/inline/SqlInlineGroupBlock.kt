@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.inline
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
@@ -42,7 +43,6 @@ open class SqlInlineGroupBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.INLINE
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -50,9 +50,7 @@ open class SqlInlineGroupBlock(
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
-            if (isParentConditionLoopDirective() || isFirstChildConditionLoopDirective() ||
-                parent is SqlSubGroupBlock
-            ) {
+            if (parent is SqlSubGroupBlock) {
                 parent.indent.groupIndentLen
             } else {
                 parent.indent.groupIndentLen.plus(1)

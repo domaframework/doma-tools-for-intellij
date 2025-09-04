@@ -63,9 +63,17 @@ open class SqlBlock(
         var groupIndentLen: Int,
     )
 
+    // Maintain the conditional loop directive block associated with itself.
+    var conditionLoopDirective: SqlElConditionLoopCommentBlock? = null
+
+    // A flag that exists within a conditional loop directive but is not associated with the directive
+    // (representing the top element of multiple lines).
+    var multipleInlineDirective = false
+
     open var parentBlock: SqlBlock? = null
     open val childBlocks = mutableListOf<SqlBlock>()
     open var prevBlocks = emptyList<SqlBlock>()
+    open val offset = 0
 
     companion object {
         private const val DEFAULT_INDENT_SIZE = 4
@@ -93,76 +101,6 @@ open class SqlBlock(
 
     private fun isExcludedFromTextLength(block: SqlBlock): Boolean = block.node.elementType in EXCLUDED_FROM_TEXT_LENGTH
 
-    /**
-     * Checks if a conditional loop directive is registered before the parent block.
-     *
-     * @note
-     * If the next element after a conditional directive is not a conditional directive block,
-     * the directive becomes a child of the next element block.
-     * Therefore, if the first element in [childBlocks] is a conditional directive,
-     * it can be determined that—syntactically—the conditional directive was placed immediately before the current block.
-     */
-    protected fun isConditionLoopDirectiveRegisteredBeforeParent(): Boolean {
-        val firstPrevBlock = (prevBlocks.lastOrNull() as? SqlElConditionLoopCommentBlock)
-        parentBlock?.let { parent ->
-            return (childBlocks.firstOrNull() as? SqlElConditionLoopCommentBlock)?.isBeforeParentBlock() == true ||
-                firstPrevBlock != null &&
-                firstPrevBlock.conditionEnd != null &&
-                firstPrevBlock.node.startOffset > parent.node.startOffset
-        }
-        return false
-    }
-
-    /**
-     * Determines if this is the element immediately after a conditional loop directive.
-     *
-     * @note
-     * The parent conditional loop directive becomes a child of the element immediately after the conditional loop directive.
-     * In the following case, "%if" is a child of "status", and the following "=" and "'pending'" are children of "%if".
-     * Therefore, set the condition to break line only when the parent of the conditional loop directive is a group block.
-     *
-     * @example
-     * ```sql
-     * WHERE -- grand
-     *      /*%if status == "pending" */ -- parent
-     *      status = 'pending' -- child
-     * ```
-     */
-    protected fun isElementAfterConditionLoopDirective(): Boolean =
-        (parentBlock as? SqlElConditionLoopCommentBlock)?.let { parent ->
-            parent.childBlocks.firstOrNull() == this &&
-                (parent.parentBlock is SqlNewGroupBlock || parent.isParentConditionLoopDirective())
-        } == true
-
-    protected fun isElementAfterConditionLoopEnd(): Boolean {
-        val prevChildren =
-            prevBlocks
-                .firstOrNull()
-                ?.childBlocks
-
-        val firstConditionBlock = prevChildren?.firstOrNull { it is SqlElConditionLoopCommentBlock } as? SqlElConditionLoopCommentBlock
-        val endBlock =
-            findConditionEndBlock(firstConditionBlock)
-        if (endBlock == null) return false
-        val lastBlock = prevBlocks.lastOrNull()
-
-        return endBlock.node.startOffset > (lastBlock?.node?.startOffset ?: 0)
-    }
-
-    private fun findConditionEndBlock(firstConditionBlock: SqlElConditionLoopCommentBlock?): SqlElConditionLoopCommentBlock? =
-        (
-            firstConditionBlock?.conditionEnd
-                ?: (
-                    firstConditionBlock?.childBlocks?.lastOrNull {
-                        it is SqlElConditionLoopCommentBlock
-                    } as? SqlElConditionLoopCommentBlock
-                )?.conditionEnd
-        )
-
-    fun isParentConditionLoopDirective(): Boolean = parentBlock is SqlElConditionLoopCommentBlock
-
-    protected fun isFirstChildConditionLoopDirective(): Boolean = childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock
-
     fun getChildBlocksDropLast(
         dropIndex: Int = 1,
         skipCommentBlock: Boolean = true,
@@ -185,11 +123,103 @@ open class SqlBlock(
             0,
         )
 
+    /**
+     * TODO 親ブロックと依存先未設定の条件ループディレクティブによってインデントと改行を計算する
+     * @param lastGroup The last group block
+     */
     open fun setParentGroupBlock(lastGroup: SqlBlock?) {
         parentBlock = lastGroup
-        prevBlocks = parentBlock?.childBlocks?.toList() ?: emptyList()
+        setPrevBlocks()
         parentBlock?.addChildBlock(this)
         setParentPropertyBlock(lastGroup)
+        setIndentLen()
+    }
+
+    fun setPrevBlocks(parent: SqlBlock? = parentBlock) {
+        parent?.let { p ->
+            // Retrieve the first conditional loop directive and the closing tag of the last conditional loop directive.
+            val firstConditionStart = p.childBlocks.firstOrNull { it.conditionLoopDirective != null }?.conditionLoopDirective
+            val lastConditionEnd =
+                p.childBlocks
+                    .lastOrNull {
+                        it.conditionLoopDirective != null &&
+                            it.conditionLoopDirective?.conditionEnd != null
+                    }?.conditionLoopDirective
+                    ?.conditionEnd
+            var openDirective: SqlElConditionLoopCommentBlock? = null
+
+            val filterBlockInlineOpenDirectives =
+                if (firstConditionStart != null && lastConditionEnd != null) {
+                    p.childBlocks.filterNot {
+                        it.node.startOffset in
+                            (firstConditionStart.node.startOffset until lastConditionEnd.node.startOffset)
+                    }
+                } else if (firstConditionStart != null) {
+                    openDirective = firstConditionStart
+                    p.childBlocks.filter { it.node.startOffset >= firstConditionStart.node.startOffset }
+                } else {
+                    p.childBlocks
+                }
+
+            prevBlocks = filterBlockInlineOpenDirectives.filter { it != this }
+        }
+    }
+
+    /**
+     *  Indentation calculation
+     *
+     * * When `multipleInlineDirective` is **true**: sibling blocks whose parent is **outside** the conditional loop directive.
+     * * When `multipleInlineDirective` is **false**: sibling blocks whose parent is **inside** the conditional loop directive, or the block body that the conditional loop directive depends on.
+     *
+     */
+    protected fun setIndentLen(baseDirective: SqlElConditionLoopCommentBlock? = conditionLoopDirective): Int {
+        indent.indentLen =
+            if (multipleInlineDirective) {
+                baseDirective?.indent?.indentLen ?: indent.indentLen
+            } else {
+                if (baseDirective?.getDependsOnBlock() == this) {
+                    baseDirective.indent.indentLen // The block body that the conditional loop directive depends on.
+                } else {
+                    createBlockIndentLen() // Sibling blocks whose parent is within a conditional loop directive.
+                }
+            }
+        return indent.indentLen
+    }
+
+    fun createBlockIndentLenDirective(
+        parent: SqlBlock?,
+        dependDirective: SqlElConditionLoopCommentBlock?,
+    ) {
+        val dependDirectiveOnBlock = dependDirective?.getDependsOnBlock()
+        if (dependDirectiveOnBlock == null) {
+            conditionLoopDirective = dependDirective
+            conditionLoopDirective?.setDependsOnBlock(this)
+            conditionLoopDirective?.createBlockIndentLenFromDependOn(this)
+        }
+        setPrevBlocks(parent)
+        // Check its own parent block and the parent of the block that `notDependDirective` depends on,
+        // and adjust the indentation as needed so that it fits within the conditional loop directive block.
+        val directiveDependent = conditionLoopDirective?.getDependsOnBlock()
+        if (directiveDependent == null || parent == directiveDependent.parentBlock) {
+            // Search among sibling blocks for those associated with a conditional loop directive.
+            // Even if a sibling block is associated with a conditional loop directive,
+            // there are cases where the indentation is aligned with the parent rather than the conditional loop directive.
+            val inlineDirectiveParentBlock =
+                parent?.let { p -> p.node.startOffset >= (dependDirective?.node?.startOffset ?: 0) } == true
+            multipleInlineDirective = dependDirective?.getDependsOnBlock() != this && !inlineDirectiveParentBlock
+            setIndentLen(dependDirective)
+        }
+    }
+
+    /**
+     * Trace back from the associated directive and recalculate the indentation of the nested directives.
+     */
+    fun recalculateDirectiveIndent() {
+        conditionLoopDirective?.let { directive ->
+            directive.recalculateIndentLen(createBlockIndentLen())
+            indent.indentLen = directive.indent.indentLen
+            indent.groupIndentLen = createGroupIndentLen()
+        }
     }
 
     open fun setParentPropertyBlock(lastGroup: SqlBlock?) {
@@ -206,17 +236,14 @@ open class SqlBlock(
 
     fun isEnableFormat(): Boolean = enableFormat
 
+    /**
+     * Block-specific line break determination.
+     */
     open fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
         when (lastGroup) {
             is SqlNewGroupBlock -> shouldSaveSpaceForNewGroup(lastGroup)
-            else -> shouldSaveSpaceForConditionLoop()
+            else -> false
         }
-
-    private fun shouldSaveSpaceForConditionLoop(): Boolean =
-        isConditionLoopDirectiveRegisteredBeforeParent() ||
-            isElementAfterConditionLoopDirective() ||
-            isFirstChildConditionLoopDirective() ||
-            isElementAfterConditionLoopEnd()
 
     private fun shouldSaveSpaceForNewGroup(parent: SqlNewGroupBlock): Boolean {
         val prevWord = prevBlocks.lastOrNull { it !is SqlCommentBlock }
@@ -250,16 +277,16 @@ open class SqlBlock(
             lastPrevBlock.node.psi.startOffset > parent.node.psi.startOffset
     }
 
-    protected fun getLastBlockHasConditionLoopDirective(): SqlElConditionLoopCommentBlock? =
-        (prevBlocks.lastOrNull()?.childBlocks?.firstOrNull() as? SqlElConditionLoopCommentBlock)
-
     /**
-     * Creates the indentation length for the block.
-     *
+     * Set the indentation for line breaks caused by conditional loop directives based on the parent block and the conditional loop directive.
      * @return The number of spaces to use for indentation
      */
     open fun createBlockIndentLen(): Int = 0
 
+    /**
+     * Calculate the indentation to apply to its own child blocks.
+     * @return The number of spaces to use for child block indentation
+     */
     open fun createGroupIndentLen(): Int = 0
 
     open fun getBlock(child: ASTNode): SqlBlock = this
@@ -329,31 +356,25 @@ open class SqlBlock(
                 SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR,
             )
 
-        // Add spacing rules for BLOCK_COMMENT_START
         typesNeedingSpaceAfterStart.forEach { type ->
             builder.withSpacing(SqlTypes.BLOCK_COMMENT_START, type, SPACING_ONE)
         }
 
-        // Special cases for BLOCK_COMMENT_START
         builder.withSpacing(SqlTypes.BLOCK_COMMENT_START, SqlTypes.HASH, SPACING_ZERO)
         builder.withSpacing(SqlTypes.BLOCK_COMMENT_START, SqlTypes.CARET, SPACING_ZERO)
 
-        // Add spacing rules for HASH
         typesNeedingSpaceAfterStart.forEach { type ->
             builder.withSpacing(SqlTypes.HASH, type, SPACING_ONE)
         }
 
-        // Add spacing rules for CARET
         typesNeedingSpaceAfterStart.forEach { type ->
             builder.withSpacing(SqlTypes.CARET, type, SPACING_ONE)
         }
 
-        // Special spacing rules
         builder.withSpacing(SqlTypes.BLOCK_COMMENT_CONTENT, SqlTypes.BLOCK_COMMENT_END, SPACING_ZERO)
         builder.withSpacing(SqlTypes.EL_FIELD_ACCESS_EXPR, SqlTypes.OTHER, SPACING_ONE_NO_KEEP)
         builder.withSpacing(SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR, SqlTypes.OTHER, SPACING_ONE_NO_KEEP)
 
-        // Add spacing rules before BLOCK_COMMENT_END
         typesNeedingSpaceBeforeEnd.forEach { type ->
             builder.withSpacing(type, SqlTypes.BLOCK_COMMENT_END, SPACING_ONE)
         }
@@ -365,20 +386,13 @@ open class SqlBlock(
         children: List<SqlBlock>,
         parent: SqlBlock,
     ): Int {
-        // Add the parent's text length to the indentation if the parent is a conditional loop directive.
-        val directiveParentIndent =
-            if (parent is SqlElConditionLoopCommentBlock) {
-                parent.parentBlock
-                    ?.getNodeText()
-                    ?.length ?: 0
-            } else {
-                0
-            }
-
         var prevBlock: SqlBlock? = null
-        return children
-            .filter { it !is SqlDefaultCommentBlock && it !is SqlElConditionLoopCommentBlock }
-            .sumOf { prev ->
+        val prevChildren =
+            children
+                .filter { it !is SqlDefaultCommentBlock }
+
+        val prevSumLength =
+            prevChildren.sumOf { prev ->
                 val sum =
                     prev
                         .getChildrenTextLen()
@@ -397,8 +411,8 @@ open class SqlBlock(
                         )
                 prevBlock = prev
                 return@sumOf sum
-            }.plus(parent.indent.groupIndentLen)
-            .plus(directiveParentIndent)
+            }
+        return prevSumLength.plus(parent.indent.groupIndentLen)
     }
 
     fun isOperationSymbol(): Boolean =

@@ -18,6 +18,7 @@ package org.domaframework.doma.intellij.formatter.block.group.column
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.other.SqlEscapeBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlTypes
@@ -54,7 +55,6 @@ open class SqlColumnDefinitionRawGroupBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
     }
 

@@ -30,18 +30,12 @@ open class SqlSecondOptionKeywordGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(node, IndentType.SECOND_OPTION, context) {
-    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
-    }
-
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             val groupLen = parent.indent.groupIndentLen
             if (parent.indent.indentLevel == IndentType.FILE) {
                 return 0
             }
-            if (parent is SqlElConditionLoopCommentBlock) return groupLen
             val subGroupBlock = parent.parentBlock as? SqlSubGroupBlock
             val newIndent =
                 if (parent is SqlSubQueryGroupBlock) {

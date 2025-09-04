@@ -42,7 +42,6 @@ open class SqlInlineSecondGroupBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.INLINE_SECOND
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -57,8 +56,6 @@ open class SqlInlineSecondGroupBlock(
             if (isEndCase) {
                 val diffTextLength = parent.getNodeText().length.minus(getNodeText().length)
                 parent.indent.indentLen.plus(diffTextLength)
-            } else if (parent is SqlElConditionLoopCommentBlock) {
-                parent.indent.groupIndentLen
             } else {
                 parent.indent.groupIndentLen.plus(1)
             }

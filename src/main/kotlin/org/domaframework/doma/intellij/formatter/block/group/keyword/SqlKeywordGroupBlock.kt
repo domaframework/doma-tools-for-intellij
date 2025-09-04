@@ -20,8 +20,8 @@ import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlSelectQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
@@ -29,6 +29,7 @@ import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGrou
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 open class SqlKeywordGroupBlock(
     node: ASTNode,
@@ -37,31 +38,24 @@ open class SqlKeywordGroupBlock(
 ) : SqlNewGroupBlock(node, context) {
     val topKeywordBlocks: MutableList<SqlBlock> = mutableListOf(this)
     var canAddTopKeyword = true
+    private val topKeywordTypes =
+        listOf(
+            SqlKeywordBlock::class,
+            SqlKeywordGroupBlock::class,
+        )
 
     fun updateTopKeywordBlocks(block: SqlBlock) {
-        val lastChild =
-            getChildBlocksDropLast().lastOrNull()
-        val topKeywordTypes =
-            listOf(
-                SqlKeywordBlock::class,
-                SqlKeywordGroupBlock::class,
-                SqlElConditionLoopCommentBlock::class,
-            )
+        val hasBlock = topKeywordBlocks.contains(block)
+        val matchKeywordType =
+            block.node.elementType == SqlTypes.KEYWORD &&
+                TypeUtil.isExpectedClassType(
+                    topKeywordTypes,
+                    block,
+                )
 
-        if (lastChild == null ||
-            TypeUtil.isExpectedClassType(
-                topKeywordTypes,
-                lastChild,
-            ) &&
-            canAddTopKeyword
-        ) {
+        if (matchKeywordType && canAddTopKeyword && !hasBlock) {
             topKeywordBlocks.add(block)
-        } else {
-            if (block !is SqlElConditionLoopCommentBlock) {
-                canAddTopKeyword = false
-            }
         }
-
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -74,17 +68,22 @@ open class SqlKeywordGroupBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        val preChildBlock =
-            if (lastGroup?.indent?.indentLevel == IndentType.FILE) {
-                null
-            } else {
-                lastGroup?.childBlocks?.dropLast(1)?.lastOrNull()
-            }
         indent.indentLevel = indentLevel
-
-        val baseIndentLen = getBaseIndentLen(preChildBlock, lastGroup)
         indent.groupIndentLen = createGroupIndentLen()
-        indent.indentLen = adjustIndentIfFirstChildIsLineComment(baseIndentLen)
+    }
+
+    override fun addChildBlock(childBlock: SqlBlock) {
+        super.addChildBlock(childBlock)
+        val lastChild = childBlocks.lastOrNull()
+        val canAppendToLastChild =
+            lastChild?.node?.elementType == SqlTypes.KEYWORD &&
+                TypeUtil.isExpectedClassType(
+                    topKeywordTypes,
+                    lastChild,
+                )
+        if (canAddTopKeyword) {
+            canAddTopKeyword = canAppendToLastChild || lastChild == null
+        }
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
@@ -120,32 +119,8 @@ open class SqlKeywordGroupBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    /**
-     * Adjust the indent position of the subgroup block element itself if it has a comment
-     */
-    open fun adjustIndentIfFirstChildIsLineComment(baseIndent: Int): Int {
-        parentBlock?.let { parent ->
-            if (indent.indentLevel == IndentType.TOP) {
-                when (parent) {
-                    is SqlSubGroupBlock -> {
-                        return if (parent.isFirstLineComment) {
-                            parent.indent.groupIndentLen.minus(parent.getNodeText().length)
-                        } else {
-                            val newIndentLen = baseIndent.minus(1)
-                            return if (newIndentLen >= 0) newIndentLen else 0
-                        }
-                    }
-
-                    else -> return baseIndent
-                }
-            }
-        }
-        return baseIndent
-    }
-
     open fun createBlockIndentLen(preChildBlock: SqlBlock?): Int {
         parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) return parent.indent.groupIndentLen
             when (indentLevel) {
                 IndentType.TOP -> {
                     if (SqlKeywordUtil.isSetLineKeyword(
@@ -181,15 +156,8 @@ open class SqlKeywordGroupBlock(
     fun getTotalTopKeywordLength(): Int = topKeywordBlocks.sumOf { it.getNodeText().length.plus(1) }.minus(1)
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        val conditionLastGroup =
-            if (isParentConditionLoopDirective()) {
-                parentBlock?.parentBlock
-            } else {
-                lastGroup
-            }
         val prevWord = prevBlocks.findLast { it is SqlKeywordBlock || it is SqlKeywordGroupBlock }
         return !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), prevWord?.getNodeText() ?: "") &&
-            !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), conditionLastGroup?.getNodeText() ?: "") &&
             !SqlKeywordUtil.isSetLineKeyword(this.getNodeText(), lastGroup?.getNodeText() ?: "") &&
             lastGroup !is SqlFunctionParamBlock
     }

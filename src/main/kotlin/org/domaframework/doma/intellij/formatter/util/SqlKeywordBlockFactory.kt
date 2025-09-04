@@ -70,6 +70,7 @@ class SqlKeywordBlockFactory(
         keywordText: String,
         child: ASTNode,
         lastGroupBlock: SqlBlock?,
+        openConditionLoopDirective: SqlElConditionLoopCommentBlock?,
     ): SqlBlock {
         // Handle AS keyword for CREATE VIEW
         if (keywordText == "as") {
@@ -91,7 +92,7 @@ class SqlKeywordBlockFactory(
 
         // Handle EXISTS/NOT EXISTS keywords
         if (SqlKeywordUtil.isExistsKeyword(keywordText)) {
-            return createExistsBlock(keywordText, child, lastGroupBlock)
+            return createExistsBlock(keywordText, child, lastGroupBlock, openConditionLoopDirective)
         }
 
         return SqlKeywordBlock(child, IndentType.OPTIONS, sqlBlockFormattingCtx)
@@ -119,16 +120,20 @@ class SqlKeywordBlockFactory(
         keywordText: String,
         child: ASTNode,
         lastGroupBlock: SqlBlock?,
+        openConditionLoopDirective: SqlElConditionLoopCommentBlock?,
     ): SqlBlock {
+        val afterConditionLoopCommentBlock = openConditionLoopDirective != null && openConditionLoopDirective.getDependsOnBlock() == null
         // If already in EXISTS group, just return a keyword block
-        if (lastGroupBlock is SqlExistsGroupBlock) {
+        if (lastGroupBlock is SqlExistsGroupBlock && !afterConditionLoopCommentBlock) {
             return SqlKeywordBlock(child, IndentType.OPTIONS, sqlBlockFormattingCtx)
         }
 
         // Check for ELSE condition or NOT keyword outside WHERE/condition context
         val shouldCreateExistsGroup =
             when {
-                lastGroupBlock is SqlElConditionLoopCommentBlock && lastGroupBlock.conditionType.isElse() -> true
+                openConditionLoopDirective?.conditionLoopDirective == null &&
+                    openConditionLoopDirective?.conditionType?.isElse() == true -> true
+                afterConditionLoopCommentBlock -> true
                 lastGroupBlock is SqlCreateTableColumnDefinitionGroupBlock ||
                     lastGroupBlock is SqlCreateTableColumnDefinitionRawGroupBlock -> false
                 keywordText == "not" && !isInConditionContext(lastGroupBlock) -> true

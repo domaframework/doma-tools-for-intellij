@@ -29,6 +29,9 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.formatter.common.AbstractBlock
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import com.intellij.psi.util.nextLeaf
+import com.intellij.psi.util.nextLeafs
+import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
@@ -61,6 +64,7 @@ import org.domaframework.doma.intellij.formatter.block.other.SqlEscapeBlock
 import org.domaframework.doma.intellij.formatter.block.other.SqlOtherBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlAliasBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlArrayWordBlock
+import org.domaframework.doma.intellij.formatter.block.word.SqlFunctionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlTableBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
@@ -118,10 +122,18 @@ open class SqlFileBlock(
             val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
             if (child !is PsiWhiteSpace) {
                 val childBlock = getBlock(child, prevNonWhiteSpaceNode)
+                val afterConditionEnd =
+                    isAfterEndDirective(
+                        prevNonWhiteSpaceNode,
+                        childBlock,
+                        lastBlock as? SqlWhitespaceBlock?,
+                    )
                 prevNonWhiteSpaceNode = childBlock
-                updateCommentParentAndIdent(childBlock)
                 updateBlockParentAndLAddGroup(childBlock)
-                updateWhiteSpaceInclude(lastBlock, childBlock, lastGroup)
+                updateWhiteSpaceInclude(lastBlock, childBlock, lastGroup, afterConditionEnd)
+                // For else/end, exclude group blocks between if~else~end
+                removeGroupBlockInConditionLoopBlock(childBlock)
+                updateCommentParentAndIdent(childBlock)
                 blocks.add(childBlock)
             } else {
                 if (lastBlock !is SqlLineCommentBlock) {
@@ -141,6 +153,27 @@ open class SqlFileBlock(
         blocks.addAll(pendingCommentBlocks)
 
         return blocks
+    }
+
+    private fun isAfterEndDirective(
+        prevBlock: SqlBlock?,
+        childBlock: SqlBlock,
+        lastBlock: SqlWhitespaceBlock?,
+    ): Boolean =
+        (
+            prevBlock is SqlElConditionLoopCommentBlock && prevBlock.conditionType.isEnd() &&
+                childBlock !is SqlRightPatternBlock && childBlock !is SqlLineCommentBlock
+        ) ||
+            (childBlock is SqlLineCommentBlock && lastBlock?.getNodeText()?.contains(StringUtil.LINE_SEPARATE) == true)
+
+    private fun removeGroupBlockInConditionLoopBlock(childBlock: SqlBlock) {
+        if (childBlock !is SqlElConditionLoopCommentBlock ||
+            childBlock.conditionType.isStartDirective()
+        ) {
+            return
+        }
+
+        blockBuilder.removeGroupForClosedDirective()
     }
 
     /**
@@ -191,6 +224,7 @@ open class SqlFileBlock(
         return blockUtil.getKeywordBlock(
             child,
             blockBuilder.getLastGroupTopNodeIndexHistory(),
+            blockBuilder.getLastNotDependOnConditionOrLoopBlock(),
         )
     }
 
@@ -206,10 +240,16 @@ open class SqlFileBlock(
 
         val escapeStrings = listOf("\"", "`", "[", "]")
         if (escapeStrings.contains(child.text)) {
-            return if (child.text == "[" && prevBlock is SqlArrayWordBlock) {
-                SqlArrayListGroupBlock(child, defaultFormatCtx)
+            if (child.text == "[" && prevBlock is SqlArrayWordBlock) {
+                return SqlArrayListGroupBlock(child, defaultFormatCtx)
             } else {
-                SqlEscapeBlock(child, defaultFormatCtx)
+                if (child.text == "]") {
+                    val arrayGroup = blockBuilder.getGroupTopNodeIndexHistory().findLast { it is SqlArrayListGroupBlock }
+                    if (arrayGroup != null) {
+                        return SqlRightPatternBlock(child, defaultFormatCtx)
+                    }
+                }
+                return SqlEscapeBlock(child, defaultFormatCtx)
             }
         }
         return SqlOtherBlock(child, defaultFormatCtx)
@@ -270,16 +310,17 @@ open class SqlFileBlock(
             commentType == SqlTypes.EL_PARSER_LEVEL_COMMENT || commentType == SqlTypes.BLOCK_COMMENT_CONTENT ||
                 child.elementType == SqlTypes.LINE_COMMENT
         if (!defaultBlockComment) {
-            if (tempBlock !is SqlElConditionLoopCommentBlock) {
-                if (lastGroup is SqlWithQueryGroupBlock || lastGroupFilteredDirective is SqlWithQueryGroupBlock) {
-                    return SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
-                }
+            if (tempBlock is SqlElConditionLoopCommentBlock) {
+                return tempBlock
             }
-            return if (lastGroup is SqlWithCommonTableGroupBlock) {
-                SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
-            } else {
-                tempBlock
+
+            if (lastGroup is SqlWithQueryGroupBlock || lastGroupFilteredDirective is SqlWithQueryGroupBlock) {
+                return SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
             }
+            if (lastGroup is SqlWithCommonTableGroupBlock) {
+                return SqlWithCommonTableGroupBlock(child, defaultFormatCtx)
+            }
+            return tempBlock
         } else {
             return tempBlock
         }
@@ -310,9 +351,10 @@ open class SqlFileBlock(
         lastBlock: AbstractBlock?,
         childBlock: SqlBlock,
         lastGroup: SqlBlock?,
+        afterConditionEnd: Boolean,
     ) {
         if (blocks.isNotEmpty() && lastBlock is SqlWhitespaceBlock) {
-            if (isSaveWhiteSpace(childBlock, lastGroup)) {
+            if (isSaveWhiteSpace(childBlock, lastGroup) || afterConditionEnd) {
                 val whiteBlock = lastBlock as SqlBlock
                 whiteBlock.parentBlock = lastGroup
             } else {
@@ -328,7 +370,16 @@ open class SqlFileBlock(
     private fun isSaveWhiteSpace(
         childBlock: SqlBlock,
         lastGroup: SqlBlock?,
-    ): Boolean = childBlock.isSaveSpace(lastGroup)
+    ): Boolean = checkSaveSpace(childBlock, lastGroup)
+
+    // Always add a line break when holding condition/loop directives
+    fun checkSaveSpace(
+        childBlock: SqlBlock,
+        lastGroup: SqlBlock?,
+    ): Boolean {
+        if (childBlock.conditionLoopDirective != null) return true
+        return childBlock.isSaveSpace(lastGroup)
+    }
 
     /**
      * Updates the parent block or registers itself as a new group block based on the class of the target block.
@@ -337,7 +388,7 @@ open class SqlFileBlock(
         val lastGroupBlock = blockBuilder.getLastGroupTopNodeIndexHistory()
         val lastIndentLevel = lastGroupBlock?.indent?.indentLevel
         if (lastGroupBlock == null || lastIndentLevel == null) {
-            blockRelationBuilder.updateGroupBlockAddGroup(
+            blockRelationBuilder.updateGroupBlockParentAndAddGroup(
                 childBlock,
             )
             return
@@ -345,6 +396,18 @@ open class SqlFileBlock(
 
         if (childBlock is SqlDefaultCommentBlock) return
 
+        val openConditionLoopDirective = blockBuilder.getLastNotDependOnConditionOrLoopBlock()
+        // Don't set parent for condition/loop directives here
+        if (childBlock is SqlElConditionLoopCommentBlock) {
+            // Build parent-child relationships when condition/loop directives are consecutive
+            // Is the end processing not working because if a5 comes right after else?
+            if (openConditionLoopDirective != null) {
+                blockRelationBuilder.updateGroupBlockParentAndAddGroup(
+                    childBlock,
+                )
+                return
+            }
+        }
         when (childBlock) {
             is SqlKeywordGroupBlock -> {
                 blockRelationBuilder.updateKeywordGroupBlockParentAndAddGroup(
@@ -383,13 +446,6 @@ open class SqlFileBlock(
 
             is SqlColumnBlock -> {
                 blockRelationBuilder.updateGroupBlockParentAndAddGroup(
-                    childBlock,
-                )
-            }
-
-            is SqlElConditionLoopCommentBlock -> {
-                blockRelationBuilder.updateConditionLoopCommentBlockParent(
-                    lastGroupBlock,
                     childBlock,
                 )
             }
@@ -448,8 +504,11 @@ open class SqlFileBlock(
                 if (lastGroupBlock is SqlCommaBlock) {
                     blockBuilder.removeLastGroupTopNodeIndexHistory()
                 }
-                blockRelationBuilder.updateGroupBlockParentAndAddGroup(
+                // When inside condition/loop directives, instead of excluding groups at the same level from the list,
+                // get them with appropriate parent conditions
+                blockRelationBuilder.updateSqlBlockAndOverIndentLevel(
                     childBlock,
+                    true,
                 )
             }
 
@@ -481,13 +540,6 @@ open class SqlFileBlock(
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
-        if (childBlock1 is SqlWhitespaceBlock && childBlock2.isParentConditionLoopDirective()) {
-            val child1 = childBlock2.parentBlock as SqlElConditionLoopCommentBlock
-            SqlCustomSpacingBuilder()
-                .getSpacingElDirectiveComment(child1, childBlock2)
-                ?.let { return it }
-        }
-
         if (childBlock1 is SqlElBlockCommentBlock && childBlock2 !is SqlRightPatternBlock) {
             SqlCustomSpacingBuilder()
                 .getSpacingElDirectiveComment(childBlock1, childBlock2)
@@ -500,7 +552,9 @@ open class SqlFileBlock(
             )
         }
 
-        if (childBlock1 is SqlArrayWordBlock && childBlock2 is SqlArrayListGroupBlock) {
+        if ((childBlock1 is SqlArrayWordBlock && childBlock2 is SqlArrayListGroupBlock) ||
+            (childBlock1 is SqlFunctionGroupBlock && childBlock2 is SqlFunctionParamBlock)
+        ) {
             return SqlCustomSpacingBuilder.nonSpacing
         }
 
@@ -586,6 +640,16 @@ open class SqlFileBlock(
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
 
+        if (childBlock1 is SqlWordBlock && childBlock2 is SqlOtherBlock) {
+            return SqlCustomSpacingBuilder.normalSpacing
+        }
+        if (childBlock1 is SqlWhitespaceBlock) {
+            CreateClauseHandler
+                .getColumnDefinitionRawGroupSpacing(childBlock1, childBlock2)
+                ?.let { return it }
+            return SqlCustomSpacingBuilder().getSpacing(childBlock2)
+        }
+
         if (childBlock1 !is SqlElSymbolBlock && childBlock1 !is SqlOtherBlock && childBlock2 is SqlOtherBlock) {
             return SqlCustomSpacingBuilder().getSpacing(childBlock2)
         }
@@ -602,7 +666,7 @@ open class SqlFileBlock(
                 }
 
                 is SqlFunctionParamBlock -> {
-                    return if (childBlock1.node.elementType in listOf(SqlTypes.FUNCTION_NAME, SqlTypes.WORD)) {
+                    return if (childBlock1.node.elementType in setOf(SqlTypes.FUNCTION_NAME, SqlTypes.WORD)) {
                         SqlCustomSpacingBuilder.nonSpacing
                     } else {
                         SqlCustomSpacingBuilder.normalSpacing
@@ -637,18 +701,6 @@ open class SqlFileBlock(
                 ?.let { return it }
         }
 
-        // First apply spacing logic for blocks under specific conditions,
-        // then execute the general spacing logic for post-line-break blocks at the end.
-        if (childBlock1 is SqlWhitespaceBlock) {
-            return when (childBlock2) {
-                is SqlDefaultCommentBlock, is SqlNewGroupBlock -> {
-                    SqlCustomSpacingBuilder().getSpacing(childBlock2)
-                }
-
-                else -> SqlCustomSpacingBuilder().getSpacing(childBlock2)
-            }
-        }
-
         if (childBlock1 is SqlTableBlock || childBlock1 is SqlAliasBlock) {
             return SqlCustomSpacingBuilder.normalSpacing
         }
@@ -671,7 +723,7 @@ open class SqlFileBlock(
             childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElAtSignBlock ||
             childBlock1 is SqlOtherBlock && childBlock2 is SqlOtherBlock ||
             childBlock1 is SqlElSymbolBlock && childBlock2 is SqlOtherBlock ||
-            childBlock1?.isOperationSymbol() == true && childBlock2.isOperationSymbol()
+            childBlock1 !is SqlRightPatternBlock && childBlock1?.isOperationSymbol() == true && childBlock2.isOperationSymbol()
 
     override fun isLeaf(): Boolean = false
 

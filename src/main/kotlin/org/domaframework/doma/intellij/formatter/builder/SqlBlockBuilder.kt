@@ -15,7 +15,6 @@
  */
 package org.domaframework.doma.intellij.formatter.builder
 
-import org.domaframework.doma.intellij.common.util.TypeUtil.isExpectedClassType
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
@@ -38,7 +37,37 @@ open class SqlBlockBuilder {
 
     private val commentBlocks = mutableListOf<SqlDefaultCommentBlock>()
 
+    // The list that manages conditional loop directive blocks.
     private val conditionOrLoopBlocks = mutableListOf<SqlElConditionLoopCommentBlock>()
+
+    fun getLastConditionOrLoopBlock() = conditionOrLoopBlocks.lastOrNull()
+
+    fun getFirstConditionOrLoopBlock() = conditionOrLoopBlocks.firstOrNull()
+
+    /**
+     *  Get directives that don't have dependencies yet
+     */
+    fun getLastNotDependOnConditionOrLoopBlock() = conditionOrLoopBlocks.findLast { it.getDependsOnBlock() == null }
+
+    fun getLastOpenDependOnConditionOrLoopBlock() = conditionOrLoopBlocks.findLast { it.conditionEnd == null }
+
+    fun removeGroupForClosedDirective() {
+        if (groupTopNodeIndexHistory.isEmpty()) return
+        val lastCloseDirective = conditionOrLoopBlocks.lastOrNull()
+        val dependBlock = lastCloseDirective?.getDependsOnBlock()
+        if (dependBlock != null) {
+            val removeCount =
+                groupTopNodeIndexHistory.takeLastWhile { it.node.startOffset >= dependBlock.node.startOffset }
+            val startIndex = groupTopNodeIndexHistory.size - removeCount.size
+            if (startIndex >= 0) {
+                clearSubListGroupTopNodeIndexHistory(startIndex)
+            }
+        }
+        // Also remove condition/loop directives associated with 'end' or `else` from the list
+        removeConditionOrLoopBlockLast()
+    }
+
+    fun getNotClosedConditionOrLoopBlock() = conditionOrLoopBlocks.filter { it.conditionEnd == null }
 
     fun getGroupTopNodeIndexHistory(): List<SqlBlock> = groupTopNodeIndexHistory
 
@@ -71,72 +100,49 @@ open class SqlBlockBuilder {
         }
     }
 
-    /**
-     * For condition/loop directive blocks
-     * determine the parent based on the type of block immediately below.
-     *
-     * When this process is invoked, a directive block has already been added to [groupTopNodeIndexHistory],
-     * and the parent of the block passed as [nextBlock] has already been determined.
-     */
-    fun updateConditionLoopBlockIndent(nextBlock: SqlBlock) {
-        if (!isExpectedClassType(updateDirectiveParentTypes, nextBlock)) {
-            if (conditionOrLoopBlocks.isNotEmpty()) {
-                val lastGroup = groupTopNodeIndexHistory.lastOrNull()
-                conditionOrLoopBlocks
-                    .filter { it.parentBlock == null }
-                    .forEach { block ->
-                        var setParentBlock: SqlBlock? = null
-                        val conditionBlockIndex = groupTopNodeIndexHistory.indexOf(block)
-                        val prevConditionBlockGroup =
-                            if (conditionBlockIndex > 0) {
-                                groupTopNodeIndexHistory[conditionBlockIndex - 1]
-                            } else {
-                                null
-                            }
-
-                        if (lastGroup == nextBlock) {
-                            setParentBlock =
-                                if (isExpectedClassType(
-                                        originalConditionLoopDirectiveParentType,
-                                        nextBlock,
-                                    )
-                                ) {
-                                    nextBlock
-                                } else {
-                                    null
-                                }
-                        } else {
-                            setParentBlock =
-                                if (isExpectedClassType(
-                                        originalConditionLoopDirectiveParentType,
-                                        nextBlock,
-                                    )
-                                ) {
-                                    nextBlock
-                                } else {
-                                    prevConditionBlockGroup
-                                }
-                        }
-
-                        if (block != nextBlock) {
-                            block.setParentGroupBlock(setParentBlock)
-                        } else if (setParentBlock is SqlElConditionLoopCommentBlock) {
-                            block.setParentGroupBlock(setParentBlock)
-                        }
-                    }
-            }
-        }
-    }
-
+    @Suppress("ktlint:standard:no-consecutive-comments")
     fun getLastGroupTopNodeIndexHistory(): SqlBlock? = groupTopNodeIndexHistory.lastOrNull()
 
     fun removeLastGroupTopNodeIndexHistory() {
         if (groupTopNodeIndexHistory.isNotEmpty()) {
+            val openDirective = getLastOpenDependOnConditionOrLoopBlock()
+            openDirective?.let { directive ->
+                val removeBlock = groupTopNodeIndexHistory.last()
+                if (removeBlock.node.startOffset > directive.node.startOffset) {
+                    groupTopNodeIndexHistory.removeLast()
+                }
+                return
+            }
             groupTopNodeIndexHistory.removeLast()
         }
     }
 
-    fun clearSubListGroupTopNodeIndexHistory(start: Int) {
+    /**
+     * When deleting group list, prevent deletion from outside condition/loop directives to inside condition/loop directives
+     */
+    fun clearSubListGroupTopNodeIndexHistory(startIndex: Int) {
+        val openDirective = getLastOpenDependOnConditionOrLoopBlock()
+        openDirective?.let { directive ->
+            val removeList =
+                groupTopNodeIndexHistory
+                    .subList(
+                        startIndex,
+                        groupTopNodeIndexHistory.size,
+                    )
+            // Also exclude blocks before the first condition/loop directive in conditionOrLoopBlocks
+            val firstConditionLoopCommentBlock = conditionOrLoopBlocks.firstOrNull()
+            val inlineDirectiveList =
+                removeList.filter {
+                    it.node.startOffset > directive.node.startOffset ||
+                        it.node.startOffset < (firstConditionLoopCommentBlock?.node?.startOffset ?: 0)
+                }
+            inlineDirectiveList.forEach { groupTopNodeIndexHistory.remove(it) }
+            return
+        }
+        clearGroupList(startIndex)
+    }
+
+    private fun clearGroupList(start: Int) {
         groupTopNodeIndexHistory
             .subList(
                 start,

@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.with
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
@@ -31,9 +32,10 @@ class SqlWithQuerySubGroupBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
+
+    fun parentInlineDirective(): Boolean = parentBlock?.conditionLoopDirective != null
 
     override fun createBlockIndentLen(): Int = offset
 

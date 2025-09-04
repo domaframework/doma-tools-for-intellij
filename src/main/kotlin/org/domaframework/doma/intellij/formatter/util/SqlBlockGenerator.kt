@@ -108,6 +108,7 @@ class SqlBlockGenerator(
     fun getKeywordBlock(
         child: ASTNode,
         lastGroupBlock: SqlBlock?,
+        openConditionLoopDirective: SqlElConditionLoopCommentBlock?,
     ): SqlBlock {
         val keywordText = child.text.lowercase()
 
@@ -120,7 +121,7 @@ class SqlBlockGenerator(
         return when (indentLevel) {
             IndentType.INLINE -> keywordBlockFactory.createInlineBlock(child, lastGroupBlock)
             IndentType.ATTACHED -> keywordBlockFactory.createAttachedBlock(child, lastGroupBlock)
-            IndentType.OPTIONS -> keywordBlockFactory.createOptionsBlock(keywordText, child, lastGroupBlock)
+            IndentType.OPTIONS -> keywordBlockFactory.createOptionsBlock(keywordText, child, lastGroupBlock, openConditionLoopDirective)
             IndentType.CONFLICT -> keywordBlockFactory.createConflictBlock(keywordText, child, lastGroupBlock)
             else -> SqlKeywordBlock(child, indentLevel, sqlBlockFormattingCtx)
         }
@@ -418,6 +419,10 @@ class SqlBlockGenerator(
         return null
     }
 
+    /**
+     * TODO If the previous group is a keyword group, it becomes a table name block under specific conditions
+     *      After [SqlColumnRawGroupBlock] etc., it becomes a normal [SqlWordBlock]
+     */
     fun getWordBlock(
         lastGroup: SqlBlock?,
         child: ASTNode,
@@ -530,12 +535,7 @@ class SqlBlockGenerator(
         }
     }
 
-    private fun getRootBlock(lastGroupBlock: SqlBlock?): SqlBlock? =
-        if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
-            lastGroupBlock.tempParentBlock
-        } else {
-            lastGroupBlock
-        }
+    private fun getRootBlock(lastGroupBlock: SqlBlock?): SqlBlock? = lastGroupBlock
 
     private fun createConditionBlock(
         child: ASTNode,

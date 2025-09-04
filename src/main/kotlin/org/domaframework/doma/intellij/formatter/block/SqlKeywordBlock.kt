@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.block
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
@@ -40,8 +41,6 @@ open class SqlKeywordBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = indentLevel
-        indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
@@ -94,12 +93,6 @@ open class SqlKeywordBlock(
                 } ?: 1
             }
 
-            else -> {
-                if (isParentConditionLoopDirective()) {
-                    parentBlock?.indent?.groupIndentLen ?: 1
-                } else {
-                    parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
-                }
-            }
+            else -> parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
         }
 }

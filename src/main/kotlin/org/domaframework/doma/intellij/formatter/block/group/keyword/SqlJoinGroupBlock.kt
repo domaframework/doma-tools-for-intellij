@@ -42,20 +42,13 @@ open class SqlJoinGroupBlock(
         parentBlock = lastGroup
         parentBlock?.childBlocks?.add(this)
         indent.indentLevel = IndentType.JOIN
-        indent.indentLen = createBlockIndentLen()
+        setIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createBlockIndentLen(): Int {
-        return parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) {
-                return parent.indent.groupIndentLen
-            }
-            return parent.indent.groupIndentLen.plus(1)
-        } ?: 1
-    }
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
 
     override fun createGroupIndentLen(): Int =
         indent.indentLen

@@ -35,7 +35,6 @@ class SqlFunctionGroupBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         prevChildren = lastGroup?.childBlocks?.toList() ?: emptyList()
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -58,12 +57,6 @@ class SqlFunctionGroupBlock(
         when (parent) {
             is SqlSubGroupBlock ->
                 prevBlocksLength
-
-            is SqlElConditionLoopCommentBlock -> {
-                val directiveParent = parentBlock?.parentBlock
-                val directiveParentLen = directiveParent?.getNodeText()?.length?.plus(1) ?: 1
-                prevBlocksLength.plus(directiveParentLen)
-            }
 
             else -> prevBlocksLength.plus(1)
         }

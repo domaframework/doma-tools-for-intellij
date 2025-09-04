@@ -31,11 +31,10 @@ class SqlJoinQueriesGroupBlock(
     context: SqlBlockFormattingContext,
 ) : SqlTopQueryGroupBlock(node, context) {
     // TODO Customize offset
-    private val offset = 0
+    override val offset = 0
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -44,7 +43,6 @@ class SqlJoinQueriesGroupBlock(
             return when (parent) {
                 is SqlFileBlock -> 0
                 is SqlWithQuerySubGroupBlock -> parent.indent.groupIndentLen
-                is SqlElConditionLoopCommentBlock -> createIndentLenInConditionLoopDirective(parent)
                 else -> parent.indent.groupIndentLen.plus(1)
             }
         }

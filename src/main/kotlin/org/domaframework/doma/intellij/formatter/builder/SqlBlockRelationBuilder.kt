@@ -19,12 +19,14 @@ import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
+import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.column.SqlRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.inline.SqlInlineGroupBlock
@@ -34,7 +36,6 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlI
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlTableModifySecondGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTableModificationKeyword
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlTopQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -88,30 +89,8 @@ class SqlBlockRelationBuilder(
                 childBlock,
                 blockBuilder,
             )
-        val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
-        if (lastGroup is SqlElConditionLoopCommentBlock) {
-            updateParentGroupLastConditionLoop(lastGroup, context, false) { block ->
-                block.indent.indentLevel < childBlock.indent.indentLevel ||
-                    block is SqlNewGroupBlock
-            }
-            return
-        }
         setParentGroups(context) { history ->
             return@setParentGroups history.lastOrNull()
-        }
-    }
-
-    /**
-     * Does not set a parent.
-     */
-    fun updateGroupBlockAddGroup(childBlock: SqlBlock) {
-        setParentGroups(
-            SetParentContext(
-                childBlock,
-                blockBuilder,
-            ),
-        ) { history ->
-            return@setParentGroups null
         }
     }
 
@@ -138,53 +117,12 @@ class SqlBlockRelationBuilder(
         childBlock: SqlKeywordGroupBlock,
     ) {
         val context = SetParentContext(childBlock, blockBuilder)
-        if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
-            if (childBlock is SqlTableModificationKeyword) {
-                handleConditionLoopParentForTableModification(lastGroupBlock, context, childBlock)
-            } else {
-                handleConditionLoopParent(lastGroupBlock, context, childBlock)
-            }
-            return
-        }
         if (childBlock.indent.indentLevel == IndentType.TOP) {
             handleTopLevelKeyword(lastGroupBlock, childBlock, context)
             return
         }
-        if (lastGroupBlock !is SqlSubGroupBlock) {
-            if (lastIndentLevel > childBlock.indent.indentLevel) {
-                val findLastGroup =
-                    blockBuilder.getGroupTopNodeIndexHistory().findLast {
-                        it.indent.indentLevel < childBlock.indent.indentLevel ||
-                            it is
-                                SqlElConditionLoopCommentBlock
-                    }
-                if (findLastGroup is SqlElConditionLoopCommentBlock) {
-                    handleConditionLoopParent(findLastGroup, context, childBlock)
-                    return
-                }
-            }
-        }
+
         handleNonTopLevelKeyword(lastGroupBlock, lastIndentLevel, childBlock, context)
-    }
-
-    private fun handleConditionLoopParent(
-        lastGroupBlock: SqlElConditionLoopCommentBlock,
-        context: SetParentContext,
-        childBlock: SqlKeywordGroupBlock,
-    ) {
-        updateParentGroupLastConditionLoop(lastGroupBlock, context, true) {
-            it.indent.indentLevel < childBlock.indent.indentLevel
-        }
-    }
-
-    private fun handleConditionLoopParentForTableModification(
-        lastGroupBlock: SqlElConditionLoopCommentBlock,
-        context: SetParentContext,
-        childBlock: SqlKeywordGroupBlock,
-    ) {
-        updateParentGroupLastConditionLoop(lastGroupBlock, context) {
-            it.indent.indentLevel <= childBlock.indent.indentLevel
-        }
     }
 
     private fun handleTopLevelKeyword(
@@ -203,6 +141,9 @@ class SqlBlockRelationBuilder(
         setParentGroups(context) { return@setParentGroups parentBlock }
     }
 
+    /**
+     * Search for groups before the top-level keyword, select the parent, and swap the list
+     */
     private fun findTopLevelParent(): SqlBlock? {
         val topKeywordIndex =
             blockBuilder.getGroupTopNodeIndex {
@@ -213,19 +154,24 @@ class SqlBlockRelationBuilder(
                 it is SqlSubGroupBlock
             }
 
+        // Determine the parent block based on the order of appearance of top-level keywords or subqueries
         val (parentBlock, deleteIndex) =
             when {
+                // If only a top-level keyword is found, get the same parent as it
                 topKeywordIndex >= 0 && subGroupIndex < 0 -> {
                     val block = blockBuilder.getGroupTopNodeIndexHistory()[topKeywordIndex]
                     block.parentBlock to topKeywordIndex
                 }
+                // If a top-level keyword is found before a subquery, make the subquery group the parent
                 topKeywordIndex > subGroupIndex -> {
                     val block = blockBuilder.getGroupTopNodeIndexHistory()[subGroupIndex]
                     block to topKeywordIndex
                 }
+                // If neither a subquery nor a top-level keyword is found, don't set a parent
                 else -> null to -1
             }
 
+        // Remove top-level keywords from the group list
         if (deleteIndex >= 0) {
             blockBuilder.clearSubListGroupTopNodeIndexHistory(deleteIndex)
         }
@@ -385,13 +331,6 @@ class SqlBlockRelationBuilder(
                 blockBuilder,
             )
 
-        if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
-            updateParentGroupLastConditionLoop(lastGroupBlock, context) {
-                it.indent.indentLevel < childBlock.indent.indentLevel
-            }
-            return
-        }
-
         if (TypeUtil.isExpectedClassType(COLUMN_RAW_EXPECTED_TYPES, lastGroupBlock)) {
             blockBuilder.removeLastGroupTopNodeIndexHistory()
         }
@@ -423,14 +362,6 @@ class SqlBlockRelationBuilder(
             return
         }
 
-        val lastGroupBlock = blockBuilder.getLastGroupTopNodeIndexHistory()
-        if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
-            updateParentGroupLastConditionLoop(lastGroupBlock, context) {
-                it.indent.indentLevel == IndentType.INLINE
-            }
-            return
-        }
-
         val caseBlockIndex =
             blockBuilder.getGroupTopNodeIndex { block ->
                 block.indent.indentLevel == IndentType.INLINE
@@ -454,54 +385,9 @@ class SqlBlockRelationBuilder(
         )
     }
 
-    /**
-     * Updates the parent of the last conditional directive block and sets the parent of the current block.
-     */
-    private fun updateParentGroupLastConditionLoop(
-        lastGroupBlock: SqlElConditionLoopCommentBlock,
-        context: SetParentContext,
-        findSubGroup: Boolean = false,
-        findDefaultParent: (SqlBlock) -> Boolean,
-    ) {
-        if (lastGroupBlock.parentBlock != null) {
-            setParentGroups(context) { lastGroupBlock }
-            return
-        }
-
-        val findParent = findParentForConditionLoop(findDefaultParent, findSubGroup)
-        handleConditionLoopParentAssignment(lastGroupBlock, context, findParent)
-    }
-
-    private fun findParentForConditionLoop(
-        findDefaultParent: (SqlBlock) -> Boolean,
-        findSubGroup: Boolean = false,
-    ): SqlBlock? =
-        blockBuilder.getGroupTopNodeIndexHistory().lastOrNull { block ->
-            findDefaultParent(block) ||
-                findSubGroup && block is SqlSubGroupBlock ||
-                (block is SqlElConditionLoopCommentBlock && block.parentBlock != null)
-        }
-
-    private fun handleConditionLoopParentAssignment(
-        lastGroupBlock: SqlElConditionLoopCommentBlock,
-        context: SetParentContext,
-        findParent: SqlBlock?,
-    ) {
-        when (findParent) {
-            is SqlElConditionLoopCommentBlock -> {
-                lastGroupBlock.setParentGroupBlock(findParent)
-                setParentGroups(context) { lastGroupBlock }
-            }
-            else -> {
-                setParentGroups(context) { findParent }
-                lastGroupBlock.setParentGroupBlock(context.childBlock)
-            }
-        }
-    }
-
-    fun updateConditionLoopCommentBlockParent(
-        lastGroupBlock: SqlBlock,
-        childBlock: SqlElConditionLoopCommentBlock,
+    fun updateSqlBlockAndOverIndentLevel(
+        childBlock: SqlCommaBlock,
+        findSubQuery: Boolean = false,
     ) {
         val context =
             SetParentContext(
@@ -509,35 +395,10 @@ class SqlBlockRelationBuilder(
                 blockBuilder,
             )
         setParentGroups(context) { history ->
-            if (childBlock.conditionType.isEnd() || childBlock.conditionType.isElse()) {
-                // remove self and previous conditional directive block
-                blockBuilder.removeConditionOrLoopBlockLast()
-                blockBuilder.removeConditionOrLoopBlockLast()
-
-                val directiveIndex =
-                    blockBuilder
-                        .getGroupTopNodeIndex { it is SqlElConditionLoopCommentBlock && it != childBlock }
-                if (directiveIndex >= 0) {
-                    val lastConditionLoopCommentBlock =
-                        blockBuilder.getGroupTopNodeIndexHistory()[directiveIndex]
-                    blockBuilder.clearSubListGroupTopNodeIndexHistory(directiveIndex)
-                    return@setParentGroups lastConditionLoopCommentBlock
-                }
-                return@setParentGroups null
+            return@setParentGroups history.findLast {
+                it.indent.indentLevel < childBlock.indent.indentLevel ||
+                    (findSubQuery && it is SqlSubGroupBlock)
             }
-
-            // If the most recent block is a conditional directive, set it as the parent block.
-            if (lastGroupBlock is SqlElConditionLoopCommentBlock) {
-                val prevGroupIndex = blockBuilder.getGroupTopNodeIndex { it == lastGroupBlock }
-                if (prevGroupIndex > 0 && lastGroupBlock.parentBlock == null) {
-                    // Determine the parent of the most recent conditional directive.
-                    val prevGroup = blockBuilder.getGroupTopNodeIndexHistory()[prevGroupIndex - 1]
-                    lastGroupBlock.setParentGroupBlock(prevGroup)
-                }
-                return@setParentGroups lastGroupBlock
-            }
-            // Temporary Parent Block
-            return@setParentGroups history.lastOrNull()
         }
     }
 
@@ -609,7 +470,8 @@ class SqlBlockRelationBuilder(
     }
 
     /**
-     * Determines its parent group and, if conditions are met, registers itself as a new group block in the list.
+     * Determines its parent group and, if conditions are met,
+     * registers itself as a new group block in the list.
      */
     private fun setParentGroups(
         context: SetParentContext,
@@ -620,60 +482,148 @@ class SqlBlockRelationBuilder(
                 context.blockBuilder.getGroupTopNodeIndexHistory() as MutableList<SqlBlock>,
             )
         val targetChildBlock = context.childBlock
+        if (targetChildBlock is SqlDefaultCommentBlock) return
 
-        if (shouldSkipParentSetting(targetChildBlock)) return
-
-        assignParentGroup(targetChildBlock, parentGroup)
-        registerAsNewGroupIfNeeded(targetChildBlock, context.blockBuilder)
-        updateBlockIndents(targetChildBlock, context.blockBuilder)
+        // If a value can be retrieved from the condition/loop directive list,
+        // first calculate the original indent of the current block
+        val dependDirective = blockBuilder.getLastConditionOrLoopBlock()
+        if (targetChildBlock !is SqlElConditionLoopCommentBlock) {
+            setParentNonLoopConditionDirective(
+                context,
+                targetChildBlock,
+                parentGroup,
+                dependDirective,
+            )
+        } else {
+            val nestParentBlock = blockBuilder.getLastConditionOrLoopBlock()
+            targetChildBlock.nestParentBlock = nestParentBlock
+            setParentLoopConditionDirective(
+                targetChildBlock,
+                parentGroup,
+                dependDirective,
+            )
+        }
+        context.blockBuilder.updateCommentBlockIndent(targetChildBlock)
     }
 
-    private fun shouldSkipParentSetting(block: SqlBlock) = block is SqlDefaultCommentBlock
-
-    private fun assignParentGroup(
+    /**
+     * Set parent-child relationships for non-condition/loop directives
+     */
+    private fun setParentNonLoopConditionDirective(
+        context: SetParentContext,
         targetChildBlock: SqlBlock,
         parentGroup: SqlBlock?,
+        dependDirective: SqlElConditionLoopCommentBlock?,
     ) {
-        when {
-            isStartDirectiveConditionLoop(targetChildBlock) -> {
-                val conditionLoop = targetChildBlock as SqlElConditionLoopCommentBlock
-                conditionLoop.tempParentBlock = parentGroup
-                if (shouldSetParentImmediately(parentGroup)) {
-                    conditionLoop.setParentGroupBlock(parentGroup)
+        // If the child block is at the same level as the previous block,
+        // the condition/loop directive makes the upper block that was retained its parent
+        val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
+        val lastGroupLevel = lastGroup?.indent?.indentLevel ?: IndentType.FILE
+        val inlineDirective = lastGroupLevel >= targetChildBlock.indent.indentLevel && dependDirective?.nestParentBlock != null
+        if (inlineDirective) {
+            dependDirective.setParentSelfNestBlock()
+        }
+
+        // If dependDirective has a parent set (nested), align the indent to dependDirective
+        // If dependDirective doesn't have a parent set, align dependDirective to its own indent
+        val lastParentChild = parentGroup?.childBlocks?.lastOrNull()
+        targetChildBlock.setParentGroupBlock(parentGroup)
+        if (dependDirective != null) {
+            targetChildBlock.createBlockIndentLenDirective(parentGroup, dependDirective)
+        }
+        // Within condition/loop directives, if there is a parent condition/loop directive but the parent's dependency is different from targetChildBlock's parent,
+        // release the parent condition/loop directive and perform normal condition/loop directive association
+        val dependDirectiveParent = dependDirective?.parentBlock
+        // If targetChildBlock is a group block and the last group block differs from parentGroup,
+        // reset the parent-child relationship of the previous condition/loop directive and start a new nest
+        var recalculate = false
+        if (parentGroup != lastGroup) {
+            if (targetChildBlock !is SqlRawGroupBlock) {
+                if (targetChildBlock !is SqlNewGroupBlock &&
+                    dependDirectiveParent is SqlElConditionLoopCommentBlock
+                ) {
+                    dependDirective.parentBlock = null
+                    recalculate = true
+                } else {
+                    lastParentChild?.let { last ->
+                        // Judge by whether the parent's last child is at the same indent level as yourself?
+                        if (last.indent.indentLevel > targetChildBlock.indent.indentLevel) {
+                            dependDirective?.parentBlock = null
+                            recalculate = true
+                        }
+                    }
                 }
             }
-            else -> targetChildBlock.setParentGroupBlock(parentGroup)
+        } else {
+            val firstConditionLoopCommentBlock = blockBuilder.getFirstConditionOrLoopBlock()
+            if (lastParentChild != null && firstConditionLoopCommentBlock != null &&
+                firstConditionLoopCommentBlock.conditionType.isStartDirective()
+            ) {
+                recalculate = lastParentChild.node.startOffset < firstConditionLoopCommentBlock.node.startOffset &&
+                    targetChildBlock is SqlNewGroupBlock
+            }
+            if (!recalculate && targetChildBlock is SqlWithCommonTableGroupBlock) {
+                val tmpParentDirective = dependDirective?.nestParentBlock
+                val tempParentDependBlock = tmpParentDirective?.getDependsOnBlock()
+                if (tempParentDependBlock != null && firstConditionLoopCommentBlock != null &&
+                    lastParentChild is SqlWithCommonTableGroupBlock
+                ) {
+                    dependDirective.setParentSelfNestBlock()
+                    recalculate =
+                        tempParentDependBlock.indent.indentLevel >= targetChildBlock.indent.indentLevel
+                }
+            }
+        }
+        // If the previous group is lower than your own group level, trace back the directive to yourself as the start of a new group,
+        // and recalculate the indent from the top of the nest to match your parent block
+        if (recalculate) {
+            if (dependDirective?.conditionType?.isStartDirective() == true) {
+                targetChildBlock.recalculateDirectiveIndent()
+            }
+        }
+
+        // If a value is retrieved from the conditional/loop directive list,
+        // set the current block as the dependency target for the directive.
+        if (isNewGroup(targetChildBlock, context.blockBuilder) ||
+            TypeUtil.isExpectedClassType(NEW_GROUP_EXPECTED_TYPES, targetChildBlock)
+        ) {
+            context.blockBuilder.addGroupTopNodeIndexHistory(targetChildBlock)
         }
     }
 
-    private fun isStartDirectiveConditionLoop(block: SqlBlock) =
-        block is SqlElConditionLoopCommentBlock && block.conditionType.isStartDirective()
-
-    private fun shouldSetParentImmediately(parentGroup: SqlBlock?) =
-        (parentGroup is SqlElConditionLoopCommentBlock || parentGroup is SqlSubGroupBlock) &&
-            parentGroup.parentBlock != null
-
-    private fun registerAsNewGroupIfNeeded(
-        targetChildBlock: SqlBlock,
-        blockBuilder: SqlBlockBuilder,
+    private fun setParentLoopConditionDirective(
+        targetChildBlock: SqlElConditionLoopCommentBlock,
+        parentGroup: SqlBlock?,
+        dependDirective: SqlElConditionLoopCommentBlock?,
     ) {
-        if (shouldRegisterAsNewGroup(targetChildBlock, blockBuilder)) {
-            blockBuilder.addGroupTopNodeIndexHistory(targetChildBlock)
+        // For else and end directives, make the start directive in the list the parent. The dependency is set later
+        if (!targetChildBlock.conditionType.isStartDirective()) {
+            targetChildBlock.setParentGroupBlock(dependDirective)
+        } else {
+            // If the subgroup block is parentGroup, make it the direct parent
+            if (parentGroup is SqlSubGroupBlock && dependDirective?.parentBlock != parentGroup) {
+                targetChildBlock.setParentGroupBlock(parentGroup)
+                return
+            }
+            // If the child is also a condition/loop directive,
+            // calculate the indent of the previous directive according to the previous group block
+            if (dependDirective != null) {
+                val parentDepend = dependDirective.getDependsOnBlock()
+                if (parentDepend == null) {
+                    dependDirective.setParentGroupBlock(parentGroup)
+                    targetChildBlock.setParentGroupBlock(dependDirective, blockBuilder)
+                } else {
+                    // Also set the parent of itself with the previous directive and calculate the indent
+                    if (parentGroup !is SqlNewGroupBlock || (
+                            parentDepend !is SqlNewGroupBlock &&
+                                parentDepend.node.startOffset >= parentGroup.node.startOffset
+                        )
+                    ) {
+                        targetChildBlock.setParentGroupBlock(dependDirective, blockBuilder)
+                    }
+                }
+            }
         }
-    }
-
-    private fun shouldRegisterAsNewGroup(
-        block: SqlBlock,
-        blockBuilder: SqlBlockBuilder,
-    ) = isNewGroup(block, blockBuilder) ||
-        TypeUtil.isExpectedClassType(NEW_GROUP_EXPECTED_TYPES, block)
-
-    private fun updateBlockIndents(
-        targetChildBlock: SqlBlock,
-        blockBuilder: SqlBlockBuilder,
-    ) {
-        blockBuilder.updateCommentBlockIndent(targetChildBlock)
-        blockBuilder.updateConditionLoopBlockIndent(targetChildBlock)
     }
 
     /**
@@ -683,17 +633,9 @@ class SqlBlockRelationBuilder(
         childBlock: SqlBlock,
         blockBuilder: SqlBlockBuilder,
     ): Boolean {
-        if (isConditionLoopNewGroup(childBlock)) {
-            return true
-        }
-
         val lastGroup = blockBuilder.getLastGroupTopNodeIndexHistory()
         return isNewGroupAndNotSetLineKeywords(childBlock, lastGroup)
     }
-
-    private fun isConditionLoopNewGroup(childBlock: SqlBlock): Boolean =
-        childBlock is SqlElConditionLoopCommentBlock &&
-            (childBlock.conditionType.isStartDirective() || childBlock.conditionType.isElse())
 
     fun isNewGroupAndNotSetLineKeywords(
         childBlock: SqlBlock,

@@ -41,7 +41,6 @@ open class SqlLiteralBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.NONE
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -49,10 +48,5 @@ open class SqlLiteralBlock(
 
     override fun isLeaf(): Boolean = true
 
-    override fun createBlockIndentLen(): Int =
-        if (isFirstChildConditionLoopDirective() || isParentConditionLoopDirective()) {
-            parentBlock?.indent?.indentLen ?: 0
-        } else {
-            0
-        }
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.indentLen ?: 0
 }

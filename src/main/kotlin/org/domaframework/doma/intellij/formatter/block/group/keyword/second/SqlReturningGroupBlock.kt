@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.formatter.block.group.keyword.second
 
 import com.intellij.lang.ASTNode
+import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 class SqlReturningGroupBlock(

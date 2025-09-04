@@ -125,7 +125,6 @@ open class SqlElBlockCommentBlock(
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
             when (parent) {
-                is SqlElConditionLoopCommentBlock -> parent.indent.groupIndentLen
                 is SqlSubQueryGroupBlock -> calculateSubQueryIndent(parent)
                 is SqlValuesGroupBlock -> parent.indent.indentLen
                 is SqlKeywordGroupBlock -> parent.indent.groupIndentLen + 1
@@ -142,7 +141,7 @@ open class SqlElBlockCommentBlock(
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
         parentBlock?.let { parent ->
-            isConditionLoopDirectiveRegisteredBeforeParent() || isParentWithOnlyConditionLoopBlocks(parent)
+            isParentWithOnlyConditionLoopBlocks(parent)
         } == true
 
     private fun isParentWithOnlyConditionLoopBlocks(parent: SqlBlock): Boolean =

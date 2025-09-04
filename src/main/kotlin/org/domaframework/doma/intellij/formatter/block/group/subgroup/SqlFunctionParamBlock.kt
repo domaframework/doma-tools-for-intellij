@@ -44,7 +44,6 @@ class SqlFunctionParamBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.PARAM
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -54,9 +53,6 @@ class SqlFunctionParamBlock(
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-
-            if (parent is SqlElConditionLoopCommentBlock) return parent.indent.groupIndentLen
-
             if (parent !is SqlSubGroupBlock) {
                 return if (parent is SqlFunctionGroupBlock) {
                     parent.indent.groupIndentLen
@@ -89,13 +85,7 @@ class SqlFunctionParamBlock(
                     it.node.elementType != SqlTypes.DOT
             }
                 ?: emptyList()
-        val parentText =
-            if (isParentConditionLoopDirective()) {
-                val grand = parentBlock?.parentBlock
-                grand?.getNodeText() ?: ""
-            } else {
-                ""
-            }
+
         val prevLength =
             prevChildrenDropLast
                 .sumOf {
@@ -106,7 +96,7 @@ class SqlFunctionParamBlock(
         val consecutiveSymbolCount =
             calculateConsecutiveSymbolCount(prevChildrenDropLast)
         val spaces = prevChildrenDropLast.count().minus(consecutiveSymbolCount)
-        return prevLength.plus(spaces).plus(parentText.length).plus(parentGroupIndent)
+        return prevLength.plus(spaces).plus(parentGroupIndent)
     }
 
     private fun calculateConsecutiveSymbolCount(prevChildrenDropLast: List<SqlBlock>): Int {

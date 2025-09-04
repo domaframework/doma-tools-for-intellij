@@ -19,11 +19,11 @@ import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlBlockCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.word.SqlWordBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlWithCommonTableGroupBlock(
     node: ASTNode,
@@ -39,13 +39,12 @@ class SqlWithCommonTableGroupBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
         isFirstTable = findWithQueryChildBlocks() == null
     }
 
     private fun getCommonTableName(): SqlBlock? {
-        if (getNodeText() == ",") return null
+        if (node.elementType == SqlTypes.COMMA) return null
         val expectedTypes =
             listOf(
                 SqlBlockCommentBlock::class,
@@ -74,33 +73,22 @@ class SqlWithCommonTableGroupBlock(
     }
 
     override fun createBlockIndentLen(): Int {
-        parentBlock?.let { parent ->
-            val prevBlock =
-                parent
-                    .getChildBlocksDropLast(skipConditionLoopCommentBlock = false)
-                    .lastOrNull()
-            return if (prevBlock is SqlElConditionLoopCommentBlock) 4 else 0
-        }
-        return 0
+        val baseIndent = if (node.elementType == SqlTypes.COMMA) 0 else offset
+        return if (conditionLoopDirective == null) baseIndent else offset
     }
 
     override fun createGroupIndentLen(): Int {
+        val baseIndent = if (conditionLoopDirective == null) 0 else offset
         parentBlock?.let { parent ->
-            return getChildBlocksDropLast().sumOf { it.getNodeText().length.plus(1) }.plus(offset)
+            return getChildBlocksDropLast().sumOf { it.getNodeText().length.plus(1) }.plus(baseIndent)
         }
-        return offset
+        return baseIndent
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean =
         parentBlock?.let { parent ->
-            isFirstChildConditionLoopDirective() ||
-                (
-                    (
-                        parent is SqlValuesGroupBlock ||
-                            parent is SqlElConditionLoopCommentBlock
-                    ) &&
-                        parent.childBlocks.dropLast(1).isEmpty()
-                )
+            parent is SqlValuesGroupBlock &&
+                parent.childBlocks.dropLast(1).isEmpty()
         } == true ||
             !isFirstTable
 }

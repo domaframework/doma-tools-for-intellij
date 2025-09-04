@@ -31,31 +31,14 @@ class SqlExistsGroupBlock(
 ) : SqlKeywordGroupBlock(node, IndentType.OPTIONS, context) {
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
-    override fun createBlockIndentLen(): Int {
-        parentBlock?.let { parent ->
-            if (parent.isParentConditionLoopDirective()) {
-                return parent.indent.groupIndentLen
-            }
-        }
-        return parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
-    }
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
 
     override fun createGroupIndentLen(): Int {
-        // If this group is not the top of a line, there must be one space between it and the block before it.
-        val correctionSpace =
-            if (isFirstChildConditionLoopDirective() ||
-                isParentConditionLoopDirective()
-            ) {
-                0
-            } else {
-                1
-            }
-        val parentGroupIndent = parentBlock?.indent?.groupIndentLen ?: 0
-        return getTotalTopKeywordLength().plus(parentGroupIndent).plus(correctionSpace)
+        val parentGroupIndent = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 0
+        return getTotalTopKeywordLength().plus(parentGroupIndent)
     }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {

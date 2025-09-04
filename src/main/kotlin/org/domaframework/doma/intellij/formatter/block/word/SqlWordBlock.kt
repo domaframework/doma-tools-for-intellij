@@ -18,7 +18,6 @@ package org.domaframework.doma.intellij.formatter.block.word
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
@@ -44,7 +43,6 @@ open class SqlWordBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
     }
 
@@ -59,6 +57,7 @@ open class SqlWordBlock(
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             when (parent) {
+                // Calculate indentation assuming function parameters or within a list.
                 is SqlSubQueryGroupBlock -> {
                     val parentIndentLen = parent.indent.groupIndentLen
                     val grand = parent.parentBlock
@@ -67,10 +66,6 @@ open class SqlWordBlock(
                         return grandIndentLen.plus(parentIndentLen).plus(1)
                     }
                     return parentIndentLen.plus(1)
-                }
-
-                is SqlElConditionLoopCommentBlock -> {
-                    return parent.indent.groupIndentLen
                 }
 
                 else -> {

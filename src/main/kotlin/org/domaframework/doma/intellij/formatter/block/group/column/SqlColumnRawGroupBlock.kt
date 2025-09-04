@@ -39,12 +39,11 @@ class SqlColumnRawGroupBlock(
         node,
         context,
     ) {
-    private val offset = 1
+    override val offset = 1
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.COLUMN
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen =
             if (isFirstColumnGroup) indent.indentLen else indent.indentLen.plus(1)
     }

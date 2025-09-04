@@ -40,7 +40,6 @@ open class SqlCreateViewGroupBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.SUB
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = getNodeText().length
     }
 

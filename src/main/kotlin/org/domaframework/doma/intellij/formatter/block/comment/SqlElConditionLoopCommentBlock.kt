@@ -28,13 +28,14 @@ import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.SqlUnknownBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlArrayListGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.builder.SqlBlockBuilder
 import org.domaframework.doma.intellij.formatter.builder.SqlCustomSpacingBuilder
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
@@ -66,6 +67,20 @@ class SqlElConditionLoopCommentBlock(
         fun isElse(): Boolean = this == ELSE
     }
 
+    // Temporary storage for making the condition/loop directive one level above the parent depending on the child block
+    var nestParentBlock: SqlElConditionLoopCommentBlock? = null
+
+    fun setParentSelfNestBlock() {
+        if (parentBlock == null) {
+            setParentGroupBlock(nestParentBlock)
+        }
+    }
+
+    // Hold dependency block separately from parent
+    private var dependsOnBlock: SqlBlock? = null
+
+    fun getDependsOnBlock(): SqlBlock? = dependsOnBlock
+
     companion object {
         const val DIRECTIVE_INDENT_STEP = 2
         private const val DEFAULT_INDENT_OFFSET = 1
@@ -77,7 +92,6 @@ class SqlElConditionLoopCommentBlock(
             )
     }
 
-    var tempParentBlock: SqlBlock? = null
     val conditionType: SqlConditionLoopCommentBlockType = initConditionOrLoopType(node)
     var conditionStart: SqlElConditionLoopCommentBlock? = null
     var conditionEnd: SqlElConditionLoopCommentBlock? = null
@@ -113,27 +127,33 @@ class SqlElConditionLoopCommentBlock(
      * @note
      * When a keyword group appears immediately before a conditional or loop directive, and a non-group block appears immediately after, the directive can end up being registered as a child of both.
      *
-     * To ensure correct group block generation in the later sub-group block processing, the conditional/loop directive must remain registered as a child of the preceding keyword group.
+     * To ensure correct group block generation in the later subgroup block processing, the conditional/loop directive must remain registered as a child of the preceding keyword group.
      * If it is not retained, the resulting group block structure will be inaccurate.
      *
      */
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
-
-        childBlocks.forEach { child ->
-            if (child is SqlElConditionLoopCommentBlock && child.conditionType.isStartDirective()) {
-                // If the child is a condition loop directive, align its indentation with the parent directive
-                child.indent.indentLen = indent.indentLen + DIRECTIVE_INDENT_STEP
-            } else if (child is SqlLineCommentBlock) {
-                if (child.hasLineBreakBefore()) {
-                    child.indent.indentLen = indent.groupIndentLen
-                } else {
-                    child.indent.indentLen = 1
-                }
-            } else {
-                child.indent.indentLen = indent.groupIndentLen
+        // When resetting the parent of the parent condition/loop directive, check that the parent is not yet set
+        if (parentBlock == null) {
+            parentBlock = lastGroup
+            if (!conditionType.isStartDirective()) {
+                (parentBlock as? SqlElConditionLoopCommentBlock)?.conditionEnd = this
+                createBlockIndentLenFromDependOn(null)
+            } else if (parentBlock !is SqlElConditionLoopCommentBlock) {
+                indent.indentLen = initIndentConditionLoopDirective()
             }
         }
+        indent.groupIndentLen = indent.indentLen
+    }
+
+    fun setParentGroupBlock(
+        lastGroup: SqlBlock?,
+        builder: SqlBlockBuilder?,
+    ) {
+        // Basically no parent except for nested structures
+        parentBlock = lastGroup
+        // Determine your own indent according to the parent's indent. Calculate considering directive nesting
+        indent.indentLen = calculateIndentLen(builder)
+        indent.groupIndentLen = indent.indentLen
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
@@ -141,6 +161,78 @@ class SqlElConditionLoopCommentBlock(
             lastGroup.conditionEnd = this
         }
     }
+
+    fun setDependsOnBlock(block: SqlBlock?) {
+        if (dependsOnBlock != null) return
+        dependsOnBlock = block
+    }
+
+    /**
+     * Calculate indent when dependency is determined
+     * Called later because dependency indent needs to be calculated first
+     * If both parent and dependency exist, prioritize parent's indent
+     * Skip if the passed block is not your own dependency block, just recalculate
+     */
+    fun createBlockIndentLenFromDependOn(hitBlock: SqlBlock?) {
+        if (hitBlock != null && hitBlock != dependsOnBlock) return
+        indent.indentLen = calculateIndentLenFromDependOn()
+        indent.groupIndentLen = indent.indentLen
+    }
+
+    private fun calculateIndentLenFromDependOn(): Int {
+        parentBlock?.let { parent ->
+            val parentGroupIndent = parent.indent.groupIndentLen
+            return when (parentBlock) {
+                is SqlElConditionLoopCommentBlock -> {
+                    if (conditionType.isStartDirective()) {
+                        parentGroupIndent.plus(DIRECTIVE_INDENT_STEP)
+                    } else {
+                        parentGroupIndent
+                    }
+                }
+
+                is SqlSubGroupBlock -> {
+                    parentGroupIndent
+                }
+
+                else -> parentGroupIndent.plus(1)
+            }
+        }
+        return dependsOnBlock?.indent?.indentLen ?: 0
+    }
+
+    /**
+     * Recalculate nested indents
+     * Count the number of levels and return to the caller
+     */
+    fun recalculateIndentLen(baseBlockIndent: Int): Int {
+        if (parentBlock is SqlSubGroupBlock) {
+            return 1
+        }
+        val nestParent = parentBlock as? SqlElConditionLoopCommentBlock
+        if (nestParent != null) {
+            val nestLevel = nestParent.recalculateIndentLen(baseBlockIndent)
+            indent.indentLen = nestParent.indent.indentLen.plus(DIRECTIVE_INDENT_STEP)
+            indent.groupIndentLen = indent.indentLen
+            return nestLevel.plus(1)
+        }
+        parentBlock = null
+        indent.indentLen = baseBlockIndent
+        indent.groupIndentLen = indent.indentLen
+        return 1
+    }
+
+    override fun getSpacing(
+        child1: Block?,
+        child2: Block,
+    ): Spacing? =
+        customSpacingBuilder?.getCustomSpacing(child1, child2) ?: spacingBuilder.getSpacing(
+            this,
+            child1,
+            child2,
+        )
+
+    override fun isLeaf(): Boolean = false
 
     override fun buildChildren(): MutableList<AbstractBlock> = buildChildBlocks { getBlock(it) }
 
@@ -156,30 +248,43 @@ class SqlElConditionLoopCommentBlock(
             else -> SqlUnknownBlock(child, context)
         }
 
-    override fun getSpacing(
-        child1: Block?,
-        child2: Block,
-    ): Spacing? =
-        customSpacingBuilder?.getCustomSpacing(child1, child2) ?: spacingBuilder.getSpacing(
-            this,
-            child1,
-            child2,
-        )
-
-    override fun isLeaf(): Boolean = false
-
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        if (conditionType.isEnd() || conditionType.isElse()) {
+        if (!conditionType.isStartDirective()) {
             return true
         }
-        if (lastGroup is SqlElConditionLoopCommentBlock) {
-            return true
-        }
-        val firstChild = lastGroup?.childBlocks?.firstOrNull()
-        if (TypeUtil.isExpectedClassType(LINE_BREAK_PARENT_TYPES, lastGroup)) {
-            return firstChild != null && firstChild != this
-        }
-        return firstChild == null || firstChild != this
+
+        // Line break if parent is a condition/loop directive
+        if (parentBlock is SqlElConditionLoopCommentBlock) return true
+
+        // If `lastGroup` is a comma group or a subgroup,
+        // do not insert a line break when there is no preceding child (i.e., when this node comes first).
+        val isExpectedParentOfDependentType = TypeUtil.isExpectedClassType(LINE_BREAK_PARENT_TYPES, lastGroup)
+        if (isExpectedParentOfDependentType) return lastGroup?.childBlocks?.isNotEmpty() == true
+        return true
+    }
+
+    /**
+     * When directly containing a conditional directive, determine your own indentation as the nest top.
+     */
+    private fun initIndentConditionLoopDirective(): Int =
+        parentBlock?.let { parent ->
+            val openConditionLoopDirectiveCount = getOpenDirectiveCount(null)
+            when (parent) {
+                is SqlSubGroupBlock -> calculateSubGroupBlockIndent(parent, openConditionLoopDirectiveCount)
+                is SqlKeywordGroupBlock -> calculateKeywordGroupBlockIndent(parent, openConditionLoopDirectiveCount)
+
+                else -> 0
+            }
+        } ?: 0
+
+    private fun calculateKeywordGroupBlockIndent(
+        parent: SqlKeywordGroupBlock,
+        openConditionLoopDirectiveCount: Int,
+    ): Int {
+        val withQuerySpace = (parent as? SqlWithQueryGroupBlock)?.let { 0 } ?: 1
+        return parent.indent.groupIndentLen +
+            openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP +
+            withQuerySpace
     }
 
     /**
@@ -189,12 +294,18 @@ class SqlElConditionLoopCommentBlock(
      * If the element immediately below the directive is not [SqlKeywordGroupBlock] or [SqlSubGroupBlock],
      * align it to the previous group indent.
      */
-    override fun createBlockIndentLen(): Int {
+    fun createBlockIndentLen(builder: SqlBlockBuilder?) {
+        indent.indentLen = calculateIndentLen(builder)
+    }
+
+    private fun calculateIndentLen(builder: SqlBlockBuilder?): Int {
         parentBlock?.let { parent ->
             if (conditionType.isEnd() || conditionType.isElse()) {
                 return parent.indent.indentLen
             }
-            val openConditionLoopDirectiveCount = getOpenDirectiveCount(parent)
+            // Once a parent-child relationship with a conditional directive is established,
+            // the top-level indentation is already calculated.
+            val openConditionLoopDirectiveCount = getOpenDirectiveCount(builder)
             when (parent) {
                 is SqlSubGroupBlock -> return calculateSubGroupBlockIndent(parent, openConditionLoopDirectiveCount)
 
@@ -210,21 +321,7 @@ class SqlElConditionLoopCommentBlock(
                     }
                 }
 
-                is SqlKeywordGroupBlock -> {
-                    // At this point, it's not possible to determine whether the parent keyword group appears before or after this block based solely on the parent-child relationship.
-                    // Therefore, determine the position directly using the text offset.
-                    if (isBeforeParentBlock()) {
-                        return parent.indent.indentLen + openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP
-                    }
-                    getLastBlockHasConditionLoopDirective()?.let { lastBlock ->
-                        if (lastBlock.conditionEnd != null) {
-                            return lastBlock.indent.indentLen
-                        }
-                    }
-                    val withQuerySpace = if (parent !is SqlWithQueryGroupBlock) 1 else 0
-                    return parent.indent.groupIndentLen.plus(withQuerySpace) +
-                        openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP
-                }
+                is SqlKeywordGroupBlock -> return calculateKeywordGroupBlockIndent(parent, openConditionLoopDirectiveCount)
                 else -> return parent.indent.indentLen + openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP
             }
         }
@@ -238,34 +335,19 @@ class SqlElConditionLoopCommentBlock(
      * Since the current directive is included in the count,
      * **subtract 1 at the end** to exclude itself.
      */
-    private fun getOpenDirectiveCount(parent: SqlBlock): Int {
+    private fun getOpenDirectiveCount(builder: SqlBlockBuilder?): Int {
+        if (parentBlock !is SqlElConditionLoopCommentBlock) return 0
         val conditionLoopDirectives: List<SqlElConditionLoopCommentBlock> =
-            parent
-                .childBlocks
-                .filterIsInstance<SqlElConditionLoopCommentBlock>()
-                .filter { it.conditionEnd == null }
-        val startDirectives =
-            conditionLoopDirectives.count { it.conditionType.isStartDirective() }
-        val endDirectives = conditionLoopDirectives.count { it.conditionType.isEnd() }
-        val diffCount = startDirectives - endDirectives
-        return if (diffCount > 0) diffCount - 1 else 0
+            builder?.getNotClosedConditionOrLoopBlock() ?: emptyList()
+        return conditionLoopDirectives.size
     }
 
     /**
-     * Determine if this conditional loop directive block is positioned before its parent block.
+     * Indentation calculation when the immediately preceding group is a subgroup block.
      */
-    fun isBeforeParentBlock(): Boolean {
-        parentBlock?.let { parent ->
-            return parent.node.startOffset > node.startOffset
-        }
-        return false
-    }
-
-    fun checkConditionLoopDirectiveParentBlock(block: SqlBlock): Boolean = isBeforeParentBlock() && parentBlock == block
-
     private fun calculateSubGroupBlockIndent(
         parent: SqlSubGroupBlock,
-        openDirectiveCount: Int,
+        openDirectiveCount: Int = 0,
     ): Int {
         val parentGroupIndentLen = parent.indent.groupIndentLen
         val grand = parent.parentBlock
@@ -274,6 +356,7 @@ class SqlElConditionLoopCommentBlock(
             return parent.indent.groupIndentLen
         }
 
+        // Set the indentation determined by the parent of the subgroup block.
         grand?.let { grandParent ->
             when (grandParent) {
                 is SqlCreateKeywordGroupBlock -> {

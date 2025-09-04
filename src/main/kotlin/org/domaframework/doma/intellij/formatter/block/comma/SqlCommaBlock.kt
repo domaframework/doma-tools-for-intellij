@@ -19,10 +19,8 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlFromGroupBlock
@@ -33,6 +31,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlU
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithColumnGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
@@ -62,7 +61,6 @@ open class SqlCommaBlock(
                 SqlFunctionParamBlock::class,
                 SqlWithColumnGroupBlock::class,
                 SqlKeywordGroupBlock::class,
-                SqlElConditionLoopCommentBlock::class,
             )
 
         private val PARENT_INDENT_SYNC_TYPES =
@@ -84,7 +82,6 @@ open class SqlCommaBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.COMMA
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -108,7 +105,7 @@ open class SqlCommaBlock(
                     return parentIndentLen
                 }
 
-                // TODO Indent each comma in a value group so that it aligns with the position of the first value row.
+                // Indent each comma in a value group so that it aligns with the position of the first value row.
                 val parentIndentSingleSpaceTypes =
                     listOf(
                         SqlInsertValueGroupBlock::class,
@@ -121,7 +118,6 @@ open class SqlCommaBlock(
                 val notNewLineTypes =
                     listOf(
                         SqlValuesParamGroupBlock::class,
-                        SqlConditionalExpressionGroupBlock::class,
                     )
                 if (TypeUtil.isExpectedClassType(notNewLineTypes, parent)) return 0
 
@@ -140,30 +136,13 @@ open class SqlCommaBlock(
             } else {
                 return when (parent) {
                     is SqlValuesGroupBlock -> parent.indent.indentLen
-                    is SqlElConditionLoopCommentBlock -> {
-                        val firstChild = parent.childBlocks.findLast { it is SqlFunctionParamBlock && it.endPatternBlock == null }
-                        val parentIndent = firstChild?.indent ?: parent.indent
-                        parentIndent.groupIndentLen.plus(1)
-                    }
                     is SqlTableModifySecondGroupBlock -> {
-                        val grand = parent.parentBlock
-                        if (grand is SqlElConditionLoopCommentBlock ||
-                            parent.childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock
-                        ) {
-                            parent.indent.indentLen.plus(2)
-                        } else {
-                            parent.indent.indentLen
-                        }
+                        parent.indent.indentLen
                     }
                     else -> {
                         // No indent after ORDER BY within function parameters
                         val grand = parent.parentBlock
-                        val conditionParent =
-                            if (grand is SqlElConditionLoopCommentBlock) {
-                                grand.parentBlock
-                            } else {
-                                grand
-                            }
+                        val conditionParent = grand
                         if (parent is SqlSecondKeywordBlock && conditionParent is SqlFunctionParamBlock) {
                             0
                         } else {
@@ -183,17 +162,11 @@ open class SqlCommaBlock(
             if (parent is SqlConditionalExpressionGroupBlock) return false
             // Don't allow line breaks after ORDER BY within function parameters
             val grand = parent.parentBlock
-            val conditionParent =
-                if (grand is SqlElConditionLoopCommentBlock) {
-                    grand.parentBlock
-                } else {
-                    grand
-                }
+            val conditionParent = grand
             if (conditionParent is SqlFunctionParamBlock) {
                 return false
             }
-            return TypeUtil.isExpectedClassType(EXPECTED_TYPES, parent) ||
-                childBlocks.firstOrNull() is SqlElConditionLoopCommentBlock
+            return TypeUtil.isExpectedClassType(EXPECTED_TYPES, parent)
         }
         return false
     }
