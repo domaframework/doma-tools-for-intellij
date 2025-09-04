@@ -1,7 +1,6 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
 labels: bug
 assignees: ''
 
@@ -20,12 +19,11 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
+**Exception Analyzer Report Number**
+Please enter the Exception Analyzer report number here.
+
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
-
-**Desktop :**
- - IDEA Version [e.g. 2024.1.7]
- - Doma Tools Version [e.g. 1.0.0]
 
 **Additional context**
 Add any other context about the problem here.
