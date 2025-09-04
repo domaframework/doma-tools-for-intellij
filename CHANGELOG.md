@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [2.2.1] - 2025-09-03
+
+### Bug Fixes
+
+- Fix: Unnecessary Space in Parser-Level Comments ([#440])
+- Improve SQL CASE Statement Formatting ([#441])
+- Add Formatting Support for Table Modification Queries ([#435])
+
+### Dependency Updates
+
+- Update dependency com.fasterxml.jackson.module:jackson-module-kotlin to v2.20.0 ([#432])
+- Update dependency org.jetbrains.intellij.platform to v2.8.0 ([#442])
+
+[#440]:https://github.com/domaframework/doma-tools-for-intellij/pull/440
+[#441]:https://github.com/domaframework/doma-tools-for-intellij/pull/441
+[#435]:https://github.com/domaframework/doma-tools-for-intellij/pull/435
+[#432]:https://github.com/domaframework/doma-tools-for-intellij/pull/432
+[#442]:https://github.com/domaframework/doma-tools-for-intellij/pull/442
+
+
 ## [2.2.0] - 2025-08-29
 
 ### New Features
@@ -519,3 +539,4 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[2.2.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.2.0...2.2.1
