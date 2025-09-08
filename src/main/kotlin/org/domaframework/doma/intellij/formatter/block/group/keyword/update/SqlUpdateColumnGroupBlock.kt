@@ -38,7 +38,6 @@ class SqlUpdateColumnGroupBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(1)
         updateParentGroupIndentLen()
     }

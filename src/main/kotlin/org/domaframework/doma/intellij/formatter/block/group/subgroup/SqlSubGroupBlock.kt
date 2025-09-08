@@ -23,7 +23,6 @@ import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlDoGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateViewGroupBlock
@@ -51,14 +50,13 @@ abstract class SqlSubGroupBlock(
                 SqlWithCommonTableGroupBlock::class,
                 SqlWithColumnGroupBlock::class,
                 SqlCreateViewGroupBlock::class,
-                SqlElConditionLoopCommentBlock::class,
             )
     }
 
-    open val offset = 1
+    override val offset = 1
 
-    // TODO Even if the first element of a subgroup is a comment,
-    //  the indentation of subsequent elements is now aligned.
+    // Even if the first element of a subgroup is a comment,
+    // the indentation of subsequent elements is now aligned.
     var isFirstLineComment = false
     var prevChildren: List<SqlBlock>? = emptyList<SqlBlock>()
     var endPatternBlock: SqlRightPatternBlock? = null
@@ -74,7 +72,6 @@ abstract class SqlSubGroupBlock(
         super.setParentGroupBlock(lastGroup)
         prevChildren = parentBlock?.childBlocks?.toList()
         indent.indentLevel = indent.indentLevel
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -102,12 +99,7 @@ abstract class SqlSubGroupBlock(
 
     override fun isLeaf(): Boolean = true
 
-    override fun createBlockIndentLen(): Int {
-        parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) return parent.indent.groupIndentLen
-        }
-        return offset
-    }
+    override fun createBlockIndentLen(): Int = offset
 
     override fun createGroupIndentLen(): Int =
         parentBlock?.let { parent ->
@@ -118,23 +110,7 @@ abstract class SqlSubGroupBlock(
         lastGroup?.let { lastBlock ->
             if (lastBlock is SqlJoinQueriesGroupBlock) return true
             if (lastGroup is SqlInGroupBlock) return false
-            if (lastGroup is SqlElConditionLoopCommentBlock) {
-                return lastGroup.checkConditionLoopDirectiveParentBlock(this) ||
-                    lastGroup.conditionType.isElse()
-            }
-            val grand = lastBlock.parentBlock
-            if (grand is SqlElConditionLoopCommentBlock) {
-                if (grand.conditionType.isElse()) {
-                    return false
-                }
-            }
-            val lastParent = lastBlock.parentBlock
-            val expectedParent =
-                if (lastParent is SqlElConditionLoopCommentBlock) {
-                    lastParent.parentBlock?.parentBlock
-                } else {
-                    lastBlock.parentBlock
-                }
+            val expectedParent = lastBlock.parentBlock
             return TypeUtil.isExpectedClassType(NEW_LINE_EXPECTED_TYPES, expectedParent)
         }
         return false

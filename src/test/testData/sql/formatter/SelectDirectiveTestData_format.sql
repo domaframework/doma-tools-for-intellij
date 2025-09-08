@@ -1,6 +1,4 @@
 SELECT /*%expand */*
-       , /*%populate */
-       , extra
   FROM ( SELECT *
            FROM users ) AS u
        , ( SELECT tag

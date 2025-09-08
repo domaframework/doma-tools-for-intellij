@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.domaframework.doma.intellij.formatter.block.group.keyword.condition
+package org.domaframework.doma.intellij.formatter.block.group.subgroup
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
 
 /**
@@ -36,7 +35,6 @@ class SqlConditionalExpressionGroupBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -48,24 +46,8 @@ class SqlConditionalExpressionGroupBlock(
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) {
-                val groupIndentLen = parent.indent.groupIndentLen
-                val grand = parent.parentBlock
-                val directiveParentTextLen =
-                    if (grand !is SqlElConditionLoopCommentBlock) {
-                        grand
-                            ?.getNodeText()
-                            ?.length
-                            ?.plus(1) ?: 0
-                    } else {
-                        0
-                    }
-                groupIndentLen + directiveParentTextLen
-            } else {
-                calculatePrevBlocksLength(prevBlocks, parent).plus(1)
-            }
-        }
-            ?: offset
+            calculatePrevBlocksLength(prevBlocks, parent).plus(1)
+        } ?: offset
 
     override fun createGroupIndentLen(): Int = indent.indentLen.plus(1)
 }

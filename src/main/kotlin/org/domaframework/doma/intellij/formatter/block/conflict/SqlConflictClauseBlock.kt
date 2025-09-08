@@ -35,7 +35,6 @@ class SqlConflictClauseBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.CONFLICT
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 

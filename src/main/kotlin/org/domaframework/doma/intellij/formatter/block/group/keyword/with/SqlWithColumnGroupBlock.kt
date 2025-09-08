@@ -26,7 +26,6 @@ class SqlWithColumnGroupBlock(
 ) : SqlSubGroupBlock(node, context) {
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 

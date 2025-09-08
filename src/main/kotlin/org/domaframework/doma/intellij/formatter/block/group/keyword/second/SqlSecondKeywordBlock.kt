@@ -18,24 +18,24 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.second
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.common.util.TypeUtil
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
+import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
 import org.domaframework.doma.intellij.formatter.block.SqlRightPatternBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.SqlNewGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
+import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 
 open class SqlSecondKeywordBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(node, IndentType.SECOND, context) {
-    private val offset = 0
+    override val offset = 0
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -52,8 +52,6 @@ open class SqlSecondKeywordBlock(
                         1
                     }
                 groupLen.plus(space)
-            } else if (parent is SqlElConditionLoopCommentBlock) {
-                groupLen
             } else {
                 groupLen.minus(this.getNodeText().length)
             }
@@ -63,17 +61,19 @@ open class SqlSecondKeywordBlock(
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
         parentBlock?.let { parent ->
-            val conditionParent =
-                if (parent is SqlElConditionLoopCommentBlock) {
-                    parent.parentBlock
-                } else {
-                    parent
-                }
-            if (conditionParent is SqlFunctionParamBlock) {
+            if (parent is SqlFunctionParamBlock) {
                 val firstKeywordParam =
-                    conditionParent.childBlocks.firstOrNull { it is SqlNewGroupBlock }
+                    parent.childBlocks.firstOrNull { it is SqlNewGroupBlock }
                 return firstKeywordParam != null && firstKeywordParam != this
             } else {
+                val prevKeywordGroupBlock =
+                    prevBlocks.lastOrNull()?.childBlocks?.lastOrNull {
+                        it is SqlKeywordBlock ||
+                            it is SqlKeywordGroupBlock
+                    }
+                if (SqlKeywordUtil.isSetLineKeyword(getNodeText(), prevKeywordGroupBlock?.getNodeText() ?: "")) {
+                    return false
+                }
                 return super.isSaveSpace(lastGroup)
             }
         }

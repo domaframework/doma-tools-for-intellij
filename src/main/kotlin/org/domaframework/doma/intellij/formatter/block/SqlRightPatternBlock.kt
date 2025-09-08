@@ -22,7 +22,6 @@ import org.domaframework.doma.intellij.formatter.block.comment.SqlCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictExpressionSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnDefinitionRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.create.SqlCreateTableColumnDefinitionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertColumnGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.insert.SqlInsertValueGroupBlock
@@ -32,6 +31,7 @@ import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlU
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateSetGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.update.SqlUpdateValueGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlDataTypeParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
@@ -74,13 +74,13 @@ open class SqlRightPatternBlock(
                 SqlUpdateValueGroupBlock::class,
                 SqlCreateTableColumnDefinitionGroupBlock::class,
                 SqlInsertValueGroupBlock::class,
+                SqlWithQuerySubGroupBlock::class,
             )
 
         val NOT_INDENT_EXPECTED_TYPES =
             listOf(
                 SqlFunctionParamBlock::class,
                 SqlInsertColumnGroupBlock::class,
-                SqlWithQuerySubGroupBlock::class,
                 SqlConflictExpressionSubGroupBlock::class,
             )
 
@@ -128,7 +128,11 @@ open class SqlRightPatternBlock(
                 ) ||
                 parent.childBlocks.any { it is SqlValuesGroupBlock }
             ) {
-                preSpaceRight = true
+                if (parent is SqlWithQuerySubGroupBlock) {
+                    preSpaceRight = parent.parentInlineDirective()
+                } else {
+                    preSpaceRight = true
+                }
                 return
             }
 
@@ -165,7 +169,6 @@ open class SqlRightPatternBlock(
         super.setParentGroupBlock(lastGroup)
         enableLastRight()
         indent.indentLevel = IndentType.NONE
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = indent.indentLen
     }
 

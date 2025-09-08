@@ -110,6 +110,10 @@ class SqlFormatterTest : BasePlatformTestCase() {
         formatSqlFile("Update.sql", "Update$formatDataPrefix.sql")
     }
 
+    fun testUpdatePopulateFormatter() {
+        formatSqlFile("UpdatePopulate.sql", "UpdatePopulate$formatDataPrefix.sql")
+    }
+
     fun testUpdateReturningFormatter() {
         formatSqlFile("UpdateReturning.sql", "UpdateReturning$formatDataPrefix.sql")
     }

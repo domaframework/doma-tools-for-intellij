@@ -19,10 +19,8 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlJoinGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.top.SqlJoinQueriesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithQuerySubGroupBlock
@@ -37,7 +35,6 @@ open class SqlSubQueryGroupBlock(
     ) {
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -52,16 +49,6 @@ open class SqlSubQueryGroupBlock(
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
             return when (parent) {
-                is SqlElConditionLoopCommentBlock -> {
-                    return if (parent.isBeforeParentBlock()) {
-                        parent.parentBlock
-                            ?.indent
-                            ?.groupIndentLen
-                            ?.plus(1) ?: 1
-                    } else {
-                        parent.indent.indentLen
-                    }
-                }
                 is SqlWithQuerySubGroupBlock -> return parent.indent.groupIndentLen
                 is SqlJoinQueriesGroupBlock -> return parent.indent.indentLen
                 is SqlJoinGroupBlock -> return parent.indent.groupIndentLen.plus(1)
@@ -69,12 +56,7 @@ open class SqlSubQueryGroupBlock(
                     val children = prevChildren?.filter { shouldIncludeChildBlock(it, parent) }?.dropLast(1)
                     // Retrieve the list of child blocks excluding the conditional directive that appears immediately before this block,
                     // as it is already included as a child block.
-                    val sumChildren =
-                        if (children?.firstOrNull() is SqlElConditionLoopCommentBlock) {
-                            children.drop(1)
-                        } else {
-                            children ?: emptyList()
-                        }
+                    val sumChildren = children ?: emptyList()
                     return sumChildren
                         .sumOf { prev ->
                             prev

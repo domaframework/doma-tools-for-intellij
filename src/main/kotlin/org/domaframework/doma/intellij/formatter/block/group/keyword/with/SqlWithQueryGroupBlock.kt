@@ -49,12 +49,7 @@ class SqlWithQueryGroupBlock(
     override fun createBlockIndentLen(): Int = 0
 
     override fun createGroupIndentLen(): Int {
-        val sumChildren =
-            if (isConditionLoopDirectiveRegisteredBeforeParent()) {
-                childBlocks.drop(1)
-            } else {
-                childBlocks
-            }
+        val sumChildren = childBlocks
         return sumChildren
             .sumOf { it.getNodeText().length.plus(1) }
             .plus(getNodeText().length)

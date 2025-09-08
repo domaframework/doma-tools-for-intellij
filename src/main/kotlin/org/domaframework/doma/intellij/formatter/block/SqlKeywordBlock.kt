@@ -40,8 +40,6 @@ open class SqlKeywordBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = indentLevel
-        indent.indentLen = createBlockIndentLen()
-        indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 
     override fun setParentPropertyBlock(lastGroup: SqlBlock?) {
@@ -94,12 +92,6 @@ open class SqlKeywordBlock(
                 } ?: 1
             }
 
-            else -> {
-                if (isParentConditionLoopDirective()) {
-                    parentBlock?.indent?.groupIndentLen ?: 1
-                } else {
-                    parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
-                }
-            }
+            else -> parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
         }
 }

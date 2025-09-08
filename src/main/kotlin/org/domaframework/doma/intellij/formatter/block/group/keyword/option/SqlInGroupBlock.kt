@@ -17,7 +17,6 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.option
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -32,17 +31,11 @@ class SqlInGroupBlock(
     ) {
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock &&
-                parent.checkConditionLoopDirectiveParentBlock(this)
-            ) {
-                return parent.indent.indentLen
-            }
             return calculatePrevBlocksLength(prevBlocks, parent).plus(1)
         }
         return 0
@@ -50,11 +43,5 @@ class SqlInGroupBlock(
 
     override fun createGroupIndentLen(): Int = indent.indentLen.plus(getNodeText().length)
 
-    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
-        if (lastGroup is SqlElConditionLoopCommentBlock) {
-            if (lastGroup.conditionType.isElse()) return false
-            return !lastGroup.isBeforeParentBlock()
-        }
-        return false
-    }
+    override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = false
 }

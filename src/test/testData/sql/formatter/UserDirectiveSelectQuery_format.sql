@@ -3,7 +3,7 @@ SELECT p.id
        , p.price
        , /*%if includeTax */
          p.price * /* taxRate */1.1 AS price_with_tax
-          ,
+         ,
          /*%end*/
          p.stock_quantity
   FROM products p

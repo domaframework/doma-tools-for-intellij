@@ -17,7 +17,6 @@ package org.domaframework.doma.intellij.formatter.block.other
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlArrayListGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -36,13 +35,7 @@ class SqlEscapeBlock(
     }
 
     override fun createBlockIndentLen(): Int {
-        val parentEscapeBlock =
-            if (isParentConditionLoopDirective()) {
-                if (parentBlock?.parentBlock is SqlEscapeBlock)1 else 0
-            } else {
-                0
-            }
-        val prevBlocks = parentBlock?.childBlocks?.count { it is SqlEscapeBlock }?.plus(parentEscapeBlock) ?: 0
+        val prevBlocks = parentBlock?.childBlocks?.count { it is SqlEscapeBlock } ?: 0
 
         val hasEvenEscapeBlocks = prevBlocks.let { it % 2 == 0 } == true
         isEndEscape = hasEvenEscapeBlocks || getNodeText() == "]"
@@ -66,12 +59,8 @@ class SqlEscapeBlock(
                     return parentIndentLen.plus(1)
                 }
 
-                is SqlElConditionLoopCommentBlock -> {
-                    return parent.indent.groupIndentLen
-                }
-
                 else -> {
-                    if (isSaveSpace(parentBlock))return parentBlock?.indent?.groupIndentLen ?: 1
+                    if (isSaveSpace(parentBlock) || conditionLoopDirective != null)return parentBlock?.indent?.groupIndentLen ?: 1
                     return 1
                 }
             }

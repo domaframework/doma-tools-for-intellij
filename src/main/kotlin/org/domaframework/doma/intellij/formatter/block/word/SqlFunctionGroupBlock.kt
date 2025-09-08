@@ -18,12 +18,9 @@ package org.domaframework.doma.intellij.formatter.block.word
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
-import kotlin.collections.emptyList
-import kotlin.collections.toList
 
 class SqlFunctionGroupBlock(
     node: ASTNode,
@@ -35,7 +32,6 @@ class SqlFunctionGroupBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         prevChildren = lastGroup?.childBlocks?.toList() ?: emptyList()
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -58,12 +54,6 @@ class SqlFunctionGroupBlock(
         when (parent) {
             is SqlSubGroupBlock ->
                 prevBlocksLength
-
-            is SqlElConditionLoopCommentBlock -> {
-                val directiveParent = parentBlock?.parentBlock
-                val directiveParentLen = directiveParent?.getNodeText()?.length?.plus(1) ?: 1
-                prevBlocksLength.plus(directiveParentLen)
-            }
 
             else -> prevBlocksLength.plus(1)
         }

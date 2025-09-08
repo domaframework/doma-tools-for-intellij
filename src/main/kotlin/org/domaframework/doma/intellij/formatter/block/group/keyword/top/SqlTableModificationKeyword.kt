@@ -17,7 +17,6 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.top
 
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -38,9 +37,7 @@ class SqlTableModificationKeyword(
     override fun createBlockIndentLen(): Int {
         return parentBlock?.let { parent ->
             val rootBlock =
-                if (parent is SqlElConditionLoopCommentBlock) {
-                    parent.tempParentBlock
-                } else if (parent.indent.indentLevel == IndentType.FILE) {
+                if (parent.indent.indentLevel == IndentType.FILE) {
                     null
                 } else {
                     parent
@@ -54,12 +51,5 @@ class SqlTableModificationKeyword(
         } ?: 0
     }
 
-    override fun createGroupIndentLen(): Int =
-        parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) {
-                parent.indent.indentLen
-            } else {
-                getTotalTopKeywordLength()
-            }
-        } ?: getTotalTopKeywordLength()
+    override fun createGroupIndentLen(): Int = getTotalTopKeywordLength()
 }

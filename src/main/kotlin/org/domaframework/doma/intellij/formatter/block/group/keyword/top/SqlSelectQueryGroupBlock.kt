@@ -38,7 +38,7 @@ class SqlSelectQueryGroupBlock(
         parentBlock?.addChildBlock(this)
         setParentPropertyBlock(lastGroup)
         indent.indentLevel = indentLevel
-        indent.indentLen = createBlockIndentLen()
+        setIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 

@@ -18,7 +18,6 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword.option
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.SqlKeywordBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubQueryGroupBlock
@@ -30,18 +29,12 @@ open class SqlSecondOptionKeywordGroupBlock(
     node: ASTNode,
     context: SqlBlockFormattingContext,
 ) : SqlKeywordGroupBlock(node, IndentType.SECOND_OPTION, context) {
-    override fun setParentGroupBlock(lastGroup: SqlBlock?) {
-        super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
-    }
-
     override fun createBlockIndentLen(): Int {
         parentBlock?.let { parent ->
             val groupLen = parent.indent.groupIndentLen
             if (parent.indent.indentLevel == IndentType.FILE) {
                 return 0
             }
-            if (parent is SqlElConditionLoopCommentBlock) return groupLen
             val subGroupBlock = parent.parentBlock as? SqlSubGroupBlock
             val newIndent =
                 if (parent is SqlSubQueryGroupBlock) {

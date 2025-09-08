@@ -42,7 +42,6 @@ open class SqlInlineGroupBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.INLINE
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
@@ -50,9 +49,7 @@ open class SqlInlineGroupBlock(
 
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
-            if (isParentConditionLoopDirective() || isFirstChildConditionLoopDirective() ||
-                parent is SqlSubGroupBlock
-            ) {
+            if (parent is SqlSubGroupBlock) {
                 parent.indent.groupIndentLen
             } else {
                 parent.indent.groupIndentLen.plus(1)

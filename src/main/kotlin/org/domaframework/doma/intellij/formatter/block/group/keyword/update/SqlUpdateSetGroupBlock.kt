@@ -39,7 +39,6 @@ open class SqlUpdateSetGroupBlock(
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
         indent.indentLevel = IndentType.SECOND
-        indent.indentLen = createBlockIndentLen(null)
         indent.groupIndentLen = indent.indentLen.plus(getNodeText().length)
     }
 
@@ -49,7 +48,7 @@ open class SqlUpdateSetGroupBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createBlockIndentLen(preChildBlock: SqlBlock?): Int = parentBlock?.indent?.groupIndentLen?.minus(getNodeText().length) ?: 0
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.minus(getNodeText().length) ?: 0
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = true
 }

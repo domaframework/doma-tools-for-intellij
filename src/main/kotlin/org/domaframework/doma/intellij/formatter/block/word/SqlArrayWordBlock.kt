@@ -18,7 +18,6 @@ package org.domaframework.doma.intellij.formatter.block.word
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.expr.SqlElDotBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlArrayListGroupBlock
 import org.domaframework.doma.intellij.formatter.block.other.SqlOtherBlock
@@ -48,11 +47,7 @@ open class SqlArrayWordBlock(
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createBlockIndentLen(): Int =
-        when (val parent = parentBlock) {
-            is SqlElConditionLoopCommentBlock -> parent.indent.groupIndentLen
-            else -> 1
-        }
+    override fun createBlockIndentLen(): Int = 1
 
     override fun createGroupIndentLen(): Int =
         parentBlock

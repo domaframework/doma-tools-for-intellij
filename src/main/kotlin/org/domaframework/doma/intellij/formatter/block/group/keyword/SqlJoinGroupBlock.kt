@@ -18,7 +18,6 @@ package org.domaframework.doma.intellij.formatter.block.group.keyword
 import com.intellij.lang.ASTNode
 import com.intellij.psi.formatter.common.AbstractBlock
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlLateralGroupBlock
 import org.domaframework.doma.intellij.formatter.util.IndentType
 import org.domaframework.doma.intellij.formatter.util.SqlBlockFormattingContext
@@ -42,20 +41,13 @@ open class SqlJoinGroupBlock(
         parentBlock = lastGroup
         parentBlock?.childBlocks?.add(this)
         indent.indentLevel = IndentType.JOIN
-        indent.indentLen = createBlockIndentLen()
+        setIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
 
     override fun buildChildren(): MutableList<AbstractBlock> = mutableListOf()
 
-    override fun createBlockIndentLen(): Int {
-        return parentBlock?.let { parent ->
-            if (parent is SqlElConditionLoopCommentBlock) {
-                return parent.indent.groupIndentLen
-            }
-            return parent.indent.groupIndentLen.plus(1)
-        } ?: 1
-    }
+    override fun createBlockIndentLen(): Int = parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
 
     override fun createGroupIndentLen(): Int =
         indent.indentLen

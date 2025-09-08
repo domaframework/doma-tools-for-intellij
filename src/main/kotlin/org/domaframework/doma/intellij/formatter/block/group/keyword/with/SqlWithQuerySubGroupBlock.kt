@@ -31,9 +31,10 @@ class SqlWithQuerySubGroupBlock(
 
     override fun setParentGroupBlock(lastGroup: SqlBlock?) {
         super.setParentGroupBlock(lastGroup)
-        indent.indentLen = createBlockIndentLen()
         indent.groupIndentLen = createGroupIndentLen()
     }
+
+    fun parentInlineDirective(): Boolean = parentBlock?.conditionLoopDirective != null
 
     override fun createBlockIndentLen(): Int = offset
 

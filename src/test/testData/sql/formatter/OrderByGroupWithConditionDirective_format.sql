@@ -5,15 +5,9 @@ SELECT e.id
          OVER(ORDER BY e.manager_id DESC)
          /*%end*/
          AS row_num
-       , RANK() OVER(PARTITION BY department_id
-                     /*%if order */
-                     ORDER BY e.manager_id DESC
-                     /*%end */
-                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS rank_num
        , DENSE_RANK() OVER(PARTITION BY department_id
-                           /*%if order */
                            ORDER BY e.id ASC, e.manager_id ASC, created_at DESC
-                           /*%else */
+                           /*%if rows */
                            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
                            /*%end */) AS dense_rank_num
        , SUM(amount)

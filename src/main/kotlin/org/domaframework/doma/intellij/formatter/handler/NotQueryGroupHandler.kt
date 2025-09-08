@@ -18,15 +18,14 @@ package org.domaframework.doma.intellij.formatter.handler
 import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictClauseBlock
 import org.domaframework.doma.intellij.formatter.block.conflict.SqlConflictExpressionSubGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.condition.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.option.SqlInGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlReturningGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlValuesGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.second.SqlWhereGroupBlock
+import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlConditionalExpressionGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlFunctionParamBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlParallelListBlock
 import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlValuesParamGroupBlock
@@ -96,14 +95,7 @@ object NotQueryGroupHandler {
     private fun hasFunctionOrAliasContext(lastGroup: SqlBlock?): Boolean {
         val lastChild = lastGroup?.childBlocks?.lastOrNull()
         if (lastChild != null) {
-            when (lastChild) {
-                is SqlElConditionLoopCommentBlock -> {
-                    if (lastChild.isBeforeParentBlock()) {
-                        return lastChild.parentBlock is SqlWordBlock
-                    }
-                }
-                else -> return lastGroup.childBlocks.lastOrNull() is SqlWordBlock
-            }
+            return lastGroup.childBlocks.lastOrNull() is SqlWordBlock
         }
         return false
     }

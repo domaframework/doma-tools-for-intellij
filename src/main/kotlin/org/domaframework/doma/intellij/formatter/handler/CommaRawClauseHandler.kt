@@ -19,7 +19,6 @@ import com.intellij.lang.ASTNode
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comma.SqlArrayCommaBlock
 import org.domaframework.doma.intellij.formatter.block.comma.SqlCommaBlock
-import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 import org.domaframework.doma.intellij.formatter.block.group.column.SqlColumnRawGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
 import org.domaframework.doma.intellij.formatter.block.group.keyword.with.SqlWithCommonTableGroupBlock
@@ -36,30 +35,7 @@ object CommaRawClauseHandler {
         lastGroup: SqlBlock?,
         child: ASTNode,
         sqlBlockFormattingCtx: SqlBlockFormattingContext,
-    ): SqlBlock =
-        when (lastGroup) {
-            is SqlElConditionLoopCommentBlock ->
-                createCommaBlockForConditionLoop(
-                    lastGroup,
-                    child,
-                    sqlBlockFormattingCtx,
-                )
-
-            else -> createCommaBlockForGroup(lastGroup, child, sqlBlockFormattingCtx)
-        }
-
-    /**
-     * Creates a comma block for condition/loop comment blocks.
-     * Uses the parent block if available, otherwise uses the temporary parent block.
-     */
-    private fun createCommaBlockForConditionLoop(
-        lastGroup: SqlElConditionLoopCommentBlock,
-        child: ASTNode,
-        sqlBlockFormattingCtx: SqlBlockFormattingContext,
-    ): SqlBlock {
-        val effectiveParent = lastGroup.parentBlock ?: lastGroup.tempParentBlock
-        return createCommaBlockForGroup(effectiveParent, child, sqlBlockFormattingCtx)
-    }
+    ): SqlBlock = createCommaBlockForGroup(lastGroup, child, sqlBlockFormattingCtx)
 
     /**
      * Creates an appropriate comma block based on the group type and indent level.

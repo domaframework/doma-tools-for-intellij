@@ -5,4 +5,4 @@ ALTER TABLE /*# tableName */
           ,
           /*%end */
         /*%end */
-        DROP COLUMN /*# column2.name */ /*# column2.type */
+       DROP COLUMN /*# column2.name */ /*# column2.type */
