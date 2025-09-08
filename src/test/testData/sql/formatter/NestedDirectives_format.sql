@@ -43,7 +43,7 @@ SELECT e.id
               /*%end */ -- END3
               /*%if sort_has_next */ -- IF8
               e.sort_field
-               ,
+              ,
               /*%end */ -- END8
             /*%end */ -- END2
           /*%else */ -- ELSE1

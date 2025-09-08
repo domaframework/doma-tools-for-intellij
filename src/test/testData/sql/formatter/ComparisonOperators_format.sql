@@ -21,7 +21,7 @@ SELECT id
          tags && ARRAY[/*%for property : properties */
                        /* property */'property'
                          /*%if property_has_next*/
-                          ,
+                         ,
                          /*%end*/
                        /*%end*/] AS is_urgent
        , ARRAY['tag1', 'tag2'] <@ tags AS has_all_tags
