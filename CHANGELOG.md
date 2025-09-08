@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [2.2.2] - 2025-09-08
+
+### Maintenance
+
+- Refactor SQL Formatter Block Relations and Translate Comments ([#444])
+
+### Dependency Updates
+
+- Update dependency org.jetbrains.intellij.platform to v2.9.0 ([#443])
+
+[#444]:https://github.com/domaframework/doma-tools-for-intellij/pull/444
+[#443]:https://github.com/domaframework/doma-tools-for-intellij/pull/443
+
+
 ## [2.2.1] - 2025-09-03
 
 ### Bug Fixes
@@ -538,3 +552,4 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[2.2.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.2.1...2.2.2
