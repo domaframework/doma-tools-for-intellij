@@ -420,8 +420,8 @@ class SqlBlockGenerator(
     }
 
     /**
-     * TODO If the previous group is a keyword group, it becomes a table name block under specific conditions
-     *      After [SqlColumnRawGroupBlock] etc., it becomes a normal [SqlWordBlock]
+     * If the previous group is a keyword group, it becomes a table name block under specific conditions
+     * After [SqlColumnRawGroupBlock] etc., it becomes a normal [SqlWordBlock]
      */
     fun getWordBlock(
         lastGroup: SqlBlock?,

@@ -124,7 +124,7 @@ open class SqlBlock(
         )
 
     /**
-     * TODO 親ブロックと依存先未設定の条件ループディレクティブによってインデントと改行を計算する
+     * Calculate indentation and line breaks based on the parent block and conditional loop directives with no dependency target set.
      * @param lastGroup The last group block
      */
     open fun setParentGroupBlock(lastGroup: SqlBlock?) {
