@@ -18,20 +18,8 @@ package org.domaframework.doma.intellij.formatter.builder
 import org.domaframework.doma.intellij.formatter.block.SqlBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultCommentBlock
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
-import org.domaframework.doma.intellij.formatter.block.group.keyword.SqlKeywordGroupBlock
-import org.domaframework.doma.intellij.formatter.block.group.subgroup.SqlSubGroupBlock
 
 open class SqlBlockBuilder {
-    private val updateDirectiveParentTypes =
-        listOf(
-            SqlDefaultCommentBlock::class,
-        )
-
-    private val originalConditionLoopDirectiveParentType =
-        listOf(
-            SqlKeywordGroupBlock::class,
-            SqlSubGroupBlock::class,
-        )
 
     private val groupTopNodeIndexHistory = mutableListOf<SqlBlock>()
 
