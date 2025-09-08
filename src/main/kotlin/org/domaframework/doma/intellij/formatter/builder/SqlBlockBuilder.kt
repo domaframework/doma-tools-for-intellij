@@ -20,7 +20,6 @@ import org.domaframework.doma.intellij.formatter.block.comment.SqlDefaultComment
 import org.domaframework.doma.intellij.formatter.block.comment.SqlElConditionLoopCommentBlock
 
 open class SqlBlockBuilder {
-
     private val groupTopNodeIndexHistory = mutableListOf<SqlBlock>()
 
     private val commentBlocks = mutableListOf<SqlDefaultCommentBlock>()
