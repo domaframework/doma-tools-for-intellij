@@ -16,11 +16,18 @@
 package org.domaframework.doma.intellij.common.psi
 
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
+import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiType
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
+import org.domaframework.doma.intellij.common.util.MethodMatcher
+import org.domaframework.doma.intellij.extension.expr.extractParameterTypes
+import org.domaframework.doma.intellij.psi.SqlElParameters
+
 /**
  * When parsing a field access element with SQL,
  * manage the reference class information of the previous element
@@ -59,6 +66,25 @@ open class PsiParentClass(
             }?.firstOrNull { m ->
                 m.name.substringBefore("(") == methodName.substringBefore("(")
             }
+
+    fun findMethod(methodExpr: PsiElement): PsiMethod? {
+        val methods  = findMethods(methodExpr.text)
+        val paramExpr = PsiTreeUtil.nextLeaf(methodExpr)?.parent as? SqlElParameters ?: return null
+        val matchCountMethods = methods.filter { m ->
+            val methodParams = m.parameterList.parameters
+            return@filter paramExpr.elExprList.size == methodParams.size
+        }
+        val paramTypes = paramExpr.extractParameterTypes(PsiManager.getInstance(methodExpr.project))
+        val matchResult =
+            MethodMatcher.findMatchingMethod(
+                methodExpr,
+                matchCountMethods,
+                paramTypes,
+                paramExpr.elExprList.size,
+            )
+
+        return matchResult.method
+    }
 
     fun findMethods(methodName: String): List<PsiMethod> =
         getMethods()

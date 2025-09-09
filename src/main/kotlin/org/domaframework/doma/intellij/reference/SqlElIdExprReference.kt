@@ -17,7 +17,6 @@ package org.domaframework.doma.intellij.reference
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
@@ -27,14 +26,11 @@ import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.sql.foritem.ForItem
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
-import org.domaframework.doma.intellij.common.util.MethodMatcher
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationCompleteResult
-import org.domaframework.doma.intellij.extension.expr.extractParameterTypes
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
-import org.domaframework.doma.intellij.psi.SqlElParameters
 import org.domaframework.doma.intellij.psi.SqlTypes
 
 class SqlElIdExprReference(
@@ -144,7 +140,7 @@ class SqlElIdExprReference(
     ): PsiElement? {
         val searchText = cleanString(targetElement.text)
         val reference =
-            topParentClass.findField(searchText) ?: findMethod(topParentClass,targetElement)
+            topParentClass.findField(searchText) ?: topParentClass.findMethod(targetElement)
 
         if (reference != null) {
             PluginLoggerUtil.countLogging(
@@ -155,24 +151,5 @@ class SqlElIdExprReference(
             )
         }
         return reference
-    }
-
-    private fun findMethod(parent: PsiParentClass, methodExpr: PsiElement): PsiMethod? {
-        val methods  = parent.findMethods(methodExpr.text)
-        val paramExpr = PsiTreeUtil.nextLeaf(methodExpr)?.parent as? SqlElParameters ?: return null
-        val matchCountMethods = methods.filter { m ->
-            val methodParams = m.parameterList.parameters
-            return@filter paramExpr.elExprList.size == methodParams.size
-        }
-        val paramTypes = paramExpr.extractParameterTypes(PsiManager.getInstance(methodExpr.project))
-        val matchResult =
-            MethodMatcher.findMatchingMethod(
-                methodExpr,
-                matchCountMethods,
-                paramTypes,
-                paramExpr.elExprList.size,
-            )
-
-        return matchResult.method
     }
 }
