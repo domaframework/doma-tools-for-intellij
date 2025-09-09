@@ -16,26 +16,11 @@
 package org.domaframework.doma.intellij.common.psi
 
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
-import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiType
-import com.intellij.psi.PsiTypes
-import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
-import org.domaframework.doma.intellij.common.util.TypeUtil
-import org.domaframework.doma.intellij.extension.expr.extractFieldType
-import org.domaframework.doma.intellij.extension.expr.extractStaticFieldType
-import org.domaframework.doma.intellij.psi.SqlElExpr
-import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
-import org.domaframework.doma.intellij.psi.SqlElParameters
-import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
-import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
-import org.domaframework.doma.intellij.psi.SqlTypes
-
 /**
  * When parsing a field access element with SQL,
  * manage the reference class information of the previous element
@@ -80,20 +65,6 @@ open class PsiParentClass(
             ?.filter { m ->
                 m.hasModifierProperty(PsiModifier.PUBLIC) && m.name.substringBefore("(") == methodName.substringBefore("(")
             } ?: emptyList()
-
-    fun findMethod(methodExpr: PsiElement): PsiMethod? =
-        findMethods(methodExpr.text).firstOrNull { m ->
-            val methodParams = m.parameterList.parameters
-            val paramExpr = PsiTreeUtil.nextLeaf(methodExpr)?.parent as? SqlElParameters ?: return@firstOrNull false
-            if (paramExpr.elExprList.size != methodParams.size) return@firstOrNull false
-
-            val paramTypes = extractParameterTypes(paramExpr.elExprList, PsiManager.getInstance(methodExpr.project))
-
-            methodParams.zip(paramTypes).all { (definedParam, actualType) ->
-                definedParam.type == actualType ||
-                    TypeUtil.sameTypeIgnoringBoxing(definedParam.type, actualType)
-            }
-        }
 
     fun searchMethod(methodName: String): List<PsiMethod>? =
         getMethods()?.filter { m ->
