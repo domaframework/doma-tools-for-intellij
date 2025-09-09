@@ -62,13 +62,12 @@ class InspectionFieldAccessVisitorProcessor(
     /**
      * Get the final class type of the field access element
      */
-    fun getFieldAccessLastPropertyClassType(): PsiType? {
-        return when (val topElementClass = resolveTopElementType(targetFile)) {
+    fun getFieldAccessLastPropertyClassType(): PsiType? =
+        when (val topElementClass = resolveTopElementType(targetFile)) {
             is DummyPsiParentClass, null -> null
 
             else -> getFieldAccess(topElementClass)?.parentClass?.type
         }
-    }
 
     private fun resolveTopElementType(file: PsiFile): PsiParentClass? {
         targetFile = file

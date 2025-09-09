@@ -20,8 +20,7 @@ import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.psi.SqlElNewExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-abstract class InspectionVisitorProcessor(
-) {
+abstract class InspectionVisitorProcessor {
     protected fun isLiteralOrStatic(targetElement: PsiElement): Boolean =
         (
             targetElement.firstChild?.elementType == SqlTypes.EL_STRING ||

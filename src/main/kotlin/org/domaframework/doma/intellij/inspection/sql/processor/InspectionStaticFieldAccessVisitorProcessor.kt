@@ -90,17 +90,17 @@ class InspectionStaticFieldAccessVisitorProcessor(
     private fun resolveTopParentClass(
         staticAccessor: SqlElStaticFieldAccessExpr,
         referenceClass: PsiClass,
-        shortName: String = ""
+        shortName: String = "",
     ): Pair<PsiParentClass?, ValidationResult?> {
         val topParentClass =
             ForDirectiveUtil.getStaticFieldAccessTopElementClassType(
                 staticAccessor,
                 referenceClass,
-                shortName
+                shortName,
             )
 
         val result = topParentClass?.validationResult
-        if(result != null){
+        if (result != null) {
             topParentClass.parent = DummyPsiParentClass()
         }
 
@@ -131,10 +131,10 @@ class InspectionStaticFieldAccessVisitorProcessor(
 
         val topParentClass =
             resolveTopParentClass(staticAccessor, referenceClass)
-        if(topParentClass.first == null || topParentClass.first is DummyPsiParentClass){
+        if (topParentClass.first == null || topParentClass.first is DummyPsiParentClass) {
             return null
         }
-        val parent : PsiParentClass = topParentClass.first ?: return null
+        val parent: PsiParentClass = topParentClass.first ?: return null
 
         val result = checkFieldAccessValidity(staticAccessor, parent)
         return result?.parentClass?.type

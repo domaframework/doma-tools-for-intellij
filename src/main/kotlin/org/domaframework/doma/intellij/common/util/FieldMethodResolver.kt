@@ -126,7 +126,6 @@ class FieldMethodResolver {
                     shortName,
                 )
 
-
             fun result(): ResolveResult {
                 if (matchResult.validation != null) {
                     context.validationResult = matchResult.validation

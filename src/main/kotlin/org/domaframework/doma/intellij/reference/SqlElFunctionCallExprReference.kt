@@ -57,10 +57,11 @@ class SqlElFunctionCallExprReference(
                 expressionFunctionsInterface
             }
 
-        val reference: PsiMethod? = implementsClass?.let { imp ->
-            val psiParentClass = PsiParentClass(imp.psiClassType)
-            psiParentClass.findMethod(element).method
-        }
+        val reference: PsiMethod? =
+            implementsClass?.let { imp ->
+                val psiParentClass = PsiParentClass(imp.psiClassType)
+                psiParentClass.findMethod(element).method
+            }
 
         if (reference == null) {
             PluginLoggerUtil.countLogging(

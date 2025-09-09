@@ -62,7 +62,6 @@ class InspectionFunctionCallVisitorProcessor(
                 }
                 result = checkMethodParamCount(functionName, methods)
                 result = checkParamTypeMatch(parentPsiClass, result)
-
             } else {
                 // Not inheriting from ExpressionFunctions.
                 result =
@@ -77,7 +76,7 @@ class InspectionFunctionCallVisitorProcessor(
 
     private fun checkParamTypeMatch(
         parentPsiClass: PsiClass,
-        result: ValidationResult?
+        result: ValidationResult?,
     ): ValidationResult? {
         var result1 = result
         val psiParentClassExpressionClazz = PsiParentClass(parentPsiClass.psiClassType)
@@ -108,7 +107,11 @@ class InspectionFunctionCallVisitorProcessor(
         return null
     }
 
-    private fun errorHighlight(holder: ProblemsHolder, functionName: PsiElement, customFunctionClassName:String) {
+    private fun errorHighlight(
+        holder: ProblemsHolder,
+        functionName: PsiElement,
+        customFunctionClassName: String,
+    ) {
         ValidationInvalidFunctionCallResult(
             functionName,
             customFunctionClassName,

@@ -65,16 +65,20 @@ open class PsiParentClass(
                 m.name.substringBefore("(") == methodName.substringBefore("(")
             }
 
-    fun findMethod(methodExpr: PsiElement, shortName:String = ""): MethodMatcher.MatchResult {
+    fun findMethod(
+        methodExpr: PsiElement,
+        shortName: String = "",
+    ): MethodMatcher.MatchResult {
         val context = MethodParamContext.of(methodExpr)
         val methods = findMethods(context.methodIdExp.text)
-        if(context.methodParams == null) return MethodMatcher.MatchResult(validation = null)
+        if (context.methodParams == null) return MethodMatcher.MatchResult(validation = null)
 
         val actualCount = context.methodParams.elExprList.size
-        val matchCountMethods = methods.filter { m ->
-            val methodParams = m.parameterList.parameters
-            return@filter actualCount == methodParams.size
-        }
+        val matchCountMethods =
+            methods.filter { m ->
+                val methodParams = m.parameterList.parameters
+                return@filter actualCount == methodParams.size
+            }
         val paramTypes = context.methodParams.extractParameterTypes(PsiManager.getInstance(methodExpr.project))
         val matchResult =
             MethodMatcher.findMatchingMethod(
@@ -82,7 +86,7 @@ open class PsiParentClass(
                 matchCountMethods,
                 paramTypes,
                 actualCount,
-                shortName
+                shortName,
             )
 
         return matchResult

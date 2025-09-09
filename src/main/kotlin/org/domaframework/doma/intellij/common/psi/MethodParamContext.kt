@@ -1,3 +1,18 @@
+/*
+ * Copyright Doma Tools Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.domaframework.doma.intellij.common.psi
 
 import com.intellij.psi.PsiElement
@@ -5,28 +20,29 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
 import org.domaframework.doma.intellij.psi.SqlElParameters
 
- class MethodParamContext(val methodIdExp: PsiElement, val methodParams: SqlElParameters?) {
-     companion object {
-         fun of(method: PsiElement): MethodParamContext {
-             return MethodParamContext(
-                 setMethodIdExp(method),
-                 setParameter(method)
-             )
-         }
-         private fun setParameter(method: PsiElement): SqlElParameters? {
-             return if (method is SqlElFunctionCallExpr) {
-                 method.elParameters
-             } else {
-                 PsiTreeUtil.nextLeaf(method)?.parent as? SqlElParameters
-             }
-         }
+class MethodParamContext(
+    val methodIdExp: PsiElement,
+    val methodParams: SqlElParameters?,
+) {
+    companion object {
+        fun of(method: PsiElement): MethodParamContext =
+            MethodParamContext(
+                setMethodIdExp(method),
+                setParameter(method),
+            )
 
-         private fun setMethodIdExp(method: PsiElement): PsiElement {
-             return if (method is SqlElFunctionCallExpr) {
-                 method.elIdExpr
-             } else {
-                 method
-             }
-         }
-     }
- }
+        private fun setParameter(method: PsiElement): SqlElParameters? =
+            if (method is SqlElFunctionCallExpr) {
+                method.elParameters
+            } else {
+                PsiTreeUtil.nextLeaf(method)?.parent as? SqlElParameters
+            }
+
+        private fun setMethodIdExp(method: PsiElement): PsiElement =
+            if (method is SqlElFunctionCallExpr) {
+                method.elIdExpr
+            } else {
+                method
+            }
+    }
+}
