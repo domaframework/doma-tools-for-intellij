@@ -45,7 +45,6 @@ class ExpressionFunctionsHelper {
                         expressionClazz.superTypes.firstOrNull()?.canonicalText
                             ?: expressionClazz.psiClassType.canonicalText
                     return project?.let {
-                        expressionClazz.psiClassType.canonicalText
                         project
                             .getJavaClazz(parentType)
                             ?.isInheritor(functionInterface, true) == true

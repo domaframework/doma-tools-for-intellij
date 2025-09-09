@@ -22,7 +22,16 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
-import org.domaframework.doma.intellij.psi.*
+import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
+import org.domaframework.doma.intellij.psi.SqlElElseifDirective
+import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElIdExpr
+import org.domaframework.doma.intellij.psi.SqlElIfDirective
+import org.domaframework.doma.intellij.psi.SqlElParameters
+import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
+import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlTypes
 
 fun SqlCustomElCommentExpr.isConditionOrLoopDirective(): Boolean =
     PsiTreeUtil.getChildOfType(this, SqlElIfDirective::class.java) != null ||

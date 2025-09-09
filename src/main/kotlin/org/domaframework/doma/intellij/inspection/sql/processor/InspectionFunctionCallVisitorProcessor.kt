@@ -17,9 +17,7 @@ package org.domaframework.doma.intellij.inspection.sql.processor
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil
 import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil.EXPRESSION_FUNCTIONS_NAME
@@ -28,12 +26,10 @@ import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.validation.result.ValidationInvalidExpressionFunctionsResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationInvalidFunctionCallResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
-import org.domaframework.doma.intellij.common.validation.result.ValidationResultFunctionCallParameterCount
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
-import org.domaframework.doma.intellij.psi.SqlElParameters
 import org.jetbrains.kotlin.idea.util.projectStructure.module
 
 class InspectionFunctionCallVisitorProcessor(
@@ -49,29 +45,71 @@ class InspectionFunctionCallVisitorProcessor(
         val isTest = CommonPathParameterUtil.isTest(module, element.containingFile.virtualFile)
         val customFunctionClassName = DomaCompileConfigUtil.getConfigValue(module, isTest, "doma.expr.functions")
 
-        var result: ValidationResult? = null
-        var methods: Array<out PsiMethod?>
+        if(customFunctionClassName?.isEmpty() == true){
+            ValidationInvalidExpressionFunctionsResult(
+                functionName,
+                shortName,
+            ).highlightElement(holder)
+            return
+        }
+
+        var methods: List<PsiMethod?>
         val expressionClazz = customFunctionClassName?.let { project.getJavaClazz(it) }
-        val parentPsiClass = expressionClazz ?: expressionFunctionalInterface
-        if (parentPsiClass != null) {
-            if (expressionHelper.isInheritor(parentPsiClass)) {
-                methods = parentPsiClass.findMethodsByName(functionName.text, true)
+        val parentClass = expressionClazz ?: expressionFunctionalInterface
+        var result: ValidationResult? =
+            ValidationInvalidFunctionCallResult(
+                functionName,
+                parentClass?.psiClassType?.canonicalText ?: EXPRESSION_FUNCTIONS_NAME,
+                shortName,
+            )
+        if (parentClass != null) {
+            if (expressionHelper.isInheritor(parentClass) || parentClass == expressionFunctionalInterface) {
+                methods = parentClass.findMethodsByName(functionName.text, true).mapNotNull { it }
                 if (methods.isEmpty()) {
-                    errorHighlight(holder, functionName, customFunctionClassName ?: EXPRESSION_FUNCTIONS_NAME)
-                    return
-                }
-                result = checkMethodParamCount(functionName, methods)
-                result = checkParamTypeMatch(parentPsiClass, result)
-            } else {
-                // Not inheriting from ExpressionFunctions.
-                result =
-                    ValidationInvalidExpressionFunctionsResult(
+                    handleNotFoundMethodError(
+                        result,
+                        parentClass,
+                        expressionFunctionalInterface,
+                        expressionHelper,
                         functionName,
-                        shortName,
-                    )
+                    )?.highlightElement(holder)
+                    return
+                } else {
+                    result = null
+                }
+                result = checkParamTypeMatch(parentClass, result)
             }
         }
+        result =
+            handleNotFoundMethodError(
+                result,
+                parentClass,
+                expressionFunctionalInterface,
+                expressionHelper,
+                functionName,
+            )
         result?.highlightElement(holder)
+    }
+
+    /**
+     * Not inheriting from ExpressionFunctions.
+     */
+    private fun handleNotFoundMethodError(
+        result: ValidationResult?,
+        parentClass: PsiClass?,
+        expressionFunctionalInterface: PsiClass?,
+        expressionHelper: ExpressionFunctionsHelper.Companion,
+        functionName: SqlElIdExpr,
+    ): ValidationResult? {
+        var result1 = result
+        if (result1 != null && parentClass != expressionFunctionalInterface && !expressionHelper.isInheritor(parentClass)) {
+            result1 =
+                ValidationInvalidExpressionFunctionsResult(
+                    functionName,
+                    shortName,
+                )
+        }
+        return result1
     }
 
     private fun checkParamTypeMatch(
@@ -85,37 +123,5 @@ class InspectionFunctionCallVisitorProcessor(
             result1 = methodResult.validation
         }
         return result1
-    }
-
-    private fun checkMethodParamCount(
-        functionName: SqlElIdExpr,
-        methods: Array<out PsiMethod?>,
-    ): ValidationResult? {
-        val paramExpr = PsiTreeUtil.nextLeaf(functionName)?.parent as? SqlElParameters ?: return null
-        val actualCount = paramExpr.elExprList.size
-        methods.mapNotNull { it }.filter { m ->
-            val exactCount = m.parameterList.parametersCount
-            exactCount == actualCount
-        }
-        if (methods.isEmpty()) {
-            return ValidationResultFunctionCallParameterCount(
-                element,
-                shortName,
-                actualCount,
-            )
-        }
-        return null
-    }
-
-    private fun errorHighlight(
-        holder: ProblemsHolder,
-        functionName: PsiElement,
-        customFunctionClassName: String,
-    ) {
-        ValidationInvalidFunctionCallResult(
-            functionName,
-            customFunctionClassName,
-            shortName,
-        ).highlightElement(holder)
     }
 }

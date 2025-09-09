@@ -25,6 +25,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationCompleteResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationNotFoundStaticPropertyResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.extension.expr.extractParameterTypes
@@ -108,7 +109,7 @@ class FieldMethodResolver {
 
             if (candidateMethods.isEmpty()) {
                 return ResolveResult(
-                    validation = ValidationPropertyResult(element, context.parent, shortName),
+                    validation = ValidationNotFoundStaticPropertyResult(element, parent.type.canonicalText, shortName),
                 )
             }
 

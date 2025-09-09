@@ -74,16 +74,11 @@ open class PsiParentClass(
         if (context.methodParams == null) return MethodMatcher.MatchResult(validation = null)
 
         val actualCount = context.methodParams.elExprList.size
-        val matchCountMethods =
-            methods.filter { m ->
-                val methodParams = m.parameterList.parameters
-                return@filter actualCount == methodParams.size
-            }
         val paramTypes = context.methodParams.extractParameterTypes(PsiManager.getInstance(methodExpr.project))
         val matchResult =
             MethodMatcher.findMatchingMethod(
                 context.methodIdExp,
-                matchCountMethods,
+                methods,
                 paramTypes,
                 actualCount,
                 shortName,

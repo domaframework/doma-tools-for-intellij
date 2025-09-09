@@ -463,7 +463,7 @@ class ForDirectiveUtil {
                     context.validationResult =
                         ValidationNotFoundStaticPropertyResult(
                             topElement,
-                            staticFieldAccessExpr.elClass,
+                            staticFieldAccessExpr.elClass.text,
                             shortName,
                         )
                     return context
@@ -472,7 +472,7 @@ class ForDirectiveUtil {
             context.validationResult =
                 ValidationNotFoundStaticPropertyResult(
                     topElement,
-                    staticFieldAccessExpr.elClass,
+                    staticFieldAccessExpr.elClass.text,
                     shortName,
                 )
             return null
@@ -574,6 +574,7 @@ class ForDirectiveUtil {
                 context.nestIndex++
                 if (field == null && methodResult.type == null) {
                     context.completeResult = null
+                    context.validationResult = methodResult.validation
                     return context
                 }
 
