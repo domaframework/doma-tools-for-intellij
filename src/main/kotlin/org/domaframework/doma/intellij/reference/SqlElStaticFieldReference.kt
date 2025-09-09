@@ -45,7 +45,7 @@ class SqlElStaticFieldReference(
         val referenceParentClass = PsiParentClass(referenceClass.psiClassType)
         if (targetElements.size == 1) {
             val searchText = element.text ?: ""
-            val reference = referenceParentClass.findField(searchText) ?: referenceParentClass.findMethod(element)
+            val reference = referenceParentClass.findField(searchText) ?: referenceParentClass.findMethod(element).method
             if (reference != null) {
                 PluginLoggerUtil.countLogging(
                     this::class.java.simpleName,

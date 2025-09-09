@@ -22,11 +22,9 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiType
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiTypesUtil
 import org.domaframework.doma.intellij.common.util.MethodMatcher
 import org.domaframework.doma.intellij.extension.expr.extractParameterTypes
-import org.domaframework.doma.intellij.psi.SqlElParameters
 
 /**
  * When parsing a field access element with SQL,
@@ -67,23 +65,27 @@ open class PsiParentClass(
                 m.name.substringBefore("(") == methodName.substringBefore("(")
             }
 
-    fun findMethod(methodExpr: PsiElement): PsiMethod? {
-        val methods  = findMethods(methodExpr.text)
-        val paramExpr = PsiTreeUtil.nextLeaf(methodExpr)?.parent as? SqlElParameters ?: return null
+    fun findMethod(methodExpr: PsiElement, shortName:String = ""): MethodMatcher.MatchResult {
+        val context = MethodParamContext.of(methodExpr)
+        val methods = findMethods(context.methodIdExp.text)
+        if(context.methodParams == null) return MethodMatcher.MatchResult(validation = null)
+
+        val actualCount = context.methodParams.elExprList.size
         val matchCountMethods = methods.filter { m ->
             val methodParams = m.parameterList.parameters
-            return@filter paramExpr.elExprList.size == methodParams.size
+            return@filter actualCount == methodParams.size
         }
-        val paramTypes = paramExpr.extractParameterTypes(PsiManager.getInstance(methodExpr.project))
+        val paramTypes = context.methodParams.extractParameterTypes(PsiManager.getInstance(methodExpr.project))
         val matchResult =
             MethodMatcher.findMatchingMethod(
-                methodExpr,
+                context.methodIdExp,
                 matchCountMethods,
                 paramTypes,
-                paramExpr.elExprList.size,
+                actualCount,
+                shortName
             )
 
-        return matchResult.method
+        return matchResult
     }
 
     fun findMethods(methodName: String): List<PsiMethod> =

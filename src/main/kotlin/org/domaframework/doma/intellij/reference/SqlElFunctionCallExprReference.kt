@@ -21,9 +21,10 @@ import com.intellij.psi.PsiMethod
 import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil
 import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
+import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.getJavaClazz
-import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
+import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.jetbrains.kotlin.idea.base.util.module
 
 class SqlElFunctionCallExprReference(
@@ -33,9 +34,6 @@ class SqlElFunctionCallExprReference(
         startTime: Long,
         file: PsiFile,
     ): PsiElement? {
-        val functionCallExpr = element.parent as? SqlElFunctionCallExpr ?: return null
-        val variableName = functionCallExpr.elIdExpr.text ?: ""
-
         val project = element.project
         val module = file.module ?: return null
         val expressionFunctionsInterface =
@@ -49,8 +47,7 @@ class SqlElFunctionCallExprReference(
 
         val implementsClass =
             if (customFunctionClassName != null) {
-                val customFunctionClass = customFunctionClassName
-                val expressionFunction = project.getJavaClazz(customFunctionClass)
+                val expressionFunction = project.getJavaClazz(customFunctionClassName)
                 if (ExpressionFunctionsHelper.isInheritor(expressionFunction)) {
                     expressionFunction
                 } else {
@@ -60,10 +57,9 @@ class SqlElFunctionCallExprReference(
                 expressionFunctionsInterface
             }
 
-        var reference: PsiMethod? = null
-        val methods = implementsClass?.findMethodsByName(variableName, true)?.firstOrNull()
-        if (methods != null) {
-            reference = methods
+        val reference: PsiMethod? = implementsClass?.let { imp ->
+            val psiParentClass = PsiParentClass(imp.psiClassType)
+            psiParentClass.findMethod(element).method
         }
 
         if (reference == null) {
