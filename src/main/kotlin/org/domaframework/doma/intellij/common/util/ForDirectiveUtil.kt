@@ -346,7 +346,7 @@ class ForDirectiveUtil {
             daoMethod: PsiMethod?,
         ): PsiParentClass? {
             var result: PsiParentClass? = null
-            var fieldAccessTopParentClass: PsiParentClass? = null
+            var fieldAccessTopParentClass: PsiParentClass?
 
             val forDirectiveExpr =
                 PsiTreeUtil.getParentOfType(topForDirectiveItem, SqlElForDirective::class.java)
@@ -394,17 +394,17 @@ class ForDirectiveUtil {
                     val daoParamType = matchParam?.type ?: return null
                     fieldAccessTopParentClass = PsiParentClass(PsiClassTypeUtil.convertOptionalType(daoParamType, project))
                 }
-                fieldAccessTopParentClass?.let {
+                fieldAccessTopParentClass?.let { parentClass ->
                     getFieldAccessLastPropertyClassType(
                         forItemDeclarationBlocks,
                         topForDirectiveItem.project,
-                        it,
+                        parentClass,
                         isBatchAnnotation = isBatchAnnotation,
                         complete = { lastType ->
                             val classType = lastType.type as? PsiClassType
                             val nestClass =
                                 if (classType != null &&
-                                    PsiClassTypeUtil.Companion.isIterableType(classType, project)
+                                    PsiClassTypeUtil.isIterableType(classType, project)
                                 ) {
                                     classType.parameters.firstOrNull()
                                 } else {
@@ -445,6 +445,7 @@ class ForDirectiveUtil {
             } else {
                 val resolveResult =
                     FieldMethodResolver.resolveStaticMethod(
+                        context,
                         topElement,
                         prentClazz,
                         topElement.text,
@@ -496,7 +497,7 @@ class ForDirectiveUtil {
             shortName: String = "",
             dropLastIndex: Int = 0,
             findFieldMethod: ((PsiType) -> PsiParentClass)? = { type -> PsiParentClass(type) },
-            complete: ((PsiParentClass) -> Unit) = { parent: PsiParentClass? -> },
+            complete: ((PsiParentClass) -> Unit) = { _: PsiParentClass? -> },
         ): ValidationResult? {
             val initialParent = resolveInitialParent(topParent, project, isBatchAnnotation) ?: return null
             val parentType = PsiClassTypeUtil.convertOptionalType(initialParent.type, project)

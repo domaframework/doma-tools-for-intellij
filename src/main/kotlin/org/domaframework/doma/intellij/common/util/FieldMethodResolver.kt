@@ -62,6 +62,9 @@ class FieldMethodResolver {
             return PsiParentClass(resolvedType)
         }
 
+        /**
+         * Retrieve, from the defined methods with that name, those whose parameter count and parameter types match.
+         */
         fun resolveMethod(
             context: ResolveContext,
             element: PsiElement,
@@ -89,6 +92,7 @@ class FieldMethodResolver {
         }
 
         fun resolveStaticMethod(
+            context: ResolveContext,
             element: PsiElement,
             parent: PsiParentClass,
             methodName: String,
@@ -103,7 +107,9 @@ class FieldMethodResolver {
             }
 
             if (candidateMethods.isEmpty()) {
-                return ResolveResult()
+                return ResolveResult(
+                    validation = ValidationPropertyResult(element, context.parent, shortName),
+                )
             }
 
             val paramTypes =
@@ -120,16 +126,26 @@ class FieldMethodResolver {
                     shortName,
                 )
 
-            return if (matchResult.method != null) {
-                val returnType = matchResult.method.returnType
-                if (returnType != null) {
-                    ResolveResult(type = PsiParentClass(returnType))
-                } else {
-                    ResolveResult()
+
+            fun result(): ResolveResult {
+                if (matchResult.validation != null) {
+                    context.validationResult = matchResult.validation
+                    return ResolveResult(validation = matchResult.validation)
                 }
-            } else {
-                ResolveResult(validation = matchResult.validation)
+
+                val returnType = matchResult.method?.returnType ?: return ResolveResult()
+
+                val convertedType = PsiClassTypeUtil.convertOptionalType(returnType, project)
+                val resolvedType =
+                    context.parentListBaseType?.let {
+                        PsiClassTypeUtil.getParameterType(project, convertedType, it, context.nestIndex)
+                    } ?: convertedType
+
+                updateContextForIterableType(context, resolvedType, project)
+                return ResolveResult(type = PsiParentClass(resolvedType))
             }
+
+            return result()
         }
 
         private fun resolveMethodWithParameters(
@@ -154,22 +170,25 @@ class FieldMethodResolver {
                     shortName,
                 )
 
-            if (matchResult.validation != null) {
-                context.validationResult = matchResult.validation
-                return ResolveResult(validation = matchResult.validation)
+            fun result(): ResolveResult {
+                if (matchResult.validation != null) {
+                    context.validationResult = matchResult.validation
+                    return ResolveResult(validation = matchResult.validation)
+                }
+
+                val returnType = matchResult.method?.returnType ?: return ResolveResult()
+
+                val convertedType = PsiClassTypeUtil.convertOptionalType(returnType, project)
+                val resolvedType =
+                    context.parentListBaseType?.let {
+                        PsiClassTypeUtil.getParameterType(project, convertedType, it, context.nestIndex)
+                    } ?: convertedType
+
+                updateContextForIterableType(context, resolvedType, project)
+                return ResolveResult(type = PsiParentClass(resolvedType))
             }
 
-            val method = context.parent.findMethod(element) ?: return ResolveResult()
-            val returnType = method.returnType ?: return ResolveResult()
-
-            val convertedType = PsiClassTypeUtil.convertOptionalType(returnType, project)
-            val resolvedType =
-                context.parentListBaseType?.let {
-                    PsiClassTypeUtil.getParameterType(project, convertedType, it, context.nestIndex)
-                } ?: convertedType
-
-            updateContextForIterableType(context, resolvedType, project)
-            return ResolveResult(type = PsiParentClass(resolvedType))
+            return result()
         }
 
         private fun updateContextForIterableType(
