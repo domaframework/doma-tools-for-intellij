@@ -26,6 +26,7 @@ import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.sql.cleanString
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
+import org.domaframework.doma.intellij.common.validation.result.ValidationDaoParamResult
 import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
@@ -35,7 +36,7 @@ import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 class InspectionFieldAccessVisitorProcessor(
     val shortName: String,
     private val element: SqlElFieldAccessExpr,
-) : InspectionVisitorProcessor(shortName) {
+) : InspectionVisitorProcessor() {
     private val project = element.project
     private var targetFile: PsiFile = element.containingFile
     private var blockElements: List<SqlElIdExpr> = emptyList()
@@ -47,9 +48,7 @@ class InspectionFieldAccessVisitorProcessor(
      * Check that the source of the bind variable in the SQL exists
      */
     fun checkBindVariableDefine(holder: ProblemsHolder) {
-        val topElementClass = resolveTopElementType(targetFile)
-
-        when (topElementClass) {
+        when (val topElementClass = resolveTopElementType(targetFile)) {
             is DummyPsiParentClass -> return
             null -> {
                 handleNullTopElementClass(holder)
@@ -64,9 +63,7 @@ class InspectionFieldAccessVisitorProcessor(
      * Get the final class type of the field access element
      */
     fun getFieldAccessLastPropertyClassType(): PsiType? {
-        val topElementClass = resolveTopElementType(targetFile)
-
-        return when (topElementClass) {
+        return when (val topElementClass = resolveTopElementType(targetFile)) {
             is DummyPsiParentClass, null -> null
 
             else -> getFieldAccess(topElementClass)?.parentClass?.type
@@ -147,15 +144,7 @@ class InspectionFieldAccessVisitorProcessor(
         topElementClass: PsiParentClass,
         holder: ProblemsHolder,
     ) {
-        val result =
-            ForDirectiveUtil.getFieldAccessLastPropertyClassType(
-                blockElements,
-                project,
-                topElementClass,
-                shortName = this.shortName,
-                isBatchAnnotation = isBatchAnnotation,
-            )
-
+        val result = getFieldAccess(topElementClass)
         result?.highlightElement(holder)
     }
 
@@ -177,5 +166,17 @@ class InspectionFieldAccessVisitorProcessor(
         }
 
         return accessElements.filterIsInstance<SqlElIdExpr>()
+    }
+
+    private fun errorHighlight(
+        topElement: SqlElIdExpr,
+        daoMethod: PsiMethod,
+        holder: ProblemsHolder,
+    ) {
+        ValidationDaoParamResult(
+            topElement,
+            daoMethod.name,
+            this.shortName,
+        ).highlightElement(holder)
     }
 }

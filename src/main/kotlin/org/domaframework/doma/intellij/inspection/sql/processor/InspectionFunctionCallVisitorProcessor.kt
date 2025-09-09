@@ -39,14 +39,13 @@ import org.jetbrains.kotlin.idea.util.projectStructure.module
 class InspectionFunctionCallVisitorProcessor(
     val shortName: String,
     private val element: SqlElFunctionCallExpr,
-) : InspectionVisitorProcessor(shortName) {
+) : InspectionVisitorProcessor() {
     fun check(holder: ProblemsHolder) {
         val project = element.project
         val module = element.module ?: return
         val expressionHelper = ExpressionFunctionsHelper
         val expressionFunctionalInterface = expressionHelper.setExpressionFunctionsInterface(project)
         val functionName = element.elIdExpr
-
         val isTest = CommonPathParameterUtil.isTest(module, element.containingFile.virtualFile)
         val customFunctionClassName = DomaCompileConfigUtil.getConfigValue(module, isTest, "doma.expr.functions")
 

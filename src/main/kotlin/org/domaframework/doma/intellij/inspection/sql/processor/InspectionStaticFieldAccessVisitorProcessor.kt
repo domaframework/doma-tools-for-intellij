@@ -30,7 +30,7 @@ import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 
 class InspectionStaticFieldAccessVisitorProcessor(
     val shortName: String,
-) : InspectionVisitorProcessor(shortName) {
+) : InspectionVisitorProcessor() {
     /**
      * Check for existence of static field
      */
