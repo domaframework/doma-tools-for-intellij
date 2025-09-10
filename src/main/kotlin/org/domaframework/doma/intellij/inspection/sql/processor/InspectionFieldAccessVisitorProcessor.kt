@@ -66,7 +66,7 @@ class InspectionFieldAccessVisitorProcessor(
         when (val topElementClass = resolveTopElementType(targetFile)) {
             is DummyPsiParentClass, null -> null
 
-            else -> getFieldAccess(topElementClass)?.parentClass?.type
+            else -> getLastFieldAccess(topElementClass).type
         }
 
     private fun resolveTopElementType(file: PsiFile): PsiParentClass? {
@@ -155,6 +155,22 @@ class InspectionFieldAccessVisitorProcessor(
             shortName = this.shortName,
             isBatchAnnotation = isBatchAnnotation,
         )
+
+    private fun getLastFieldAccess(topElementClass: PsiParentClass): PsiParentClass {
+        var findLastTypeParent = topElementClass
+        ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+            blockElements,
+            project,
+            topElementClass,
+            shortName = this.shortName,
+            isBatchAnnotation = isBatchAnnotation,
+            findFieldMethod = { type ->
+                findLastTypeParent = PsiParentClass(type)
+                findLastTypeParent
+            },
+        )
+        return findLastTypeParent
+    }
 
     private fun extractFieldAccessBlocks(element: SqlElFieldAccessExpr): List<SqlElIdExpr> {
         val accessElements = element.accessElements

@@ -24,6 +24,7 @@ import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.common.util.ForDirectiveUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationClassPathResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationNotFoundStaticPropertyResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
@@ -49,7 +50,11 @@ class InspectionStaticFieldAccessVisitorProcessor(
             resolveTopParentClass(staticAccessor, referenceClass, shortName)
         when (topParentClass.first) {
             is DummyPsiParentClass -> {
-                topParentClass.second?.highlightElement(holder)
+                if (topParentClass.second is ValidationPropertyResult) {
+                    highlightPropertyNotFoundError(staticAccessor, holder)
+                } else {
+                    topParentClass.second?.highlightElement(holder)
+                }
                 return
             }
             null -> {
@@ -115,7 +120,7 @@ class InspectionStaticFieldAccessVisitorProcessor(
         blockElements.firstOrNull()?.let { firstElement ->
             ValidationNotFoundStaticPropertyResult(
                 firstElement,
-                staticAccessor.elClass,
+                staticAccessor.elClass.text,
                 shortName,
             ).highlightElement(holder)
         }
@@ -136,8 +141,8 @@ class InspectionStaticFieldAccessVisitorProcessor(
         }
         val parent: PsiParentClass = topParentClass.first ?: return null
 
-        val result = checkFieldAccessValidity(staticAccessor, parent)
-        return result?.parentClass?.type
+        val result = getStaticFieldAccessLastProperty(staticAccessor, parent)
+        return result.type
     }
 
     private fun checkFieldAccessValidity(
@@ -145,11 +150,32 @@ class InspectionStaticFieldAccessVisitorProcessor(
         topParentClass: PsiParentClass,
     ): ValidationResult? {
         val blockElements = staticAccessor.accessElements
-        return ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+        val result =
+            ForDirectiveUtil.getFieldAccessLastPropertyClassType(
+                blockElements,
+                staticAccessor.project,
+                topParentClass,
+                shortName = shortName,
+            )
+        return result
+    }
+
+    private fun getStaticFieldAccessLastProperty(
+        staticAccessor: SqlElStaticFieldAccessExpr,
+        topParentClass: PsiParentClass,
+    ): PsiParentClass {
+        val blockElements = staticAccessor.accessElements
+        var findLastTypeParent = topParentClass
+        ForDirectiveUtil.getFieldAccessLastPropertyClassType(
             blockElements,
             staticAccessor.project,
             topParentClass,
             shortName = shortName,
+            findFieldMethod = { type ->
+                findLastTypeParent = PsiParentClass(type)
+                findLastTypeParent
+            },
         )
+        return findLastTypeParent
     }
 }
