@@ -81,9 +81,10 @@ class MethodMatcher {
         ): PsiMethod? =
             methods.firstOrNull { method ->
                 val methodParams = method.parameterList.parameters
-                methodParams.zip(actualParameterTypes).all { (definedParam, actualType) ->
-                    areTypesCompatible(definedParam.type, actualType)
-                }
+                methodParams.size == actualParameterTypes.size &&
+                    methodParams.zip(actualParameterTypes).all { (definedParam, actualType) ->
+                        areTypesCompatible(definedParam.type, actualType)
+                    }
             }
 
         private fun areTypesCompatible(
