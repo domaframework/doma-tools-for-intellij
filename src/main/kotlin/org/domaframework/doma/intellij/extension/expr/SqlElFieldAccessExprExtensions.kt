@@ -17,7 +17,9 @@ package org.domaframework.doma.intellij.extension.expr
 
 import com.intellij.psi.PsiType
 import org.domaframework.doma.intellij.inspection.sql.processor.InspectionFieldAccessVisitorProcessor
+import org.domaframework.doma.intellij.inspection.sql.processor.InspectionFunctionCallVisitorProcessor
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
+import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 
 val SqlElFieldAccessExpr.accessElements: List<SqlElIdExpr?>
@@ -34,4 +36,9 @@ fun SqlElFieldAccessExpr.accessElementsPrevOriginalElement(targetTextOffset: Int
 fun SqlElFieldAccessExpr.extractFieldType(): PsiType? {
     val processor = InspectionFieldAccessVisitorProcessor(shortName = "", this)
     return processor.getFieldAccessLastPropertyClassType()
+}
+
+fun SqlElFunctionCallExpr.extractFunctionReturnType(): PsiType? {
+    val processor = InspectionFunctionCallVisitorProcessor(shortName = "", this)
+    return processor.getFunctionCallType()?.returnType
 }

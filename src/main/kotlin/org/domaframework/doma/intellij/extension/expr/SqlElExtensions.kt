@@ -26,6 +26,7 @@ import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElIfDirective
 import org.domaframework.doma.intellij.psi.SqlElParameters
@@ -65,6 +66,9 @@ fun SqlElParameters.extractParameterTypes(psiManager: PsiManager): List<PsiType?
                     SqlTypes.BOOLEAN -> PsiTypes.booleanType()
                     else -> null
                 }
+            }
+            is SqlElFunctionCallExpr -> {
+                param.extractFunctionReturnType()
             }
 
             else -> null
