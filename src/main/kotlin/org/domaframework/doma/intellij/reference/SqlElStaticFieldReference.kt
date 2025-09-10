@@ -34,8 +34,7 @@ class SqlElStaticFieldReference(
         file: PsiFile,
     ): PsiElement? {
         val staticAccessParent =
-            PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java)
-        if (staticAccessParent == null) return null
+            PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java) ?: return null
 
         val targetElements =
             getBlockCommentElements(element, SqlElStaticFieldAccessExpr::class.java)
