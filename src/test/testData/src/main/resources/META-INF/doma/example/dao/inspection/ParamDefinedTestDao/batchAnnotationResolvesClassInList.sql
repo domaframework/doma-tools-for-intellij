@@ -19,7 +19,7 @@
             JOIN project p1 ON e1.employee_id = p1.employee_id
               WHERE
               -- Public entity method
-              p1.project_id = /* employees.getFirstProject().projectId */0
+              p1.project_id = /* employees.getProject().projectId */0
               -- Private entity method
               AND p1.base_rank >= /* employees.<error descr="The field or method [getEmployeeRank] does not exist in the class [Employee]">getEmployeeRank</error>() */0
         WHERE

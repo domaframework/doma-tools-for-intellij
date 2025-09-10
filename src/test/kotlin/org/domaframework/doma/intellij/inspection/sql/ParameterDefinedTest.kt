@@ -129,7 +129,7 @@ class ParameterDefinedTest : DomaSqlTest() {
 
     fun testImplementCustomFunctions() {
         addSqlFile("$testDaoName/implementCustomFunctions.sql")
-        addResourceCompileFile("doma.compile.config")
+        addDomaCompileConfig()
         val sqlFile =
             findSqlFile("$testDaoName/implementCustomFunctions.sql")
         assertNotNull("Not Found SQL File", sqlFile)
@@ -143,6 +143,17 @@ class ParameterDefinedTest : DomaSqlTest() {
         addResourceCompileFile("invalid.doma.compile.config")
         val sqlFile =
             findSqlFile("$testDaoName/invalidImplementCustomFunctions.sql")
+        assertNotNull("Not Found SQL File", sqlFile)
+        if (sqlFile == null) return
+
+        myFixture.testHighlighting(false, false, false, sqlFile)
+    }
+
+    fun testEmptyPropertyCustomFunctions() {
+        addSqlFile("$testDaoName/emptyPropertyCustomFunctions.sql")
+        addResourceCompileFile("empty.property.doma.compile.config")
+        val sqlFile =
+            findSqlFile("$testDaoName/emptyPropertyCustomFunctions.sql")
         assertNotNull("Not Found SQL File", sqlFile)
         if (sqlFile == null) return
 
