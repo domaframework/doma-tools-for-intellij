@@ -21,7 +21,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiType
-import com.intellij.psi.util.PsiTreeUtil
+import org.domaframework.doma.intellij.common.psi.MethodParamContext
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.validation.result.ValidationCompleteResult
@@ -73,20 +73,18 @@ class FieldMethodResolver {
             project: Project,
             shortName: String = "",
         ): ResolveResult {
+            val methodContext: MethodParamContext = MethodParamContext.of(element)
             val candidateMethods = context.parent.findMethods(methodName)
             if (candidateMethods.isEmpty()) {
                 return ResolveResult(
                     validation = ValidationPropertyResult(element, context.parent, shortName),
                 )
             }
-
-            val paramExpr = PsiTreeUtil.nextLeaf(element)?.parent as? SqlElParameters ?: return ResolveResult()
-
             return resolveMethodWithParameters(
                 context,
                 element,
                 candidateMethods,
-                paramExpr,
+                methodContext.methodParams,
                 project,
                 shortName,
             )
@@ -152,21 +150,21 @@ class FieldMethodResolver {
             context: ResolveContext,
             element: PsiElement,
             candidateMethods: List<PsiMethod>,
-            paramExpr: SqlElParameters,
+            paramExpr: SqlElParameters?,
             project: Project,
             shortName: String,
         ): ResolveResult {
             val paramTypes =
-                paramExpr.extractParameterTypes(
+                paramExpr?.extractParameterTypes(
                     PsiManager.getInstance(project),
-                )
+                ) ?: emptyList()
 
             val matchResult =
                 MethodMatcher.findMatchingMethod(
                     element,
                     candidateMethods,
                     paramTypes,
-                    paramExpr.elExprList.size,
+                    paramExpr?.elExprList?.size ?: 0,
                     shortName,
                 )
 
