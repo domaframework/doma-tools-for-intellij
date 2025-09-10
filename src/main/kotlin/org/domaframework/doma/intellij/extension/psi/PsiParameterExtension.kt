@@ -20,7 +20,7 @@ import com.intellij.psi.PsiParameter
 import org.domaframework.doma.intellij.common.util.DomaClassName
 
 private val ignoreUsageCheckType =
-    listOf<DomaClassName>(
+    listOf(
         DomaClassName.JAVA_FUNCTION,
         DomaClassName.BI_FUNCTION,
         DomaClassName.SELECT_OPTIONS,

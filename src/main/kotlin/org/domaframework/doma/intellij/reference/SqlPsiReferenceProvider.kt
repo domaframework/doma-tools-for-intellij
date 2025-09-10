@@ -79,10 +79,10 @@ class SqlPsiReferenceProvider : PsiReferenceProvider() {
 
             is SqlElIdExpr -> {
                 when {
-                    element.parent is SqlElFieldAccessExpr
-                            || element.parent is SqlElParameters -> arrayOf(SqlElIdExprReference(element))
+                    element.parent is SqlElFieldAccessExpr ||
+                        element.parent is SqlElParameters -> arrayOf(SqlElIdExprReference(element))
 
-                    getParentClassPsiType(element, SqlElFunctionCallExpr::class.java) != null  ->
+                    getParentClassPsiType(element, SqlElFunctionCallExpr::class.java) != null ->
                         arrayOf(SqlElFunctionCallExprReference(element))
 
                     getParentClassPsiType(element, SqlElClass::class.java) != null ->
