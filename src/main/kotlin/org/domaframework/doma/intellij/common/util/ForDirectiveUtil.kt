@@ -434,7 +434,7 @@ class ForDirectiveUtil {
                     completeResult = null,
                     validationResult = null,
                 )
-            val parametersExpr = PsiTreeUtil.nextLeaf(topElement)?.parent as? SqlElParameters
+            val parametersExpr = topElement.nextSibling as? SqlElParameters
             if (parametersExpr == null) {
                 val topPropertyField = referenceClazz.findStaticField(searchText)
 
