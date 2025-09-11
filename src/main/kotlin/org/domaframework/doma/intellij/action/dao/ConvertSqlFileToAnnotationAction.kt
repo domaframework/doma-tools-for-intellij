@@ -15,6 +15,7 @@
  */
 package org.domaframework.doma.intellij.action.dao
 
+import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
 import com.intellij.codeInsight.intention.preview.IntentionPreviewUtils
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
@@ -33,7 +34,7 @@ import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 /**
  * Intention action to convert SQL file to @Sql annotation
  */
-class ConvertSqlFileToAnnotationAction : ConvertSqlIntentionAction() {
+class ConvertSqlFileToAnnotationAction : PsiElementBaseIntentionAction() {
     override fun getFamilyName(): String = MessageBundle.message("convert.sql.file.to.annotation.family")
 
     override fun getText(): String = MessageBundle.message("convert.sql.file.to.annotation.text")
@@ -83,7 +84,7 @@ class ConvertSqlFileToAnnotationAction : ConvertSqlIntentionAction() {
         }
 
         val hasAnnotation =
-            supportedTypes.any { type ->
+            SqlAnnotationConverter.supportedTypes.any { type ->
                 val annotation = type.getPsiAnnotation(daoMethod)
                 annotation != null
             }

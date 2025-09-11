@@ -15,6 +15,7 @@
  */
 package org.domaframework.doma.intellij.action.dao
 
+import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
 import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo
 import com.intellij.codeInsight.intention.preview.IntentionPreviewUtils
 import com.intellij.openapi.command.WriteCommandAction
@@ -32,7 +33,7 @@ import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 /**
  * Intention action to convert @Sql annotation to SQL file
  */
-class ConvertSqlAnnotationToFileAction : ConvertSqlIntentionAction() {
+class ConvertSqlAnnotationToFileAction : PsiElementBaseIntentionAction() {
     override fun getFamilyName(): String = MessageBundle.message("convert.sql.annotation.to.file.family")
 
     override fun getText(): String = MessageBundle.message("convert.sql.annotation.to.file.text")
@@ -54,7 +55,7 @@ class ConvertSqlAnnotationToFileAction : ConvertSqlIntentionAction() {
             return false
         }
 
-        return supportedTypes.any { it.getPsiAnnotation(method) != null }
+        return SqlAnnotationConverter.supportedTypes.any { it.getPsiAnnotation(method) != null }
     }
 
     override fun generatePreview(
