@@ -17,9 +17,8 @@ package org.domaframework.doma.intellij.action.dao
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.psi.PsiDocumentManager
-import org.domaframework.doma.intellij.DomaSqlTest
 
-class ConvertSqlFileToAnnotationActionTest : DomaSqlTest() {
+class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
     private val sqlToAnnotationPackage = "sqltoannotation"
     private val convertActionName = "Convert to @Sql annotation (set sqlFile=false)"
     private val convertFamilyName = "Convert SQL file to @Sql annotation"
@@ -87,7 +86,10 @@ class ConvertSqlFileToAnnotationActionTest : DomaSqlTest() {
         val intentions = myFixture.availableIntentions
         val convertIntention = intentions.find { it is ConvertSqlFileToAnnotationAction }
 
-        assertNull("$convertFamilyName intention should NOT be available when @Sql annotation already exists", convertIntention)
+        assertNull(
+            "$convertFamilyName intention should NOT be available when @Sql annotation already exists",
+            convertIntention,
+        )
     }
 
     fun testIntentionNotAvailableForMethodWithoutSqlFile() {
@@ -106,6 +108,15 @@ class ConvertSqlFileToAnnotationActionTest : DomaSqlTest() {
         val daoName = "SelectWithComplexSqlFileDao"
         val sqlFileName = "selectComplexQuery"
         doTest(daoName, sqlFileName)
+    }
+
+    fun testSelectWithSqlFileConvertAnnotation() {
+        val daoName = "SelectWithSqlFileConvertAnnotationDao"
+        val sqlFileName = "selectEmployee.sql"
+        doConvertActionTest(daoName, sqlToAnnotationPackage, convertFamilyName)
+        // Test SQL File Removed
+        val generatedSql = findSqlFile("$sqlToAnnotationPackage/$daoName/$sqlFileName")
+        assertTrue("SQL File [$sqlFileName] should exists ", generatedSql == null)
     }
 
     private fun doTest(
