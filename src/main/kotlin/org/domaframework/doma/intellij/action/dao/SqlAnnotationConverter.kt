@@ -243,7 +243,7 @@ class SqlAnnotationConverter(
 
     private fun generateSqlFileWithContent(content: String) {
         // First generate the empty SQL file using existing functionality
-        psiDaoMethod.generateSqlFile()
+        psiDaoMethod.generateSqlFile(false)
 
         // Then update its content
         ApplicationManager.getApplication().invokeLater {

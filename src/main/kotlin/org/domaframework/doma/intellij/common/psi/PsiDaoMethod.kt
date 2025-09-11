@@ -169,7 +169,7 @@ class PsiDaoMethod(
         }
     }
 
-    fun generateSqlFile() {
+    fun generateSqlFile(fileJump: Boolean = true) {
         ApplicationManager.getApplication().runReadAction {
             if (sqlFilePath.isEmpty()) return@runReadAction
             val rootDir = psiProject.getContentRoot(daoFile) ?: return@runReadAction
@@ -202,9 +202,11 @@ class PsiDaoMethod(
                         .findDirectory(virtualFile) ?: return@runWriteCommandAction
                 sqlOutputDirPath.findFile(sqlFileName)?.delete()
                 val sqlVirtualFile = sqlOutputDirPath.createFile(sqlFileName).virtualFile ?: return@runWriteCommandAction
-                FileEditorManager
-                    .getInstance(psiProject)
-                    .openFile(sqlVirtualFile, true)
+                if (fileJump) {
+                    FileEditorManager
+                        .getInstance(psiProject)
+                        .openFile(sqlVirtualFile, true)
+                }
                 writeEmptyElementSqlFile(sqlVirtualFile)
             }
         }
