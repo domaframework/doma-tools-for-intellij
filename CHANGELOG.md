@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [2.3.0] - 2025-09-11
+
+### New Features
+
+- Check Parameter Types for Method Calls in Bind Variables ([#448])
+
+### Maintenance
+
+- Refactor SQL Formatter Block Relations and Translate Comments ([#444])
+
+### Dependency Updates
+
+- Update dependency org.jetbrains.intellij.platform to v2.9.0 ([#443])
+
+[#448]:https://github.com/domaframework/doma-tools-for-intellij/pull/448
+[#444]:https://github.com/domaframework/doma-tools-for-intellij/pull/444
+[#443]:https://github.com/domaframework/doma-tools-for-intellij/pull/443
+
+
 ## [2.2.1] - 2025-09-03
 
 ### Bug Fixes
@@ -538,3 +557,4 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[2.3.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.2.1...2.3.0
