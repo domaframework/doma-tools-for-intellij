@@ -148,7 +148,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     fun testDocumentForItemInvalidPrimary() {
         addSqlFile("$testPackage/$testDaoName/documentForItemInvalidPrimary.sql")
         val sqlName = "documentForItemInvalidPrimary"
-        val result = " item"
+        val result = "<a href=\"psi_element://doma.example.entity.Principal\">Principal</a> item"
 
         documentationFindTextTest(sqlName, "item", result)
     }
