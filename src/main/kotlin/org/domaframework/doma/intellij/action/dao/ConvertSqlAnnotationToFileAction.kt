@@ -15,7 +15,6 @@
  */
 package org.domaframework.doma.intellij.action.dao
 
-import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
 import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo
 import com.intellij.codeInsight.intention.preview.IntentionPreviewUtils
 import com.intellij.openapi.command.WriteCommandAction
@@ -28,12 +27,11 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
-import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 
 /**
  * Intention action to convert @Sql annotation to SQL file
  */
-class ConvertSqlAnnotationToFileAction : PsiElementBaseIntentionAction() {
+class ConvertSqlAnnotationToFileAction : ConvertSqlIntentionAction() {
     override fun getFamilyName(): String = MessageBundle.message("convert.sql.annotation.to.file.family")
 
     override fun getText(): String = MessageBundle.message("convert.sql.annotation.to.file.text")
@@ -47,23 +45,11 @@ class ConvertSqlAnnotationToFileAction : PsiElementBaseIntentionAction() {
         val psiDaoMethod = PsiDaoMethod(project, method)
 
         // Check if method has @Sql annotation
-        if (!psiDaoMethod.useSqlAnnotation()) {
+        // When a Sql annotation is present, a virtual SQL file is associated;
+        // therefore, check the parent and exclude the injected (inline) SQL.
+        if (!psiDaoMethod.useSqlAnnotation() || psiDaoMethod.sqlFile != null && psiDaoMethod.sqlFile?.parent != null) {
             return false
         }
-
-        // Check if method has @Insert, @Update, or @Delete annotation
-        val supportedTypes =
-            listOf(
-                DomaAnnotationType.Select,
-                DomaAnnotationType.Script,
-                DomaAnnotationType.SqlProcessor,
-                DomaAnnotationType.Insert,
-                DomaAnnotationType.Update,
-                DomaAnnotationType.Delete,
-                DomaAnnotationType.BatchInsert,
-                DomaAnnotationType.BatchUpdate,
-                DomaAnnotationType.BatchDelete,
-            )
 
         return supportedTypes.any { it.getPsiAnnotation(method) != null }
     }
