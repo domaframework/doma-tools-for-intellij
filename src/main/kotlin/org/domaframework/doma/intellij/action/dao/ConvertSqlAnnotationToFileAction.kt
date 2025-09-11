@@ -25,6 +25,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.bundle.MessageBundle
+import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
@@ -47,7 +48,9 @@ class ConvertSqlAnnotationToFileAction : ConvertSqlIntentionAction() {
         // Check if method has @Sql annotation
         // When a Sql annotation is present, a virtual SQL file is associated;
         // therefore, check the parent and exclude the injected (inline) SQL.
-        if (!psiDaoMethod.useSqlAnnotation() || psiDaoMethod.sqlFile != null && psiDaoMethod.sqlFile?.parent != null) {
+        if (getDaoClass(method.containingFile) == null || !psiDaoMethod.useSqlAnnotation() ||
+            psiDaoMethod.sqlFile != null && psiDaoMethod.sqlFile?.parent != null
+        ) {
             return false
         }
 

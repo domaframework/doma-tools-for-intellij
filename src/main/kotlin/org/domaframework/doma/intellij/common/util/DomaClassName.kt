@@ -18,6 +18,8 @@ package org.domaframework.doma.intellij.common.util
 enum class DomaClassName(
     val className: String,
 ) {
+    DAO("org.seasar.doma.Dao"),
+
     OPTIONAL("java.util.Optional"),
     OPTIONAL_INT("java.util.OptionalInt"),
     OPTIONAL_DOUBLE("java.util.OptionalDouble"),

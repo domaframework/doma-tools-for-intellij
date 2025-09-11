@@ -24,6 +24,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
+import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
 import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
@@ -42,8 +43,8 @@ class ConvertSqlFileToAnnotationAction : ConvertSqlIntentionAction() {
         editor: Editor?,
         element: PsiElement,
     ): Boolean {
-        val file = element.containingFile
-        if (isJavaOrKotlinFileType(file)) {
+        val file = element.containingFile ?: return false
+        if (isJavaOrKotlinFileType(file) && getDaoClass(file) != null) {
             return checkOnMethod(element, project)
         }
 
