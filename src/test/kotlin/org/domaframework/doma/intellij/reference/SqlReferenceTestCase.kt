@@ -407,7 +407,6 @@ class SqlReferenceTestCase : DomaSqlTest() {
                     ?.joinToString()
                     ?: resolveResult.toString()
             val expectedResults = resolveExpects[reference.text]
-            println("Reference: ${reference.text}, Resolve: $resolveResultText Expects: $expectedResults")
             assertTrue(expectedResults?.contains(resolveResultText) == true)
         }
     }

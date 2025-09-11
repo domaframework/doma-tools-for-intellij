@@ -49,9 +49,10 @@ class ConvertSqlAnnotationToFileAction : PsiElementBaseIntentionAction() {
         // Check if method has @Sql annotation
         // When a Sql annotation is present, a virtual SQL file is associated;
         // therefore, check the parent and exclude the injected (inline) SQL.
-        if (getDaoClass(method.containingFile) == null || !psiDaoMethod.useSqlAnnotation() ||
-            psiDaoMethod.sqlFile != null && psiDaoMethod.sqlFile?.parent != null
-        ) {
+        val isDaoClassMissing = getDaoClass(method.containingFile) == null
+        val isSqlAnnotationNotUsed = !psiDaoMethod.useSqlAnnotation()
+        val hasSqlFileWithParent = psiDaoMethod.sqlFile != null && psiDaoMethod.sqlFile?.parent != null
+        if (isDaoClassMissing || isSqlAnnotationNotUsed || hasSqlFileWithParent) {
             return false
         }
 
