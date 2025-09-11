@@ -22,55 +22,40 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.util.PsiTreeUtil
-import org.domaframework.doma.intellij.bundle.MessageBundle
-import org.domaframework.doma.intellij.common.dao.findDaoMethod
-import org.domaframework.doma.intellij.common.dao.getDaoClass
-import org.domaframework.doma.intellij.common.isJavaOrKotlinFileType
-import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
 /**
- * Intention action to convert SQL file to @Sql annotation
+ * Abstract base class for converting SQL file to @Sql annotation
  */
-class ConvertSqlFileToAnnotationAction : PsiElementBaseIntentionAction() {
-    override fun getFamilyName(): String = MessageBundle.message("convert.sql.file.to.annotation.family")
-
-    override fun getText(): String = MessageBundle.message("convert.sql.file.to.annotation.text")
-
+abstract class AbstractConvertSqlFileToAnnotationAction : PsiElementBaseIntentionAction() {
     override fun isAvailable(
         project: Project,
         editor: Editor?,
         element: PsiElement,
     ): Boolean {
-        val file = element.containingFile ?: return false
-        if (isJavaOrKotlinFileType(file) && getDaoClass(file) != null) {
-            return checkOnMethod(element, project)
+        if (!isTargetFile(element)) {
+            return false
         }
 
-        if (isSupportFileType(file)) {
-            return checkOnSqlFile(element, project)
-        }
-
-        return false
-    }
-
-    private fun checkOnMethod(
-        element: PsiElement,
-        project: Project,
-    ): Boolean {
-        val daoMethod = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return false
+        val daoMethod = getDaoMethod(element) ?: return false
         return checkAvailable(project, daoMethod)
     }
 
-    private fun checkOnSqlFile(
-        element: PsiElement,
-        project: Project,
-    ): Boolean {
-        val daoMethod = findDaoMethod(element.containingFile) ?: return false
-        return checkAvailable(project, daoMethod)
-    }
+    /**
+     * Check if the element is in a target file type for this action
+     */
+    protected abstract fun isTargetFile(element: PsiElement): Boolean
+
+    /**
+     * Get the DAO method from the element
+     */
+    protected abstract fun getDaoMethod(element: PsiElement): PsiMethod?
+
+    /**
+     * Get the action name for logging
+     */
+    protected abstract fun getActionName(): String
 
     private fun checkAvailable(
         project: Project,
@@ -101,22 +86,7 @@ class ConvertSqlFileToAnnotationAction : PsiElementBaseIntentionAction() {
         // Do nothing when previewing
         if (IntentionPreviewUtils.isIntentionPreviewActive()) return
 
-        val file = element.containingFile
-        if (isJavaOrKotlinFileType(file)) {
-            return processOnMethod(element, project)
-        }
-
-        // Process if the file type is SQL
-        if (isSupportFileType(file)) {
-            return processOnSqlFile(element, project)
-        }
-    }
-
-    private fun processOnMethod(
-        element: PsiElement,
-        project: Project,
-    ) {
-        val daoMethod = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
+        val daoMethod = getDaoMethod(element) ?: return
 
         val startTime = System.nanoTime()
         val converter = SqlAnnotationConverter(project, daoMethod)
@@ -126,27 +96,7 @@ class ConvertSqlFileToAnnotationAction : PsiElementBaseIntentionAction() {
 
         PluginLoggerUtil.countLogging(
             className = this::class.java.simpleName,
-            actionName = "convertSqlFileToAnnotationOnMethod",
-            inputName = "IntentionAction",
-            start = startTime,
-        )
-    }
-
-    private fun processOnSqlFile(
-        element: PsiElement,
-        project: Project,
-    ) {
-        val daoMethod = findDaoMethod(element.containingFile) ?: return
-
-        val startTime = System.nanoTime()
-        val converter = SqlAnnotationConverter(project, daoMethod)
-        WriteCommandAction.runWriteCommandAction(project) {
-            converter.convertToSqlAnnotation()
-        }
-
-        PluginLoggerUtil.countLogging(
-            className = this::class.java.simpleName,
-            actionName = "convertSqlFileToAnnotationOnSQL",
+            actionName = getActionName(),
             inputName = "IntentionAction",
             start = startTime,
         )

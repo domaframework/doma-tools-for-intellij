@@ -17,11 +17,13 @@ package org.domaframework.doma.intellij.action.dao
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.psi.PsiDocumentManager
+import org.domaframework.doma.intellij.action.sql.ConvertSqlFileToAnnotationFromSqlAction
+import org.domaframework.doma.intellij.bundle.MessageBundle
 
 class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
     private val sqlToAnnotationPackage = "sqltoannotation"
-    private val convertActionName = "Convert to @Sql annotation (set sqlFile=false)"
-    private val convertFamilyName = "Convert SQL file to @Sql annotation"
+    private val convertActionName = MessageBundle.message("convert.sql.file.to.annotation.from.sql.text")
+    private val convertFamilyName = MessageBundle.message("convert.sql.file.to.annotation.from.sql.family")
 
     fun testIntentionAvailableForSelectWithSqlFile() {
         val daoName = "SelectWithSqlFileDao"
@@ -84,7 +86,7 @@ class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
         myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
 
         val intentions = myFixture.availableIntentions
-        val convertIntention = intentions.find { it is ConvertSqlFileToAnnotationAction }
+        val convertIntention = intentions.find { it is ConvertSqlFileToAnnotationFromSqlAction }
 
         assertNull(
             "$convertFamilyName intention should NOT be available when @Sql annotation already exists",
@@ -99,9 +101,12 @@ class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
         myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
 
         val intentions = myFixture.availableIntentions
-        val convertIntention = intentions.find { it is ConvertSqlFileToAnnotationAction }
+        val convertIntention = intentions.find { it is ConvertSqlFileToAnnotationFromSqlAction }
 
-        assertNull("$convertFamilyName intention should NOT be available when SQL file doesn't exist", convertIntention)
+        assertNull(
+            "$convertFamilyName intention should NOT be available when SQL file doesn't exist",
+            convertIntention,
+        )
     }
 
     fun testSqlFormattingInAnnotation() {
@@ -113,7 +118,12 @@ class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
     fun testSelectWithSqlFileConvertAnnotation() {
         val daoName = "SelectWithSqlFileConvertAnnotationDao"
         val sqlFileName = "selectEmployee.sql"
-        doConvertActionTest(daoName, sqlToAnnotationPackage, convertFamilyName)
+        doConvertActionTest(
+            daoName,
+            sqlToAnnotationPackage,
+            convertFamilyName,
+            ConvertSqlFileToAnnotationFromDaoAction::class,
+        )
         // Test SQL File Removed
         val generatedSql = findSqlFile("$sqlToAnnotationPackage/$daoName/$sqlFileName")
         assertTrue("SQL File [$sqlFileName] should exists ", generatedSql == null)
