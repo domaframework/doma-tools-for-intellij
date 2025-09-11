@@ -16,11 +16,12 @@
 package org.domaframework.doma.intellij.action.dao
 
 import com.intellij.openapi.fileEditor.FileEditorManager
+import org.domaframework.doma.intellij.bundle.MessageBundle
 
 class ConvertSqlAnnotationToFileActionTest : ConvertSqlActionTest() {
     private val sqlConversionPackage = "sqltofile"
-    private val convertActionName = "Convert to SQL file (set sqlFile=true)"
-    private val convertFamilyName = "Convert @Sql annotation to SQL file"
+    private val convertActionName = MessageBundle.message("convert.sql.annotation.to.file.text")
+    private val convertFamilyName = MessageBundle.message("convert.sql.annotation.to.file.family")
 
     fun testIntentionAvailableForSelectWithSqlAnnotation() {
         val daoName = "SelectWithSqlAnnotationDao"
