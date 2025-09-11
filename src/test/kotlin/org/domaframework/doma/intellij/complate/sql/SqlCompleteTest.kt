@@ -68,7 +68,7 @@ class SqlCompleteTest : DomaSqlTest() {
                 "department",
                 "rank",
                 "projects",
-                "getFirstProject()",
+                "getProject()",
             ),
             listOf("getEmployeeRank()"),
         )
@@ -85,7 +85,7 @@ class SqlCompleteTest : DomaSqlTest() {
                 "employeeName",
                 "department",
                 "rank",
-                "getFirstProject()",
+                "getProject()",
                 "toLowerCase()",
                 "charAt()",
                 "contains()",
@@ -119,7 +119,7 @@ class SqlCompleteTest : DomaSqlTest() {
                 "department",
                 "rank",
                 "projects",
-                "getFirstProject()",
+                "getProject()",
             ),
             listOf("projectNumber", "projectDetailId", "members", "getEmployeeRank()"),
         )
@@ -142,7 +142,7 @@ class SqlCompleteTest : DomaSqlTest() {
                 "department",
                 "rank",
                 "projects",
-                "getFirstProject()",
+                "getProject()",
             ),
         )
     }
@@ -230,7 +230,7 @@ class SqlCompleteTest : DomaSqlTest() {
         innerDirectiveCompleteTest(
             "$testDaoName/completeBatchInsert.sql",
             listOf(
-                "getFirstProject()",
+                "getProject()",
             ),
             listOf(
                 "employeeName",
@@ -387,7 +387,7 @@ class SqlCompleteTest : DomaSqlTest() {
                 "userName()",
                 "userAge()",
                 "langCode()",
-                "isGest()",
+                "isGuest()",
                 "getId()",
                 "getName()",
                 "getAge()",
@@ -509,7 +509,7 @@ class SqlCompleteTest : DomaSqlTest() {
         innerDirectiveCompleteTest(
             "$testDaoName/completeParameterFirstPropertyWithMethodParameter.sql",
             listOf("projectNumber", "projectCategory", "getFirstEmployee()"),
-            listOf("employeeId", "employeeName", "getFirstProject()"),
+            listOf("employeeId", "employeeName", "getProject()"),
         )
 
         innerDirectiveCompleteTest(
@@ -711,7 +711,7 @@ class SqlCompleteTest : DomaSqlTest() {
     }
 
     fun testCompleteImplementCustomFunction() {
-        addResourceCompileFile("doma.compile.config")
+        addDomaCompileConfig()
         addSqlFile("$testDaoName/completeImplementCustomFunction.sql")
         innerDirectiveCompleteTest(
             "$testDaoName/completeImplementCustomFunction.sql",
@@ -723,7 +723,7 @@ class SqlCompleteTest : DomaSqlTest() {
                 "getLangCode()",
                 "isManager()",
                 "langCode()",
-                "isGest()",
+                "isGuest()",
                 "isBlank()",
                 "isNotBlank()",
             ),
@@ -746,7 +746,7 @@ class SqlCompleteTest : DomaSqlTest() {
                 "userName()",
                 "userAge()",
                 "langCode()",
-                "isGest()",
+                "isGuest()",
                 "getId()",
                 "getName()",
                 "getAge()",

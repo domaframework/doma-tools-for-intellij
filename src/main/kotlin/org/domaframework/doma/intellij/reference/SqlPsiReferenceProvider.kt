@@ -24,6 +24,7 @@ import com.intellij.psi.util.prevLeaf
 import com.intellij.util.ProcessingContext
 import org.domaframework.doma.intellij.psi.SqlCustomElExpr
 import org.domaframework.doma.intellij.psi.SqlElClass
+import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
@@ -38,36 +39,28 @@ class SqlPsiReferenceProvider : PsiReferenceProvider() {
     ): Array<out PsiReference?> {
         if (element !is SqlCustomElExpr) return PsiReference.EMPTY_ARRAY
 
-        return if (element is SqlElClass) {
-            arrayOf(SqlElClassExprReference(element))
-        } else if (element is SqlElIdExpr) {
-            when {
-                getParentClassPsiType(element, SqlElParameters::class.java) != null ->
-                    arrayOf(SqlElIdExprReference(element))
-
-                getParentClassPsiType(element, SqlElFunctionCallExpr::class.java) != null ->
-                    arrayOf(SqlElFunctionCallExprReference(element))
-
-                getParentClassPsiType(element, SqlElClass::class.java) != null ->
-                    arrayOf(
-                        SqlElClassExprReference(element),
-                    )
-
-                getParentClassPsiType(
-                    element,
-                    SqlElStaticFieldAccessExpr::class.java,
-                ) != null -> arrayOf(SqlElStaticFieldReference(element))
-
-                getParentClassPsiType(element, SqlElForDirective::class.java) != null &&
-                    element.prevLeaf()?.prevLeaf()?.elementType == SqlTypes.EL_FOR ->
-                    arrayOf(
-                        SqlElForDirectiveIdExprReference(element),
-                    )
-
-                else -> arrayOf(SqlElIdExprReference(element))
+        return when (element) {
+            is SqlElClass -> {
+                arrayOf(SqlElClassExprReference(element))
             }
-        } else {
-            PsiReference.EMPTY_ARRAY
+
+            is SqlElIdExpr -> {
+                when {
+                    getParentClassPsiType(element, SqlElParameters::class.java) != null -> {
+                        val childArray = getReferenceByElementOriginal(element)
+                        if (!childArray.contentEquals(PsiReference.EMPTY_ARRAY)) {
+                            return childArray
+                        }
+                        return arrayOf(SqlElIdExprReference(element))
+                    }
+
+                    else -> getReferenceByElementOriginal(element)
+                }
+            }
+
+            else -> {
+                PsiReference.EMPTY_ARRAY
+            }
         }
     }
 
@@ -75,4 +68,46 @@ class SqlPsiReferenceProvider : PsiReferenceProvider() {
         element: PsiElement,
         parentClass: Class<R>,
     ): R? = PsiTreeUtil.getParentOfType(element, parentClass)
+
+    private fun getReferenceByElementOriginal(element: PsiElement): Array<out PsiReference?> {
+        if (element !is SqlCustomElExpr) return PsiReference.EMPTY_ARRAY
+
+        return when (element) {
+            is SqlElClass -> {
+                arrayOf(SqlElClassExprReference(element))
+            }
+
+            is SqlElIdExpr -> {
+                when {
+                    element.parent is SqlElFieldAccessExpr ||
+                        element.parent is SqlElParameters -> arrayOf(SqlElIdExprReference(element))
+
+                    getParentClassPsiType(element, SqlElFunctionCallExpr::class.java) != null ->
+                        arrayOf(SqlElFunctionCallExprReference(element))
+
+                    getParentClassPsiType(element, SqlElClass::class.java) != null ->
+                        arrayOf(
+                            SqlElClassExprReference(element),
+                        )
+
+                    getParentClassPsiType(
+                        element,
+                        SqlElStaticFieldAccessExpr::class.java,
+                    ) != null && element.parent !is SqlElFieldAccessExpr -> arrayOf(SqlElStaticFieldReference(element))
+
+                    getParentClassPsiType(element, SqlElForDirective::class.java) != null &&
+                        element.prevLeaf()?.prevLeaf()?.elementType == SqlTypes.EL_FOR ->
+                        arrayOf(
+                            SqlElForDirectiveIdExprReference(element),
+                        )
+
+                    else -> arrayOf(SqlElIdExprReference(element))
+                }
+            }
+
+            else -> {
+                PsiReference.EMPTY_ARRAY
+            }
+        }
+    }
 }

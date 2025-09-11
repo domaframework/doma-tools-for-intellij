@@ -16,58 +16,153 @@
 package org.domaframework.doma.intellij.inspection.sql.processor
 
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import org.domaframework.doma.intellij.common.CommonPathParameterUtil
 import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil
-import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil.EXPRESSION_FUNCTIONS_NAME
 import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
+import org.domaframework.doma.intellij.common.psi.PsiParentClass
+import org.domaframework.doma.intellij.common.util.MethodMatcher
 import org.domaframework.doma.intellij.common.validation.result.ValidationInvalidExpressionFunctionsResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationInvalidFunctionCallResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
+import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
 import org.jetbrains.kotlin.idea.util.projectStructure.module
 
 class InspectionFunctionCallVisitorProcessor(
     val shortName: String,
     private val element: SqlElFunctionCallExpr,
-) : InspectionVisitorProcessor(shortName) {
+) : InspectionVisitorProcessor() {
     fun check(holder: ProblemsHolder) {
+        val result: ValidationResult? = getFunctionCallValidationResult()
+        result?.highlightElement(holder)
+    }
+
+    fun getFunctionCallType(): PsiMethod? {
+        val result = getFunctionCall()
+        return result
+    }
+
+    private fun getFunctionCallValidationResult(): ValidationResult? {
         val project = element.project
-        val module = element.module ?: return
+        val module = element.module ?: return null
         val expressionHelper = ExpressionFunctionsHelper
         val expressionFunctionalInterface = expressionHelper.setExpressionFunctionsInterface(project)
         val functionName = element.elIdExpr
-
         val isTest = CommonPathParameterUtil.isTest(module, element.containingFile.virtualFile)
         val customFunctionClassName = DomaCompileConfigUtil.getConfigValue(module, isTest, "doma.expr.functions")
 
-        var result: ValidationResult =
-            ValidationInvalidFunctionCallResult(
-                functionName,
-                customFunctionClassName ?: EXPRESSION_FUNCTIONS_NAME,
-                shortName,
-            )
-        var methods: Array<out PsiMethod?> = emptyArray()
+        var methods: List<PsiMethod?>
         val expressionClazz = customFunctionClassName?.let { project.getJavaClazz(it) }
-        if (expressionClazz != null) {
-            if (expressionHelper.isInheritor(expressionClazz)) {
-                methods = expressionClazz.findMethodsByName(functionName.text, true)
+
+        if (customFunctionClassName?.isEmpty() == true) {
+            return ValidationInvalidExpressionFunctionsResult(
+                functionName,
+                shortName,
+                customFunctionClassName,
+            )
+        }
+
+        val parentClass = expressionClazz ?: expressionFunctionalInterface
+        var result: ValidationResult? = null
+        if (parentClass != null) {
+            if (expressionHelper.isInheritor(parentClass) || parentClass == expressionFunctionalInterface) {
+                methods = parentClass.findMethodsByName(functionName.text, true).mapNotNull { it }
+                if (methods.isEmpty()) {
+                    return ValidationInvalidFunctionCallResult(
+                        element.elIdExpr,
+                        parentClass.psiClassType.canonicalText,
+                        shortName,
+                    )
+                }
+                result = null
+                val matchResult = checkParamTypeMatch(parentClass)
+                if (matchResult.method == null) {
+                    result = matchResult.validation
+                }
             } else {
                 result =
                     ValidationInvalidExpressionFunctionsResult(
                         functionName,
                         shortName,
+                        customFunctionClassName ?: "",
                     )
             }
         }
+        if (result != null &&
+            isImplementExpressionFunction(
+                parentClass,
+                expressionFunctionalInterface,
+                expressionHelper,
+            )
+        ) {
+            result =
+                ValidationInvalidExpressionFunctionsResult(
+                    functionName,
+                    shortName,
+                    customFunctionClassName ?: "",
+                )
+        }
+        return result
+    }
 
-        if (methods.isEmpty()) {
-            methods = expressionFunctionalInterface?.findMethodsByName(functionName.text, true) ?: emptyArray()
+    private fun getFunctionCall(): PsiMethod? {
+        val project = element.project
+        val module = element.module ?: return null
+        val expressionHelper = ExpressionFunctionsHelper
+        val expressionFunctionalInterface = expressionHelper.setExpressionFunctionsInterface(project)
+        val functionName = element.elIdExpr
+        val isTest = CommonPathParameterUtil.isTest(module, element.containingFile.virtualFile)
+        val customFunctionClassName = DomaCompileConfigUtil.getConfigValue(module, isTest, "doma.expr.functions")
+
+        if (customFunctionClassName?.isEmpty() == true) {
+            return null
         }
 
-        if (methods.isEmpty()) {
-            result.highlightElement(holder)
+        var methods: List<PsiMethod?>
+        val expressionClazz = customFunctionClassName?.let { project.getJavaClazz(it) }
+        val parentClass = expressionClazz ?: expressionFunctionalInterface
+        var result: PsiMethod? = null
+        if (parentClass != null) {
+            if (expressionHelper.isInheritor(parentClass) || parentClass == expressionFunctionalInterface) {
+                methods = parentClass.findMethodsByName(functionName.text, true).mapNotNull { it }
+                if (methods.isEmpty()) {
+                    return null
+                }
+                result = getParamTypeMatch(parentClass)
+            }
         }
+        if (isImplementExpressionFunction(
+                parentClass,
+                expressionFunctionalInterface,
+                expressionHelper,
+            )
+        ) {
+            return null
+        }
+
+        return result
+    }
+
+    /**
+     * Not inheriting from ExpressionFunctions.
+     */
+    private fun isImplementExpressionFunction(
+        parentClass: PsiClass?,
+        expressionFunctionalInterface: PsiClass?,
+        expressionHelper: ExpressionFunctionsHelper.Companion,
+    ): Boolean = parentClass != expressionFunctionalInterface && !expressionHelper.isInheritor(parentClass)
+
+    private fun checkParamTypeMatch(parentPsiClass: PsiClass): MethodMatcher.MatchResult {
+        val psiParentClassExpressionClazz = PsiParentClass(parentPsiClass.psiClassType)
+        return psiParentClassExpressionClazz.findMethod(element, shortName)
+    }
+
+    private fun getParamTypeMatch(parentPsiClass: PsiClass): PsiMethod? {
+        val psiParentClassExpressionClazz = PsiParentClass(parentPsiClass.psiClassType)
+        val methodResult = psiParentClassExpressionClazz.findMethod(element, shortName)
+        return methodResult.method
     }
 }

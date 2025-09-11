@@ -1,1 +1,1 @@
-select * from employee where id = /* employee.employeeParam(name).<caret> */1
+select * from employee where id = /* employee.employeeParam(name, 0).<caret> */1

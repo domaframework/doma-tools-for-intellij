@@ -57,7 +57,11 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         addEntityJavaFile("EmployeeSummary.java")
         addEntityJavaFile("Project.java")
         addEntityJavaFile("ProjectDetail.java")
+        addEntityJavaFile("DummyProject.java")
         addEntityJavaFile("Principal.java")
+        addEntityJavaFile("ColumnEntity.java")
+        addOtherJavaFile("domain", "ProjectNumber.java")
+        addOtherJavaFile("domain", "DummyProjectNumber.java")
 
         addExpressionJavaFile("TestExpressionFunctions.java")
         addExpressionJavaFile("TestNotExpressionFunctions.java")
@@ -116,8 +120,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
     }
 
     private fun deleteSdk() {
-        val oldJdk = ProjectJdkTable.getInstance().findJdk("Doma Test JDK")
-        if (oldJdk == null) return
+        val oldJdk = ProjectJdkTable.getInstance().findJdk("Doma Test JDK") ?: return
         WriteAction.runAndWait<RuntimeException> {
             ProjectJdkTable.getInstance().removeJdk(oldJdk)
             if (oldJdk is Disposable) {
@@ -151,7 +154,11 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         }
     }
 
-    fun addDaoJavaFile(vararg fileNames: String) {
+    protected fun addDomaCompileConfig() {
+        addResourceCompileFile("doma.compile.config")
+    }
+
+    protected fun addDaoJavaFile(vararg fileNames: String) {
         for (fileName in fileNames) {
             val file = File("$testDataPath/$sourceRoot/$packagePath/dao/$fileName")
             myFixture.addFileToProject(
@@ -188,7 +195,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         )
     }
 
-    fun addResourceEmptySqlFile(vararg sqlFileNames: String) {
+    protected fun addResourceEmptySqlFile(vararg sqlFileNames: String) {
         for (sqlFileName in sqlFileNames) {
             myFixture.addFileToProject(
                 "main/$resourceRoot/$RESOURCES_META_INF_PATH/$packagePath/dao/$sqlFileName",
@@ -197,7 +204,7 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         }
     }
 
-    fun addResourceCompileFile(readFileName: String) {
+    protected fun addResourceCompileFile(readFileName: String) {
         val file = File("$testDataPath/$resourceRoot/$readFileName")
         myFixture.addFileToProject(
             "main/$resourceRoot/doma.compile.config",
@@ -205,13 +212,13 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         )
     }
 
-    fun addSqlFile(vararg sqlNames: String) {
+    protected fun addSqlFile(vararg sqlNames: String) {
         for (sqlName in sqlNames) {
             addOtherPackageSqlFile("$packagePath/dao", sqlName)
         }
     }
 
-    fun addOtherPackageSqlFile(
+    protected fun addOtherPackageSqlFile(
         packageName: String,
         sqlName: String,
     ) {
@@ -223,9 +230,9 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         )
     }
 
-    fun findSqlFile(sqlName: String): VirtualFile? = findSqlFile(packagePath, sqlName)
+    protected fun findSqlFile(sqlName: String): VirtualFile? = findSqlFile(packagePath, sqlName)
 
-    fun findSqlFile(
+    protected fun findSqlFile(
         packageName: String,
         sqlName: String,
     ): VirtualFile? {
@@ -237,9 +244,9 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
         )
     }
 
-    fun findDaoClass(testDaoName: String): PsiClass = findDaoClass("doma.example.dao", testDaoName)
+    protected fun findDaoClass(testDaoName: String): PsiClass = findDaoClass("doma.example.dao", testDaoName)
 
-    fun findDaoClass(
+    protected fun findDaoClass(
         packageName: String,
         testDaoName: String,
     ): PsiClass {

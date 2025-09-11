@@ -15,33 +15,24 @@
  */
 package org.domaframework.doma.intellij.extension.expr
 
+import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiType
+import com.intellij.psi.PsiTypes
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.psi.SqlCustomElCommentExpr
 import org.domaframework.doma.intellij.psi.SqlElElseifDirective
 import org.domaframework.doma.intellij.psi.SqlElFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlElForDirective
+import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElIfDirective
+import org.domaframework.doma.intellij.psi.SqlElParameters
+import org.domaframework.doma.intellij.psi.SqlElPrimaryExpr
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
-
-val SqlElStaticFieldAccessExpr.accessElements: List<SqlElIdExpr>
-    get() =
-        this.elIdExprList
-            .sortedBy { it.textOffset }
-            .toList()
-
-val SqlElFieldAccessExpr.accessElements: List<SqlElIdExpr?>
-    get() =
-        this
-            .getElPrimaryExprList()
-            .mapNotNull { it as SqlElIdExpr }
-            .sortedBy { it.textOffset }
-            .toList()
-
-fun SqlElFieldAccessExpr.accessElementsPrevOriginalElement(targetTextOffset: Int): List<SqlElIdExpr> =
-    this.accessElements.filter { it != null && it.textOffset <= targetTextOffset }.mapNotNull { it }
 
 fun SqlCustomElCommentExpr.isConditionOrLoopDirective(): Boolean =
     PsiTreeUtil.getChildOfType(this, SqlElIfDirective::class.java) != null ||
@@ -52,3 +43,34 @@ fun SqlCustomElCommentExpr.isConditionOrLoopDirective(): Boolean =
         ) != null ||
         this.findElementAt(2)?.elementType == SqlTypes.EL_END ||
         this.findElementAt(2)?.elementType == SqlTypes.EL_ELSE
+
+fun SqlElParameters.extractParameterTypes(psiManager: PsiManager): List<PsiType?> =
+    this.elExprList.mapNotNull { param ->
+        when (param) {
+            is SqlElStaticFieldAccessExpr -> param.extractStaticFieldType()
+            is SqlElFieldAccessExpr -> param.extractFieldType()
+            is SqlElIdExpr -> {
+                val daoMethod = findDaoMethod(this.containingFile)
+                daoMethod
+                    ?.parameterList
+                    ?.parameters
+                    ?.find { it.name == param.text }
+                    ?.type
+            }
+            is SqlElPrimaryExpr -> {
+                when (param.node.firstChildNode.elementType) {
+                    SqlTypes.EL_NUMBER -> PsiTypes.intType()
+                    SqlTypes.EL_STRING -> {
+                        PsiType.getJavaLangString(psiManager, GlobalSearchScope.allScope(param.project))
+                    }
+                    SqlTypes.BOOLEAN -> PsiTypes.booleanType()
+                    else -> null
+                }
+            }
+            is SqlElFunctionCallExpr -> {
+                param.extractFunctionReturnType()
+            }
+
+            else -> null
+        }
+    }

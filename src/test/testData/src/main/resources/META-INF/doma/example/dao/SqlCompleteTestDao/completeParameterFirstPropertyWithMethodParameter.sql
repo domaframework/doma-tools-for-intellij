@@ -1,1 +1,1 @@
-select * from employee where id = /* employee.getFirstProject(employee.getFirstProject(index).<caret> ) */1
+select * from employee where id = /* employee.getProject(employee.getProject(index).<caret> ) */1

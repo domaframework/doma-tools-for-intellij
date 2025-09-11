@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.reference
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.DomaSqlTest
@@ -36,21 +37,18 @@ class SqlReferenceTestCase : DomaSqlTest() {
     private val fieldResolve = "PsiField"
     private val methodResolve = "PsiMethod"
     private val classResolve = "PsiClass"
+    private val psiTypeResolve = "PsiType"
 
     override fun setUp() {
         super.setUp()
         addDaoJavaFile("$testPackage/$testDaoName.java")
-        addSqlFile("$testPackage/$testDaoName/referenceDaoParameter.sql")
-        addSqlFile("$testPackage/$testDaoName/referenceEntityProperty.sql")
-        addSqlFile("$testPackage/$testDaoName/referenceStaticField.sql")
-        addSqlFile("$testPackage/$testDaoName/referenceListFieldMethod.sql")
-        addSqlFile("$testPackage/$testDaoName/referenceForItem.sql")
-        addSqlFile("$testPackage/$testDaoName/referenceCustomFunction.sql")
     }
 
     fun testReferenceDaoMethodParameter() {
+        val sqlFileName = "referenceDaoParameter"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
         referenceTest(
-            "referenceDaoParameter",
+            sqlFileName,
             mapOf(
                 "reportId" to listOf("$daoParameterResolve:reportId"),
                 "tableName" to listOf("$daoParameterResolve:tableName"),
@@ -62,8 +60,10 @@ class SqlReferenceTestCase : DomaSqlTest() {
     }
 
     fun testReferenceEntityProperty() {
+        val sqlFileName = "referenceEntityProperty"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
         referenceTest(
-            "referenceEntityProperty",
+            sqlFileName,
             mapOf(
                 "detail" to listOf("$daoParameterResolve:detail"),
                 "getFirstEmployee" to listOf("$methodResolve:getFirstEmployee"),
@@ -81,8 +81,10 @@ class SqlReferenceTestCase : DomaSqlTest() {
     }
 
     fun testReferenceStaticField() {
+        val sqlFileName = "referenceStaticField"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
         referenceTest(
-            "referenceStaticField",
+            sqlFileName,
             mapOf(
                 "doma.example.entity.ProjectDetail" to listOf("$classResolve:ProjectDetail"),
                 "doma.example.entity.Project" to listOf("$classResolve:Project"),
@@ -98,8 +100,10 @@ class SqlReferenceTestCase : DomaSqlTest() {
     }
 
     fun testReferenceListFieldMethod() {
+        val sqlFileName = "referenceListFieldMethod"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
         referenceTest(
-            "referenceListFieldMethod",
+            sqlFileName,
             mapOf(
                 "doma.example.entity.Employee" to listOf("$classResolve:Employee"),
                 "projects" to listOf("$fieldResolve:projects"),
@@ -113,8 +117,10 @@ class SqlReferenceTestCase : DomaSqlTest() {
     }
 
     fun testReferenceForItem() {
+        val sqlFileName = "referenceForItem"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
         referenceTest(
-            "referenceForItem",
+            sqlFileName,
             mapOf(
                 "employeesList" to listOf("$daoParameterResolve:employeesList"),
                 "projects" to listOf("$fieldResolve:projects"),
@@ -135,13 +141,172 @@ class SqlReferenceTestCase : DomaSqlTest() {
     }
 
     fun testReferenceCustomFunction() {
-        addResourceCompileFile("doma.compile.config")
+        addDomaCompileConfig()
+        val sqlFileName = "referenceCustomFunction"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
         referenceTest(
-            "referenceCustomFunction",
+            sqlFileName,
             mapOf(
                 "detail" to listOf("$daoParameterResolve:detail"),
                 "projectDetailId" to listOf("$fieldResolve:projectDetailId"),
                 "userId" to listOf("$methodResolve:userId"),
+            ),
+        )
+    }
+
+    fun testReferenceMethodParameter() {
+        addDomaCompileConfig()
+        val sqlFileName = "referenceMethodParameter"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
+        referenceTest(
+            sqlFileName,
+            mapOf(
+                "doma.example.entity.Project" to listOf("$classResolve:Project"),
+                "getEmployee" to listOf("$methodResolve:getEmployee"),
+                "employee" to listOf("$daoParameterResolve:employee"),
+                "project" to listOf("$daoParameterResolve:project"),
+                "managerId" to listOf("$fieldResolve:managerId"),
+                "employeeParam" to listOf("$methodResolve:employeeParam"),
+                "employeeName" to listOf("$fieldResolve:employeeName"),
+                "processText" to listOf("$methodResolve:processText"),
+                "getSubEmployee" to listOf("$methodResolve:getSubEmployee"),
+                "managerId" to listOf("$fieldResolve:managerId"),
+                "cost" to listOf("$fieldResolve:cost"),
+                "projectId" to listOf("$fieldResolve:projectId"),
+                "optionalIds" to listOf("$fieldResolve:optionalIds"),
+                "getProjectNumber" to listOf("$methodResolve:getProjectNumber"),
+                "get" to listOf("$methodResolve:get"),
+                "0" to listOf(null),
+                "formatName" to listOf("$methodResolve:formatName"),
+                "str" to listOf("$daoParameterResolve:str"),
+                "intValue" to listOf("$daoParameterResolve:intValue"),
+                "floatValue" to listOf("$daoParameterResolve:floatValue"),
+                "\"suffix\"" to listOf(null),
+                "\"test\"" to listOf(null),
+                "charSeq" to listOf("$daoParameterResolve:charSeq"),
+                "toString" to listOf("$methodResolve:toString"),
+                "subProject" to listOf("$daoParameterResolve:subProject"),
+                "number" to listOf("$fieldResolve:number"),
+                "roundUpTimePart" to listOf("$methodResolve:roundUpTimePart"),
+                "localDate" to listOf("$daoParameterResolve:localDate"),
+                "localDateTime" to listOf("$daoParameterResolve:localDateTime"),
+                "suffix" to listOf("$methodResolve:suffix"),
+                "isGuest" to listOf("$methodResolve:isGuest"),
+                "isGuestInProject" to listOf("$methodResolve:isGuestInProject"),
+                "columns" to listOf("$daoParameterResolve:columns"),
+                "item" to listOf(forItemResolve),
+                "params" to listOf("$methodResolve:params"),
+                "currentYear" to listOf("$methodResolve:currentYear"),
+                "item_has_next" to listOf(forItemResolve),
+            ),
+        )
+    }
+
+    /**
+     * Test reference resolution for overloaded instance methods.
+     */
+    fun testDocumentOverloadInstanceMethod1() {
+        val sqlFileName = "documentOverloadInstanceMethod1"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
+        referenceTestDocument(
+            sqlFileName,
+            mapOf(
+                "employee" to listOf("$daoParameterResolve:employee"),
+                "employeeParam" to listOf("$psiTypeResolve:String, $psiTypeResolve:Integer"),
+                "employeeName" to listOf("$fieldResolve:employeeName"),
+                "managerId" to listOf("$fieldResolve:managerId"),
+            ),
+        )
+    }
+
+    fun testDocumentOverloadInstanceMethod2() {
+        val sqlFileName = "documentOverloadInstanceMethod2"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
+        referenceTestDocument(
+            sqlFileName,
+            mapOf(
+                "employee" to listOf("$daoParameterResolve:employee"),
+                "employeeParam" to listOf("$psiTypeResolve:int, $psiTypeResolve:Float"),
+                "employeeName" to listOf("$fieldResolve:employeeName"),
+                "managerId" to listOf("$fieldResolve:managerId"),
+                "floatVal" to listOf("$daoParameterResolve:floatVal"),
+            ),
+        )
+    }
+
+    fun testDocumentOverloadStaticMethod1() {
+        val sqlFileName = "documentOverloadStaticMethod1"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
+        referenceTestDocument(
+            sqlFileName,
+            mapOf(
+                "doma.example.entity.Project" to listOf("$classResolve:Project"),
+                "getEmployee" to listOf("$psiTypeResolve:int"),
+                "employee" to listOf("$daoParameterResolve:employee"),
+                "managerId" to listOf("$fieldResolve:managerId"),
+            ),
+        )
+    }
+
+    fun testDocumentOverloadStaticMethod2() {
+        val sqlFileName = "documentOverloadStaticMethod2"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
+        referenceTestDocument(
+            sqlFileName,
+            mapOf(
+                "doma.example.entity.Project" to listOf("$classResolve:Project"),
+                "getEmployee" to listOf("$psiTypeResolve:Employee"),
+                "employee" to listOf("$daoParameterResolve:employee"),
+            ),
+        )
+    }
+
+    fun testDocumentOverloadCustomFunction1() {
+        addDomaCompileConfig()
+        val sqlFileName = "documentOverloadCustomFunction1"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
+        referenceTestDocument(
+            sqlFileName,
+            mapOf(
+                "isGuest" to listOf("$psiTypeResolve:Employee"),
+                "employee" to listOf("$daoParameterResolve:employee"),
+            ),
+        )
+    }
+
+    fun testDocumentOverloadCustomFunction2() {
+        addDomaCompileConfig()
+        val sqlFileName = "documentOverloadCustomFunction2"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
+        referenceTestDocument(
+            sqlFileName,
+            mapOf(
+                "isGuest" to listOf("$psiTypeResolve:Project"),
+                "project" to listOf("$daoParameterResolve:project"),
+            ),
+        )
+    }
+
+    fun testDocumentOverloadBuiltInFunction1() {
+        val sqlFileName = "documentOverloadBuiltInFunction1"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
+        referenceTestDocument(
+            sqlFileName,
+            mapOf(
+                "roundDownTimePart" to listOf("$psiTypeResolve:Date"),
+                "date" to listOf("$daoParameterResolve:date"),
+            ),
+        )
+    }
+
+    fun testDocumentOverloadBuiltInFunction2() {
+        val sqlFileName = "documentOverloadBuiltInFunction2"
+        addSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
+        referenceTestDocument(
+            sqlFileName,
+            mapOf(
+                "roundDownTimePart" to listOf("$psiTypeResolve:LocalDateTime"),
+                "localDateTime" to listOf("$daoParameterResolve:localDateTime"),
             ),
         )
     }
@@ -186,7 +351,64 @@ class SqlReferenceTestCase : DomaSqlTest() {
         for (reference in references) {
             val resolveResult = reference.references.firstOrNull()?.resolve()
             val expectedResults = resolveExpects[reference.text]
+            println(
+                "Reference: ${reference.text}, Resolve: ${(resolveResult as? PsiMethod)
+                    ?.parameterList
+                    ?.parameters
+                    ?.map{ it.type }
+                    ?.joinToString() ?: resolveResult}",
+            )
             assertTrue(expectedResults?.contains(resolveResult?.toString()) == true)
+        }
+    }
+
+    /**
+     * Test whether the referenced method matches, using the documentation generated by reference resolution.
+     */
+    private fun referenceTestDocument(
+        sqlFileName: String,
+        resolveExpects: Map<String, List<String?>>,
+    ) {
+        val sqlFile = findSqlFile("$testPackage/$testDaoName/$sqlFileName.sql")
+        assertNotNull("Not Found SQL File", sqlFile)
+        if (sqlFile == null) return
+
+        myFixture.configureFromExistingVirtualFile(sqlFile)
+        sqlFile.toPsiFile(project)?.let {
+            resolveDocumentInTestFile(
+                it,
+                resolveExpects,
+            )
+        }
+    }
+
+    private fun resolveDocumentInTestFile(
+        sqlFile: PsiFile,
+        resolveExpects: Map<String, List<String?>>,
+    ) {
+        val references =
+            PsiTreeUtil.collectElementsOfType(sqlFile, SqlCustomElExpr::class.java).filter {
+                !isLiteral(it) &&
+                    !(
+                        it is SqlElIdExpr &&
+                            PsiTreeUtil.getParentOfType(
+                                it,
+                                SqlElClass::class.java,
+                            ) != null
+                    )
+            }
+        for (reference in references) {
+            val resolveResult = reference.references.firstOrNull()?.resolve()
+            val resolveResultText =
+                (resolveResult as? PsiMethod)
+                    ?.parameterList
+                    ?.parameters
+                    ?.map { it.type }
+                    ?.joinToString()
+                    ?: resolveResult.toString()
+            val expectedResults = resolveExpects[reference.text]
+            println("Reference: ${reference.text}, Resolve: $resolveResultText Expects: $expectedResults")
+            assertTrue(expectedResults?.contains(resolveResultText) == true)
         }
     }
 

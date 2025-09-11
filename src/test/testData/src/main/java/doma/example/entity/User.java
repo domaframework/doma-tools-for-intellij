@@ -30,5 +30,13 @@ public class User {
   private String getEmail(){
     return email;
   }
+  
+  public String processText(CharSequence text) {
+    return text.toString();
+  }
+  
+  public CharSequence getDescription() {
+    return "User description";
+  }
 
 }

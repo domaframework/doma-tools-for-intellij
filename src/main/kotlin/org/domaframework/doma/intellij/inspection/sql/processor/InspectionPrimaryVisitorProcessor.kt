@@ -32,7 +32,7 @@ import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 class InspectionPrimaryVisitorProcessor(
     val shortName: String,
     private val element: SqlElPrimaryExpr,
-) : InspectionVisitorProcessor(shortName) {
+) : InspectionVisitorProcessor() {
     fun check(
         holder: ProblemsHolder,
         file: PsiFile,
@@ -43,7 +43,7 @@ class InspectionPrimaryVisitorProcessor(
         val forDirectiveExp = PsiTreeUtil.getParentOfType(element, SqlElForDirective::class.java)
         val isSkip = forDirectiveExp != null && forDirectiveExp.getForItem() != element
 
-        var forDirectiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(element, skipSelf = isSkip)
+        val forDirectiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(element, skipSelf = isSkip)
         val forItem =
             ForDirectiveUtil.findForItem(
                 element,

@@ -34,8 +34,7 @@ class SqlElStaticFieldReference(
         file: PsiFile,
     ): PsiElement? {
         val staticAccessParent =
-            PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java)
-        if (staticAccessParent == null) return null
+            PsiTreeUtil.getParentOfType(element, SqlElStaticFieldAccessExpr::class.java) ?: return null
 
         val targetElements =
             getBlockCommentElements(element, SqlElStaticFieldAccessExpr::class.java)
@@ -45,7 +44,7 @@ class SqlElStaticFieldReference(
         val referenceParentClass = PsiParentClass(referenceClass.psiClassType)
         if (targetElements.size == 1) {
             val searchText = element.text ?: ""
-            val reference = referenceParentClass.findField(searchText) ?: referenceParentClass.findMethod(searchText)
+            val reference = referenceParentClass.findField(searchText) ?: referenceParentClass.findMethod(element).method
             if (reference != null) {
                 PluginLoggerUtil.countLogging(
                     this::class.java.simpleName,
@@ -62,7 +61,7 @@ class SqlElStaticFieldReference(
                 ForDirectiveUtil.getFieldAccessLastPropertyClassType(
                     targetElements,
                     staticAccessParent.project,
-                    it,
+                    it.parent,
                     dropLastIndex = 1,
                 )
             }

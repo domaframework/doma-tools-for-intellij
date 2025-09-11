@@ -32,22 +32,10 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     override fun setUp() {
         super.setUp()
         addDaoJavaFile("$testPackage/$testDaoName.java")
-        addSqlFile("$testPackage/$testDaoName/documentForItemDaoParam.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemDeclaration.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemElement.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemElementInBindVariable.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemElementInIfDirective.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemElementByFieldAccess.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemFirstElement.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemStaticProperty.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemHasNext.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemIndex.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemOptionalForItem.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemOptionalProperty.sql")
-        addSqlFile("$testPackage/$testDaoName/documentForItemInvalidPrimary.sql")
     }
 
     fun testDocumentForItemDaoParam() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemDaoParam.sql")
         val sqlName = "documentForItemDaoParam"
         val result: String? = null
 
@@ -55,6 +43,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemDeclaration() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemDeclaration.sql")
         val sqlName = "documentForItemDeclaration"
         val result =
             "<a href=\"psi_element://java.util.List\">List</a><<a href=\"psi_element://java.util.List\">" +
@@ -64,6 +53,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemOptionalForItem() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemOptionalForItem.sql")
         val sqlName = "documentForItemOptionalForItem"
         val result =
             "<a href=\"psi_element://java.util.List\">List</a><<a href=\"psi_element://doma.example.entity.Project\">Project</a>> optionalProjects"
@@ -72,6 +62,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemOptionalForItemProperty() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemOptionalProperty.sql")
         val sqlName = "documentForItemOptionalProperty"
         val result =
             "<a href=\"psi_element://java.util.List\">List</a><<a href=\"psi_element://java.lang.Integer\">Integer</a>> optionalIds"
@@ -80,6 +71,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemElement() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemElement.sql")
         val sqlName = "documentForItemElement"
         val result =
             "<a href=\"psi_element://java.util.List\">List</a><<a href=\"psi_element://java.util.List\">" +
@@ -89,6 +81,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemElementInBindVariable() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemElementInBindVariable.sql")
         val sqlName = "documentForItemElementInBindVariable"
         val result =
             "<a href=\"psi_element://java.util.List\">List</a><" +
@@ -98,6 +91,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemElementInIfDirective() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemElementInIfDirective.sql")
         val sqlName = "documentForItemElementInIfDirective"
         val result =
             "<a href=\"psi_element://java.util.List\">List</a><" +
@@ -107,6 +101,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemElementByFieldAccess() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemElementByFieldAccess.sql")
         val sqlName = "documentForItemElementByFieldAccess"
         val result =
             "<a href=\"psi_element://doma.example.entity.Project\">Project</a> project"
@@ -115,6 +110,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemFirstElement() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemFirstElement.sql")
         val sqlName = "documentForItemFirstElement"
         val result =
             "<a href=\"psi_element://doma.example.entity.Principal.Permission\">Permission</a> item"
@@ -123,6 +119,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemHasNext() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemHasNext.sql")
         val sqlName = "documentForItemHasNext"
         val result =
             "<a href=\"psi_element://boolean\">boolean</a> item_has_next"
@@ -131,6 +128,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemIndex() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemIndex.sql")
         val sqlName = "documentForItemIndex"
         val result =
             "<a href=\"psi_element://int\">int</a> item_index"
@@ -139,6 +137,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemStaticProperty() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemStaticProperty.sql")
         val sqlName = "documentForItemStaticProperty"
         val result =
             "<a href=\"psi_element://doma.example.entity.Project\">Project</a> project"
@@ -147,8 +146,9 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
     }
 
     fun testDocumentForItemInvalidPrimary() {
+        addSqlFile("$testPackage/$testDaoName/documentForItemInvalidPrimary.sql")
         val sqlName = "documentForItemInvalidPrimary"
-        val result = " item"
+        val result = "<a href=\"psi_element://doma.example.entity.Principal\">Principal</a> item"
 
         documentationFindTextTest(sqlName, "item", result)
     }
@@ -162,7 +162,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
         if (sqlFile == null) return
 
         myFixture.configureFromExistingVirtualFile(sqlFile)
-        var originalElement: PsiElement = myFixture.elementAtCaret
+        val originalElement: PsiElement = myFixture.elementAtCaret
         val resultDocument = myDocumentationProvider.generateDoc(originalElement, originalElement)
         assertEquals("Documentation should contain expected text", result, resultDocument)
     }
@@ -177,7 +177,7 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
         if (sqlFile == null) return
 
         myFixture.configureFromExistingVirtualFile(sqlFile)
-        var originalElement: PsiElement? =
+        val originalElement: PsiElement? =
             myFixture.findElementByText(originalElementName, SqlElIdExpr::class.java)
                 ?: fundForDirectiveDeclarationElement(sqlFile, originalElementName)
         assertNotNull("Not Found Element [$originalElementName]", originalElement)
@@ -200,10 +200,9 @@ class SqlSymbolDocumentTestCase : DomaSqlTest() {
         val forDirective =
             forDirectiveBlock?.children?.find { it is SqlElForDirective } as? SqlElForDirective
                 ?: return null
-        val fieldAccessExpr = forDirective.elExprList[1] as? SqlElFieldAccessExpr
-        if (fieldAccessExpr == null) {
-            return forDirective.elExprList.firstOrNull { it.text == searchElementName }
-        }
+        val fieldAccessExpr =
+            forDirective.elExprList[1] as? SqlElFieldAccessExpr
+                ?: return forDirective.elExprList.firstOrNull { it.text == searchElementName }
 
         val accesses = fieldAccessExpr.accessElements
         return accesses.firstOrNull { it?.text == searchElementName }

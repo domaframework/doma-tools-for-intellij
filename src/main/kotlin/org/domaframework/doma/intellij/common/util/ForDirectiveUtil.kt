@@ -26,29 +26,32 @@ import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiParentClass
 import org.domaframework.doma.intellij.common.psi.PsiStaticElement
 import org.domaframework.doma.intellij.common.sql.PsiClassTypeUtil
 import org.domaframework.doma.intellij.common.sql.cleanString
+import org.domaframework.doma.intellij.common.sql.foritem.ForDeclarationItem
 import org.domaframework.doma.intellij.common.sql.foritem.ForItem
 import org.domaframework.doma.intellij.common.validation.result.ValidationCompleteResult
+import org.domaframework.doma.intellij.common.validation.result.ValidationNotFoundStaticPropertyResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationNotFoundTopTypeResult
-import org.domaframework.doma.intellij.common.validation.result.ValidationPropertyResult
 import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.extension.expr.accessElements
 import org.domaframework.doma.intellij.extension.psi.findParameter
 import org.domaframework.doma.intellij.extension.psi.findStaticField
-import org.domaframework.doma.intellij.extension.psi.findStaticMethod
 import org.domaframework.doma.intellij.extension.psi.getForItem
 import org.domaframework.doma.intellij.extension.psi.getForItemDeclaration
+import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElForDirective
 import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElParameters
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
+import org.toml.lang.psi.ext.elementType
+
+private typealias FieldAccessContext = FieldMethodResolver.ResolveContext
 
 class ForDirectiveUtil {
     data class BlockToken(
@@ -84,59 +87,8 @@ class ForDirectiveUtil {
                 cachedForDirectiveBlocks.getOrPut(targetElement) {
                     CachedValuesManager.getManager(targetElement.project).createCachedValue {
                         val file = targetElement.containingFile ?: return@createCachedValue null
-                        val directiveBlocks =
-                            PsiTreeUtil
-                                .findChildrenOfType(file, PsiElement::class.java)
-                                .filter { elm ->
-                                    (
-                                        elm.elementType == SqlTypes.EL_FOR ||
-                                            elm.elementType == SqlTypes.EL_IF ||
-                                            elm.elementType == SqlTypes.EL_END
-                                    )
-                                }.sortedBy { it.textOffset }
-                                .map {
-                                    when (it.elementType) {
-                                        SqlTypes.EL_FOR -> {
-                                            val item =
-                                                (it.parent as? SqlElForDirective)?.getForItem()
-                                            BlockToken(
-                                                BlockType.FOR,
-                                                item ?: it,
-                                                item?.textOffset ?: 0,
-                                            )
-                                        }
-
-                                        SqlTypes.EL_IF ->
-                                            BlockToken(
-                                                BlockType.IF,
-                                                it,
-                                                it.textOffset,
-                                            )
-
-                                        else -> BlockToken(BlockType.END, it, it.textOffset)
-                                    }
-                                }
-                        var stack = mutableListOf<BlockToken>()
-                        val filterPosition =
-                            if (skipSelf) {
-                                directiveBlocks.filter {
-                                    it.position < targetElement.textOffset
-                                }
-                            } else {
-                                directiveBlocks.filter { it.position <= targetElement.textOffset }
-                            }
-                        filterPosition.forEach { block ->
-                            when (block.type) {
-                                BlockType.FOR, BlockType.IF -> stack.add(block)
-                                BlockType.END -> if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
-                            }
-                        }
-                        if (skipSelf) {
-                            stack =
-                                stack
-                                    .filter { !isSameForDirective(it.item, targetElement) }
-                                    .toMutableList()
-                        }
+                        val directiveBlocks = extractDirectiveBlocks(file)
+                        val stack = buildDirectiveStack(directiveBlocks, targetElement, skipSelf)
 
                         CachedValueProvider.Result.create(
                             stack.filter { it.type == BlockType.FOR },
@@ -145,6 +97,61 @@ class ForDirectiveUtil {
                     }
                 }
             return cachedValue.value
+        }
+
+        private fun extractDirectiveBlocks(file: PsiElement): List<BlockToken> =
+            PsiTreeUtil
+                .findChildrenOfType(file, PsiElement::class.java)
+                .filter { isDirectiveElement(it) }
+                .sortedBy { it.textOffset }
+                .map { createBlockToken(it) }
+
+        private fun isDirectiveElement(element: PsiElement): Boolean =
+            element.elementType == SqlTypes.EL_FOR ||
+                element.elementType == SqlTypes.EL_IF ||
+                element.elementType == SqlTypes.EL_END
+
+        private fun createBlockToken(element: PsiElement): BlockToken =
+            when (element.elementType) {
+                SqlTypes.EL_FOR -> {
+                    val item = (element.parent as? SqlElForDirective)?.getForItem()
+                    BlockToken(
+                        BlockType.FOR,
+                        item ?: element,
+                        item?.textOffset ?: 0,
+                    )
+                }
+                SqlTypes.EL_IF ->
+                    BlockToken(
+                        BlockType.IF,
+                        element,
+                        element.textOffset,
+                    )
+                else -> BlockToken(BlockType.END, element, element.textOffset)
+            }
+
+        private fun buildDirectiveStack(
+            directiveBlocks: List<BlockToken>,
+            targetElement: PsiElement,
+            skipSelf: Boolean,
+        ): List<BlockToken> {
+            val stack = mutableListOf<BlockToken>()
+            val positionThreshold = if (skipSelf) targetElement.textOffset else targetElement.textOffset + 1
+
+            directiveBlocks
+                .filter { it.position < positionThreshold }
+                .forEach { block ->
+                    when (block.type) {
+                        BlockType.FOR, BlockType.IF -> stack.add(block)
+                        BlockType.END -> if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
+                    }
+                }
+
+            return if (skipSelf) {
+                stack.filter { !isSameForDirective(it.item, targetElement) }
+            } else {
+                stack
+            }
         }
 
         private fun isSameForDirective(
@@ -180,9 +187,8 @@ class ForDirectiveUtil {
             forDirectiveBlocks: List<BlockToken>,
             targetForItem: PsiElement? = null,
         ): PsiParentClass? {
-            // Get the type of the top for directive definition element
-            // Defined in DAO parameters or static property calls
             if (forDirectiveBlocks.isEmpty()) return null
+
             val topDirectiveItem = forDirectiveBlocks.first().item
             val file = topDirectiveItem.containingFile ?: return null
             val daoMethod = findDaoMethod(file)
@@ -193,66 +199,145 @@ class ForDirectiveUtil {
                     project,
                     daoMethod,
                 )
-            forDirectiveBlocks.drop(1).forEach { directive ->
-                // Get the definition type of the target directive
-                val formItem = ForItem(directive.item)
-                if (targetForItem != null && formItem.element.textOffset > targetForItem.textOffset) {
-                    return parentClassType
-                }
-                val forDirectiveExpr = formItem.getParentForDirectiveExpr()
-                val forDirectiveDeclaration = forDirectiveExpr?.getForItemDeclaration()
-                if (forDirectiveDeclaration != null) {
-                    val declarationTopElement =
-                        forDirectiveDeclaration.getDeclarationChildren().first()
-                    val findDeclarationForItem =
-                        findForItem(declarationTopElement, forDirectives = forDirectiveBlocks)
 
-                    if (findDeclarationForItem == null && daoMethod != null) {
-                        val matchParam = daoMethod.findParameter(declarationTopElement.text)
-                        if (matchParam != null) {
-                            val convertOptional =
-                                PsiClassTypeUtil.convertOptionalType(matchParam.type, project)
-                            parentClassType = PsiParentClass(convertOptional)
-                        }
-                    }
-                    if (parentClassType != null) {
-                        val isBatchAnnotation = daoMethod?.let { PsiDaoMethod(project, it).daoType.isBatchAnnotation() } == true
-                        val forItemDeclarationBlocks =
-                            forDirectiveDeclaration.getDeclarationChildren()
-                        getFieldAccessLastPropertyClassType(
-                            forItemDeclarationBlocks,
-                            project,
-                            parentClassType,
-                            isBatchAnnotation = isBatchAnnotation,
-                            complete = { lastType ->
-                                val classType = lastType.type as? PsiClassType
-                                val nestClass =
-                                    if (classType != null &&
-                                        PsiClassTypeUtil.isIterableType(
-                                            classType,
-                                            project,
-                                        )
-                                    ) {
-                                        classType.parameters.firstOrNull()
-                                    } else {
-                                        null
-                                    }
-                                parentClassType =
-                                    if (nestClass != null) {
-                                        PsiParentClass(nestClass)
-                                    } else {
-                                        null
-                                    }
-                            },
-                        )
-                        if (targetForItem != null && formItem.element.text == targetForItem.text) {
-                            return parentClassType
-                        }
-                    }
+            for (directive in forDirectiveBlocks.drop(1)) {
+                val result =
+                    processDirective(
+                        directive,
+                        targetForItem,
+                        forDirectiveBlocks,
+                        daoMethod,
+                        project,
+                        parentClassType,
+                    )
+
+                if (result.shouldReturn) {
+                    return result.parentClassType
                 }
+                parentClassType = result.parentClassType
             }
 
             return parentClassType
+        }
+
+        private data class DirectiveProcessResult(
+            val parentClassType: PsiParentClass?,
+            val shouldReturn: Boolean = false,
+        )
+
+        private fun processDirective(
+            directive: BlockToken,
+            targetForItem: PsiElement?,
+            forDirectiveBlocks: List<BlockToken>,
+            daoMethod: PsiMethod?,
+            project: Project,
+            currentParentClassType: PsiParentClass?,
+        ): DirectiveProcessResult {
+            val formItem = ForItem(directive.item)
+
+            if (targetForItem != null && formItem.element.textOffset > targetForItem.textOffset) {
+                return DirectiveProcessResult(currentParentClassType, shouldReturn = true)
+            }
+
+            val forDirectiveExpr = formItem.getParentForDirectiveExpr()
+            val forDirectiveDeclaration =
+                forDirectiveExpr?.getForItemDeclaration()
+                    ?: return DirectiveProcessResult(currentParentClassType)
+
+            var updatedParentClassType =
+                resolveParentClassType(
+                    forDirectiveDeclaration,
+                    forDirectiveBlocks,
+                    daoMethod,
+                    project,
+                    currentParentClassType,
+                )
+
+            if (updatedParentClassType != null) {
+                updatedParentClassType =
+                    processDeclarationBlocks(
+                        forDirectiveDeclaration,
+                        daoMethod,
+                        project,
+                        updatedParentClassType,
+                    )
+
+                if (targetForItem != null && formItem.element.text == targetForItem.text) {
+                    return DirectiveProcessResult(updatedParentClassType, shouldReturn = true)
+                }
+            }
+
+            return DirectiveProcessResult(updatedParentClassType)
+        }
+
+        private fun resolveParentClassType(
+            forDirectiveDeclaration: Any,
+            forDirectiveBlocks: List<BlockToken>,
+            daoMethod: PsiMethod?,
+            project: Project,
+            currentParentClassType: PsiParentClass?,
+        ): PsiParentClass? {
+            val declaration = forDirectiveDeclaration as? ForDeclarationItem
+            val declarationTopElement =
+                declaration?.getDeclarationChildren()?.first()
+                    ?: return currentParentClassType
+
+            val findDeclarationForItem = findForItem(declarationTopElement, forDirectives = forDirectiveBlocks)
+
+            if (findDeclarationForItem == null && daoMethod != null) {
+                val matchParam = daoMethod.findParameter(declarationTopElement.text)
+                if (matchParam != null) {
+                    val convertOptional = PsiClassTypeUtil.convertOptionalType(matchParam.type, project)
+                    return PsiParentClass(convertOptional)
+                }
+            }
+
+            return currentParentClassType
+        }
+
+        private fun processDeclarationBlocks(
+            forDirectiveDeclaration: Any,
+            daoMethod: PsiMethod?,
+            project: Project,
+            parentClassType: PsiParentClass,
+        ): PsiParentClass? {
+            val isBatchAnnotation =
+                daoMethod?.let {
+                    PsiDaoMethod(project, it).daoType.isBatchAnnotation()
+                } == true
+
+            val declaration = forDirectiveDeclaration as? ForDeclarationItem
+            val forItemDeclarationBlocks =
+                declaration?.getDeclarationChildren()
+                    ?: return parentClassType
+
+            var resultParentClassType: PsiParentClass? = parentClassType
+
+            getFieldAccessLastPropertyClassType(
+                forItemDeclarationBlocks,
+                project,
+                parentClassType,
+                isBatchAnnotation = isBatchAnnotation,
+                complete = { lastType ->
+                    resultParentClassType = extractNestedClassType(lastType, project)
+                },
+            )
+
+            return resultParentClassType
+        }
+
+        private fun extractNestedClassType(
+            lastType: PsiParentClass,
+            project: Project,
+        ): PsiParentClass? {
+            val classType = lastType.type as? PsiClassType ?: return null
+
+            if (PsiClassTypeUtil.isIterableType(classType, project)) {
+                val nestClass = classType.parameters.firstOrNull()
+                return nestClass?.let { PsiParentClass(it) }
+            }
+
+            return null
         }
 
         fun getTopForDirectiveDeclarationClassType(
@@ -261,7 +346,7 @@ class ForDirectiveUtil {
             daoMethod: PsiMethod?,
         ): PsiParentClass? {
             var result: PsiParentClass? = null
-            var fieldAccessTopParentClass: PsiParentClass? = null
+            var fieldAccessTopParentClass: PsiParentClass?
 
             val forDirectiveExpr =
                 PsiTreeUtil.getParentOfType(topForDirectiveItem, SqlElForDirective::class.java)
@@ -287,11 +372,15 @@ class ForDirectiveUtil {
                     val referenceClazz = staticElement.getRefClazz() ?: return null
 
                     // In the case of staticFieldAccess, the property that is called first is retrieved.
-                    fieldAccessTopParentClass =
+                    val staticContext =
                         getStaticFieldAccessTopElementClassType(
                             staticFieldAccessExpr,
                             referenceClazz,
                         )
+                    if (staticContext?.validationResult != null) {
+                        return null
+                    }
+                    fieldAccessTopParentClass = staticContext?.parent
                 } else {
                     // Defined by DAO parameter
                     if (daoMethod == null) return null
@@ -305,17 +394,17 @@ class ForDirectiveUtil {
                     val daoParamType = matchParam?.type ?: return null
                     fieldAccessTopParentClass = PsiParentClass(PsiClassTypeUtil.convertOptionalType(daoParamType, project))
                 }
-                fieldAccessTopParentClass?.let {
+                fieldAccessTopParentClass?.let { parentClass ->
                     getFieldAccessLastPropertyClassType(
                         forItemDeclarationBlocks,
                         topForDirectiveItem.project,
-                        it,
+                        parentClass,
                         isBatchAnnotation = isBatchAnnotation,
                         complete = { lastType ->
                             val classType = lastType.type as? PsiClassType
                             val nestClass =
                                 if (classType != null &&
-                                    PsiClassTypeUtil.Companion.isIterableType(classType, project)
+                                    PsiClassTypeUtil.isIterableType(classType, project)
                                 ) {
                                     classType.parameters.firstOrNull()
                                 } else {
@@ -332,21 +421,60 @@ class ForDirectiveUtil {
         fun getStaticFieldAccessTopElementClassType(
             staticFieldAccessExpr: SqlElStaticFieldAccessExpr,
             referenceClazz: PsiClass,
-        ): PsiParentClass? {
+            shortName: String = "",
+        ): FieldAccessContext? {
             val topElement = staticFieldAccessExpr.elIdExprList.firstOrNull() ?: return null
             val searchText = cleanString(topElement.text)
-            if (topElement.nextSibling?.elementType != SqlTypes.EL_PARAMETERS) {
+            val prentClazz = PsiParentClass(referenceClazz.psiClassType)
+            val context =
+                FieldAccessContext(
+                    parent = prentClazz,
+                    parentListBaseType = null,
+                    nestIndex = 0,
+                    completeResult = null,
+                    validationResult = null,
+                )
+            val parametersExpr = topElement.nextSibling as? SqlElParameters
+            if (parametersExpr == null) {
                 val topPropertyField = referenceClazz.findStaticField(searchText)
+
                 topPropertyField?.type?.let {
-                    return PsiParentClass(it)
+                    context.parent = PsiParentClass(it)
+                    return context
                 }
             } else {
-                val topPropertyMethod = referenceClazz.findStaticMethod(searchText)
-                topPropertyMethod?.let {
-                    val returnType = it.returnType ?: return null
-                    return PsiParentClass(returnType)
+                val resolveResult =
+                    FieldMethodResolver.resolveStaticMethod(
+                        context,
+                        topElement,
+                        prentClazz,
+                        topElement.text,
+                        parametersExpr,
+                        topElement.project,
+                        shortName,
+                    )
+                if (resolveResult.type != null) {
+                    context.parent = resolveResult.type
+                    return context
+                } else if (resolveResult.validation != null) {
+                    context.validationResult = resolveResult.validation
+                    return context
+                } else {
+                    context.validationResult =
+                        ValidationNotFoundStaticPropertyResult(
+                            topElement,
+                            staticFieldAccessExpr.elClass.text,
+                            shortName,
+                        )
+                    return context
                 }
             }
+            context.validationResult =
+                ValidationNotFoundStaticPropertyResult(
+                    topElement,
+                    staticFieldAccessExpr.elClass.text,
+                    shortName,
+                )
             return null
         }
 
@@ -369,137 +497,107 @@ class ForDirectiveUtil {
             shortName: String = "",
             dropLastIndex: Int = 0,
             findFieldMethod: ((PsiType) -> PsiParentClass)? = { type -> PsiParentClass(type) },
-            complete: ((PsiParentClass) -> Unit) = { parent: PsiParentClass? -> },
+            complete: ((PsiParentClass) -> Unit) = { _: PsiParentClass? -> },
         ): ValidationResult? {
-            var parent =
-                if (isBatchAnnotation) {
-                    val parentType = PsiClassTypeUtil.convertOptionalType(topParent.type, project)
-                    val nextClassType = parentType as? PsiClassType ?: return null
-                    val nestType = nextClassType.parameters.firstOrNull() ?: return null
-                    PsiParentClass(PsiClassTypeUtil.convertOptionalType(nestType, project))
-                } else {
-                    val convertOptional = PsiClassTypeUtil.convertOptionalType(topParent.type, project)
-                    PsiParentClass(convertOptional)
-                }
-            val parentType = PsiClassTypeUtil.convertOptionalType(parent.type, project)
+            val initialParent = resolveInitialParent(topParent, project, isBatchAnnotation) ?: return null
+            val parentType = PsiClassTypeUtil.convertOptionalType(initialParent.type, project)
             val classType =
                 parentType as? PsiClassType
                     ?: return ValidationNotFoundTopTypeResult(blocks.first(), shortName)
 
-            var competeResult: ValidationCompleteResult? = null
-
             val searchBlocks = blocks.drop(1).dropLast(dropLastIndex)
             if (dropLastIndex > 0 && searchBlocks.isEmpty()) {
-                complete.invoke(parent)
-                return ValidationCompleteResult(
-                    blocks.last(),
-                    parent,
-                )
+                complete.invoke(initialParent)
+                return ValidationCompleteResult(blocks.last(), initialParent)
             }
 
-            // When a List type element is used as the parent,
-            // the original declared type is retained and the referenced type is obtained by nesting.
-            var parentListBaseType: PsiType? =
-                if (PsiClassTypeUtil.isIterableType(classType, project)) {
-                    PsiClassTypeUtil.convertOptionalType(parentType, project)
-                } else {
-                    null
-                }
-            var nestIndex = 0
+            val context =
+                FieldAccessContext(
+                    parent = initialParent,
+                    parentListBaseType =
+                        if (PsiClassTypeUtil.isIterableType(classType, project)) {
+                            PsiClassTypeUtil.convertOptionalType(parentType, project)
+                        } else {
+                            null
+                        },
+                    nestIndex = 0,
+                    completeResult = null,
+                    validationResult = null,
+                )
 
-            // Analyze a block element and get the type of the last called property
+            val finalContext =
+                processFieldAccessBlocks(
+                    searchBlocks,
+                    context,
+                    project,
+                    shortName,
+                    findFieldMethod,
+                )
+
+            complete.invoke(finalContext.parent)
+            return finalContext.completeResult ?: finalContext.validationResult
+        }
+
+        private fun resolveInitialParent(
+            topParent: PsiParentClass,
+            project: Project,
+            isBatchAnnotation: Boolean,
+        ): PsiParentClass? {
+            return if (isBatchAnnotation) {
+                val parentType = PsiClassTypeUtil.convertOptionalType(topParent.type, project)
+                val nextClassType = parentType as? PsiClassType ?: return null
+                val nestType = nextClassType.parameters.firstOrNull() ?: return null
+                PsiParentClass(PsiClassTypeUtil.convertOptionalType(nestType, project))
+            } else {
+                val convertOptional = PsiClassTypeUtil.convertOptionalType(topParent.type, project)
+                PsiParentClass(convertOptional)
+            }
+        }
+
+        private fun processFieldAccessBlocks(
+            searchBlocks: List<PsiElement>,
+            context: FieldAccessContext,
+            project: Project,
+            shortName: String,
+            findFieldMethod: ((PsiType) -> PsiParentClass)?,
+        ): FieldAccessContext {
             for (element in searchBlocks) {
                 val searchElm = cleanString(getSearchElementText(element))
                 if (searchElm.isEmpty()) {
-                    complete.invoke(parent)
-                    return ValidationCompleteResult(
-                        element,
-                        parent,
-                    )
+                    context.completeResult = ValidationCompleteResult(element, context.parent)
+                    return context
                 }
 
-                val field =
-                    parent
-                        .findField(searchElm)
-                        ?.let { match ->
-                            val convertOptional = PsiClassTypeUtil.convertOptionalType(match.type, project)
-                            val type =
-                                parentListBaseType?.let {
-                                    PsiClassTypeUtil.getParameterType(
-                                        project,
-                                        convertOptional,
-                                        it,
-                                        nestIndex,
-                                    )
-                                }
-                                    ?: convertOptional
-                            val classType = type as? PsiClassType
-                            if (classType != null &&
-                                PsiClassTypeUtil.isIterableType(
-                                    classType,
-                                    element.project,
-                                )
-                            ) {
-                                parentListBaseType = PsiClassTypeUtil.convertOptionalType(type, project)
-                                nestIndex = 0
-                            }
-                            findFieldMethod?.invoke(type)
-                        }
-                val method =
-                    parent
-                        .findMethod(searchElm)
-                        ?.let { match ->
-                            val returnType = match.returnType ?: return null
-                            val convertOptionalType = PsiClassTypeUtil.convertOptionalType(returnType, project)
-                            val methodReturnType =
-                                parentListBaseType?.let {
-                                    PsiClassTypeUtil.getParameterType(
-                                        project,
-                                        convertOptionalType,
-                                        it,
-                                        nestIndex,
-                                    )
-                                }
-                                    ?: convertOptionalType
-                            val classType = methodReturnType as? PsiClassType
-                            if (classType != null &&
-                                PsiClassTypeUtil.isIterableType(
-                                    classType,
-                                    element.project,
-                                )
-                            ) {
-                                parentListBaseType = methodReturnType
-                                nestIndex = 0
-                            }
-                            findFieldMethod?.invoke(methodReturnType)
-                        }
-                nestIndex++
-                if (field == null && method == null) {
-                    return ValidationPropertyResult(
-                        element,
-                        parent,
-                        shortName,
-                    )
+                val field = FieldMethodResolver.resolveField(context, searchElm, project)
+                val methodResult = FieldMethodResolver.resolveMethod(context, element, searchElm, project, shortName)
+
+                context.nestIndex++
+                if (field == null && methodResult.type == null) {
+                    context.completeResult = null
+                    context.validationResult = methodResult.validation
+                    return context
                 }
 
-                if (field != null && element.nextSibling !is SqlElParameters) {
-                    parent = field
-                    competeResult =
-                        ValidationCompleteResult(
-                            element,
-                            parent,
-                        )
-                } else if (method != null) {
-                    parent = method
-                    competeResult =
-                        ValidationCompleteResult(
-                            element,
-                            parent,
-                        )
-                }
+                val method = methodResult.type
+                findFieldMethod?.invoke(field?.type ?: method?.type ?: context.parent.type)
+                updateParentContext(element, field, method, context)
             }
-            complete.invoke(parent)
-            return competeResult
+            return context
+        }
+
+        private fun updateParentContext(
+            element: PsiElement,
+            field: PsiParentClass?,
+            method: PsiParentClass?,
+            context: FieldAccessContext,
+        ) {
+            if (field != null && element.nextSibling !is SqlElParameters) {
+                context.parent = field
+                context.completeResult = ValidationCompleteResult(element, context.parent)
+            } else if (method != null) {
+                context.parent = method
+                context.completeResult = ValidationCompleteResult(element, context.parent)
+            }
         }
 
         private fun getSearchElementText(elm: PsiElement): String =

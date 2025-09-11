@@ -24,7 +24,7 @@ import org.domaframework.doma.intellij.psi.SqlElForDirective
 class InspectionForDirectiveVisitorProcessor(
     val shortName: String,
     private val element: SqlElForDirective,
-) : InspectionVisitorProcessor(shortName) {
+) : InspectionVisitorProcessor() {
     fun check(holder: ProblemsHolder) {
         val forItem = element.getForItem() ?: return
         val directiveBlocks = ForDirectiveUtil.getForDirectiveBlocks(forItem, false)

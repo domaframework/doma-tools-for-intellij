@@ -42,7 +42,7 @@ class SqlElIdExprReference(
     ): PsiElement? {
         val targetElements = getBlockCommentElements(element, SqlElFieldAccessExpr::class.java)
         if (targetElements.isEmpty()) return null
-        val topElm = targetElements.firstOrNull() as? PsiElement ?: return null
+        val topElm = targetElements.firstOrNull() ?: return null
         if (topElm.prevSibling.elementType == SqlTypes.AT_SIGN) return null
 
         // Refers to an element defined in the for directive
@@ -70,7 +70,7 @@ class SqlElIdExprReference(
         }
 
         // Reference to field access elements
-        var parentClass: PsiParentClass? = null
+        var parentClass: PsiParentClass?
         var isBatchAnnotation = false
         if (forItem != null) {
             val project = topElm.project
@@ -140,7 +140,8 @@ class SqlElIdExprReference(
     ): PsiElement? {
         val searchText = cleanString(targetElement.text)
         val reference =
-            topParentClass.findField(searchText) ?: topParentClass.findMethod(searchText)
+            topParentClass.findField(searchText) ?: topParentClass.findMethod(targetElement).method
+
         if (reference != null) {
             PluginLoggerUtil.countLogging(
                 this::class.java.simpleName,

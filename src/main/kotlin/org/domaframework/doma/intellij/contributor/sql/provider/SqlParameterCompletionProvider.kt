@@ -149,7 +149,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
 
         // If the parent has field access, get its child element
         // Completion for the first argument in SqlElParameters.
-        var parameterParent: PsiElement? =
+        val parameterParent: PsiElement? =
             PsiTreeUtil.getParentOfType(targetElement, SqlElParameters::class.java)
         val processor = SqlCompletionParameterArgsBlockProcessor(targetElement)
         if (parameterParent != null && parameterParent.children.size <= 1) {
@@ -420,7 +420,7 @@ class SqlParameterCompletionProvider : CompletionProvider<CompletionParameters>(
         caretNextText: String,
         result: CompletionResultSet,
     ) {
-        var psiParentClass = PsiParentClass(topElementType)
+        val psiParentClass = PsiParentClass(topElementType)
 
         // FieldAccess Completion
         ForDirectiveUtil.getFieldAccessLastPropertyClassType(

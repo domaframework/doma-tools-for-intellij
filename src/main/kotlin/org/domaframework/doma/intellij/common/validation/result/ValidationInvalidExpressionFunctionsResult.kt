@@ -28,6 +28,7 @@ import org.domaframework.doma.intellij.common.psi.PsiParentClass
 open class ValidationInvalidExpressionFunctionsResult(
     override val identify: PsiElement,
     override val shortName: String,
+    private val implementClassName: String,
 ) : ValidationResult(identify, null, shortName) {
     override fun setHighlight(
         highlightRange: TextRange,
@@ -40,6 +41,7 @@ open class ValidationInvalidExpressionFunctionsResult(
             identify,
             MessageBundle.message(
                 "inspection.invalid.sql.notFound.expressionClass",
+                implementClassName,
             ),
             problemHighlightType(project, shortName),
             highlightRange,

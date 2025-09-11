@@ -22,7 +22,7 @@ INSERT INTO employee_project (employee_name, department, project)
                  JOIN project p1 ON e1.employee_id = p1.employee_id
                    WHERE
                    -- Public entity method
-                   p1.project_id = /* employee.getFirstProject().projectId */0
+                   p1.project_id = /* employee.getProject().projectId */0
                    -- Private entity method
                    AND p1.base_rank >= /* employee.<error descr="The field or method [getEmployeeRank] does not exist in the class [Employee]">getEmployeeRank</error>() */0
              WHERE

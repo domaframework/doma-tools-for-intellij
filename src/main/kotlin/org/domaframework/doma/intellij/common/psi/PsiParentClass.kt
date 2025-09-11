@@ -16,17 +16,21 @@
 package org.domaframework.doma.intellij.common.psi
 
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
+import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiType
 import com.intellij.psi.util.PsiTypesUtil
+import org.domaframework.doma.intellij.common.util.MethodMatcher
+import org.domaframework.doma.intellij.extension.expr.extractParameterTypes
 
 /**
  * When parsing a field access element with SQL,
  * manage the reference class information of the previous element
  */
-class PsiParentClass(
+open class PsiParentClass(
     val type: PsiType,
 ) {
     var clazz: PsiClass? = psiClass()
@@ -61,6 +65,34 @@ class PsiParentClass(
                 m.name.substringBefore("(") == methodName.substringBefore("(")
             }
 
+    fun findMethod(
+        methodExpr: PsiElement,
+        shortName: String = "",
+    ): MethodMatcher.MatchResult {
+        val context = MethodParamContext.of(methodExpr)
+        val methods = findMethods(context.methodIdExp.text)
+        if (context.methodParams == null) return MethodMatcher.MatchResult(validation = null)
+
+        val actualCount = context.methodParams.elExprList.size
+        val paramTypes = context.methodParams.extractParameterTypes(PsiManager.getInstance(methodExpr.project))
+        val matchResult =
+            MethodMatcher.findMatchingMethod(
+                context.methodIdExp,
+                methods,
+                paramTypes,
+                actualCount,
+                shortName,
+            )
+
+        return matchResult
+    }
+
+    fun findMethods(methodName: String): List<PsiMethod> =
+        getMethods()
+            ?.filter { m ->
+                m.hasModifierProperty(PsiModifier.PUBLIC) && m.name.substringBefore("(") == methodName.substringBefore("(")
+            } ?: emptyList()
+
     fun searchMethod(methodName: String): List<PsiMethod>? =
         getMethods()?.filter { m ->
             m.name.substringBefore("(").startsWith(methodName.substringBefore("(")) &&
@@ -81,4 +113,11 @@ class PsiParentClass(
                 m.hasModifierProperty(PsiModifier.PUBLIC) &&
                 m.name.substringBefore("(").startsWith(methodName.substringBefore("("))
         }
+
+    fun findStaticMethods(methodName: String): List<PsiMethod> =
+        getMethods()
+            ?.filter { m ->
+                m.hasModifierProperty(PsiModifier.STATIC) &&
+                    m.hasModifierProperty(PsiModifier.PUBLIC) && m.name.substringBefore("(") == methodName.substringBefore("(")
+            } ?: emptyList()
 }

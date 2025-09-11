@@ -34,7 +34,7 @@ class FunctionCallCollector(
     private val bind: String,
 ) : StaticDirectiveHandlerCollector() {
     public override fun collect(): List<LookupElement>? {
-        var functions = mutableSetOf<PsiMethod>()
+        val functions = mutableSetOf<PsiMethod>()
         val project = file?.project
         val module = file?.module ?: return null
         val isTest = CommonPathParameterUtil.isTest(module, file.virtualFile)
@@ -50,7 +50,10 @@ class FunctionCallCollector(
             project?.let { ExpressionFunctionsHelper.setExpressionFunctionsInterface(it) }
                 ?: return null
 
-        val expressionClazz = customFunctionClassName?.let { project.getJavaClazz(it) }
+        val expressionClazz =
+            customFunctionClassName?.let {
+                if (it.isNotEmpty()) project.getJavaClazz(it) else null
+            }
         if (expressionClazz != null &&
             ExpressionFunctionsHelper.isInheritor(expressionClazz)
         ) {
@@ -71,17 +74,17 @@ class FunctionCallCollector(
         return functions
             .filter {
                 it.name.startsWith(bind.substringAfter("@"))
-            }.map {
-                val parameters = it.parameterList.parameters.toList()
+            }.map { m ->
+                val parameters = m.parameterList.parameters.toList()
                 LookupElementBuilder
-                    .create(createMethodLookupElement(caretNextText, it))
-                    .withPresentableText(it.name)
+                    .create(createMethodLookupElement(caretNextText, m))
+                    .withPresentableText(m.name)
                     .withTailText(
                         "(${
-                            parameters.joinToString(",") { "${it.type.presentableText} ${it.name}" }
+                            parameters.joinToString(",") { p -> "${p.type.presentableText} ${p.name}" }
                         })",
                         true,
-                    ).withTypeText(it.returnType?.presentableText ?: "void")
+                    ).withTypeText(m.returnType?.presentableText ?: "void")
                     .withAutoCompletionPolicy(AutoCompletionPolicy.ALWAYS_AUTOCOMPLETE)
             }
     }

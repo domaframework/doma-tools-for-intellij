@@ -18,13 +18,10 @@ package org.domaframework.doma.intellij.reference
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
-import org.domaframework.doma.intellij.common.CommonPathParameterUtil
-import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil
-import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
+import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
-import org.domaframework.doma.intellij.extension.getJavaClazz
+import org.domaframework.doma.intellij.inspection.sql.processor.InspectionFunctionCallVisitorProcessor
 import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
-import org.jetbrains.kotlin.idea.base.util.module
 
 class SqlElFunctionCallExprReference(
     element: PsiElement,
@@ -33,38 +30,11 @@ class SqlElFunctionCallExprReference(
         startTime: Long,
         file: PsiFile,
     ): PsiElement? {
-        val functionCallExpr = element.parent as? SqlElFunctionCallExpr ?: return null
-        val variableName = functionCallExpr.elIdExpr.text ?: ""
-
-        val project = element.project
-        val module = file.module ?: return null
-        val expressionFunctionsInterface =
-            ExpressionFunctionsHelper.setExpressionFunctionsInterface(project)
+        val functionCallExpr =
+            element as? SqlElFunctionCallExpr ?: PsiTreeUtil.getParentOfType(element, SqlElFunctionCallExpr::class.java)
                 ?: return null
-
-        val isTest =
-            CommonPathParameterUtil
-                .isTest(module, file.virtualFile)
-        val customFunctionClassName = DomaCompileConfigUtil.getConfigValue(module, isTest, "doma.expr.functions")
-
-        val implementsClass =
-            if (customFunctionClassName != null) {
-                val customFunctionClass = customFunctionClassName
-                val expressionFunction = project.getJavaClazz(customFunctionClass)
-                if (ExpressionFunctionsHelper.isInheritor(expressionFunction)) {
-                    expressionFunction
-                } else {
-                    expressionFunctionsInterface
-                }
-            } else {
-                expressionFunctionsInterface
-            }
-
-        var reference: PsiMethod? = null
-        val methods = implementsClass?.findMethodsByName(variableName, true)?.firstOrNull()
-        if (methods != null) {
-            reference = methods
-        }
+        val processor = InspectionFunctionCallVisitorProcessor("", functionCallExpr)
+        val reference: PsiMethod? = processor.getFunctionCallType()
 
         if (reference == null) {
             PluginLoggerUtil.countLogging(

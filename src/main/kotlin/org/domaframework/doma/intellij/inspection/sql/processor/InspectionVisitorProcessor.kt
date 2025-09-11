@@ -15,30 +15,12 @@
  */
 package org.domaframework.doma.intellij.inspection.sql.processor
 
-import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.elementType
-import org.domaframework.doma.intellij.common.validation.result.ValidationDaoParamResult
-import org.domaframework.doma.intellij.psi.SqlElIdExpr
 import org.domaframework.doma.intellij.psi.SqlElNewExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
 
-abstract class InspectionVisitorProcessor(
-    private val shortName: String,
-) {
-    protected fun errorHighlight(
-        topElement: SqlElIdExpr,
-        daoMethod: PsiMethod,
-        holder: ProblemsHolder,
-    ) {
-        ValidationDaoParamResult(
-            topElement,
-            daoMethod.name,
-            this.shortName,
-        ).highlightElement(holder)
-    }
-
+abstract class InspectionVisitorProcessor {
     protected fun isLiteralOrStatic(targetElement: PsiElement): Boolean =
         (
             targetElement.firstChild?.elementType == SqlTypes.EL_STRING ||

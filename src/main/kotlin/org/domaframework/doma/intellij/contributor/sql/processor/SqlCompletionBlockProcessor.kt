@@ -50,13 +50,20 @@ abstract class SqlCompletionBlockProcessor {
                 }.toList()
 
         var inParameter = false
+        val rightLists: MutableList<PsiElement> = mutableListOf()
         val formatElements = mutableListOf<PsiElement>()
         prevElements.forEach { prev ->
-            if (prev.elementType == SqlTypes.RIGHT_PAREN) inParameter = true
-            if (!inParameter) {
+            if (prev.elementType == SqlTypes.RIGHT_PAREN) {
+                inParameter = true
+                rightLists.add(prev)
+            }
+            if (!inParameter && rightLists.isEmpty()) {
                 formatElements.add(prev)
             }
-            if (prev.elementType == SqlTypes.LEFT_PAREN) inParameter = false
+            if (prev.elementType == SqlTypes.LEFT_PAREN) {
+                inParameter = false
+                rightLists.removeLastOrNull()
+            }
         }
 
         val filterElements =
@@ -72,7 +79,7 @@ abstract class SqlCompletionBlockProcessor {
                 }.plus(targetElement)
                 .sortedBy { it.textOffset }
 
-        return if (filterElements.isNotEmpty()) filterElements else emptyList()
+        return filterElements.ifEmpty { emptyList() }
     }
 
     private fun isSqlElSymbol(element: PsiElement): Boolean =
