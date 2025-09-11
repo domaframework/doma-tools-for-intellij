@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.action.dao
 
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.psi.PsiDocumentManager
+import org.domaframework.doma.intellij.action.sql.ConvertSqlFileToAnnotationFromSqlAction
 
 class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
     private val sqlToAnnotationPackage = "sqltoannotation"
@@ -84,7 +85,7 @@ class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
         myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
 
         val intentions = myFixture.availableIntentions
-        val convertIntention = intentions.find { it is ConvertSqlFileToAnnotationAction }
+        val convertIntention = intentions.find { it is ConvertSqlFileToAnnotationFromSqlAction }
 
         assertNull(
             "$convertFamilyName intention should NOT be available when @Sql annotation already exists",
@@ -99,7 +100,7 @@ class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
         myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
 
         val intentions = myFixture.availableIntentions
-        val convertIntention = intentions.find { it is ConvertSqlFileToAnnotationAction }
+        val convertIntention = intentions.find { it is ConvertSqlFileToAnnotationFromSqlAction }
 
         assertNull("$convertFamilyName intention should NOT be available when SQL file doesn't exist", convertIntention)
     }
@@ -113,7 +114,7 @@ class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
     fun testSelectWithSqlFileConvertAnnotation() {
         val daoName = "SelectWithSqlFileConvertAnnotationDao"
         val sqlFileName = "selectEmployee.sql"
-        doConvertActionTest(daoName, sqlToAnnotationPackage, convertFamilyName)
+        doConvertActionTest(daoName, sqlToAnnotationPackage, convertFamilyName, ConvertSqlFileToAnnotationFromDaoAction::class)
         // Test SQL File Removed
         val generatedSql = findSqlFile("$sqlToAnnotationPackage/$daoName/$sqlFileName")
         assertTrue("SQL File [$sqlFileName] should exists ", generatedSql == null)

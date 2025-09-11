@@ -102,13 +102,13 @@
     </intentionAction>
     <intentionAction>
       <language>DomaSql</language>
-      <className>org.domaframework.doma.intellij.action.dao.ConvertSqlFileToAnnotationAction</className>
+      <className>org.domaframework.doma.intellij.action.sql.ConvertSqlFileToAnnotationFromSqlAction</className>
       <category>Doma tools</category>
       <skipBeforeAfter>true</skipBeforeAfter>
     </intentionAction>
       <intentionAction>
           <language>JAVA</language>
-          <className>org.domaframework.doma.intellij.action.dao.ConvertSqlFileToAnnotationAction</className>
+          <className>org.domaframework.doma.intellij.action.dao.ConvertSqlFileToAnnotationFromDaoAction</className>
           <category>Doma tools</category>
           <skipBeforeAfter>true</skipBeforeAfter>
       </intentionAction>
