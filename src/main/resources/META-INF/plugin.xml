@@ -106,6 +106,12 @@
       <category>Doma tools</category>
       <skipBeforeAfter>true</skipBeforeAfter>
     </intentionAction>
+      <intentionAction>
+          <language>JAVA</language>
+          <className>org.domaframework.doma.intellij.action.dao.ConvertSqlFileToAnnotationAction</className>
+          <category>Doma tools</category>
+          <skipBeforeAfter>true</skipBeforeAfter>
+      </intentionAction>
   </extensions>
 
   <extensions defaultExtensionNs="org.intellij.intelliLang">

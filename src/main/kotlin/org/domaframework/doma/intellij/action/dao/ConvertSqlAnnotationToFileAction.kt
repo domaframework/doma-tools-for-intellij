@@ -26,9 +26,9 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.bundle.MessageBundle
+import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
-import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 
 /**
  * Intention action to convert @Sql annotation to SQL file
@@ -47,25 +47,15 @@ class ConvertSqlAnnotationToFileAction : PsiElementBaseIntentionAction() {
         val psiDaoMethod = PsiDaoMethod(project, method)
 
         // Check if method has @Sql annotation
-        if (!psiDaoMethod.useSqlAnnotation()) {
+        // When a Sql annotation is present, a virtual SQL file is associated;
+        // therefore, check the parent and exclude the injected (inline) SQL.
+        if (getDaoClass(method.containingFile) == null || !psiDaoMethod.useSqlAnnotation() ||
+            psiDaoMethod.sqlFile != null && psiDaoMethod.sqlFile?.parent != null
+        ) {
             return false
         }
 
-        // Check if method has @Insert, @Update, or @Delete annotation
-        val supportedTypes =
-            listOf(
-                DomaAnnotationType.Select,
-                DomaAnnotationType.Script,
-                DomaAnnotationType.SqlProcessor,
-                DomaAnnotationType.Insert,
-                DomaAnnotationType.Update,
-                DomaAnnotationType.Delete,
-                DomaAnnotationType.BatchInsert,
-                DomaAnnotationType.BatchUpdate,
-                DomaAnnotationType.BatchDelete,
-            )
-
-        return supportedTypes.any { it.getPsiAnnotation(method) != null }
+        return SqlAnnotationConverter.supportedTypes.any { it.getPsiAnnotation(method) != null }
     }
 
     override fun generatePreview(

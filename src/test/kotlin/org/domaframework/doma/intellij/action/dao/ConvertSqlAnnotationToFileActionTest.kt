@@ -15,12 +15,9 @@
  */
 package org.domaframework.doma.intellij.action.dao
 
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.psi.PsiDocumentManager
-import org.domaframework.doma.intellij.DomaSqlTest
 
-class ConvertSqlAnnotationToFileActionTest : DomaSqlTest() {
+class ConvertSqlAnnotationToFileActionTest : ConvertSqlActionTest() {
     private val sqlConversionPackage = "sqltofile"
     private val convertActionName = "Convert to SQL file (set sqlFile=true)"
     private val convertFamilyName = "Convert @Sql annotation to SQL file"
@@ -112,26 +109,12 @@ class ConvertSqlAnnotationToFileActionTest : DomaSqlTest() {
 
     fun testIntentionNotAvailableForMethodWithoutSqlAnnotation() {
         val daoName = "NoSqlAnnotationDao"
-        addDaoJavaFile("$sqlConversionPackage/$daoName.java")
-        val daoClass = findDaoClass("$sqlConversionPackage.$daoName")
-        myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
-
-        val intentions = myFixture.availableIntentions
-        val convertIntention = intentions.find { it is ConvertSqlAnnotationToFileAction }
-
-        assertNull("$convertFamilyName intention should NOT be available without @Sql annotation", convertIntention)
+        doConvertActionTest(daoName, sqlConversionPackage, convertFamilyName)
     }
 
     fun testIntentionNotAvailableForUnsupportedAnnotation() {
         val daoName = "UnsupportedAnnotationDao"
-        addDaoJavaFile("$sqlConversionPackage/$daoName.java")
-        val daoClass = findDaoClass("$sqlConversionPackage.$daoName")
-        myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
-
-        val intentions = myFixture.availableIntentions
-        val convertIntention = intentions.find { it is ConvertSqlAnnotationToFileAction }
-
-        assertNull("$convertFamilyName intention should NOT be available without @Sql annotation", convertIntention)
+        doConvertActionTest(daoName, sqlConversionPackage, convertFamilyName)
     }
 
     private fun doTest(
@@ -139,27 +122,18 @@ class ConvertSqlAnnotationToFileActionTest : DomaSqlTest() {
         sqlFileName: String,
         isScript: Boolean = false,
     ) {
-        addDaoJavaFile("$sqlConversionPackage/$daoName.java")
-
-        val daoClass = findDaoClass("$sqlConversionPackage.$daoName")
-        myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
-        val intention = myFixture.findSingleIntention(convertActionName)
-
-        assertNotNull(
-            "$convertActionName intention should be available",
-            intention,
+        doConvertAction(
+            daoName,
+            convertFamilyName,
+            sqlConversionPackage,
+            convertActionName,
         )
-        assertEquals(convertActionName, intention.text)
-        assertEquals(convertFamilyName, intention.familyName)
-
-        myFixture.launchAction(intention)
-        myFixture.checkResultByFile("java/doma/example/dao/$sqlConversionPackage/$daoName.after.java")
 
         // Test SQL File Generation
         val sqlFile = "$sqlFileName.${if (isScript) "script" else "sql"}"
         val openedEditor = FileEditorManager.getInstance(project).selectedEditors
-        assertTrue(
-            "Open File is Not $sqlFileName",
+        assertFalse(
+            "Open File is $sqlFileName",
             openedEditor.any { it.file.name == sqlFile.substringAfter("/") },
         )
 
@@ -172,22 +146,11 @@ class ConvertSqlAnnotationToFileActionTest : DomaSqlTest() {
         sqlFileName: String,
         isScript: Boolean = false,
     ) {
-        val openedEditor = FileEditorManager.getInstance(project).selectedEditors
-        val extension = if (isScript) "script" else "sql"
-        val sqlFile = openedEditor.find { it.file.name == sqlFileName.substringAfter("/").plus(".$extension") }
-
-        if (sqlFile == null) {
-            fail("SQL file $sqlFileName.$extension should be opened after conversion")
-            return
-        }
-        // If the generated `PsiFile` has an associated `Document`, explicitly reload it to ensure memory–disk consistency.
-        // If not reloaded, the test may produce: *Unexpected memory–disk conflict in tests for*.
-        val fdm = FileDocumentManager.getInstance()
-        fdm.saveAllDocuments()
-        PsiDocumentManager.getInstance(project).commitAllDocuments()
-        fdm.getDocument(sqlFile.file)?.let { fdm.reloadFromDisk(it) }
-
-        myFixture.configureFromExistingVirtualFile(sqlFile.file)
-        myFixture.checkResultByFile("resources/META-INF/doma/example/dao/$sqlConversionPackage/$daoName/$sqlFileName.after.$extension")
+        doTestSqlFormat(
+            daoName,
+            sqlFileName,
+            sqlConversionPackage,
+            isScript,
+        )
     }
 }

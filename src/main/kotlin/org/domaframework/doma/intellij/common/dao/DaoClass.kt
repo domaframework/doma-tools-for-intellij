@@ -18,8 +18,9 @@ package org.domaframework.doma.intellij.common.dao
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
+import org.domaframework.doma.intellij.common.util.DomaClassName
 
 fun getDaoClass(file: PsiFile): PsiClass? =
     PsiTreeUtil
         .findChildrenOfType(file, PsiClass::class.java)
-        .firstOrNull { it.hasAnnotation("org.seasar.doma.Dao") }
+        .firstOrNull { it.hasAnnotation(DomaClassName.DAO.className) }

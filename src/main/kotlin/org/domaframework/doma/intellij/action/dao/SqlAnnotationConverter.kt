@@ -48,6 +48,21 @@ class SqlAnnotationConverter(
     private val psiDaoMethod = PsiDaoMethod(project, method)
     private val elementFactory = JavaPsiFacade.getElementFactory(project)
 
+    companion object {
+        val supportedTypes =
+            setOf(
+                DomaAnnotationType.Select,
+                DomaAnnotationType.Script,
+                DomaAnnotationType.SqlProcessor,
+                DomaAnnotationType.Insert,
+                DomaAnnotationType.Update,
+                DomaAnnotationType.Delete,
+                DomaAnnotationType.BatchInsert,
+                DomaAnnotationType.BatchUpdate,
+                DomaAnnotationType.BatchDelete,
+            )
+    }
+
     /**
      * Convert @Sql annotation to SQL file
      */
@@ -95,19 +110,6 @@ class SqlAnnotationConverter(
     }
 
     private fun findTargetAnnotation(): PsiAnnotation? {
-        val supportedTypes =
-            listOf(
-                DomaAnnotationType.Select,
-                DomaAnnotationType.Script,
-                DomaAnnotationType.SqlProcessor,
-                DomaAnnotationType.Insert,
-                DomaAnnotationType.Update,
-                DomaAnnotationType.Delete,
-                DomaAnnotationType.BatchInsert,
-                DomaAnnotationType.BatchUpdate,
-                DomaAnnotationType.BatchDelete,
-            )
-
         for (type in supportedTypes) {
             val annotation = type.getPsiAnnotation(method)
             if (annotation != null) {
@@ -243,7 +245,7 @@ class SqlAnnotationConverter(
 
     private fun generateSqlFileWithContent(content: String) {
         // First generate the empty SQL file using existing functionality
-        psiDaoMethod.generateSqlFile()
+        psiDaoMethod.generateSqlFile(false)
 
         // Then update its content
         ApplicationManager.getApplication().invokeLater {
