@@ -109,6 +109,7 @@ class DaoAnnotationOptionParameterCheckProcessor(
         arrayValues.map { fields ->
             val valueFields = fields.text.replace("\"", "").split(".")
             var searchParamType: PsiType = entityClass.psiClassType
+            var prevFieldVal = valueFields.first()
             var searchParamClass: PsiClass? = project.getJavaClazz(searchParamType)
 
             valueFields.forEachIndexed { _, field ->
@@ -122,12 +123,13 @@ class DaoAnnotationOptionParameterCheckProcessor(
                         fields,
                         shortName,
                         fields.text.replace("\"", ""),
-                        field,
+                        prevFieldVal,
                         optionName,
                     ).highlightElement(holder)
                     return@map
                 } else {
                     if (currentField != null) {
+                        prevFieldVal = currentField.nameIdentifier.text
                         searchParamType = currentField.type
                         searchParamClass = project.getJavaClazz(searchParamType)
                     } else {
