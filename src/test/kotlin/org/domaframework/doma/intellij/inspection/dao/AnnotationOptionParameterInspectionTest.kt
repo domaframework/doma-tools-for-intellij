@@ -33,7 +33,7 @@ class AnnotationOptionParameterInspectionTest : DomaSqlTest() {
      * - Error check when specifying fields not defined in the parameter type with `exclude` option.
      * - Error check for specifying fields not defined in immutable Entity with `MultiInsert` (also for fields not defined in parameter type).
      * - Error check for specifying fields not defined in mutable Entity with `MultiInsert`.
-     * - Error check for specifying fields not defined in parameter type with batch annotations.
+     * - Error check for specifying fields not defined in the parameter type with batch annotations.
      * - Error when ending with an embedded property.
      * - Error when specifying incorrect properties in an embedded class.
      * - Error check for invalid field specification in `Returning` option.
@@ -42,5 +42,6 @@ class AnnotationOptionParameterInspectionTest : DomaSqlTest() {
      * - Error when specifying further properties from a primitive type.
      * - Error check for specifying parent class properties in subclass with `@Entity`.
      * - Error check for specifying parent class properties in subclass without `@Entity`.
+     * - Error check for specifying fields from a parent class that is not an Entity.
      */
 }

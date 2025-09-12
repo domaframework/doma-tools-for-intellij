@@ -76,30 +76,20 @@ object TypeUtil {
         type: PsiType?,
         project: Project,
     ): Boolean {
-        var clazz = type?.let { project.getJavaClazz(type) }
-        while (clazz != null) {
-            if (clazz.isEntity()) {
-                return true
-            }
-            clazz = clazz.superClass
-        }
-        return false
+        val clazz = type?.let { project.getJavaClazz(type) }
+        return clazz?.isEntity() == true
     }
 
     fun isImmutableEntity(
         project: Project,
         canonicalText: String,
     ): Boolean {
-        var returnTypeClass = project.getJavaClazz(canonicalText)
-        while (returnTypeClass != null) {
-            val entity = returnTypeClass.getClassAnnotation(DomaClassName.ENTITY.className)
-            if (entity != null) {
-                return AnnotationUtil.getBooleanAttributeValue(entity, "immutable") == true ||
-                    returnTypeClass.isRecord
-            }
-            returnTypeClass = returnTypeClass.superClass
-        }
-        return false
+        val returnTypeClass = project.getJavaClazz(canonicalText)
+        val entity =
+            returnTypeClass?.getClassAnnotation(DomaClassName.ENTITY.className) ?: return false
+        return entity.let { entity ->
+            AnnotationUtil.getBooleanAttributeValue(entity, "immutable") == true
+        } || returnTypeClass.isRecord
     }
 
     /**

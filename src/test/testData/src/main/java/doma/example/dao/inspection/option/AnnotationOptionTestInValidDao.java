@@ -1,9 +1,9 @@
 package doma.example.dao.inspection.option;
 
 import doma.example.entity.Department;
-import doma.example.entity.NonSubEntity;
+import doma.example.entity.DepartmentHasNonEmmbedable;
+import doma.example.entity.FacetEntity;
 import doma.example.entity.Pckt;
-import doma.example.entity.SubEntity;
 import org.seasar.doma.*;
 import org.seasar.doma.jdbc.MultiResult;
 
@@ -125,4 +125,21 @@ public interface AnnotationOptionTestInValidDao {
      */
     @Insert(exclude = "subId.get")
     int insertPrimitiveProperty(Department department);
+
+    /**
+     * Case specifying properties defined in an intermediate non-Entity class (Entity subclass)
+     *
+     * @param subEntity
+     * @return
+     */
+    @Insert(exclude = "subName")
+    int insertReferenceNonEntityProperty2(FacetEntity subEntity);
+
+    /**
+     * Case specifying properties defined in a parent Embeddable class
+     * Error occurs first on Entity side for non-Embeddable property
+     * */
+    @Update(include = "embeddableEntity.childEmbedded3.subAccountNumber")
+    int updateReferenceParentEmbeddableProperty(DepartmentHasNonEmmbedable department);
+
 }
