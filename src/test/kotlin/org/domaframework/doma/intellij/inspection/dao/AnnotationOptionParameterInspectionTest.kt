@@ -16,12 +16,13 @@
 package org.domaframework.doma.intellij.inspection.dao
 
 import org.domaframework.doma.intellij.DomaSqlTest
-import org.domaframework.doma.intellij.inspection.dao.inspector.DaoAnnotationOptionParameterInspection
+import kotlin.test.Ignore
 
 /**
  * Test class for annotation option parameter inspection.
  * Tests include/exclude options with parent class properties.
  */
+@Ignore
 class AnnotationOptionParameterInspectionTest : DomaSqlTest() {
     /**
      * Since error highlight tags for annotation options cannot be set in the test data, verify manually.

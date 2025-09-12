@@ -168,12 +168,12 @@ class DaoAnnotationOptionParameterCheckProcessor(
                 .filter { it is PsiLiteralExpression }
         }
 
-    private fun getMatchFields(paramClass: PsiClass?):List<PsiField> =
+    private fun getMatchFields(paramClass: PsiClass?): List<PsiField> =
         paramClass?.allFields?.filter { f ->
-        val parentClass = f.parent as? PsiClass
-            (parentClass?.isEntity() == true ||  parentClass?.isEmbeddable() == true)
-                    && (TypeUtil.isBaseOrOptionalWrapper(f.type) || TypeUtil.isEmbeddable(f.type, project))
-                 } ?: emptyList()
+            val parentClass = f.parent as? PsiClass
+            (parentClass?.isEntity() == true || parentClass?.isEmbeddable() == true) &&
+                (TypeUtil.isBaseOrOptionalWrapper(f.type) || TypeUtil.isEmbeddable(f.type, project))
+        } ?: emptyList()
 
     private fun getTargetOptionProperties(paramClass: PsiClass?) =
         getMatchFields(paramClass).joinToString(", ") { it.name.substringAfter(":") }
