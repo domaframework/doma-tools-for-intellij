@@ -110,12 +110,11 @@ class DaoAnnotationOptionParameterCheckProcessor(
             val valueFields = fields.text.replace("\"", "").split(".")
             var searchParamType: PsiType = entityClass.psiClassType
             var searchParamClass: PsiClass? = project.getJavaClazz(searchParamType)
-            var hasError = false
 
-            valueFields.forEachIndexed { index, field ->
+            valueFields.forEachIndexed { _, field ->
                 val currentField =
                     searchParamClass
-                        ?.fields
+                        ?.allFields
                         ?.find { property -> isOptionTargetProperty(property, field, project) }
                 // Given that the first `searchParamType` is assumed to contain the type of  Entity class,
                 // checking the index for a primitive type is unnecessary.
@@ -128,7 +127,6 @@ class DaoAnnotationOptionParameterCheckProcessor(
                         field,
                         optionName,
                     ).highlightElement(holder)
-                    hasError = true
                     return@map
                 } else {
                     if (currentField != null) {
@@ -143,7 +141,6 @@ class DaoAnnotationOptionParameterCheckProcessor(
                             searchParamClass?.name ?: "Unknown",
                             getTargetOptionProperties(searchParamClass),
                         ).highlightElement(holder)
-                        hasError = true
                         return@map
                     }
                 }
@@ -172,12 +169,12 @@ class DaoAnnotationOptionParameterCheckProcessor(
         }
 
     private fun getTargetOptionProperties(paramClass: PsiClass?) =
-        paramClass?.fields?.filter { isOptionTargetProperty(it, it.name, project) }?.joinToString(", ") { it.name.substringAfter(":") }
+        paramClass?.allFields?.filter { isOptionTargetProperty(it, it.name, project) }?.joinToString(", ") { it.name.substringAfter(":") }
             ?: "No fields found"
 
     private fun getEmbeddableProperties(embeddableClass: PsiClass?) =
         embeddableClass
-            ?.fields
+            ?.allFields
             ?.filter { !TypeUtil.isEntity(it.type, project) && !TypeUtil.isEmbeddable(it.type, project) }
             ?.joinToString(", ") { it.name }
             ?: "No properties found"
