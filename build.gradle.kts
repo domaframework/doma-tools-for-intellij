@@ -180,6 +180,28 @@ tasks {
     publishPlugin {
         dependsOn(patchChangelog)
     }
+
+    // Ensure generateLexer and generateParser run before compilation
+    compileJava {
+        dependsOn(generateLexer, generateParser)
+    }
+
+    compileKotlin {
+        dependsOn(generateLexer, generateParser)
+    }
+
+    compileTestJava {
+        dependsOn(generateLexer, generateParser)
+    }
+
+    compileTestKotlin {
+        dependsOn(generateLexer, generateParser)
+    }
+
+    // Ensure build task depends on grammar generation
+    build {
+        dependsOn(generateLexer, generateParser)
+    }
 }
 
 tasks.register("encodeBase64") {
