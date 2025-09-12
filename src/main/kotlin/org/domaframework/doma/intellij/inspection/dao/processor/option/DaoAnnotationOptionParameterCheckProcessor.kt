@@ -170,10 +170,18 @@ class DaoAnnotationOptionParameterCheckProcessor(
 
     private fun getMatchFields(paramClass: PsiClass?): List<PsiField> =
         paramClass?.allFields?.filter { f ->
-            val parentClass = f.parent as? PsiClass
-            (parentClass?.isEntity() == true || parentClass?.isEmbeddable() == true) &&
-                (TypeUtil.isBaseOrOptionalWrapper(f.type) || TypeUtil.isEmbeddable(f.type, project))
+            isValidMatchField(f)
         } ?: emptyList()
+
+    /**
+     * Helper method to encapsulate field validation logic for getMatchFields.
+     */
+    private fun isValidMatchField(f: PsiField): Boolean {
+        val parentClass = f.parent as? PsiClass
+        val isEntityOrEmbeddable = parentClass?.isEntity() == true || parentClass?.isEmbeddable() == true
+        val isBaseOrEmbeddableType = TypeUtil.isBaseOrOptionalWrapper(f.type) || TypeUtil.isEmbeddable(f.type, project)
+        return isEntityOrEmbeddable && isBaseOrEmbeddableType
+    }
 
     private fun getTargetOptionProperties(paramClass: PsiClass?) =
         getMatchFields(paramClass).joinToString(", ") { it.name.substringAfter(":") }
