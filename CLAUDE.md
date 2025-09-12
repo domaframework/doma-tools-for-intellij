@@ -107,6 +107,19 @@ Feature Package
     └── AnAction subclass
 ```
 
+### Common
+
+**Accessing `PsiClass` Members**
+When retrieving fields and methods from `PsiClass`, use `allFields` and `allMethods` instead of `fields` and `methods`.
+This is necessary to include members defined in parent classes.
+
+Alternatively, you can use [PsiParentClass](src/main/kotlin/org/domaframework/doma/intellij/common/psi/PsiParentClass.kt)
+to achieve equivalent functionality with `findField()` and `findMethod()`.
+
+**Separating Complex Logic**
+Each feature requires implementing corresponding classes following the IntelliJ platform conventions.
+Complex logic should not be implemented directly in these corresponding classes but delegated to separate classes (Processors or Handlers).
+
 ### Actions
 Action functionality for navigating between DAO files and SQL files
 
@@ -170,6 +183,10 @@ Code inspection functionality for DAO methods and DOMA directives in SQL
       - `QuickFix` object: Use `QuickFix` as a suffix
   - [ValidationResult](src/main/kotlin/org/domaframework/doma/intellij/common/validation/result): Classes that provide error messages and highlights for code inspection results
     - **Class Naming Rules**: Use `ValidationResult` as a suffix. Name classes according to the message resources to be displayed
+
+**Coding Rule**
+For code inspection features, always implement `InspectionTool` and `Visitor` as separate classes.
+When the logic within `Visitor` becomes complex, implement separate Processor classes for main processing or Handler classes for error highlighting.
 
 ### Completion
 Code completion functionality for DOMA directive syntax in SQL

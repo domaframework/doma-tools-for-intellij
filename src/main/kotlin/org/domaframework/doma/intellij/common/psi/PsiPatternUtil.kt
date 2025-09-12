@@ -157,7 +157,7 @@ object PsiPatternUtil {
         targetType: IElementType?,
     ): MutableList<PsiElement> {
         var prevElement = PsiTreeUtil.prevLeaf(element, true)
-        var prevElements = mutableListOf<PsiElement>()
+        val prevElements = mutableListOf<PsiElement>()
         while (prevElement != null &&
             prevElement !is PsiWhiteSpace &&
             prevElement.elementType != targetType &&

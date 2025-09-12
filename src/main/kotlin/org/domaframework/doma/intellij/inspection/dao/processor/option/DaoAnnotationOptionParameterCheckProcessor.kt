@@ -109,14 +109,12 @@ class DaoAnnotationOptionParameterCheckProcessor(
         arrayValues.map { fields ->
             val valueFields = fields.text.replace("\"", "").split(".")
             var searchParamType: PsiType = entityClass.psiClassType
+            var prevFieldVal = valueFields.first()
             var searchParamClass: PsiClass? = project.getJavaClazz(searchParamType)
-            var hasError = false
 
-            valueFields.forEachIndexed { index, field ->
-                val currentField =
-                    searchParamClass
-                        ?.fields
-                        ?.find { property -> isOptionTargetProperty(property, field, project) }
+            valueFields.forEachIndexed { _, field ->
+                // Error when specifying a property not defined in the Entity or the Embeddable.
+                val currentField = getMatchFields(searchParamClass).find { f -> isOptionTargetProperty(f, field, project) }
                 // Given that the first `searchParamType` is assumed to contain the type of  Entity class,
                 // checking the index for a primitive type is unnecessary.
                 if (searchParamType is PsiPrimitiveType) {
@@ -125,13 +123,13 @@ class DaoAnnotationOptionParameterCheckProcessor(
                         fields,
                         shortName,
                         fields.text.replace("\"", ""),
-                        field,
+                        prevFieldVal,
                         optionName,
                     ).highlightElement(holder)
-                    hasError = true
                     return@map
                 } else {
                     if (currentField != null) {
+                        prevFieldVal = currentField.nameIdentifier.text
                         searchParamType = currentField.type
                         searchParamClass = project.getJavaClazz(searchParamType)
                     } else {
@@ -143,7 +141,6 @@ class DaoAnnotationOptionParameterCheckProcessor(
                             searchParamClass?.name ?: "Unknown",
                             getTargetOptionProperties(searchParamClass),
                         ).highlightElement(holder)
-                        hasError = true
                         return@map
                     }
                 }
@@ -171,16 +168,28 @@ class DaoAnnotationOptionParameterCheckProcessor(
                 .filter { it is PsiLiteralExpression }
         }
 
-    private fun getTargetOptionProperties(paramClass: PsiClass?) =
-        paramClass?.fields?.filter { isOptionTargetProperty(it, it.name, project) }?.joinToString(", ") { it.name.substringAfter(":") }
-            ?: "No fields found"
+    private fun getMatchFields(paramClass: PsiClass?): List<PsiField> =
+        paramClass?.allFields?.filter { f ->
+            isValidMatchField(f)
+        } ?: emptyList()
 
-    private fun getEmbeddableProperties(embeddableClass: PsiClass?) =
-        embeddableClass
-            ?.fields
-            ?.filter { !TypeUtil.isEntity(it.type, project) && !TypeUtil.isEmbeddable(it.type, project) }
-            ?.joinToString(", ") { it.name }
-            ?: "No properties found"
+    /**
+     * Helper method to encapsulate field validation logic for getMatchFields.
+     */
+    private fun isValidMatchField(f: PsiField): Boolean {
+        val parentClass = f.parent as? PsiClass
+        val isEntityOrEmbeddable = parentClass?.isEntity() == true || parentClass?.isEmbeddable() == true
+        val isBaseOrEmbeddableType = TypeUtil.isBaseOrOptionalWrapper(f.type) || TypeUtil.isEmbeddable(f.type, project)
+        return isEntityOrEmbeddable && isBaseOrEmbeddableType
+    }
+
+    private fun getTargetOptionProperties(paramClass: PsiClass?) =
+        getMatchFields(paramClass).joinToString(", ") { it.name.substringAfter(":") }
+
+    /**
+     * If the last field access is Embeddable, get its property list
+     */
+    private fun getEmbeddableProperties(embeddableClass: PsiClass?) = getMatchFields(embeddableClass).joinToString(", ") { it.name }
 
     private fun isOptionTargetProperty(
         field: PsiField,
@@ -189,7 +198,7 @@ class DaoAnnotationOptionParameterCheckProcessor(
     ): Boolean =
         (
             field.name == optionPropertyName && (
-                !TypeUtil.isEntity(field.type, project) ||
+                TypeUtil.isBaseOrOptionalWrapper(field.type) ||
                     TypeUtil.isEmbeddable(field.type, project)
             )
         )
