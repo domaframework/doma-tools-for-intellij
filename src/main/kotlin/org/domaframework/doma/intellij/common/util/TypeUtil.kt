@@ -89,8 +89,7 @@ object TypeUtil {
             returnTypeClass?.getClassAnnotation(DomaClassName.ENTITY.className) ?: return false
         return entity.let { entity ->
             AnnotationUtil.getBooleanAttributeValue(entity, "immutable") == true
-        } == true ||
-            returnTypeClass.isRecord == true
+        } || returnTypeClass.isRecord
     }
 
     /**
