@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+## [2.3.0] - 2025-09-17
+
+### New Features
+
+- Enable SQL Annotation Conversion Action from DAO Methods and Control SQL File Opening ([#451])
+- Check Parameter Types for Method Calls in Bind Variables ([#448])
+
+### Bug Fixes
+
+- Fix: Annotation Option Checks Respect Entity Inheritance ([#454])
+- Fix Multiple Registration Error for SQL File to Annotation Conversion Actions ([#452])
+
+### Maintenance
+
+- Set Upper Limit for Plugin Support Versions ([#456])
+- Refactor SQL Formatter Block Relations and Translate Comments ([#444])
+
+### Dependency Updates
+
+- Update actions/setup-java action to v5 ([#407])
+- Update dependency org.jetbrains.kotlinx.kover to v0.9.2 ([#455])
+- Update dependency org.jetbrains.kotlin.jvm to v2.2.20 ([#447])
+- Update dependency org.jetbrains.intellij.platform to v2.9.0 ([#443])
+
+[#451]:https://github.com/domaframework/doma-tools-for-intellij/pull/451
+[#448]:https://github.com/domaframework/doma-tools-for-intellij/pull/448
+[#454]:https://github.com/domaframework/doma-tools-for-intellij/pull/454
+[#452]:https://github.com/domaframework/doma-tools-for-intellij/pull/452
+[#456]:https://github.com/domaframework/doma-tools-for-intellij/pull/456
+[#444]:https://github.com/domaframework/doma-tools-for-intellij/pull/444
+[#407]:https://github.com/domaframework/doma-tools-for-intellij/pull/407
+[#455]:https://github.com/domaframework/doma-tools-for-intellij/pull/455
+[#447]:https://github.com/domaframework/doma-tools-for-intellij/pull/447
+[#443]:https://github.com/domaframework/doma-tools-for-intellij/pull/443
+
+
 ## [2.2.1] - 2025-09-03
 
 ### Bug Fixes
@@ -538,3 +574,4 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[2.3.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.2.1...2.3.0
