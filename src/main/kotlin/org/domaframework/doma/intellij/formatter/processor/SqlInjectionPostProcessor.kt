@@ -79,7 +79,7 @@ class SqlInjectionPostProcessor : SqlPostProcessor() {
      */
     private fun processInjectedFragment(source: PsiFile) {
         val host = InjectionSqlUtil.getLiteralExpressionHost(source) ?: return
-        val originalText = host.value?.toString() ?: return
+        val originalText = source.text ?: return
 
         val injectionFormatter = InjectionSqlFormatter(source.project)
         val formattingTask = FormattingTask(host, originalText, host.isTextBlock)

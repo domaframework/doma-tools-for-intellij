@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.formatter.processor
 
 import com.intellij.lang.ASTNode
 import com.intellij.lang.injection.InjectedLanguageManager
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
@@ -26,8 +27,10 @@ import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.TokenType
 import com.intellij.psi.impl.source.codeStyle.PreFormatProcessor
+import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import com.intellij.psi.util.endOffset
 import com.intellij.psi.util.prevLeafs
 import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
@@ -38,8 +41,15 @@ import org.domaframework.doma.intellij.formatter.visitor.SqlFormatVisitor
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
+import org.jetbrains.kotlin.utils.rethrow
 
 class SqlFormatPreProcessor : PreFormatProcessor {
+    data class TextReplacement(
+        val offset: Int,
+        val length: Int,
+        val replacement: String,
+    )
+
     private val targetElementTypes =
         setOf(
             SqlTypes.KEYWORD,
@@ -79,7 +89,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         return updateDocument(source, rangeToReformat).range
     }
 
-    private fun shouldFormatFile(source: PsiFile): Boolean = source.language == SqlLanguage.INSTANCE || isInjectedSqlFile(source)
+    private fun shouldFormatFile(source: PsiFile): Boolean = source.language == SqlLanguage.INSTANCE && !isInjectedSqlFile(source)
 
     private fun shouldProcessInjectedFile(source: PsiFile): Boolean {
         if (!isInjectedSqlFile(source)) return true
@@ -91,160 +101,295 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         return host?.isTextBlock == true
     }
 
+    /**
+     * PSI-safe fast processing
+     */
     fun updateDocument(
         source: PsiFile,
         rangeToReformat: TextRange,
     ): ProcessResult {
-        val visitor = SqlFormatVisitor()
-        source.accept(visitor)
-
         val docManager = PsiDocumentManager.getInstance(source.project)
         val document = docManager.getDocument(source) ?: return ProcessResult(null, rangeToReformat)
 
-        val keywordList = visitor.replaces.filter { it.elementType != TokenType.WHITE_SPACE }
-        val replaceKeywordList = visitor.replaces.filter { it.elementType == SqlTypes.KEYWORD }
-        var index = keywordList.size
-        var keywordIndex = replaceKeywordList.size
-
-        visitor.replaces.asReversed().forEach { current ->
-            if (current.elementType != TokenType.WHITE_SPACE) {
-                processNonWhiteSpaceElement(current, document)
-                index--
-                if (current.elementType == SqlTypes.KEYWORD) keywordIndex--
-            } else {
-                removeSpacesAroundNewline(document, current as PsiWhiteSpace)
-            }
+        if (!source.isValid) {
+            return ProcessResult(document, rangeToReformat)
         }
 
-        trimLeadingWhitespaceAtFileHead(document, source, rangeToReformat)
-        docManager.commitDocument(document)
+        try {
+            val visitor = SqlFormatVisitor()
+            source.accept(visitor)
 
-        return ProcessResult(document, rangeToReformat.grown(visitor.replaces.size))
+            if (!source.isValid) {
+                return ProcessResult(document, rangeToReformat)
+            }
+
+            // Bulk string-based processing
+            val originalText = document.getText(rangeToReformat)
+            val formattedText =
+                processTextWithPsiInfo(originalText, visitor.replaces, rangeToReformat.startOffset, document)
+
+            if (formattedText != originalText) {
+                val newRange =
+                    ApplicationManager.getApplication().runWriteAction<TextRange> {
+                        if (isInjectedSqlFile(source)) {
+                            updateInjectedDocument(source, formattedText, rangeToReformat, docManager)
+                        } else {
+                            updateRegularDocument(document, formattedText, rangeToReformat, source, docManager)
+                        }
+                    }
+
+                return ProcessResult(document, newRange)
+            }
+
+            return ProcessResult(document, rangeToReformat.grown(visitor.replaces.size))
+        } catch (e: Exception) {
+            rethrow(e)
+            return ProcessResult(document, rangeToReformat)
+        }
     }
 
-    private fun trimLeadingWhitespaceAtFileHead(
-        document: Document,
-        source: PsiFile,
+    /**
+     * Update injection document
+     */
+    private fun updateInjectedDocument(
+        injectedFile: PsiFile,
+        formattedText: String,
         rangeToReformat: TextRange,
-    ) {
-        if (rangeToReformat.startOffset != 0) return
-        if (isInjectedSqlFile(source)) return
+        docManager: PsiDocumentManager,
+    ): TextRange {
+        val injectionManager = InjectedLanguageManager.getInstance(injectedFile.project)
+        val injectionHost =
+            injectionManager.getInjectionHost(injectedFile) as? PsiLiteralExpression
+                ?: return rangeToReformat
 
-        val chars = document.charsSequence
-        if (chars.isEmpty()) return
+        val hostFile = injectionHost.containingFile
+        val hostDocument = docManager.getDocument(hostFile) ?: return rangeToReformat
 
-        var start = 0
-        // Save Bom
-        if (chars[0] == '\uFEFF') start = 1
+        // Update injection document directly
+        val injectedDocument = docManager.getDocument(injectedFile)
+        if (injectedDocument != null && injectedDocument.isWritable) {
+            injectedDocument.replaceString(
+                rangeToReformat.startOffset,
+                rangeToReformat.endOffset,
+                formattedText,
+            )
 
-        var i = start
-        while (i < chars.length) {
-            val c = chars[i]
-            if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
-                i++
-            } else {
-                break
+            docManager.commitDocument(injectedDocument)
+
+            // Wait for PSI resynchronization
+            PsiDocumentManager.getInstance(injectedFile.project).performForCommittedDocument(hostDocument) {
+                if (injectedFile.isValid) {
+                    return@performForCommittedDocument
+                }
             }
         }
-        if (i > start) {
-            document.deleteString(start, i)
-        }
+
+        return TextRange(rangeToReformat.startOffset, rangeToReformat.startOffset + formattedText.length)
     }
 
-    private fun processNonWhiteSpaceElement(
-        current: PsiElement,
+    /**
+     * Regular document update
+     */
+    private fun updateRegularDocument(
         document: Document,
-    ) {
-        val textRangeStart = current.startOffset
-        val textRangeEnd = textRangeStart + current.text.length
-        val newText = getProcessedText(current)
+        formattedText: String,
+        rangeToReformat: TextRange,
+        source: PsiFile,
+        docManager: PsiDocumentManager,
+    ): TextRange {
+        if (rangeToReformat.endOffset <= document.textLength) {
+            val newText = trimLeadingWhitespaceAtFileHead(formattedText, source, rangeToReformat)
+            document.replaceString(
+                rangeToReformat.startOffset,
+                rangeToReformat.endOffset,
+                newText,
+            )
+            docManager.commitDocument(document)
 
-        document.deleteString(textRangeStart, textRangeEnd)
-        document.insertString(textRangeStart, newText)
+            return TextRange(rangeToReformat.startOffset, rangeToReformat.startOffset + newText.length)
+        }
+
+        return rangeToReformat
     }
 
-    private fun getProcessedText(current: PsiElement): String {
-        val newKeyword =
-            when (current.elementType) {
-                SqlTypes.KEYWORD -> processKeyword(current)
-                SqlTypes.LEFT_PAREN -> getNewLineLeftParenString(current.prevSibling, getUpperText(current))
-                SqlTypes.RIGHT_PAREN -> getRightPatternNewText(current)
-                SqlTypes.WORD, SqlTypes.FUNCTION_NAME -> getWordNewText(current)
-                SqlTypes.COMMA, SqlTypes.OTHER -> getNewLineString(current.prevSibling, getUpperText(current))
-                SqlTypes.BLOCK_COMMENT_START -> processBlockCommentStart(current)
-                else -> getUpperText(current)
+    /**
+     * Fast string processing using PSI information
+     */
+    private fun processTextWithPsiInfo(
+        originalText: String,
+        psiElements: List<PsiElement>,
+        baseOffset: Int,
+        document: Document,
+    ): String {
+        val validElements =
+            psiElements
+                .filter { element ->
+                    element.isValid && element.containingFile.isValid
+                }.reversed()
+
+        if (validElements.isEmpty()) return originalText
+
+        val replacements = buildReplacementMap(validElements, baseOffset, document.charsSequence)
+        return applyReplacements(originalText, replacements)
+    }
+
+    /**
+     * Efficient replacement map construction
+     */
+    private fun buildReplacementMap(
+        elements: List<PsiElement>,
+        baseOffset: Int,
+        documentText: CharSequence,
+    ): List<TextReplacement> {
+        val replacements = mutableListOf<TextReplacement>()
+
+        var newNextElementStartOffset: Int? = elements.first().nextSibling?.startOffset
+        var newNextElementText = elements.first().nextSibling?.text ?: ""
+        var nextElementType: IElementType? = elements.first().nextSibling?.elementType
+        elements.forEach { element ->
+            val offset = element.startOffset
+            if (offset < baseOffset || offset >= documentText.length) return@forEach
+
+            val relativeOffset = offset - baseOffset
+            val originalText = element.text
+
+            val newText =
+                when (element.elementType) {
+                    TokenType.WHITE_SPACE -> {
+                        if (element is PsiWhiteSpace) {
+                            processWhiteSpaceElement(element, originalText, newNextElementStartOffset, newNextElementText, nextElementType)
+                        } else {
+                            originalText
+                        }
+                    }
+                    SqlTypes.KEYWORD -> processKeywordElement(element)
+                    SqlTypes.LEFT_PAREN -> processLeftParenElement(element)
+                    SqlTypes.RIGHT_PAREN -> processRightParenElement(element)
+                    SqlTypes.WORD, SqlTypes.FUNCTION_NAME -> processWordElement(element)
+                    SqlTypes.COMMA, SqlTypes.OTHER -> processCommaOtherElement(element)
+                    SqlTypes.BLOCK_COMMENT_START -> processBlockCommentStartElement(element)
+                    else -> getUpperText(element)
+                }
+            newNextElementText = newText
+            newNextElementStartOffset = offset
+            nextElementType = element.elementType
+            if (newText != originalText && relativeOffset >= 0) {
+                replacements.add(
+                    TextReplacement(relativeOffset, originalText.length, newText),
+                )
             }
-
-        return newKeyword
-    }
-
-    private fun processKeyword(current: PsiElement): String {
-        val escapes = current.prevLeafs.filter { it.elementType == SqlTypes.OTHER }.toList()
-        return if (hasEscapeBeforeWhiteSpace(escapes, current.node)) {
-            current.text
-        } else {
-            getKeywordNewText(current)
-        }
-    }
-
-    private fun processBlockCommentStart(current: PsiElement): String =
-        if (current.nextSibling?.elementType == SqlTypes.BLOCK_COMMENT_CONTENT) {
-            "$LINE_SEPARATE${getUpperText(current)}"
-        } else {
-            getNewLineString(PsiTreeUtil.prevLeaf(current), getUpperText(current))
         }
 
-    private fun removeSpacesAroundNewline(
-        document: Document,
+        return replacements.sortedBy { it.offset }
+    }
+
+    /**
+     * Fast string replacement
+     */
+    private fun applyReplacements(
+        originalText: String,
+        replacements: List<TextReplacement>,
+    ): String {
+        if (replacements.isEmpty()) return originalText
+
+        val result = StringBuilder()
+        var currentIndex = 0
+
+        replacements.forEach { replacement ->
+            if (replacement.offset > currentIndex) {
+                result.append(originalText.substring(currentIndex, replacement.offset))
+            }
+            result.append(replacement.replacement)
+            currentIndex = replacement.offset + replacement.length
+        }
+        if (currentIndex < originalText.length) {
+            result.append(originalText.substring(currentIndex))
+        }
+
+        return result.toString()
+    }
+
+    /**
+     * PSI element modification processing
+     */
+    private fun processWhiteSpaceElement(
         element: PsiWhiteSpace,
-    ) {
-        val range = element.textRange
-        val originalText = document.getText(range)
-        val nextElement = element.nextSibling
-        val nextElementText = nextElement?.let { document.getText(it.textRange) } ?: ""
+        originalText: String,
+        newNextElementStartOffset: Int?,
+        newNextElementText: String,
+        nextElementType: IElementType?,
+    ): String {
+        val nextElementText =
+            if (newNextElementStartOffset == element.endOffset) {
+                newNextElementText
+            } else {
+                element.nextSibling?.text ?: ""
+            }
+        val nextElementType =
+            if (newNextElementStartOffset == element.endOffset) {
+                nextElementType
+            } else {
+                element.nextSibling?.elementType
+            }
         val preElement = element.prevSibling
 
-        val newText = calculateNewWhiteSpaceText(element, nextElement, originalText, nextElementText, preElement)
-        document.replaceString(range.startOffset, range.endOffset, newText)
-    }
-
-    private fun calculateNewWhiteSpaceText(
-        element: PsiWhiteSpace,
-        nextElement: PsiElement?,
-        originalText: String,
-        nextElementText: String,
-        preElement: PsiElement?,
-    ): String {
-        if (!targetElementTypes.contains(nextElement?.elementType) && preElement?.elementType != SqlTypes.BLOCK_COMMENT) {
+        if (!targetElementTypes.contains(nextElementType) &&
+            preElement?.elementType != SqlTypes.BLOCK_COMMENT
+        ) {
             return SINGLE_SPACE
         }
 
         if (element.prevSibling == null) return ""
 
-        return when (nextElement.elementType) {
-            SqlTypes.LINE_COMMENT -> processLineCommentWhiteSpace(originalText, nextElementText)
-            else -> processDefaultWhiteSpace(originalText, nextElementText)
+        val hasNewline = originalText.indexOf(LINE_SEPARATE) >= 0
+
+        return when (nextElementType) {
+            SqlTypes.LINE_COMMENT -> {
+                when {
+                    nextElementText.startsWith(LINE_SEPARATE) -> SINGLE_SPACE
+                    hasNewline -> LINE_SEPARATE.toString()
+                    else -> SINGLE_SPACE
+                }
+            }
+            else -> {
+                when {
+                    nextElementText.indexOf(LINE_SEPARATE) >= 0 -> SINGLE_SPACE
+                    hasNewline -> LINE_SEPARATE.toString()
+                    else -> LINE_SEPARATE.toString()
+                }
+            }
         }
     }
 
-    private fun processLineCommentWhiteSpace(
-        originalText: String,
-        nextElementText: String,
-    ): String =
-        when {
-            nextElementText.startsWith(LINE_SEPARATE) -> SINGLE_SPACE
-            originalText.contains(LINE_SEPARATE) -> originalText.replace(Regex("\\s*\\n\\s*"), LINE_SEPARATE)
-            else -> SINGLE_SPACE
+    private fun processKeywordElement(element: PsiElement): String {
+        val escapes = element.prevLeafs.filter { it.elementType == SqlTypes.OTHER }.toList()
+        return if (hasEscapeBeforeWhiteSpace(escapes, element.node)) {
+            element.text
+        } else {
+            getKeywordNewText(element)
         }
+    }
 
-    private fun processDefaultWhiteSpace(
-        originalText: String,
-        nextElementText: String,
-    ): String =
-        when {
-            nextElementText.contains(LINE_SEPARATE) -> SINGLE_SPACE
-            originalText.contains(LINE_SEPARATE) -> originalText.replace(Regex("\\s*\\n\\s*"), LINE_SEPARATE)
-            else -> LINE_SEPARATE
+    private fun processLeftParenElement(element: PsiElement): String = getNewLineLeftParenString(element.prevSibling, getUpperText(element))
+
+    private fun processRightParenElement(element: PsiElement): String = getNewLineString(element.prevSibling, element.text)
+
+    private fun processWordElement(element: PsiElement): String {
+        val prev = findPreviousNonWhiteSpaceElement(element)
+        return if (prev?.elementType == SqlTypes.BLOCK_COMMENT) {
+            getNewLineString(element.prevSibling, getUpperText(element))
+        } else {
+            getUpperText(element)
+        }
+    }
+
+    private fun processCommaOtherElement(element: PsiElement): String = getNewLineString(element.prevSibling, getUpperText(element))
+
+    private fun processBlockCommentStartElement(element: PsiElement): String =
+        if (element.nextSibling?.elementType == SqlTypes.BLOCK_COMMENT_CONTENT) {
+            "$LINE_SEPARATE${getUpperText(element)}"
+        } else {
+            getNewLineString(PsiTreeUtil.prevLeaf(element), getUpperText(element))
         }
 
     private fun hasEscapeBeforeWhiteSpace(
@@ -255,10 +400,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             prevBlocks.count {
                 it.elementType == SqlTypes.OTHER && it.text in escapeCharacters
             }
-
-        if (escapeCount % 2 == 0) return false
-
-        return findEscapeEndCharacter(start)
+        return if (escapeCount % 2 == 0) false else findEscapeEndCharacter(start)
     }
 
     private fun findEscapeEndCharacter(start: ASTNode): Boolean {
@@ -281,27 +423,12 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         val upperText = getUpperText(element)
         val shouldAddNewLine =
             SqlKeywordUtil.getIndentType(keywordText).isNewLineGroup() ||
-                element.prevSibling.elementType == SqlTypes.BLOCK_COMMENT
+                element.prevSibling?.elementType == SqlTypes.BLOCK_COMMENT
 
         return if (shouldAddNewLine) {
             getNewLineString(element.prevSibling, upperText)
         } else {
             upperText
-        }
-    }
-
-    private fun getRightPatternNewText(element: PsiElement): String {
-        val elementText = element.text
-        return getNewLineString(element.prevSibling, elementText)
-    }
-
-    private fun getWordNewText(element: PsiElement): String {
-        val prev = findPreviousNonWhiteSpaceElement(element)
-
-        return if (prev?.elementType == SqlTypes.BLOCK_COMMENT) {
-            getNewLineString(element.prevSibling, getUpperText(element))
-        } else {
-            getUpperText(element)
         }
     }
 
@@ -350,8 +477,36 @@ class SqlFormatPreProcessor : PreFormatProcessor {
             element.text
         }
 
+    private fun trimLeadingWhitespaceAtFileHead(
+        document: String,
+        source: PsiFile,
+        rangeToReformat: TextRange,
+    ): String {
+        if (rangeToReformat.startOffset != 0 || !source.isValid) return document
+        if (isInjectedSqlFile(source)) return document
+
+        if (document.isEmpty()) return document
+
+        var start = 0
+        if (document[0] == '\uFEFF') start = 1
+
+        var i = start
+        while (i < document.length) {
+            val c = document[i]
+            if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+                i++
+            } else {
+                break
+            }
+        }
+        if (i > start && i <= document.length) {
+            document.removeRange(start, i)
+        }
+        return document
+    }
+
     private fun logging() {
-        PluginLoggerUtil.Companion.countLogging(
+        PluginLoggerUtil.countLogging(
             this::class.java.simpleName,
             "SqlFormat",
             "Format",

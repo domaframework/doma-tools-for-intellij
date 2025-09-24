@@ -134,7 +134,7 @@ open class SqlFileBlock(
                 updateCommentParentAndIdent(childBlock)
                 blocks.add(childBlock)
             } else {
-                if (lastBlock !is SqlLineCommentBlock) {
+                if (lastBlock !is SqlLineCommentBlock && child.prevSibling != null) {
                     blocks.add(
                         SqlWhitespaceBlock(
                             child,

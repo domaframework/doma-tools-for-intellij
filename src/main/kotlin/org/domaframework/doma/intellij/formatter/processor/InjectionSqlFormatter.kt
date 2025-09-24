@@ -70,7 +70,7 @@ class InjectionSqlFormatter(
                 ?.first as? PsiFile ?: return
 
         val result =
-            SqlFormatPreProcessor().updateDocumentSafely(injectionFile, injectionFile.textRange)
+            SqlFormatPreProcessor().updateDocument(injectionFile, injectionFile.textRange)
         val formattedText = result.document?.text ?: return
         replaceHostStringLiteral(FormattingTask(task.expression, formattedText, task.isOriginalTextBlock), removeSpace)
     }
@@ -79,7 +79,7 @@ class InjectionSqlFormatter(
         sqlFile: PsiFile,
         removeSpace: (String) -> String,
     ) {
-        val result = SqlFormatPreProcessor().updateDocumentSafely(sqlFile, sqlFile.textRange)
+        val result = SqlFormatPreProcessor().updateDocument(sqlFile, sqlFile.textRange)
         val document = result.document ?: return
         val tmpFormatted = formatAsTemporarySqlFile(document)
         document.replaceString(
