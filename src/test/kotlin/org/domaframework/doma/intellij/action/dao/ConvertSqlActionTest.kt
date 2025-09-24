@@ -32,7 +32,6 @@ abstract class ConvertSqlActionTest : DomaSqlTest() {
 
         val daoClass = findDaoClass("$sqlConversionPackage.$daoName")
         myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
-        println("convertActionName: $convertActionName")
         val intention = myFixture.findSingleIntention(convertActionName)
 
         assertNotNull(

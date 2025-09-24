@@ -18,14 +18,13 @@ package org.domaframework.doma.intellij.formatter
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import com.intellij.util.ThrowableRunnable
 import org.domaframework.doma.intellij.setting.SettingComponent
 import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 
 class SqlFormatterTest : BasePlatformTestCase() {
-    override fun getBasePath(): String? = "src/test/testData/sql/formatter"
+    override fun getBasePath(): String = "src/test/testData/sql/formatter"
 
-    override fun getTestDataPath(): String? = "src/test/testData/sql/formatter"
+    override fun getTestDataPath(): String = "src/test/testData/sql/formatter"
 
     private val formatDataPrefix = "_format"
 
@@ -314,14 +313,12 @@ class SqlFormatterTest : BasePlatformTestCase() {
         val currentFile = myFixture.file
         WriteCommandAction
             .writeCommandAction(project)
-            .run<RuntimeException?>(
-                ThrowableRunnable {
-                    CodeStyleManager.getInstance(project).reformatText(
-                        currentFile,
-                        arrayListOf(currentFile.textRange),
-                    )
-                },
-            )
+            .run<RuntimeException?> {
+                CodeStyleManager.getInstance(project).reformatText(
+                    currentFile,
+                    arrayListOf(currentFile.textRange),
+                )
+            }
         myFixture.checkResultByFile(afterFile)
     }
 }
