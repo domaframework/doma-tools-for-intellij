@@ -34,7 +34,7 @@ import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
  * Intention action to convert SQL file to @Sql annotation
  */
 class BulkConvertSqlFileToAnnotationAction : PsiElementBaseIntentionAction() {
-    override fun getFamilyName(): String = MessageBundle.message("bilk.convert.sql.file.to.annotation.family")
+    override fun getFamilyName(): String = MessageBundle.message("bulk.convert.sql.file.to.annotation.family")
 
     override fun getText(): String = MessageBundle.message("bulk.convert.sql.file.to.annotation.text")
 
