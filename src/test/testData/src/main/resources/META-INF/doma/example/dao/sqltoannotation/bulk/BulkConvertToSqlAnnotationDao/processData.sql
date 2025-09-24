@@ -1,0 +1,1 @@
+select count(*) from employee where age > 25

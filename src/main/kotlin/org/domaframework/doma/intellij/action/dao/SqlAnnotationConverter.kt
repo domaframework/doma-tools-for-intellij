@@ -30,6 +30,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNameValuePair
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.codeStyle.JavaCodeStyleManager
+import com.intellij.testFramework.LightVirtualFile
 import org.domaframework.doma.intellij.common.dao.jumpToDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.StringUtil
@@ -88,6 +89,7 @@ class SqlAnnotationConverter(
         setSqlFileOption(targetAnnotation, false)
         addSqlAnnotation(sqlContent)
 
+        if(sqlFile is LightVirtualFile) return
         deleteSqlFile(sqlFile)
     }
 
@@ -292,7 +294,6 @@ class SqlAnnotationConverter(
         if (editorManager.isFileOpen(virtualFile)) {
             editorManager.closeFile(virtualFile)
         }
-
         virtualFile.delete(null)
     }
 

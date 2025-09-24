@@ -1,0 +1,1 @@
+update employee set name = /* employee.employeeName */'John', rank = /* employee.rank */30 where id = /* employee.managerId */1
