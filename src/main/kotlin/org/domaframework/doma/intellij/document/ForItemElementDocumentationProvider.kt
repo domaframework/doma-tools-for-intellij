@@ -63,7 +63,7 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
 
         generator.generateDocument()
 
-        return result.joinToString(StringUtil.LINE_SEPARATE)
+        return result.joinToString(StringUtil.LINE_SEPARATE.toString())
     }
 
     override fun generateHoverDoc(
@@ -74,10 +74,10 @@ class ForItemElementDocumentationProvider : AbstractDocumentationProvider() {
     override fun getQuickNavigateInfo(
         element: PsiElement,
         originalElement: PsiElement?,
-    ): String? {
+    ): String {
         val result: MutableList<String?> = LinkedList<String?>()
         val typeDocument = generateDoc(element, originalElement)
         result.add(typeDocument)
-        return result.joinToString(StringUtil.LINE_SEPARATE)
+        return result.joinToString(StringUtil.LINE_SEPARATE.toString())
     }
 }

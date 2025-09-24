@@ -16,8 +16,9 @@
 package org.domaframework.doma.intellij.common.util
 
 object StringUtil {
-    const val LINE_SEPARATE: String = "\n"
+    const val LINE_SEPARATE: Char = '\n'
     const val SINGLE_SPACE: String = " "
+    const val TRIPLE_QUOTE: String = "\"\"\""
 
     fun getSqlElClassText(text: String): String =
         text

@@ -28,15 +28,14 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNameValuePair
+import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.codeStyle.JavaCodeStyleManager
 import org.domaframework.doma.intellij.common.dao.jumpToDaoMethod
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
-import org.domaframework.doma.intellij.common.util.InjectionSqlUtil
 import org.domaframework.doma.intellij.common.util.StringUtil
 import org.domaframework.doma.intellij.extension.findFile
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
 import org.domaframework.doma.intellij.formatter.processor.InjectionSqlFormatter
-import org.domaframework.doma.intellij.formatter.visitor.FormattingTask
 
 /**
  * Class that handles conversion between @Sql annotation and SQL files
@@ -81,13 +80,15 @@ class SqlAnnotationConverter(
      */
     fun convertToSqlAnnotation() {
         val sqlFile = psiDaoMethod.sqlFile ?: return
+        val sqlPsiFile = project.findFile(sqlFile) ?: return
+        formatSql(sqlPsiFile)
+
         val sqlContent = readSqlFileContent(sqlFile) ?: return
         val targetAnnotation = findTargetAnnotation() ?: return
-
         setSqlFileOption(targetAnnotation, false)
         addSqlAnnotation(sqlContent)
+
         deleteSqlFile(sqlFile)
-        formatInjectionSql(targetAnnotation)
     }
 
     private fun extractSqlContent(sqlAnnotation: PsiAnnotation): String? {
@@ -180,32 +181,60 @@ class SqlAnnotationConverter(
     }
 
     private fun addSqlAnnotation(sqlContent: String) {
+        val sqlAnnotation = createSqlAnnotation(sqlContent)
+        val modifierList = method.modifierList
+        val targetAnnotation = findTargetAnnotation()
+        val documentManager = PsiDocumentManager.getInstance(project) ?: return
+
+        // Disable Java formatting to apply custom indentation to text blocks.
+        CodeStyleManager.getInstance(project).performActionWithFormatterDisabled {
+            if (targetAnnotation != null) {
+                modifierList.addAfter(sqlAnnotation, targetAnnotation)
+            } else {
+                modifierList.add(sqlAnnotation)
+            }
+
+            val psiFile = method.containingFile
+            val document = documentManager.getDocument(psiFile)
+            if (document != null) {
+                documentManager.doPostponedOperationsAndUnblockDocument(document)
+            }
+        }
+
+        addImports(documentManager)
+
+        val newDaoFile = method.containingFile
+        val newDocument = documentManager.getDocument(newDaoFile)
+        if (newDocument != null) {
+            documentManager.doPostponedOperationsAndUnblockDocument(newDocument)
+        }
+        jumpToDaoMethod(project, psiDaoMethod.sqlFile?.nameWithoutExtension ?: return, newDaoFile.virtualFile)
+    }
+
+    private fun createSqlAnnotation(sqlContent: String): PsiAnnotation {
         val escapedContent =
             sqlContent
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
 
-        val annotationText = "@Sql(\"\"\"\n$escapedContent\"\"\")"
-        val sqlAnnotation = elementFactory.createAnnotationFromText(annotationText, null)
+        // During Sql annotation indentation correction, add spaces equal to the number of “(” characters.
+        val indentationSpaces = InjectionSqlFormatter.createSpaceIndent(project)
+        val replaceIndentContent = escapedContent.replace("\n", "\n" + indentationSpaces)
+        val annotationText =
+            buildString {
+                append("@Sql(")
+                    .append(StringUtil.TRIPLE_QUOTE)
+                    .append(StringUtil.LINE_SEPARATE)
+                    .append(indentationSpaces)
+                    .append(replaceIndentContent)
+                    .append(StringUtil.TRIPLE_QUOTE)
+                    .append(")")
+            }
 
-        val modifierList = method.modifierList
-        val targetAnnotation = findTargetAnnotation()
+        return elementFactory.createAnnotationFromText(annotationText, null)
+    }
 
-        if (targetAnnotation != null) {
-            // Add after the target annotation
-            modifierList.addAfter(sqlAnnotation, targetAnnotation)
-            // modifierList.addAfter(elementFactory.createWhiteSpaceFromText("\n"), targetAnnotation)
-        } else {
-            // Add at the beginning
-            modifierList.add(sqlAnnotation)
-        }
-        val psiFile = method.containingFile
-        val documentManager = PsiDocumentManager.getInstance(project)
-        val document = documentManager.getDocument(psiFile)
-        if (document != null) {
-            documentManager.doPostponedOperationsAndUnblockDocument(document)
-        }
-        // Add import if needed
+    private fun addImports(documentManager: PsiDocumentManager): Boolean {
         val containingFile = method.containingFile
         // TODO Support Kotlin files in the future
         if (containingFile is PsiJavaFile) {
@@ -223,7 +252,7 @@ class SqlAnnotationConverter(
                         JavaPsiFacade.getInstance(project).findClass(
                             sqlImport,
                             method.resolveScope,
-                        ) ?: return,
+                        ) ?: return true,
                     )
                 importList?.add(importStatement)
                 val psiFile = method.containingFile
@@ -233,14 +262,7 @@ class SqlAnnotationConverter(
                 }
             }
         }
-
-        // Jump to method
-        val newDaoFile = method.containingFile
-        val newDocument = documentManager.getDocument(newDaoFile)
-        if (newDocument != null) {
-            documentManager.doPostponedOperationsAndUnblockDocument(newDocument)
-        }
-        jumpToDaoMethod(project, psiDaoMethod.sqlFile?.nameWithoutExtension ?: return, newDaoFile.virtualFile)
+        return false
     }
 
     private fun generateSqlFileWithContent(content: String) {
@@ -258,24 +280,19 @@ class SqlAnnotationConverter(
                 val documentManager = PsiDocumentManager.getInstance(project)
                 val document = documentManager.getDocument(psiFile) ?: return@runWriteCommandAction
 
-                // Replace the default content with the actual SQL content
                 document.setText(content)
                 documentManager.commitDocument(document)
-
-                // Format Sql
                 formatSql(psiFile)
             }
         }
     }
 
     private fun deleteSqlFile(virtualFile: VirtualFile) {
-        // Close the file if it's open in the editor
         val editorManager = FileEditorManager.getInstance(project)
         if (editorManager.isFileOpen(virtualFile)) {
             editorManager.closeFile(virtualFile)
         }
 
-        // Delete the file
         virtualFile.delete(null)
     }
 
@@ -284,23 +301,6 @@ class SqlAnnotationConverter(
         val project = method.project
         val injectionFormatter = InjectionSqlFormatter(project)
         injectionFormatter.format(sqlFile) { text ->
-            processDocumentText(text)
-        }
-    }
-
-    private fun formatInjectionSql(annotation: PsiAnnotation) {
-        val method = psiDaoMethod.psiMethod
-        val sqlAnnotation = DomaAnnotationType.Sql.getPsiAnnotation(method) ?: return
-        val valueExpression = getSqlAnnotationLiteralExpression(sqlAnnotation) ?: return
-        val injectedSql = InjectionSqlUtil.initInjectionElement(method.containingFile, project, valueExpression) ?: return
-
-        val host = InjectionSqlUtil.getLiteralExpressionHost(injectedSql.containingFile) ?: return
-        val originalText = host.value?.toString() ?: return
-
-        val injectionFormatter = InjectionSqlFormatter(annotation.project)
-        val formattingTask = FormattingTask(host, originalText, false)
-        injectionFormatter.convertExpressionToTextBlock(formattingTask.expression)
-        injectionFormatter.processFormattingTask(formattingTask) { text ->
             processDocumentText(text)
         }
     }

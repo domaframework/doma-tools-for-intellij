@@ -75,7 +75,7 @@
       implementationClass="org.domaframework.doma.intellij.formatter.builder.SqlFormattingModelBuilder"/>
     <preFormatProcessor implementation="org.domaframework.doma.intellij.formatter.processor.SqlFormatPreProcessor" />
     <postFormatProcessor implementation="org.domaframework.doma.intellij.formatter.processor.SqlFormatPostProcessor" />
-    <postFormatProcessor implementation="org.domaframework.doma.intellij.formatter.processor.SqlInjectionPostProcessor" />
+    <postFormatProcessor implementation="org.domaframework.doma.intellij.formatter.processor.SqlInjectionPostProcessor" order="last"/>
 
     <!-- CustomLanguage -->
     <fileType
@@ -109,6 +109,18 @@
       <intentionAction>
           <language>JAVA</language>
           <className>org.domaframework.doma.intellij.action.dao.ConvertSqlFileToAnnotationFromDaoAction</className>
+          <category>Doma tools</category>
+          <skipBeforeAfter>true</skipBeforeAfter>
+      </intentionAction>
+      <intentionAction>
+          <language>JAVA</language>
+          <className>org.domaframework.doma.intellij.action.dao.BulkConvertSqlAnnotationToFileAction</className>
+          <category>Doma tools</category>
+          <skipBeforeAfter>true</skipBeforeAfter>
+      </intentionAction>
+      <intentionAction>
+          <language>JAVA</language>
+          <className>org.domaframework.doma.intellij.action.dao.BulkConvertSqlFileToAnnotationAction</className>
           <category>Doma tools</category>
           <skipBeforeAfter>true</skipBeforeAfter>
       </intentionAction>
