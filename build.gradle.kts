@@ -26,13 +26,13 @@ plugins {
 grammarKit {
     tasks {
         generateLexer {
-            group = "grammer-kit"
+            group = "grammar-kit"
             sourceFile = file("src/main/java/org/domaframework/doma/intellij/Sql.flex")
             targetOutputDir = file("src/main/gen/org/domaframework/doma/intellij")
             purgeOldFiles = true
         }
         generateParser {
-            group = "grammer-kit"
+            group = "grammar-kit"
             sourceFile = file("src/main/java/org/domaframework/doma/intellij/Sql.bnf")
             targetRootOutputDir = file("src/main/gen")
             pathToParser = "/org/domaframework/doma/intellij/SqlParser.java"
@@ -182,7 +182,7 @@ tasks {
     }
 }
 
-tasks.register("encodeBase64") {
+tasks.register<Task>("encodeBase64") {
     doLast {
         val currentDir = File("./certificate")
         val files = currentDir.listFiles() ?: return@doLast
@@ -203,7 +203,7 @@ tasks.register("encodeBase64") {
     }
 }
 
-tasks.register("updateChangelog") {
+tasks.register<Task>("updateChangelog") {
     group = "changelog"
     description = "Update CHANGELOG.md based on merged PRs since last release"
 
@@ -218,7 +218,7 @@ tasks.register("updateChangelog") {
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class PullRequestItem(
         val title: String = "",
-        @JsonProperty("html_url")
+        @param:JsonProperty("html_url")
         val url: String = "",
         val number: Long = 0,
         var labelItems: List<String> = emptyList(),
@@ -601,7 +601,6 @@ fun replaceVersionInLogSetting(ver: String) {
 }
 
 fun replaceVersion(ver: String) {
-    checkNotNull(ver)
     replaceVersionInPluginUtil(ver)
     replaceVersionGradleProperty(ver)
     replaceVersionInLogSetting(ver)
