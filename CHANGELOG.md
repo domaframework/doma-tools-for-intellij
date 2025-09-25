@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [2.3.1] - 2025-09-25
+
+### Dependency Updates
+
+- Update plugin spotless to v8 ([#459])
+- Update Gradle to v9.1.0 ([#458])
+
+[#459]:https://github.com/domaframework/doma-tools-for-intellij/pull/459
+[#458]:https://github.com/domaframework/doma-tools-for-intellij/pull/458
+
+
 ## [2.3.0] - 2025-09-17
 
 ### New Features
@@ -573,3 +584,4 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
+[2.3.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.3.0...2.3.1
