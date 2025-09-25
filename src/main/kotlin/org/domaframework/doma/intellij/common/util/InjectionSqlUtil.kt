@@ -38,11 +38,13 @@ object InjectionSqlUtil {
         }
 
     fun isInjectedSqlFile(source: PsiFile): Boolean {
+        if (!source.isValid) return false
         val injectedLanguageManager = InjectedLanguageManager.getInstance(source.project)
         return injectedLanguageManager.isInjectedFragment(source)
     }
 
     fun getLiteralExpressionHost(source: PsiFile): PsiLiteralExpression? {
+        if (!source.isValid) return null
         val injectedLanguageManager = InjectedLanguageManager.getInstance(source.project)
         return injectedLanguageManager.getInjectionHost(source) as? PsiLiteralExpression
     }

@@ -1,0 +1,7 @@
+CREATE TABLE employee (
+    id INTEGER PRIMARY KEY,
+name VARCHAR(100),
+age INTEGER<caret>
+);
+
+CREATE INDEX idx_employee_name ON employee(name);

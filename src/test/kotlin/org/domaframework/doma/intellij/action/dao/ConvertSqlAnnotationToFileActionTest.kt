@@ -110,12 +110,12 @@ class ConvertSqlAnnotationToFileActionTest : ConvertSqlActionTest() {
 
     fun testIntentionNotAvailableForMethodWithoutSqlAnnotation() {
         val daoName = "NoSqlAnnotationDao"
-        doConvertActionTest(daoName, sqlConversionPackage, convertFamilyName, ConvertSqlFileToAnnotationFromDaoAction::class)
+        doNotAvailableConvertActionTest(daoName, sqlConversionPackage, convertFamilyName)
     }
 
     fun testIntentionNotAvailableForUnsupportedAnnotation() {
         val daoName = "UnsupportedAnnotationDao"
-        doConvertActionTest(daoName, sqlConversionPackage, convertFamilyName, ConvertSqlFileToAnnotationFromDaoAction::class)
+        doNotAvailableConvertActionTest(daoName, sqlConversionPackage, convertFamilyName)
     }
 
     private fun doTest(

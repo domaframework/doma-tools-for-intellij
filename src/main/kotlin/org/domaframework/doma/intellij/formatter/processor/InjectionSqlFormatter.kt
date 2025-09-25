@@ -38,20 +38,19 @@ class InjectionSqlFormatter(
     companion object {
         private const val TEMP_FILE_PREFIX = "temp_format"
         private const val SQL_FILE_EXTENSION = ".sql"
-        private const val TRIPLE_QUOTE = "\"\"\""
         private const val WRITE_COMMAND_NAME = "Format Injected SQL"
         private val COMMENT_START_REGEX = Regex("^[ \t]*/[*][ \t]*\\*")
+
+        fun createSpaceIndent(project: Project): String {
+            val settings = CodeStyle.getSettings(project)
+            val java = settings.getIndentOptions(JavaFileType.INSTANCE)
+            val indentSize = java.INDENT_SIZE
+            val prefixLen = "@Sql(${StringUtil.TRIPLE_QUOTE}".length
+            return StringUtil.SINGLE_SPACE.repeat(indentSize.plus(prefixLen))
+        }
     }
 
     private var baseIndent = createSpaceIndent(project)
-
-    private fun createSpaceIndent(project: Project): String {
-        val settings = CodeStyle.getSettings(project)
-        val java = settings.getIndentOptions(JavaFileType.INSTANCE)
-        val indentSize = java.INDENT_SIZE
-        val prefixLen = "@Sql(${TRIPLE_QUOTE}".length
-        return StringUtil.SINGLE_SPACE.repeat(indentSize.plus(prefixLen))
-    }
 
     private val injectionManager by lazy { InjectedLanguageManager.getInstance(project) }
     private val documentManager by lazy { PsiDocumentManager.getInstance(project) }
@@ -70,14 +69,9 @@ class InjectionSqlFormatter(
                 ?.firstOrNull()
                 ?.first as? PsiFile ?: return
 
-        val formattedText =
-            if (!task.isOriginalTextBlock) {
-                val result =
-                    SqlFormatPreProcessor().updateDocument(injectionFile, injectionFile.textRange)
-                result.document?.text ?: return
-            } else {
-                task.formattedText
-            }
+        val result =
+            SqlFormatPreProcessor().updateDocument(injectionFile, injectionFile.textRange)
+        val formattedText = result.document?.text ?: return
         replaceHostStringLiteral(FormattingTask(task.expression, formattedText, task.isOriginalTextBlock), removeSpace)
     }
 
@@ -98,7 +92,7 @@ class InjectionSqlFormatter(
     }
 
     private fun removeIndentLines(sqlText: String): String =
-        sqlText.lines().joinToString(StringUtil.LINE_SEPARATE) { line ->
+        sqlText.lines().joinToString(StringUtil.LINE_SEPARATE.toString()) { line ->
             val processedLine =
                 if (COMMENT_START_REGEX.containsMatchIn(line)) {
                     // Remove spaces between /* and comment content, as IntelliJ Java formatter may insert them
@@ -181,7 +175,7 @@ class InjectionSqlFormatter(
      */
     private fun updateBaseIndent(task: FormattingTask) {
         val input = PsiTreeUtil.prevLeaf(task.expression)?.text
-        val prevTexts = countCharsToLineBreak(task.expression).plus(TRIPLE_QUOTE.length)
+        val prevTexts = countCharsToLineBreak(task.expression).plus(StringUtil.TRIPLE_QUOTE.length)
         if (input != null) {
             val matches = StringUtil.SINGLE_SPACE.repeat(prevTexts)
             baseIndent = matches
@@ -210,10 +204,10 @@ class InjectionSqlFormatter(
      */
     private fun createFormattedLiteralText(formattedSqlText: String): String =
         buildString {
-            append(TRIPLE_QUOTE)
+            append(StringUtil.TRIPLE_QUOTE)
             append(StringUtil.LINE_SEPARATE)
             append(formattedSqlText)
-            append(TRIPLE_QUOTE)
+            append(StringUtil.TRIPLE_QUOTE)
         }
 
     /**
@@ -238,7 +232,7 @@ class InjectionSqlFormatter(
             append(literalSeparator)
             if (normalizedLines.isNotEmpty()) {
                 append(StringUtil.LINE_SEPARATE)
-                append(normalizedLines.joinToString(StringUtil.LINE_SEPARATE))
+                append(normalizedLines.joinToString(StringUtil.LINE_SEPARATE.toString()))
             }
         }
     }
@@ -284,5 +278,11 @@ class InjectionSqlFormatter(
         documentManager.commitDocument(document)
     }
 
-    private fun convertToTextBlock(content: String): String = "\"\"\"\n${content.replace("\"\"\"", "\\\"\\\"\\\"")}${TRIPLE_QUOTE}"
+    private fun convertToTextBlock(content: String): String =
+        buildString {
+            append(StringUtil.TRIPLE_QUOTE)
+                .append(StringUtil.LINE_SEPARATE)
+                .append(content.replace(StringUtil.TRIPLE_QUOTE, "\\\"\\\"\\\""))
+                .append(StringUtil.TRIPLE_QUOTE)
+        }
 }

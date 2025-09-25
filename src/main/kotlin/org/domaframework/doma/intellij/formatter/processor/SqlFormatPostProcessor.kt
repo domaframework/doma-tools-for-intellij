@@ -43,7 +43,7 @@ class SqlFormatPostProcessor : SqlPostProcessor() {
         }
 
         val document = getDocument(source) ?: return rangeToReformat
-        val processedText = processDocumentText(document.text)
+        val processedText = processDocumentText(source.text)
 
         if (document.text == processedText) {
             return rangeToReformat

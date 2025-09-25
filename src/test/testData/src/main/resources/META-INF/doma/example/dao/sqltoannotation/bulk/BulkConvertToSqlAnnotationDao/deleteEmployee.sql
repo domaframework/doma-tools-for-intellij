@@ -1,0 +1,1 @@
+delete from employee where id = /* employee.managerId */1

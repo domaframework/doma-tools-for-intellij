@@ -19,7 +19,6 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.psi.PsiDocumentManager
 import org.domaframework.doma.intellij.DomaSqlTest
-import kotlin.reflect.KClass
 
 abstract class ConvertSqlActionTest : DomaSqlTest() {
     protected fun doConvertAction(
@@ -32,7 +31,6 @@ abstract class ConvertSqlActionTest : DomaSqlTest() {
 
         val daoClass = findDaoClass("$sqlConversionPackage.$daoName")
         myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
-        println("convertActionName: $convertActionName")
         val intention = myFixture.findSingleIntention(convertActionName)
 
         assertNotNull(
@@ -46,20 +44,42 @@ abstract class ConvertSqlActionTest : DomaSqlTest() {
         myFixture.checkResultByFile("java/doma/example/dao/$sqlConversionPackage/$daoName.after.java")
     }
 
-    protected fun <T : AbstractConvertSqlFileToAnnotationAction> doConvertActionTest(
+    /**
+     * Execute the intention action with the specified family name.
+     */
+    protected fun doAvailableConvertActionTest(
         daoName: String,
         sqlToAnnotationPackage: String,
         convertFamilyName: String,
-        convertActionClass: KClass<T>,
     ) {
         addDaoJavaFile("$sqlToAnnotationPackage/$daoName.java")
         val daoClass = findDaoClass("$sqlToAnnotationPackage.$daoName")
         myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
 
         val intentions = myFixture.availableIntentions
-        val convertIntention = intentions.find { convertActionClass.java.isInstance(it) }
+        val convertIntention = intentions.find { it.familyName == convertFamilyName }
+        if (convertIntention == null) {
+            fail("[$convertFamilyName] intention should NOT be available without @Sql annotation")
+            return
+        }
+        convertIntention.invoke(myFixture.project, myFixture.editor, myFixture.file)
+    }
 
-        assertNull("$convertFamilyName intention should NOT be available without @Sql annotation", convertIntention)
+    protected fun doNotAvailableConvertActionTest(
+        daoName: String,
+        sqlToAnnotationPackage: String,
+        convertFamilyName: String,
+    ) {
+        addDaoJavaFile("$sqlToAnnotationPackage/$daoName.java")
+        val daoClass = findDaoClass("$sqlToAnnotationPackage.$daoName")
+        myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
+
+        val intentions = myFixture.availableIntentions
+        val convertIntention = intentions.find { it.familyName == convertFamilyName }
+        if (convertIntention != null) {
+            fail("[$convertFamilyName] intention should be available without @Sql annotation")
+            return
+        }
     }
 
     protected fun doTestSqlFormat(

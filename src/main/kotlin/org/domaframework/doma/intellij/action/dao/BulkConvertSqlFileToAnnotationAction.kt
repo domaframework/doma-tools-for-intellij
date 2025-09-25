@@ -21,42 +21,34 @@ import com.intellij.codeInsight.intention.preview.IntentionPreviewUtils
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.bundle.MessageBundle
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 
 /**
- * Intention action to convert @Sql annotation to SQL file
+ * Intention action to convert SQL file to @Sql annotation
  */
-class ConvertSqlAnnotationToFileAction : PsiElementBaseIntentionAction() {
-    override fun getFamilyName(): String = MessageBundle.message("convert.sql.annotation.to.file.family")
+class BulkConvertSqlFileToAnnotationAction : PsiElementBaseIntentionAction() {
+    override fun getFamilyName(): String = MessageBundle.message("bulk.convert.sql.file.to.annotation.family")
 
-    override fun getText(): String = MessageBundle.message("convert.sql.annotation.to.file.text")
+    override fun getText(): String = MessageBundle.message("bulk.convert.sql.file.to.annotation.text")
 
     override fun isAvailable(
         project: Project,
         editor: Editor?,
         element: PsiElement,
     ): Boolean {
-        val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return false
-        val psiDaoMethod = PsiDaoMethod(project, method)
+        val daoClass = findDaoClassElement(element) ?: return false
+        if (getDaoClass(daoClass.containingFile) == null) return false
 
-        // Check if method has @Sql annotation
-        // When a Sql annotation is present, a virtual SQL file is associated;
-        // therefore, check the parent and exclude the injected (inline) SQL.
-        val isDaoClassMissing = getDaoClass(method.containingFile) == null
-        val isSqlAnnotationNotUsed = !psiDaoMethod.useSqlAnnotation()
-        val hasSqlFileWithParent = psiDaoMethod.sqlFile != null && psiDaoMethod.sqlFile?.parent != null
-        if (isDaoClassMissing || isSqlAnnotationNotUsed || hasSqlFileWithParent) {
-            return false
-        }
+        val methods = getTargetMethods(daoClass, project)
 
-        return SqlAnnotationConverter.supportedTypes.any { it.getPsiAnnotation(method) != null }
+        return methods.isNotEmpty()
     }
 
     override fun generatePreview(
@@ -72,19 +64,44 @@ class ConvertSqlAnnotationToFileAction : PsiElementBaseIntentionAction() {
     ) {
         // Do nothing when previewing
         if (IntentionPreviewUtils.isIntentionPreviewActive()) return
-        val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
-
         val startTime = System.nanoTime()
-        val converter = SqlAnnotationConverter(project, method)
+        val daoClass = findDaoClassElement(element) ?: return
+        // Already checked in isAvailable, should not be null here
+        check(getDaoClass(daoClass.containingFile) != null) { "DAO class should be available" }
+
+        val methods = getTargetMethods(daoClass, project)
+        if (methods.isEmpty()) return
+
         WriteCommandAction.runWriteCommandAction(project) {
-            converter.convertToSqlFile()
+            methods.reversed().forEach { method ->
+                val converter = SqlAnnotationConverter(project, method)
+                converter.convertToSqlAnnotation()
+            }
         }
 
         PluginLoggerUtil.countLogging(
             className = this::class.java.simpleName,
-            actionName = "convertSqlAnnotationToFile",
+            actionName = "convertSqlFileToAnnotationBatch",
             inputName = "IntentionAction",
             start = startTime,
         )
     }
+
+    private fun getTargetMethods(
+        daoClass: PsiClass,
+        project: Project,
+    ): List<PsiMethod> =
+        daoClass.methods.filter { method ->
+            val isSupportedDaoMethod = SqlAnnotationConverter.supportedTypes.any { it.getPsiAnnotation(method) != null }
+            val psiDaoMethod = PsiDaoMethod(project, method)
+            val isSqlAnnotationUsed = psiDaoMethod.useSqlAnnotation()
+            val hasSqlFileWithParent = psiDaoMethod.sqlFile?.parent != null
+
+            // For SQL file to annotation conversion, we need:
+            // - SQL file exists
+            // - @Sql annotation is NOT used
+            !isSqlAnnotationUsed && hasSqlFileWithParent && isSupportedDaoMethod
+        }
+
+    private fun findDaoClassElement(element: PsiElement): PsiClass? = element as? PsiClass ?: element.parent as? PsiClass
 }

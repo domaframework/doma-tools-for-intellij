@@ -351,13 +351,6 @@ class SqlReferenceTestCase : DomaSqlTest() {
         for (reference in references) {
             val resolveResult = reference.references.firstOrNull()?.resolve()
             val expectedResults = resolveExpects[reference.text]
-            println(
-                "Reference: ${reference.text}, Resolve: ${(resolveResult as? PsiMethod)
-                    ?.parameterList
-                    ?.parameters
-                    ?.map{ it.type }
-                    ?.joinToString() ?: resolveResult}",
-            )
             assertTrue(expectedResults?.contains(resolveResult?.toString()) == true)
         }
     }

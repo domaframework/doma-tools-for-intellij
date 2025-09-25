@@ -118,15 +118,16 @@ class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
     fun testSelectWithSqlFileConvertAnnotation() {
         val daoName = "SelectWithSqlFileConvertAnnotationDao"
         val sqlFileName = "selectEmployee.sql"
-        doConvertActionTest(
+        addSqlFile("$sqlToAnnotationPackage/$daoName/$sqlFileName")
+        doAvailableConvertActionTest(
             daoName,
             sqlToAnnotationPackage,
             convertFamilyName,
-            ConvertSqlFileToAnnotationFromDaoAction::class,
         )
+
         // Test SQL File Removed
         val generatedSql = findSqlFile("$sqlToAnnotationPackage/$daoName/$sqlFileName")
-        assertTrue("SQL File [$sqlFileName] should exists ", generatedSql == null)
+        assertNull("SQL File [$sqlFileName] should exists ", generatedSql)
     }
 
     private fun doTest(

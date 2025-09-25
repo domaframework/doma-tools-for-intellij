@@ -47,7 +47,7 @@ class SqlFormattingModelBuilder : FormattingModelBuilder {
         settings: CodeStyleSettings,
     ): FormattingModel {
         val setting = DomaToolsFormatEnableSettings.getInstance()
-        val isEnableFormat = setting.state.isEnableSqlFormat == true
+        val isEnableFormat = setting.state.isEnableSqlFormat
         val formatMode = formattingContext.formattingMode
         val spacingBuilder = createSpaceBuilder(settings)
         val customSpacingBuilder = createCustomSpacingBuilder()
