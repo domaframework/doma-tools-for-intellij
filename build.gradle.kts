@@ -182,7 +182,7 @@ tasks {
     }
 }
 
-tasks.register<Task>("encodeBase64") {
+tasks.register("encodeBase64") {
     doLast {
         val currentDir = File("./certificate")
         val files = currentDir.listFiles() ?: return@doLast
@@ -203,7 +203,7 @@ tasks.register<Task>("encodeBase64") {
     }
 }
 
-tasks.register<Task>("updateChangelog") {
+tasks.register("updateChangelog") {
     group = "changelog"
     description = "Update CHANGELOG.md based on merged PRs since last release"
 
@@ -326,9 +326,9 @@ tasks.register<Task>("updateChangelog") {
         val mapper = jacksonObjectMapper()
         val json: Map<String, Any> =
             (
-                mapper.readValue(response, Map::class.java) as? Map<String, Any>
-                    ?: emptyList<Map<String, Any>>()
-            ) as Map<String, Any>
+                    mapper.readValue(response, Map::class.java) as? Map<String, Any>
+                        ?: emptyList<Map<String, Any>>()
+                    ) as Map<String, Any>
         val items =
             (json["items"] as List<*>)
                 .mapNotNull { item ->
@@ -479,9 +479,9 @@ tasks.register("checkExistChangelogPullRequest") {
         val mapper = jacksonObjectMapper()
         val json: Map<String, Any> =
             (
-                mapper.readValue(response, Map::class.java) as? Map<String, Any>
-                    ?: emptyList<Map<String, Any>>()
-            ) as Map<String, Any>
+                    mapper.readValue(response, Map::class.java) as? Map<String, Any>
+                        ?: emptyList<Map<String, Any>>()
+                    ) as Map<String, Any>
         println("get response Json ${json["total_count"]}")
         val existChangelogPr = json["total_count"] != 0
 
@@ -601,6 +601,7 @@ fun replaceVersionInLogSetting(ver: String) {
 }
 
 fun replaceVersion(ver: String) {
+    checkNotNull(ver)
     replaceVersionInPluginUtil(ver)
     replaceVersionGradleProperty(ver)
     replaceVersionInLogSetting(ver)
