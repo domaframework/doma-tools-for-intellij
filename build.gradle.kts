@@ -182,7 +182,7 @@ tasks {
     }
 }
 
-tasks.register("encodeBase64") {
+tasks.register<Task>("encodeBase64") {
     doLast {
         val currentDir = File("./certificate")
         val files = currentDir.listFiles() ?: return@doLast
@@ -203,7 +203,7 @@ tasks.register("encodeBase64") {
     }
 }
 
-tasks.register("updateChangelog") {
+tasks.register<Task>("updateChangelog") {
     group = "changelog"
     description = "Update CHANGELOG.md based on merged PRs since last release"
 
@@ -326,9 +326,9 @@ tasks.register("updateChangelog") {
         val mapper = jacksonObjectMapper()
         val json: Map<String, Any> =
             (
-                    mapper.readValue(response, Map::class.java) as? Map<String, Any>
-                        ?: emptyList<Map<String, Any>>()
-                    ) as Map<String, Any>
+                mapper.readValue(response, Map::class.java) as? Map<String, Any>
+                    ?: emptyList<Map<String, Any>>()
+            ) as Map<String, Any>
         val items =
             (json["items"] as List<*>)
                 .mapNotNull { item ->
@@ -445,7 +445,7 @@ tasks.register("updateChangelog") {
     }
 }
 
-tasks.register("checkExistChangelogPullRequest") {
+tasks.register<Task>("checkExistChangelogPullRequest") {
     group = "changelog"
     description = "Check if a PR with the same name has already been created"
 
@@ -479,9 +479,9 @@ tasks.register("checkExistChangelogPullRequest") {
         val mapper = jacksonObjectMapper()
         val json: Map<String, Any> =
             (
-                    mapper.readValue(response, Map::class.java) as? Map<String, Any>
-                        ?: emptyList<Map<String, Any>>()
-                    ) as Map<String, Any>
+                mapper.readValue(response, Map::class.java) as? Map<String, Any>
+                    ?: emptyList<Map<String, Any>>()
+            ) as Map<String, Any>
         println("get response Json ${json["total_count"]}")
         val existChangelogPr = json["total_count"] != 0
 
@@ -492,24 +492,24 @@ tasks.register("checkExistChangelogPullRequest") {
 
 intellijPlatformTesting {
     runIde {
-        register("runIdeForUiTests") {
-            task {
-                jvmArgumentProviders +=
-                    CommandLineArgumentProvider {
-                        listOf(
-                            "-Drobot-server.port=8082",
-                            "-Dide.mac.message.dialogs.as.sheets=false",
-                            "-Djb.privacy.policy.text=<!--999.999-->",
-                            "-Djb.consents.confirmation.enabled=false",
-                            "-Didea.log.registry.conflicts.silent=true",
-                        )
-                    }
-            }
-
-            plugins {
-                robotServerPlugin()
-            }
-        }
+//        register("runIdeForUiTests") {
+//            task {
+//                jvmArgumentProviders +=
+//                    CommandLineArgumentProvider {
+//                        listOf(
+//                            "-Drobot-server.port=8082",
+//                            "-Dide.mac.message.dialogs.as.sheets=false",
+//                            "-Djb.privacy.policy.text=<!--999.999-->",
+//                            "-Djb.consents.confirmation.enabled=false",
+//                            "-Didea.log.registry.conflicts.silent=true",
+//                        )
+//                    }
+//            }
+//
+//            plugins {
+//                robotServerPlugin()
+//            }
+//        }
     }
 }
 
@@ -601,7 +601,6 @@ fun replaceVersionInLogSetting(ver: String) {
 }
 
 fun replaceVersion(ver: String) {
-    checkNotNull(ver)
     replaceVersionInPluginUtil(ver)
     replaceVersionGradleProperty(ver)
     replaceVersionInLogSetting(ver)
@@ -610,7 +609,7 @@ fun replaceVersion(ver: String) {
 
 val encoding: String by project
 
-tasks.register("replaceNewVersion") {
+tasks.register<Task>("replaceNewVersion") {
     val releaseVersion =
         if (project.hasProperty("newVersion")) {
             project.property("newVersion") as String
@@ -639,7 +638,7 @@ tasks.register("replaceNewVersion") {
     }
 }
 
-tasks.register("replaceDraftVersion") {
+tasks.register<Task>("replaceDraftVersion") {
     val draftVersion =
         if (project.hasProperty("draftVersion")) {
             project.property("draftVersion") as String
