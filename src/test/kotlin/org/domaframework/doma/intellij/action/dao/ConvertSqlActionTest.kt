@@ -65,6 +65,23 @@ abstract class ConvertSqlActionTest : DomaSqlTest() {
         convertIntention.invoke(myFixture.project, myFixture.editor, myFixture.file)
     }
 
+    protected fun doNotAvailableConvertActionTest(
+        daoName: String,
+        sqlToAnnotationPackage: String,
+        convertFamilyName: String,
+    ) {
+        addDaoJavaFile("$sqlToAnnotationPackage/$daoName.java")
+        val daoClass = findDaoClass("$sqlToAnnotationPackage.$daoName")
+        myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
+
+        val intentions = myFixture.availableIntentions
+        val convertIntention = intentions.find { it.familyName == convertFamilyName }
+        if (convertIntention != null) {
+            fail("[$convertFamilyName] intention should be available without @Sql annotation")
+            return
+        }
+    }
+
     protected fun doTestSqlFormat(
         daoName: String,
         sqlFileName: String,

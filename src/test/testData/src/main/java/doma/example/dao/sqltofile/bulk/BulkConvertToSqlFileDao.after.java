@@ -37,22 +37,22 @@ public interface BulkConvertToSqlFileDao {
     @Select
     Employee selectEmployee(int id);
 
-    @Insert
+    @Insert(sqlFile = true)
     int insertEmployee(Employee employee);
 
-    @Update
+    @Update(sqlFile = true)
     int updateEmployee(Employee employee);
 
-    @Delete
+    @Delete(sqlFile = true)
     int deleteEmployee(Employee employee);
 
-    @BatchInsert
+    @BatchInsert(sqlFile = true)
     int[] batchInsertEmployees(List<Employee> employees);
 
-    @BatchUpdate
+    @BatchUpdate(sqlFile = true)
     int[] batchUpdateEmployees(List<Employee> employees);
 
-    @BatchDelete
+    @BatchDelete(sqlFile = true)
     int[] batchDeleteEmployees(List<Employee> employees);
 
     @Script
