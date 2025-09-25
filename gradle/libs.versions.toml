@@ -31,4 +31,4 @@ kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 qodana = { id = "org.jetbrains.qodana", version.ref = "qodana" }
 grammarkit= { id = "org.jetbrains.grammarkit", version.ref = "grammarkit" }
-spotless = { id = "com.diffplug.spotless", version = "7.2.1" }
+spotless = { id = "com.diffplug.spotless", version = "8.0.0" }
