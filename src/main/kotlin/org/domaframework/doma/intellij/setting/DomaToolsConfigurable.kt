@@ -26,8 +26,7 @@ class DomaToolsConfigurable : Configurable {
 
     private var formatSettings: DomaToolsFormatEnableSettings = DomaToolsFormatEnableSettings.getInstance()
 
-    override fun getDisplayName(): String =
-        SettingMessageBundle.message("applicationConfigurable.DomaToolsConfigurable.displayName")
+    override fun getDisplayName(): String = SettingMessageBundle.message("applicationConfigurable.DomaToolsConfigurable.displayName")
 
     override fun createComponent(): JComponent? = mySettingsComponent?.panel
 
