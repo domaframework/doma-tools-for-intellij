@@ -17,6 +17,7 @@ package org.domaframework.doma.intellij.setting
 
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ConfigurationException
+import org.domaframework.doma.intellij.bundle.SettingMessageBundle
 import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
 import javax.swing.JComponent
 
@@ -25,12 +26,13 @@ class DomaToolsConfigurable : Configurable {
 
     private var formatSettings: DomaToolsFormatEnableSettings = DomaToolsFormatEnableSettings.getInstance()
 
-    override fun getDisplayName(): String = "Doma Tools"
+    override fun getDisplayName(): String =
+        SettingMessageBundle.message("applicationConfigurable.DomaToolsConfigurable.displayName")
 
     override fun createComponent(): JComponent? = mySettingsComponent?.panel
 
     override fun isModified(): Boolean {
-        val enableFormatModified = formatSettings.isModified(mySettingsComponent) != false
+        val enableFormatModified = formatSettings.isModified(mySettingsComponent)
         return enableFormatModified
     }
 
