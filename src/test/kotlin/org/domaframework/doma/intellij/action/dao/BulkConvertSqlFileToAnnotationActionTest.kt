@@ -43,7 +43,7 @@ class BulkConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
         targetSqlFileNames: List<String>,
     ) {
         targetSqlFileNames.forEach { file ->
-            addSqlFile( "$sqlConversionPackage/$daoName/$file")
+            addSqlFile("$sqlConversionPackage/$daoName/$file")
         }
         doAvailableConvertActionTest(
             daoName,

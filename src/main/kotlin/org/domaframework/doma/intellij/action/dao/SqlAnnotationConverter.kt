@@ -89,7 +89,7 @@ class SqlAnnotationConverter(
         setSqlFileOption(targetAnnotation, false)
         addSqlAnnotation(sqlContent)
 
-        if(sqlFile is LightVirtualFile) return
+        if (sqlFile is LightVirtualFile) return
         deleteSqlFile(sqlFile)
     }
 
