@@ -320,13 +320,13 @@ class SqlFormatPreProcessor : PreFormatProcessor {
         nextElementType: IElementType?,
     ): String {
         val nextElementText =
-            if (newNextElementStartOffset == element.endOffset) {
+            if (newNextElementStartOffset == element.textRange.endOffset) {
                 newNextElementText
             } else {
                 element.nextSibling?.text ?: ""
             }
         val nextElementType =
-            if (newNextElementStartOffset == element.endOffset) {
+            if (newNextElementStartOffset == element.textRange.endOffset) {
                 nextElementType
             } else {
                 element.nextSibling?.elementType
