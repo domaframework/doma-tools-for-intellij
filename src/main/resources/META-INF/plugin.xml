@@ -14,6 +14,8 @@
 
   <resource-bundle>messages.DomaToolsBundle</resource-bundle>
   <resource-bundle>messages.LLMInstallerBundle</resource-bundle>
+  <!-- Write it last to make it recognized as the default resource bundle -->
+  <resource-bundle>messages.DomaToolsSettingBundle</resource-bundle>
 
   <projectListeners>
     <listener
@@ -27,9 +29,12 @@
 
     <applicationService
       serviceImplementation="org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings"/>
-      <applicationConfigurable groupId="org.domaframework.doma"
-        instance="org.domaframework.doma.intellij.setting.DomaToolsConfigurable"
-        displayName="Doma Tools" />
+      <applicationConfigurable
+              bundle="messages.DomaToolsSettingBundle"
+              id="org.domaframework.doma.intellij.setting.DomaToolsConfigurable"
+              groupId="org.domaframework.doma"
+              key="doma.tools"
+              instance="org.domaframework.doma.intellij.setting.DomaToolsConfigurable" />
 
     <!-- Reference -->
     <psi.referenceContributor
@@ -95,35 +100,40 @@
 
     <!-- Intention Actions -->
     <intentionAction>
-      <language>JAVA</language>
-      <className>org.domaframework.doma.intellij.action.dao.ConvertSqlAnnotationToFileAction</className>
-      <category>Doma tools</category>
-      <skipBeforeAfter>true</skipBeforeAfter>
+        <language>JAVA</language>
+        <bundleName>messages.DomaToolsSettingBundle</bundleName>
+        <className>org.domaframework.doma.intellij.action.dao.ConvertSqlAnnotationToFileAction</className>
+        <categoryKey>doma.tools</categoryKey>
+        <skipBeforeAfter>true</skipBeforeAfter>
     </intentionAction>
     <intentionAction>
-      <language>DomaSql</language>
-      <className>org.domaframework.doma.intellij.action.sql.ConvertSqlFileToAnnotationFromSqlAction</className>
-      <category>Doma tools</category>
-      <skipBeforeAfter>true</skipBeforeAfter>
+        <language>DomaSql</language>
+        <bundleName>messages.DomaToolsSettingBundle</bundleName>
+        <className>org.domaframework.doma.intellij.action.sql.ConvertSqlFileToAnnotationFromSqlAction</className>
+        <categoryKey>doma.tools</categoryKey>
+        <skipBeforeAfter>true</skipBeforeAfter>
     </intentionAction>
-      <intentionAction>
-          <language>JAVA</language>
-          <className>org.domaframework.doma.intellij.action.dao.ConvertSqlFileToAnnotationFromDaoAction</className>
-          <category>Doma tools</category>
-          <skipBeforeAfter>true</skipBeforeAfter>
-      </intentionAction>
-      <intentionAction>
-          <language>JAVA</language>
-          <className>org.domaframework.doma.intellij.action.dao.BulkConvertSqlAnnotationToFileAction</className>
-          <category>Doma tools</category>
-          <skipBeforeAfter>true</skipBeforeAfter>
-      </intentionAction>
-      <intentionAction>
-          <language>JAVA</language>
-          <className>org.domaframework.doma.intellij.action.dao.BulkConvertSqlFileToAnnotationAction</className>
-          <category>Doma tools</category>
-          <skipBeforeAfter>true</skipBeforeAfter>
-      </intentionAction>
+    <intentionAction>
+        <language>JAVA</language>
+        <bundleName>messages.DomaToolsSettingBundle</bundleName>
+        <className>org.domaframework.doma.intellij.action.dao.ConvertSqlFileToAnnotationFromDaoAction</className>
+        <categoryKey>doma.tools</categoryKey>
+        <skipBeforeAfter>true</skipBeforeAfter>
+    </intentionAction>
+    <intentionAction>
+        <language>JAVA</language>
+        <bundleName>messages.DomaToolsSettingBundle</bundleName>
+        <className>org.domaframework.doma.intellij.action.dao.BulkConvertSqlAnnotationToFileAction</className>
+        <categoryKey>doma.tools</categoryKey>
+        <skipBeforeAfter>true</skipBeforeAfter>
+    </intentionAction>
+    <intentionAction>
+        <language>JAVA</language>
+        <bundleName>messages.DomaToolsSettingBundle</bundleName>
+        <className>org.domaframework.doma.intellij.action.dao.BulkConvertSqlFileToAnnotationAction</className>
+        <categoryKey>doma.tools</categoryKey>
+        <skipBeforeAfter>true</skipBeforeAfter>
+    </intentionAction>
   </extensions>
 
   <extensions defaultExtensionNs="org.intellij.intelliLang">
@@ -135,33 +145,25 @@
   </extensions>
 
   <!-- Action -->
-  <actions>
+  <actions resource-bundle="messages.DomaToolsSettingBundle">
     <group
       id="org.domaframework.doma.intellij.DomaToolGroupActions"
-      text="Doma Tools"
       popup="true"
       icon="AllIcons.Nodes.AbstractClass">
       <add-to-group
         group-id="EditorPopupMenu"
-        anchor="last"
-       />
+        anchor="last"/>
       <action
         id="org.domaframework.doma.intellij.action.JumpToSQLFromDao"
-        class="org.domaframework.doma.intellij.action.dao.JumpToSQLFromDaoAction"
-        text="Jump to SQL"
-        description="Jump from DAO file to SQL file">
+        class="org.domaframework.doma.intellij.action.dao.JumpToSQLFromDaoAction">
         <keyboard-shortcut keymap="$default" first-keystroke="alt D"/>
       </action>
       <action id="org.domaframework.doma.intellij.JumpToDaoFromSQL"
-        class="org.domaframework.doma.intellij.action.sql.JumpToDaoFromSQLAction"
-        text="Jump to DAO"
-        description="Jump from SQL file to DAO method definition">
+        class="org.domaframework.doma.intellij.action.sql.JumpToDaoFromSQLAction">
         <keyboard-shortcut keymap="$default" first-keystroke="alt D"/>
       </action>
       <action id="org.domaframework.doma.intellij.GenerateSqlAction"
-        class="org.domaframework.doma.intellij.action.dao.GenerateSqlAction"
-        text="Generate SQL"
-        description="Generate SQL file from DAO method">
+        class="org.domaframework.doma.intellij.action.dao.GenerateSqlAction">
         <keyboard-shortcut keymap="$default" first-keystroke="control alt G"/>
       </action>
     </group>
