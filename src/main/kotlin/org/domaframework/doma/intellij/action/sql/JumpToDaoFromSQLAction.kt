@@ -19,7 +19,6 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.psi.PsiFile
 import org.domaframework.doma.intellij.common.dao.findDaoFile
 import org.domaframework.doma.intellij.common.dao.findDaoMethod
 import org.domaframework.doma.intellij.common.dao.jumpToDaoMethod
@@ -30,15 +29,12 @@ import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
  * Action to jump from SQL file to corresponding DAO function
  */
 class JumpToDaoFromSQLAction : AnAction() {
-    private var currentFile: PsiFile? = null
-
     override fun update(e: AnActionEvent) {
         e.presentation.isEnabledAndVisible = false
-        currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
-        val file = currentFile ?: return
-        if (findDaoMethod(file) == null) return
+        val currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
+        if (findDaoMethod(currentFile) == null) return
         e.presentation.isEnabledAndVisible =
-            isSupportFileType(file)
+            isSupportFileType(currentFile)
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
@@ -52,11 +48,11 @@ class JumpToDaoFromSQLAction : AnAction() {
             inputEvent,
             startTime,
         )
-        val file = currentFile ?: return
+        val currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
         val project = e.project ?: return
-        val daoFile = findDaoFile(project, file) ?: return
+        val daoFile = findDaoFile(project, currentFile) ?: return
 
-        val sqlFileName = file.virtualFile?.nameWithoutExtension ?: return
+        val sqlFileName = currentFile.virtualFile?.nameWithoutExtension ?: return
         jumpToDaoMethod(project, sqlFileName, daoFile)
         PluginLoggerUtil.countLoggingByAction(
             this::class.java.simpleName,

@@ -19,7 +19,6 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import org.domaframework.doma.intellij.common.dao.getDaoClass
@@ -31,22 +30,19 @@ import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
  * Action class that generates SQL from DAO method
  */
 class GenerateSqlAction : AnAction() {
-    private var currentFile: PsiFile? = null
-
     override fun update(e: AnActionEvent) {
         e.presentation.isEnabledAndVisible = false
-        currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
+        val currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
         val project = e.project ?: return
-        val file: PsiFile = currentFile ?: return
-        if (getDaoClass(file) == null) return
-        val element = file.findElementAt(editor.caretModel.offset) ?: return
+        if (getDaoClass(currentFile) == null) return
+        val element = currentFile.findElementAt(editor.caretModel.offset) ?: return
         val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
 
         val psiDaoMethod = PsiDaoMethod(project, method)
         e.presentation.isEnabledAndVisible =
             psiDaoMethod.isUseSqlFileMethod() &&
-            isJavaOrKotlinFileType(file) &&
+            isJavaOrKotlinFileType(currentFile) &&
             psiDaoMethod.sqlFile == null
     }
 
@@ -62,9 +58,9 @@ class GenerateSqlAction : AnAction() {
             startTime,
         )
         val project = e.project ?: return
+        val currentFile = e.getData(CommonDataKeys.PSI_FILE) ?: return
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
-        val file: PsiFile = currentFile ?: return
-        val element = file.findElementAt(editor.caretModel.offset) ?: return
+        val element = currentFile.findElementAt(editor.caretModel.offset) ?: return
         val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
         val psiDaoMethod = PsiDaoMethod(project, method)
         psiDaoMethod.generateSqlFile()
