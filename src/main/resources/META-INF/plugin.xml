@@ -14,7 +14,8 @@
 
   <resource-bundle>messages.DomaToolsBundle</resource-bundle>
   <resource-bundle>messages.LLMInstallerBundle</resource-bundle>
-    <resource-bundle>messages.DomaToolsSettingBundle</resource-bundle>
+  <!-- Write it last to make it recognized as the default resource bundle -->
+  <resource-bundle>messages.DomaToolsSettingBundle</resource-bundle>
 
   <projectListeners>
     <listener
