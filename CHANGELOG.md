@@ -17,12 +17,6 @@
 - Update plugin spotless to v8 ([#459])
 - Update Gradle to v9.1.0 ([#458])
 
-[#460]:https://github.com/domaframework/doma-tools-for-intellij/pull/460
-[#465]:https://github.com/domaframework/doma-tools-for-intellij/pull/465
-[#459]:https://github.com/domaframework/doma-tools-for-intellij/pull/459
-[#458]:https://github.com/domaframework/doma-tools-for-intellij/pull/458
-
-
 ## [2.3.0] - 2025-09-17
 
 ### New Features
@@ -403,7 +397,8 @@
   - Rename SQL file directory when renaming DAO
   - Change DAO package name or SQL file directory configuration when changing configuration
 
-[Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/domaframework/doma-tools-for-intellij/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v2.2.1...v2.3.0
 [2.2.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/v2.1.2...v2.2.0
@@ -455,6 +450,10 @@
 [#56]: https://github.com/domaframework/doma-tools-for-intellij/pull/56
 [#49]: https://github.com/domaframework/doma-tools-for-intellij/pull/49
 [#48]: https://github.com/domaframework/doma-tools-for-intellij/pull/48
+[#465]: https://github.com/domaframework/doma-tools-for-intellij/pull/465
+[#460]: https://github.com/domaframework/doma-tools-for-intellij/pull/460
+[#459]: https://github.com/domaframework/doma-tools-for-intellij/pull/459
+[#458]: https://github.com/domaframework/doma-tools-for-intellij/pull/458
 [#456]: https://github.com/domaframework/doma-tools-for-intellij/pull/456
 [#455]: https://github.com/domaframework/doma-tools-for-intellij/pull/455
 [#454]: https://github.com/domaframework/doma-tools-for-intellij/pull/454
@@ -594,4 +593,3 @@
 [#103]: https://github.com/domaframework/doma-tools-for-intellij/pull/103
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
-[2.4.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.3.0...2.4.0
