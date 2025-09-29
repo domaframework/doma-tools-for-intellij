@@ -23,6 +23,9 @@ Provides Intention Action features for automatically generating SQL templates be
   - When a DAO method has an `@Sql` annotation but the corresponding SQL template file does not exist, you can automatically generate it from the intention action (Alt+Enter).
 - **Generate corresponding SQL annotation from SQL file**
   - When a SQL file exists but the corresponding DAO method doesn't have an `@Sql` annotation, you can automatically add the annotation from the intention action (Alt+Enter) on the SQL file.
+- **Bulk conversion for DAO class**
+  - You can execute a bulk conversion action for an entire DAO class, converting between `@Sql` annotations and SQL files for all methods at once.
+  - Methods that already have an `@Sql` annotation or an existing SQL file are excluded from the bulk action.
 
 ![IntentionAction](images/gif/IntentionAction.gif)
 
@@ -62,7 +65,7 @@ The plugin also provides quick fixes for DAO methods where the required SQL file
   ![inspectionPackageName.png](images/inspectionPackageName.png)
 - Optional types are recognized as their element type (e.g., a parameter of type `Optional<String>` is treated as type `String`).
 - For custom functions, checks for methods that are not defined in the configured ExpressionFunctions implementation class.
-
+- In method definition checks, the plugin verifies the appropriate method definition based on the number and types of arguments.
 
 ## Completion
 Code completion is available to assist you in coding within directives.
@@ -168,6 +171,7 @@ This feature works in source JARs as well, but in binary JARs, if the DAO method
 - The class definition referenced by @ClassName@.
 - Custom functions in the configured ExpressionFunctions implementation class.
 - You can also jump using the **Go To > Declaration Usage** menu.
+- For method definition references, the plugin resolves the reference based on the number and types of arguments.
 
 ![Reference.gif](images/gif/Reference.gif)
 
