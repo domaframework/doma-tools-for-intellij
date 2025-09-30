@@ -8,7 +8,6 @@ This document describes the format and rules for creating a Pull Request (PR) on
 
 ## PR Guidelines
 - If there are unstaged changes when creating a pull request, please split them appropriately and commit them separately.
-- When using the gh command, first authenticate with ```gh auth login```.
 - Use the [PR Template](../templates/PR_TEMPLATE.md) for PR descriptions
 - PR titles should be concise and descriptive
 - Ensure all tests pass before submitting a PR
