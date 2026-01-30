@@ -2,7 +2,7 @@
 # libraries
 junit = "4.13.2"
 doma = "3.2.0"
-logback = "1.5.26"
+logback = "1.5.27"
 pluginVerifier = "1.398"
 
 # plugins
