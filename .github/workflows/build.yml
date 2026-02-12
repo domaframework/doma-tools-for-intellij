@@ -52,7 +52,7 @@ jobs:
           echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
 
       - name: Cache Lexer and Parser
-        uses: actions/cache@v4
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         id: cache-lexer-parser
         with:
           path: ${{ github.workspace }}/src/main/gen
@@ -127,7 +127,7 @@ jobs:
           cache-read-only: true
 
       - name: Cache Lexer and Parser
-        uses: actions/cache@v4
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         id: cache-lexer-parser
         with:
           path: ${{ github.workspace }}/src/main/gen
@@ -185,7 +185,7 @@ jobs:
           cache-read-only: true
 
       - name: Cache Lexer and Parser
-        uses: actions/cache@v4
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         id: cache-lexer-parser
         with:
           path: ${{ github.workspace }}/src/main/gen
@@ -202,7 +202,7 @@ jobs:
         run: ./gradlew generateParser
 
       - name: Setup Plugin Verifier IDEs Cache
-        uses: actions/cache@v4
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         with:
           path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
           key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
