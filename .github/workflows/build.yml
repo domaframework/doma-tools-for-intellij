@@ -30,7 +30,7 @@ jobs:
       pluginVerifierHomeDir: ${{ steps.properties.outputs.pluginVerifierHomeDir }}
     steps:
       - name: Fetch Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Gradle Wrapper Validation
         uses: gradle/actions/wrapper-validation@v4
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Fetch Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -171,7 +171,7 @@ jobs:
           large-packages: false
 
       - name: Fetch Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup Java
         uses: actions/setup-java@v5
