@@ -20,7 +20,7 @@ slf4j = { group = "org.slf4j", name = "slf4j-api", version = "2.0.17" }
 kotlinTest = { group = "org.jetbrains.kotlin", name = "kotlin-test" }
 domacore = { module = "org.seasar.doma:doma-core", version.ref = "doma" }
 google-java-format = { module = "com.google.googlejavaformat:google-java-format", version = "1.28.0" }
-ktlint = { module = "com.pinterest.ktlint:ktlint-cli", version = "1.7.1" }
+ktlint = { module = "com.pinterest.ktlint:ktlint-cli", version = "1.8.0" }
 jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.21.0" }
 pluginVerifier = { group = "org.jetbrains.intellij.plugins", name = "verifier-cli", version.ref = "pluginVerifier" }
 
