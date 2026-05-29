@@ -182,6 +182,14 @@ tasks {
     }
 }
 
+tasks.named("instrumentCode") {
+    enabled = false
+}
+
+tasks.named("instrumentTestCode") {
+    enabled = false
+}
+
 tasks.register<Task>("encodeBase64") {
     doLast {
         val currentDir = File("./certificate")
@@ -387,9 +395,7 @@ tasks.register<Task>("updateChangelog") {
                             assigned = true
                             when (version) {
                                 "major" -> versionInfo.updateMajor()
-
                                 "minor" -> versionInfo.updateMinor()
-
                                 "patch" -> versionInfo.updatePatch()
                             }
                         }
