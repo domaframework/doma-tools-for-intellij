@@ -41,13 +41,13 @@ import com.intellij.testFramework.IdeaTestUtil
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor
 
 class DomaProjectDescriptor : DefaultLightProjectDescriptor() {
-    override fun getSdk(): Sdk = IdeaTestUtil.getMockJdk17()
+    override fun getSdk(): Sdk = IdeaTestUtil.getMockJdk21()
 
     override fun configureModule(
         module: Module,
         model: ModifiableRootModel,
         contentEntry: ContentEntry,
     ) {
-        IdeaTestUtil.setModuleLanguageLevel(module, LanguageLevel.JDK_17)
+        IdeaTestUtil.setModuleLanguageLevel(module, LanguageLevel.JDK_21)
     }
 }
