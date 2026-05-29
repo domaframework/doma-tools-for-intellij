@@ -30,7 +30,7 @@ If you have any questions or suggestions, feel free to open an issue or contact 
 - Install **IntelliJ IDEA** (2024.3 or later)
   - We recommend using the latest stable version of IntelliJ IDEA.
 - Install **Git** and configure your GitHub access
-- Install **JDK 17**
+- Install **JDK 21**
 
 ## Recommended IntelliJ IDEA Plugins
 
