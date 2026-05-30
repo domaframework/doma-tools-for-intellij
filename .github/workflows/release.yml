@@ -37,13 +37,6 @@ jobs:
         with:
           cache-read-only: true
 
-      # Generate Lexer and Parser
-      - name: Generate Lexer
-        run: ./gradlew generateLexer
-
-      - name: Generate Parser
-        run: ./gradlew generateParser
-
       # Publish the plugin to JetBrains Marketplace
       - name: Publish Plugin
         env:
