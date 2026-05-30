@@ -180,6 +180,25 @@ tasks {
     publishPlugin {
         dependsOn(patchChangelog)
     }
+
+    // generateLexer purges its output directory, which it shares with the parser
+    // output, so generateParser must always run after it; otherwise the lexer
+    // purge would wipe the generated parser/PSI sources.
+    generateParser {
+        mustRunAfter(generateLexer)
+    }
+
+    // Regenerate the lexer/parser from the latest Sql.flex/Sql.bnf before any
+    // compilation runs. This keeps the generated sources in src/main/gen in sync
+    // with the grammar definitions even after editing the grammar or switching
+    // branches, so developers no longer have to run the Grammar-Kit tasks by hand.
+    val grammarKitTasks = listOf(generateLexer, generateParser)
+    withType<JavaCompile>().configureEach {
+        dependsOn(grammarKitTasks)
+    }
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        dependsOn(grammarKitTasks)
+    }
 }
 
 tasks.register<Task>("encodeBase64") {
