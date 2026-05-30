@@ -38,17 +38,19 @@ class FactoryParamTypeCheckProcessor(
         if (factoryAnnotationType.paramCount != params.size) {
             val paramCountResult =
                 when (factoryAnnotationType) {
-                    FactoryAnnotationType.ArrayFactory ->
+                    FactoryAnnotationType.ArrayFactory -> {
                         ValidationMethodParamsCountResult(
                             method.nameIdentifier,
                             shortName,
                         )
+                    }
 
-                    else ->
+                    else -> {
                         ValidationMethodParamsEmptyResult(
                             method.nameIdentifier,
                             shortName,
                         )
+                    }
                 }
             paramCountResult.highlightElement(holder)
             return

@@ -54,7 +54,9 @@ class SqlPsiReferenceProvider : PsiReferenceProvider() {
                         return arrayOf(SqlElIdExprReference(element))
                     }
 
-                    else -> getReferenceByElementOriginal(element)
+                    else -> {
+                        getReferenceByElementOriginal(element)
+                    }
                 }
             }
 
@@ -80,28 +82,37 @@ class SqlPsiReferenceProvider : PsiReferenceProvider() {
             is SqlElIdExpr -> {
                 when {
                     element.parent is SqlElFieldAccessExpr ||
-                        element.parent is SqlElParameters -> arrayOf(SqlElIdExprReference(element))
+                        element.parent is SqlElParameters -> {
+                        arrayOf(SqlElIdExprReference(element))
+                    }
 
-                    getParentClassPsiType(element, SqlElFunctionCallExpr::class.java) != null ->
+                    getParentClassPsiType(element, SqlElFunctionCallExpr::class.java) != null -> {
                         arrayOf(SqlElFunctionCallExprReference(element))
+                    }
 
-                    getParentClassPsiType(element, SqlElClass::class.java) != null ->
+                    getParentClassPsiType(element, SqlElClass::class.java) != null -> {
                         arrayOf(
                             SqlElClassExprReference(element),
                         )
+                    }
 
                     getParentClassPsiType(
                         element,
                         SqlElStaticFieldAccessExpr::class.java,
-                    ) != null && element.parent !is SqlElFieldAccessExpr -> arrayOf(SqlElStaticFieldReference(element))
+                    ) != null && element.parent !is SqlElFieldAccessExpr -> {
+                        arrayOf(SqlElStaticFieldReference(element))
+                    }
 
                     getParentClassPsiType(element, SqlElForDirective::class.java) != null &&
-                        element.prevLeaf()?.prevLeaf()?.elementType == SqlTypes.EL_FOR ->
+                        element.prevLeaf()?.prevLeaf()?.elementType == SqlTypes.EL_FOR -> {
                         arrayOf(
                             SqlElForDirectiveIdExprReference(element),
                         )
+                    }
 
-                    else -> arrayOf(SqlElIdExprReference(element))
+                    else -> {
+                        arrayOf(SqlElIdExprReference(element))
+                    }
                 }
             }
 

@@ -46,20 +46,27 @@ object CommaRawClauseHandler {
         sqlBlockFormattingCtx: SqlBlockFormattingContext,
     ): SqlBlock =
         when {
-            lastGroup is SqlArrayListGroupBlock -> SqlArrayCommaBlock(child, sqlBlockFormattingCtx)
-            shouldCreateColumnRawBlock(lastGroup) ->
+            lastGroup is SqlArrayListGroupBlock -> {
+                SqlArrayCommaBlock(child, sqlBlockFormattingCtx)
+            }
+
+            shouldCreateColumnRawBlock(lastGroup) -> {
                 SqlColumnRawGroupBlock(
                     child,
                     sqlBlockFormattingCtx,
                 )
+            }
 
-            lastGroup is SqlWithCommonTableGroupBlock ->
+            lastGroup is SqlWithCommonTableGroupBlock -> {
                 SqlWithCommonTableGroupBlock(
                     child,
                     sqlBlockFormattingCtx,
                 )
+            }
 
-            else -> SqlCommaBlock(child, sqlBlockFormattingCtx)
+            else -> {
+                SqlCommaBlock(child, sqlBlockFormattingCtx)
+            }
         }
 
     /**

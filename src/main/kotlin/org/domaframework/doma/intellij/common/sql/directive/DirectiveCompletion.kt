@@ -38,28 +38,31 @@ class DirectiveCompletion(
 
     fun directiveHandle(symbol: String): Boolean {
         return when (symbol) {
-            "%" ->
+            "%" -> {
                 PercentDirectiveHandler(
                     originalFile = originalFile,
                     element = element,
                     result = result,
                 ).directiveHandle()
+            }
 
-            "#" ->
+            "#" -> {
                 EmbeddedDirectiveHandler(
                     originalFile = originalFile,
                     element = element,
                     result = result,
                 ).directiveHandle()
+            }
 
-            "^" ->
+            "^" -> {
                 LiteralDirectiveHandler(
                     originalFile = originalFile,
                     element = element,
                     result = result,
                 ).directiveHandle()
+            }
 
-            "@" ->
+            "@" -> {
                 StaticDirectiveHandler(
                     originalFile = originalFile,
                     element = element,
@@ -67,8 +70,11 @@ class DirectiveCompletion(
                     result = result,
                     bindText = bindText,
                 ).directiveHandle()
+            }
 
-            else -> return false
+            else -> {
+                return false
+            }
         }
     }
 }

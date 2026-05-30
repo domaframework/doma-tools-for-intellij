@@ -152,54 +152,65 @@ class SqlBlockGenerator(
 
             IndentType.TOP -> {
                 return when (keywordText) {
-                    "with" ->
+                    "with" -> {
                         SqlWithQueryGroupBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
+                    }
 
-                    "select" ->
+                    "select" -> {
                         SqlSelectQueryGroupBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
+                    }
 
-                    "create" ->
+                    "create" -> {
                         SqlCreateKeywordGroupBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
+                    }
 
-                    "insert" ->
+                    "insert" -> {
                         SqlInsertQueryGroupBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
+                    }
 
-                    "do" ->
+                    "do" -> {
                         SqlDoGroupBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
+                    }
 
-                    "update" ->
+                    "update" -> {
                         SqlUpdateQueryGroupBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
+                    }
 
-                    "delete" ->
+                    "delete" -> {
                         SqlDeleteQueryGroupBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
-                    "union", "intersect", "except" ->
+                    }
+
+                    "union", "intersect", "except" -> {
                         SqlJoinQueriesGroupBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
+                    }
 
-                    else -> createTableModificationBlock(lastGroupBlock, child)
+                    else -> {
+                        createTableModificationBlock(lastGroupBlock, child)
+                    }
                 }
             }
 
@@ -224,6 +235,7 @@ class SqlBlockGenerator(
                             )
                         }
                     }
+
                     "from" -> {
                         if (lastGroupBlock is SqlSubGroupBlock) {
                             SqlKeywordBlock(
@@ -238,6 +250,7 @@ class SqlBlockGenerator(
                             )
                         }
                     }
+
                     "where" -> {
                         SqlWhereGroupBlock(
                             child,
@@ -245,11 +258,12 @@ class SqlBlockGenerator(
                         )
                     }
 
-                    "values" ->
+                    "values" -> {
                         SqlValuesGroupBlock(
                             child,
                             sqlBlockFormattingCtx,
                         )
+                    }
 
                     else -> {
                         WithClauseHandler
@@ -344,8 +358,9 @@ class SqlBlockGenerator(
                 return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
             }
 
-            is SqlColumnDefinitionRawGroupBlock ->
+            is SqlColumnDefinitionRawGroupBlock -> {
                 return SqlDataTypeParamBlock(child, sqlBlockFormattingCtx)
+            }
 
             else -> {
                 if (lastGroup is SqlSubGroupBlock) {
@@ -443,15 +458,19 @@ class SqlBlockGenerator(
                         )
                     }
 
-                    lastGroup is SqlWithQueryGroupBlock -> return SqlWithCommonTableGroupBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
+                    lastGroup is SqlWithQueryGroupBlock -> {
+                        return SqlWithCommonTableGroupBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+                    }
 
-                    lastGroup is SqlInsertQueryGroupBlock -> return SqlTableBlock(
-                        child,
-                        sqlBlockFormattingCtx,
-                    )
+                    lastGroup is SqlInsertQueryGroupBlock -> {
+                        return SqlTableBlock(
+                            child,
+                            sqlBlockFormattingCtx,
+                        )
+                    }
                 }
             }
 
@@ -503,10 +522,14 @@ class SqlBlockGenerator(
             isOnKeywordForNonJoin(keywordText, lastGroupBlock) -> {
                 handleOnKeyword(child, lastGroupBlock)
             }
+
             SqlKeywordUtil.isConditionKeyword(keywordText) -> {
                 createConditionBlock(child, lastGroupBlock)
             }
-            else -> SqlSecondOptionKeywordGroupBlock(child, sqlBlockFormattingCtx)
+
+            else -> {
+                SqlSecondOptionKeywordGroupBlock(child, sqlBlockFormattingCtx)
+            }
         }
 
     private fun isOnKeywordForNonJoin(
@@ -531,7 +554,9 @@ class SqlBlockGenerator(
                 SqlKeywordBlock(child, IndentType.ATTACHED, sqlBlockFormattingCtx)
             }
 
-            else -> SqlConflictClauseBlock(child, sqlBlockFormattingCtx)
+            else -> {
+                SqlConflictClauseBlock(child, sqlBlockFormattingCtx)
+            }
         }
     }
 

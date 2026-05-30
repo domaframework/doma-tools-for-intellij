@@ -52,9 +52,12 @@ class SqlFunctionGroupBlock(
         prevBlocksLength: Int,
     ): Int =
         when (parent) {
-            is SqlSubGroupBlock ->
+            is SqlSubGroupBlock -> {
                 prevBlocksLength
+            }
 
-            else -> prevBlocksLength.plus(1)
+            else -> {
+                prevBlocksLength.plus(1)
+            }
         }
 }

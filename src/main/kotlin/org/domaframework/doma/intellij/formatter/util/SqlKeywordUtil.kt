@@ -320,20 +320,34 @@ class SqlKeywordUtil {
             val keyword = keywordText.lowercase()
             return when {
                 isTopKeyword(keyword) -> IndentType.TOP
+
                 isSecondKeyword(keyword) || isSelectSecondOptionKeyword(keyword) || isWithOptionKeyword(keyword) ||
                     isTableModifyKeyword(keyword) -> IndentType.SECOND
+
                 isSecondOptionKeyword(keyword) || isConditionKeyword(keyword) -> IndentType.SECOND_OPTION
+
                 isJoinKeyword(keyword) || isJoinAttachedKeyword(keyword) -> IndentType.JOIN
+
                 isAttachedKeyword(keyword) -> IndentType.ATTACHED
+
                 isThirdKeyword(keyword) -> IndentType.TIRD
+
                 isInlineParentSqlKeyword(keyword) -> IndentType.INLINE
+
                 isInlineSqlKeyword(keyword) -> IndentType.INLINE_SECOND
+
                 isAttributeKeyword(keyword) -> IndentType.ATTRIBUTE
+
                 isLiteralKeyword(keyword) -> IndentType.LITERAL
+
                 isOptionSqlKeyword(keyword) -> IndentType.OPTIONS
+
                 isColumnTypeKeyword(keyword) -> IndentType.COLUMN
+
                 isConflictAttachedKeyword(keyword) -> IndentType.ATTACHED
+
                 isComma(keyword) -> IndentType.COMMA
+
                 else -> IndentType.NONE
             }
         }

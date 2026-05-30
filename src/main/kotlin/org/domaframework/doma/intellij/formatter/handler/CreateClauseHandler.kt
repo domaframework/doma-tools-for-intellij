@@ -71,11 +71,15 @@ object CreateClauseHandler {
             child1 is SqlWhitespaceBlock && child2 is SqlCreateTableColumnDefinitionRawGroupBlock -> {
                 calculateColumnDefinitionSpacing(child2)
             }
+
             child1 is SqlCreateTableColumnDefinitionRawGroupBlock &&
                 (child2 is SqlColumnBlock || child2 is SqlEscapeBlock) -> {
                 calculateColumnSpacing(child1, child2)
             }
-            else -> null
+
+            else -> {
+                null
+            }
         }
 
     private fun calculateColumnDefinitionSpacing(columnDefBlock: SqlCreateTableColumnDefinitionRawGroupBlock): Spacing? {

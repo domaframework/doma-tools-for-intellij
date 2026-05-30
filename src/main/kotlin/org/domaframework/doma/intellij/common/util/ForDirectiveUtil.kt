@@ -121,13 +121,18 @@ class ForDirectiveUtil {
                         item?.textOffset ?: 0,
                     )
                 }
-                SqlTypes.EL_IF ->
+
+                SqlTypes.EL_IF -> {
                     BlockToken(
                         BlockType.IF,
                         element,
                         element.textOffset,
                     )
-                else -> BlockToken(BlockType.END, element, element.textOffset)
+                }
+
+                else -> {
+                    BlockToken(BlockType.END, element, element.textOffset)
+                }
             }
 
         private fun buildDirectiveStack(

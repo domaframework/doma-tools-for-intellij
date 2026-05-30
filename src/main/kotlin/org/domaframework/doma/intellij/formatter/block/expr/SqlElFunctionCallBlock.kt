@@ -44,16 +44,19 @@ class SqlElFunctionCallBlock(
 
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
-            SqlTypes.AT_SIGN ->
+            SqlTypes.AT_SIGN -> {
                 SqlElAtSignBlock(child, context, createSpacingBuilder())
+            }
 
-            SqlTypes.EL_IDENTIFIER ->
+            SqlTypes.EL_IDENTIFIER -> {
                 SqlElIdentifierBlock(child, context)
+            }
 
-            SqlTypes.EL_PARAMETERS ->
+            SqlTypes.EL_PARAMETERS -> {
                 SqlElParametersBlock(child, context)
+            }
 
-            else ->
+            else -> {
                 SqlBlock(
                     child,
                     wrap,
@@ -62,6 +65,7 @@ class SqlElFunctionCallBlock(
                     context.enableFormat,
                     context.formatMode,
                 )
+            }
         }
 
     override fun isLeaf(): Boolean = false

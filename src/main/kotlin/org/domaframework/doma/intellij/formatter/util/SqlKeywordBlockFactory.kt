@@ -133,10 +133,14 @@ class SqlKeywordBlockFactory(
             when {
                 openConditionLoopDirective?.conditionLoopDirective == null &&
                     openConditionLoopDirective?.conditionType?.isElse() == true -> true
+
                 afterConditionLoopCommentBlock -> true
+
                 lastGroupBlock is SqlCreateTableColumnDefinitionGroupBlock ||
                     lastGroupBlock is SqlCreateTableColumnDefinitionRawGroupBlock -> false
+
                 keywordText == "not" && !isInConditionContext(lastGroupBlock) -> true
+
                 else -> false
             }
 

@@ -96,25 +96,29 @@ object CommonPathParameterUtil {
                     val file = folder.file
                     if (file != null) {
                         when (folder.rootType) {
-                            JavaSourceRootType.SOURCE ->
+                            JavaSourceRootType.SOURCE -> {
                                 if (!sourceDirs.contains(file)) {
                                     sourceDirs.add(file)
                                 }
+                            }
 
-                            JavaSourceRootType.TEST_SOURCE ->
+                            JavaSourceRootType.TEST_SOURCE -> {
                                 if (!testSourceDirs.contains(file)) {
                                     testSourceDirs.add(file)
                                 }
+                            }
 
-                            JavaResourceRootType.RESOURCE ->
+                            JavaResourceRootType.RESOURCE -> {
                                 if (!resourceDirs.contains(file)) {
                                     resourceDirs.add(file)
                                 }
+                            }
 
-                            JavaResourceRootType.TEST_RESOURCE ->
+                            JavaResourceRootType.TEST_RESOURCE -> {
                                 if (!testResourceDirs.contains(file)) {
                                     testResourceDirs.add(file)
                                 }
+                            }
                         }
                     }
                 }

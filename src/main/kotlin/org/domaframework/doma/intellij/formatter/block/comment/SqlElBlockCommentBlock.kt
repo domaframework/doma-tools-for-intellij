@@ -82,23 +82,45 @@ open class SqlElBlockCommentBlock(
         when (child.elementType) {
             SqlTypes.GE, SqlTypes.LE, SqlTypes.GT, SqlTypes.LT, SqlTypes.EL_EQ, SqlTypes.EL_NE,
             SqlTypes.PLUS, SqlTypes.MINUS, SqlTypes.ASTERISK, SqlTypes.SLASH, SqlTypes.AT_SIGN,
-            ->
+            -> {
                 SqlOperationBlock(child, context)
+            }
 
             SqlTypes.EL_EQ_EXPR, SqlTypes.EL_NE_EXPR, SqlTypes.EL_GE_EXPR, SqlTypes.EL_GT_EXPR,
             SqlTypes.EL_LE_EXPR, SqlTypes.EL_LT_EXPR, SqlTypes.EL_AND_EXPR, SqlTypes.EL_OR_EXPR,
             SqlTypes.EL_NOT_EXPR, SqlTypes.EL_ADD_EXPR, SqlTypes.EL_SUBTRACT_EXPR,
             SqlTypes.EL_MULTIPLY_EXPR, SqlTypes.EL_DIVIDE_EXPR, SqlTypes.EL_MOD_EXPR,
-            ->
+            -> {
                 SqlElBlockCommentBlock(child, context, createBlockDirectiveCommentSpacingBuilder())
+            }
 
-            SqlTypes.EL_FIELD_ACCESS_EXPR -> SqlElFieldAccessBlock(child, context)
-            SqlTypes.BLOCK_COMMENT_START -> SqlCommentStartBlock(child, context)
-            SqlTypes.BLOCK_COMMENT_END -> SqlCommentEndBlock(child, context)
-            SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR -> SqlElStaticFieldAccessBlock(child, context)
-            SqlTypes.EL_FUNCTION_CALL_EXPR -> SqlElFunctionCallBlock(child, context)
-            SqlTypes.BLOCK_COMMENT_CONTENT -> SqlBlockCommentBlock(child, context)
-            else -> SqlUnknownBlock(child, context)
+            SqlTypes.EL_FIELD_ACCESS_EXPR -> {
+                SqlElFieldAccessBlock(child, context)
+            }
+
+            SqlTypes.BLOCK_COMMENT_START -> {
+                SqlCommentStartBlock(child, context)
+            }
+
+            SqlTypes.BLOCK_COMMENT_END -> {
+                SqlCommentEndBlock(child, context)
+            }
+
+            SqlTypes.EL_STATIC_FIELD_ACCESS_EXPR -> {
+                SqlElStaticFieldAccessBlock(child, context)
+            }
+
+            SqlTypes.EL_FUNCTION_CALL_EXPR -> {
+                SqlElFunctionCallBlock(child, context)
+            }
+
+            SqlTypes.BLOCK_COMMENT_CONTENT -> {
+                SqlBlockCommentBlock(child, context)
+            }
+
+            else -> {
+                SqlUnknownBlock(child, context)
+            }
         }
 
     protected fun createBlockCommentSpacingBuilder(): SqlCustomSpacingBuilder {

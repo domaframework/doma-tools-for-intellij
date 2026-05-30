@@ -92,6 +92,8 @@ open class SqlKeywordBlock(
                 } ?: 1
             }
 
-            else -> parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+            else -> {
+                parentBlock?.indent?.groupIndentLen?.plus(1) ?: 1
+            }
         }
 }

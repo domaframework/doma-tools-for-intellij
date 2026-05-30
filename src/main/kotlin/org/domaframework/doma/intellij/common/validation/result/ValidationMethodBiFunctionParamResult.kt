@@ -44,21 +44,25 @@ class ValidationMethodBiFunctionParamResult(
 
     private fun getCheckParamIndexMessage(index: Int): String =
         when (index) {
-            0 ->
+            0 -> {
                 MessageBundle.message(
                     "inspection.invalid.dao.sqlProcessor.params.biFunction.param.first",
                     DomaClassName.CONFIG.className,
                 )
-            1 ->
+            }
+
+            1 -> {
                 MessageBundle.message(
                     "inspection.invalid.dao.sqlProcessor.params.biFunction.param.second",
                     DomaClassName.PREPARED_SQL.className,
                 )
+            }
 
-            else ->
+            else -> {
                 MessageBundle.message(
                     "inspection.invalid.dao.sqlProcessor.params.biFunction.param.invalid",
                     index,
                 )
+            }
         }
 }

@@ -49,9 +49,18 @@ open class SqlSubQueryGroupBlock(
     override fun createBlockIndentLen(): Int =
         parentBlock?.let { parent ->
             return when (parent) {
-                is SqlWithQuerySubGroupBlock -> return parent.indent.groupIndentLen
-                is SqlJoinQueriesGroupBlock -> return parent.indent.indentLen
-                is SqlJoinGroupBlock -> return parent.indent.groupIndentLen.plus(1)
+                is SqlWithQuerySubGroupBlock -> {
+                    return parent.indent.groupIndentLen
+                }
+
+                is SqlJoinQueriesGroupBlock -> {
+                    return parent.indent.indentLen
+                }
+
+                is SqlJoinGroupBlock -> {
+                    return parent.indent.groupIndentLen.plus(1)
+                }
+
                 else -> {
                     val children = prevChildren?.filter { shouldIncludeChildBlock(it, parent) }?.dropLast(1)
                     // Retrieve the list of child blocks excluding the conditional directive that appears immediately before this block,

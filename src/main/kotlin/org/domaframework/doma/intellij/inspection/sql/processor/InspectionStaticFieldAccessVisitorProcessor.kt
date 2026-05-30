@@ -57,6 +57,7 @@ class InspectionStaticFieldAccessVisitorProcessor(
                 }
                 return
             }
+
             null -> {
                 highlightPropertyNotFoundError(staticAccessor, holder)
                 return

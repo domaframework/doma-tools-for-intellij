@@ -262,13 +262,34 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                             originalText
                         }
                     }
-                    SqlTypes.KEYWORD -> processKeywordElement(element)
-                    SqlTypes.LEFT_PAREN -> processLeftParenElement(element)
-                    SqlTypes.RIGHT_PAREN -> processRightParenElement(element)
-                    SqlTypes.WORD, SqlTypes.FUNCTION_NAME -> processWordElement(element)
-                    SqlTypes.COMMA, SqlTypes.OTHER -> processCommaOtherElement(element)
-                    SqlTypes.BLOCK_COMMENT_START -> processBlockCommentStartElement(element)
-                    else -> getUpperText(element)
+
+                    SqlTypes.KEYWORD -> {
+                        processKeywordElement(element)
+                    }
+
+                    SqlTypes.LEFT_PAREN -> {
+                        processLeftParenElement(element)
+                    }
+
+                    SqlTypes.RIGHT_PAREN -> {
+                        processRightParenElement(element)
+                    }
+
+                    SqlTypes.WORD, SqlTypes.FUNCTION_NAME -> {
+                        processWordElement(element)
+                    }
+
+                    SqlTypes.COMMA, SqlTypes.OTHER -> {
+                        processCommaOtherElement(element)
+                    }
+
+                    SqlTypes.BLOCK_COMMENT_START -> {
+                        processBlockCommentStartElement(element)
+                    }
+
+                    else -> {
+                        getUpperText(element)
+                    }
                 }
             newNextElementText = newText
             newNextElementStartOffset = offset
@@ -351,6 +372,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
                     else -> SINGLE_SPACE
                 }
             }
+
             else -> {
                 when {
                     nextElementText.indexOf(LINE_SEPARATE) >= 0 -> SINGLE_SPACE

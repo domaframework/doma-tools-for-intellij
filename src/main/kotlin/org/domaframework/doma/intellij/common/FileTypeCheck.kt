@@ -23,10 +23,22 @@ import com.intellij.psi.PsiFile
  */
 fun getExtension(type: String): String =
     when (type) {
-        "JAVA" -> "java"
-        "Kotlin" -> "kt"
-        "SQL" -> "sql"
-        "CLASS" -> "class"
+        "JAVA" -> {
+            "java"
+        }
+
+        "Kotlin" -> {
+            "kt"
+        }
+
+        "SQL" -> {
+            "sql"
+        }
+
+        "CLASS" -> {
+            "class"
+        }
+
         else -> {
             ""
         }

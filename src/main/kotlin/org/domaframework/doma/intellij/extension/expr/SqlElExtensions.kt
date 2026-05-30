@@ -47,8 +47,14 @@ fun SqlCustomElCommentExpr.isConditionOrLoopDirective(): Boolean =
 fun SqlElParameters.extractParameterTypes(psiManager: PsiManager): List<PsiType?> =
     this.elExprList.mapNotNull { param ->
         when (param) {
-            is SqlElStaticFieldAccessExpr -> param.extractStaticFieldType()
-            is SqlElFieldAccessExpr -> param.extractFieldType()
+            is SqlElStaticFieldAccessExpr -> {
+                param.extractStaticFieldType()
+            }
+
+            is SqlElFieldAccessExpr -> {
+                param.extractFieldType()
+            }
+
             is SqlElIdExpr -> {
                 val daoMethod = findDaoMethod(this.containingFile)
                 daoMethod
@@ -57,20 +63,33 @@ fun SqlElParameters.extractParameterTypes(psiManager: PsiManager): List<PsiType?
                     ?.find { it.name == param.text }
                     ?.type
             }
+
             is SqlElPrimaryExpr -> {
                 when (param.node.firstChildNode.elementType) {
-                    SqlTypes.EL_NUMBER -> PsiTypes.intType()
+                    SqlTypes.EL_NUMBER -> {
+                        PsiTypes.intType()
+                    }
+
                     SqlTypes.EL_STRING -> {
                         PsiType.getJavaLangString(psiManager, GlobalSearchScope.allScope(param.project))
                     }
-                    SqlTypes.BOOLEAN -> PsiTypes.booleanType()
-                    else -> null
+
+                    SqlTypes.BOOLEAN -> {
+                        PsiTypes.booleanType()
+                    }
+
+                    else -> {
+                        null
+                    }
                 }
             }
+
             is SqlElFunctionCallExpr -> {
                 param.extractFunctionReturnType()
             }
 
-            else -> null
+            else -> {
+                null
+            }
         }
     }

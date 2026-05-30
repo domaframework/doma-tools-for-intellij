@@ -195,7 +195,9 @@ class SqlElConditionLoopCommentBlock(
                     parentGroupIndent
                 }
 
-                else -> parentGroupIndent.plus(1)
+                else -> {
+                    parentGroupIndent.plus(1)
+                }
             }
         }
         return dependsOnBlock?.indent?.indentLen ?: 0
@@ -238,14 +240,17 @@ class SqlElConditionLoopCommentBlock(
 
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
-            SqlTypes.EL_IF_DIRECTIVE, SqlTypes.EL_ELSEIF_DIRECTIVE, SqlTypes.EL_FOR_DIRECTIVE ->
+            SqlTypes.EL_IF_DIRECTIVE, SqlTypes.EL_ELSEIF_DIRECTIVE, SqlTypes.EL_FOR_DIRECTIVE -> {
                 SqlElBlockCommentBlock(
                     child,
                     context,
                     createBlockDirectiveCommentSpacingBuilder(),
                 )
+            }
 
-            else -> SqlUnknownBlock(child, context)
+            else -> {
+                SqlUnknownBlock(child, context)
+            }
         }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean {
@@ -272,7 +277,6 @@ class SqlElConditionLoopCommentBlock(
             when (parent) {
                 is SqlSubGroupBlock -> calculateSubGroupBlockIndent(parent, openConditionLoopDirectiveCount)
                 is SqlKeywordGroupBlock -> calculateKeywordGroupBlockIndent(parent, openConditionLoopDirectiveCount)
-
                 else -> 0
             }
         } ?: 0
@@ -307,7 +311,9 @@ class SqlElConditionLoopCommentBlock(
             // the top-level indentation is already calculated.
             val openConditionLoopDirectiveCount = getOpenDirectiveCount(builder)
             when (parent) {
-                is SqlSubGroupBlock -> return calculateSubGroupBlockIndent(parent, openConditionLoopDirectiveCount)
+                is SqlSubGroupBlock -> {
+                    return calculateSubGroupBlockIndent(parent, openConditionLoopDirectiveCount)
+                }
 
                 is SqlElConditionLoopCommentBlock -> {
                     if (!conditionType.isStartDirective()) {
@@ -321,8 +327,13 @@ class SqlElConditionLoopCommentBlock(
                     }
                 }
 
-                is SqlKeywordGroupBlock -> return calculateKeywordGroupBlockIndent(parent, openConditionLoopDirectiveCount)
-                else -> return parent.indent.indentLen + openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP
+                is SqlKeywordGroupBlock -> {
+                    return calculateKeywordGroupBlockIndent(parent, openConditionLoopDirectiveCount)
+                }
+
+                else -> {
+                    return parent.indent.indentLen + openConditionLoopDirectiveCount * DIRECTIVE_INDENT_STEP
+                }
             }
         }
         return 0
@@ -363,7 +374,11 @@ class SqlElConditionLoopCommentBlock(
                     val grandIndentLen = grandParent.indent.groupIndentLen
                     return grandIndentLen + parentGroupIndentLen - DEFAULT_INDENT_OFFSET
                 }
-                is SqlInsertQueryGroupBlock -> return parentGroupIndentLen
+
+                is SqlInsertQueryGroupBlock -> {
+                    return parentGroupIndentLen
+                }
+
                 is SqlColumnRawGroupBlock -> {
                     val grandIndentLen = grandParent.indent.groupIndentLen
                     val prevTextLen = calculatePreviousTextLength(parent)

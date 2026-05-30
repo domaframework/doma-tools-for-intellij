@@ -66,17 +66,21 @@ class DaoMethodParamTypeInspectionVisitor(
             DomaAnnotationType.Procedure, DomaAnnotationType.Function -> {
                 ProcedureParamTypeCheckProcessor(psiDaoMethod, this.shortName)
             }
+
             DomaAnnotationType.SqlProcessor -> {
                 SqlProcessorParamTypeCheckProcessor(
                     psiDaoMethod,
                     this.shortName,
                 )
             }
-            DomaAnnotationType.MultiInsert ->
+
+            DomaAnnotationType.MultiInsert -> {
                 MultiInsertParamTypeCheckProcessor(
                     psiDaoMethod,
                     this.shortName,
                 )
+            }
+
             DomaAnnotationType.Script -> {
                 ScriptParamTypeCheckProcessor(
                     psiDaoMethod,
@@ -93,6 +97,8 @@ class DaoMethodParamTypeInspectionVisitor(
                 )
             }
 
-            DomaAnnotationType.Sql, DomaAnnotationType.Unknown -> null
+            DomaAnnotationType.Sql, DomaAnnotationType.Unknown -> {
+                null
+            }
         }
 }
