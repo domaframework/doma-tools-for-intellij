@@ -15,7 +15,9 @@
  */
 package org.domaframework.doma.intellij.refactor
 
+import com.intellij.openapi.vfs.newvfs.impl.VfsRootAccess
 import org.domaframework.doma.intellij.DomaSqlTest
+import java.nio.file.Paths
 
 /**
  * Refactoring test when changing DAO class name and method name
@@ -32,6 +34,17 @@ class DaoMethodRenameTestCase : DomaSqlTest() {
         addResourceEmptySqlFile(
             "RenameDaoMethod/renameDaoMethodName.sql",
             "RenameDao/renameDaoClassName.sql",
+        )
+        val testDataPath =
+            Paths
+                .get(
+                    "src/test/testData",
+                ).toAbsolutePath()
+                .toString()
+
+        VfsRootAccess.allowRootAccess(
+            testRootDisposable,
+            testDataPath,
         )
     }
 

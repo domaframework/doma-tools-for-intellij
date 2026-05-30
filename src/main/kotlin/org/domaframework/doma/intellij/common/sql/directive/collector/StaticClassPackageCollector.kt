@@ -137,5 +137,5 @@ class StaticClassPackageCollector(
             type.isInterface -> "interface"
             type.isRecord -> "record"
             else -> type.containingFile?.fileType?.name ?: ""
-        }.toString()
+        }
 }

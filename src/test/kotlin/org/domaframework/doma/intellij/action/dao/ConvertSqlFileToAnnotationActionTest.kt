@@ -19,6 +19,8 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.psi.PsiDocumentManager
 import org.domaframework.doma.intellij.action.sql.ConvertSqlFileToAnnotationFromSqlAction
 import org.domaframework.doma.intellij.bundle.MessageBundle
+import java.nio.file.Files.readString
+import java.nio.file.Path
 
 class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
     private val sqlToAnnotationPackage = "sqltoannotation"
@@ -164,7 +166,14 @@ class ConvertSqlFileToAnnotationActionTest : ConvertSqlActionTest() {
 
         val daoClass = findDaoClass("$sqlToAnnotationPackage.$daoName")
         myFixture.configureFromExistingVirtualFile(daoClass.containingFile.virtualFile)
-        myFixture.checkResultByFile("java/doma/example/dao/$sqlToAnnotationPackage/$daoName.after.java")
+
+        val expectedFile =
+            Path.of(
+                getTestDataPath(),
+                "java/doma/example/dao/$sqlToAnnotationPackage/$daoName.after.java",
+            )
+        val expectedText = readString(expectedFile)
+        myFixture.checkResult(expectedText)
 
         val sqlFileAfter = findSqlFile("$sqlToAnnotationPackage/$daoName/$sqlFileName.$extension")
         assertNull("SQL file should be deleted after conversion", sqlFileAfter)

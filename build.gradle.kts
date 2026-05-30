@@ -46,7 +46,7 @@ group = providers.gradleProperty("pluginGroup").get()
 version = providers.gradleProperty("pluginVersion").get()
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 repositories {
@@ -387,9 +387,7 @@ tasks.register<Task>("updateChangelog") {
                             assigned = true
                             when (version) {
                                 "major" -> versionInfo.updateMajor()
-
                                 "minor" -> versionInfo.updateMinor()
-
                                 "patch" -> versionInfo.updatePatch()
                             }
                         }

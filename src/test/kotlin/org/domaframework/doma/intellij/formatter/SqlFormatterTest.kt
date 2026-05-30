@@ -20,6 +20,8 @@ import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import org.domaframework.doma.intellij.setting.SettingComponent
 import org.domaframework.doma.intellij.setting.state.DomaToolsFormatEnableSettings
+import java.nio.file.Files.readString
+import java.nio.file.Path
 
 class SqlFormatterTest : BasePlatformTestCase() {
     override fun getBasePath(): String = "src/test/testData/sql/formatter"
@@ -319,6 +321,13 @@ class SqlFormatterTest : BasePlatformTestCase() {
                     arrayListOf(currentFile.textRange),
                 )
             }
-        myFixture.checkResultByFile(afterFile)
+
+        val expectedFile =
+            Path.of(
+                getTestDataPath(),
+                afterFile,
+            )
+        val expectedText = readString(expectedFile)
+        myFixture.checkResult(expectedText)
     }
 }

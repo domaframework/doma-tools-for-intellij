@@ -19,6 +19,8 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.psi.PsiDocumentManager
 import org.domaframework.doma.intellij.DomaSqlTest
+import java.nio.file.Files.readString
+import java.nio.file.Path
 
 abstract class ConvertSqlActionTest : DomaSqlTest() {
     protected fun doConvertAction(
@@ -41,7 +43,14 @@ abstract class ConvertSqlActionTest : DomaSqlTest() {
         assertEquals(convertFamilyName, intention.familyName)
 
         myFixture.launchAction(intention)
-        myFixture.checkResultByFile("java/doma/example/dao/$sqlConversionPackage/$daoName.after.java")
+        val expectedFile =
+            Path.of(
+                getTestDataPath(),
+                "/java/doma/example/dao/$sqlConversionPackage/$daoName.after.java",
+            )
+        val expectedText = readString(expectedFile)
+
+        myFixture.checkResult(expectedText)
     }
 
     /**
@@ -109,6 +118,12 @@ abstract class ConvertSqlActionTest : DomaSqlTest() {
         }
         fdm.getDocument(newSqlFile)?.let { fdm.reloadFromDisk(it) }
         myFixture.configureFromExistingVirtualFile(newSqlFile)
-        myFixture.checkResultByFile("resources/META-INF/doma/example/dao/$sqlConversionPackage/$daoName/$sqlFileName.after.$extension")
+        val expectedFile =
+            Path.of(
+                getTestDataPath(),
+                "resources/META-INF/doma/example/dao/$sqlConversionPackage/$daoName/$sqlFileName.after.$extension",
+            )
+        val expectedText = readString(expectedFile)
+        myFixture.checkResult(expectedText)
     }
 }

@@ -16,6 +16,7 @@
 package org.domaframework.doma.intellij.inspection.sql.processor
 
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import org.domaframework.doma.intellij.common.CommonPathParameterUtil
@@ -29,7 +30,6 @@ import org.domaframework.doma.intellij.common.validation.result.ValidationResult
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.psi.psiClassType
 import org.domaframework.doma.intellij.psi.SqlElFunctionCallExpr
-import org.jetbrains.kotlin.idea.util.projectStructure.module
 
 class InspectionFunctionCallVisitorProcessor(
     val shortName: String,
@@ -47,7 +47,7 @@ class InspectionFunctionCallVisitorProcessor(
 
     private fun getFunctionCallValidationResult(): ValidationResult? {
         val project = element.project
-        val module = element.module ?: return null
+        val module = ModuleUtilCore.findModuleForPsiElement(element) ?: return null
         val expressionHelper = ExpressionFunctionsHelper
         val expressionFunctionalInterface = expressionHelper.setExpressionFunctionsInterface(project)
         val functionName = element.elIdExpr
@@ -110,7 +110,7 @@ class InspectionFunctionCallVisitorProcessor(
 
     private fun getFunctionCall(): PsiMethod? {
         val project = element.project
-        val module = element.module ?: return null
+        val module = ModuleUtilCore.findModuleForPsiElement(element) ?: return null
         val expressionHelper = ExpressionFunctionsHelper
         val expressionFunctionalInterface = expressionHelper.setExpressionFunctionsInterface(project)
         val functionName = element.elIdExpr
