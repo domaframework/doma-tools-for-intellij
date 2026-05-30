@@ -26,8 +26,6 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-24.04
-    outputs:
-      pluginVerifierHomeDir: ${{ steps.properties.outputs.pluginVerifierHomeDir }}
     steps:
       - name: Fetch Sources
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
@@ -43,13 +41,6 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
-
-      - name: Export Properties
-        id: properties
-        shell: bash
-        run: |
-          PROPERTIES="$(./gradlew properties --console=plain -q)"
-          echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
 
       - name: Cache Lexer and Parser
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -67,9 +58,6 @@ jobs:
       - name: Generate Parser
         if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
         run: ./gradlew generateParser
-
-      - name: Build Gradle
-        run: ./gradlew build -x test
 
       - name: Resolve release version
         run: |
@@ -115,7 +103,6 @@ jobs:
 
   test:
     name: Test
-    needs: [ build ]
     runs-on: ubuntu-24.04
     steps:
       - name: Fetch Sources
@@ -167,7 +154,8 @@ jobs:
 
   verify:
     name: Verify plugin
-    needs: [ build ]
+    # Plugin compatibility verification is a release gate: run only on push to main, not on every PR.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     steps:
       - name: Maximize Build Space
@@ -210,11 +198,11 @@ jobs:
       - name: Setup Plugin Verifier IDEs Cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
-          path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
+          path: ~/.pluginVerifier/ides
           key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
 
       - name: Run Plugin Verification tasks
-        run: ./gradlew verifyPlugin -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
+        run: ./gradlew verifyPlugin -Dplugin.verifier.home.dir=~/.pluginVerifier
 
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}
