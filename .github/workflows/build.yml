@@ -42,23 +42,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6
 
-      - name: Cache Lexer and Parser
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
-        id: cache-lexer-parser
-        with:
-          path: ${{ github.workspace }}/src/main/gen
-          key: lexer-parser-${{ hashFiles('**/Sql.bnf','**/Sql.flex') }}
-          restore-keys: |
-            lexer-parser-
-
-      - name: Generate Lexer
-        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
-        run: ./gradlew generateLexer
-
-      - name: Generate Parser
-        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
-        run: ./gradlew generateParser
-
       - name: Resolve release version
         run: |
           # Draft releases are only visible to tokens with write access, so
@@ -119,23 +102,6 @@ jobs:
         with:
           cache-read-only: true
 
-      - name: Cache Lexer and Parser
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
-        id: cache-lexer-parser
-        with:
-          path: ${{ github.workspace }}/src/main/gen
-          key: lexer-parser-${{ hashFiles('**/Sql.bnf','**/Sql.flex') }}
-          restore-keys: |
-            lexer-parser-
-
-      - name: Generate Lexer
-        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
-        run: ./gradlew generateLexer
-
-      - name: Generate Parser
-        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
-        run: ./gradlew generateParser
-
       # Run tests
       - name: Run Tests
         run: ./gradlew check
@@ -177,23 +143,6 @@ jobs:
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6
         with:
           cache-read-only: true
-
-      - name: Cache Lexer and Parser
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
-        id: cache-lexer-parser
-        with:
-          path: ${{ github.workspace }}/src/main/gen
-          key: lexer-parser-${{ hashFiles('**/Sql.bnf','**/Sql.flex') }}
-          restore-keys: |
-            lexer-parser-
-
-      - name: Generate Lexer
-        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
-        run: ./gradlew generateLexer
-
-      - name: Generate Parser
-        if: steps.cache-lexer-parser.outputs.cache-hit != 'true'
-        run: ./gradlew generateParser
 
       - name: Setup Plugin Verifier IDEs Cache
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
