@@ -71,17 +71,23 @@ jobs:
       - name: Build Gradle
         run: ./gradlew build -x test
 
-      - name: Get latest draft release title
+      - name: Resolve release version
         run: |
+          # Draft releases are only visible to tokens with write access, so
+          # this returns nothing for pull requests from forks. Fall back to the
+          # pluginVersion declared in gradle.properties in that case.
           TITLE=$(gh api repos/${{ github.repository }}/releases \
             --jq '.[] | select(.draft==true) | .name' | head -n 1)
-          if [[ -z "$TITLE" ]]; then
-            echo "No draft release found."
-            exit 1
-          fi      
-          VERSION=$(echo "$TITLE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          VERSION=""
+          if [[ -n "$TITLE" ]]; then
+            VERSION=$(echo "$TITLE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+          fi
           if [[ -z "$VERSION" ]]; then
-            echo "No version found in version."
+            echo "No draft release version available. Falling back to pluginVersion in gradle.properties."
+            VERSION=$(grep -E '^pluginVersion' gradle.properties | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+          fi
+          if [[ -z "$VERSION" ]]; then
+            echo "No version found."
             exit 1
           fi
           echo "Extracted version: $VERSION"
