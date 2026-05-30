@@ -43,7 +43,7 @@ jobs:
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6
 
       - name: Cache Lexer and Parser
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         id: cache-lexer-parser
         with:
           path: ${{ github.workspace }}/src/main/gen
@@ -120,7 +120,7 @@ jobs:
           cache-read-only: true
 
       - name: Cache Lexer and Parser
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         id: cache-lexer-parser
         with:
           path: ${{ github.workspace }}/src/main/gen
@@ -179,7 +179,7 @@ jobs:
           cache-read-only: true
 
       - name: Cache Lexer and Parser
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         id: cache-lexer-parser
         with:
           path: ${{ github.workspace }}/src/main/gen
@@ -196,7 +196,7 @@ jobs:
         run: ./gradlew generateParser
 
       - name: Setup Plugin Verifier IDEs Cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ~/.pluginVerifier/ides
           key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
