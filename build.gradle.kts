@@ -626,35 +626,6 @@ fun replaceVersion(ver: String) {
 
 val encoding: String by project
 
-tasks.register<Task>("replaceNewVersion") {
-    val releaseVersion =
-        if (project.hasProperty("newVersion")) {
-            project.property("newVersion") as String
-        } else {
-            "0.0.0"
-        }
-
-    doLast {
-        val lastVersions = releaseVersion.substringAfter("v").split(".")
-        val major = lastVersions[0].toInt()
-        val minor = lastVersions[1].toInt()
-        val patch = lastVersions[2].toInt() + 1
-
-        val newVersion = "$major.$minor.$patch-beta"
-        println("Release newVersion: $newVersion")
-        replaceVersion(newVersion)
-        try {
-            val githubEnv = System.getenv("GITHUB_ENV")
-            val envFile = File(githubEnv)
-            envFile.appendText("REPLACE_VERSION=$newVersion\n")
-            println("Set Replace version in GITHUB_ENV: $newVersion")
-        } catch (e: NullPointerException) {
-            println("GITHUB_ENV not found")
-            println(e.stackTrace)
-        }
-    }
-}
-
 tasks.register<Task>("replaceDraftVersion") {
     val draftVersion =
         if (project.hasProperty("draftVersion")) {
