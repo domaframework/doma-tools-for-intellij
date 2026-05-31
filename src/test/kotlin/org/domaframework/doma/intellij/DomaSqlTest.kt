@@ -15,17 +15,12 @@
  */
 package org.domaframework.doma.intellij
 
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.module.Module
-import com.intellij.openapi.projectRoots.JavaSdk
-import com.intellij.openapi.projectRoots.ProjectJdkTable
-import com.intellij.openapi.roots.ModifiableRootModel
 import com.intellij.openapi.roots.ModuleRootModificationUtil
-import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiClass
+import com.intellij.testFramework.LightProjectDescriptor
 import com.intellij.testFramework.PsiTestUtil
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import org.domaframework.doma.intellij.common.CommonPathParameterUtil
@@ -44,10 +39,16 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
 
     override fun getTestDataPath(): String = "src/test/testData/src/main/"
 
+    /**
+     * Share a single descriptor instance across every test class so the light
+     * fixture reuses the same project and its (real) JDK instead of recreating
+     * the SDK in each test's setUp.
+     */
+    override fun getProjectDescriptor(): LightProjectDescriptor = SHARED_DESCRIPTOR
+
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        settingJdk()
         setDirectoryRoot()
         addLibrary("doma-core-3.11.0.jar", "doma-core")
 
@@ -70,7 +71,6 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
     @Throws(Exception::class)
     override fun tearDown() {
         try {
-            deleteSdk()
             CommonPathParameterUtil.clearCache()
         } finally {
             super.tearDown()
@@ -100,33 +100,6 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
             libPath,
             jarName,
         )
-    }
-
-    private fun settingJdk() {
-        deleteSdk()
-        setUpJdk(myFixture.module)
-    }
-
-    private fun setUpJdk(module: Module) {
-        val newJdk =
-            JavaSdk.getInstance().createJdk("Doma Test JDK", System.getProperty("java.home"), false)
-
-        WriteAction.runAndWait<RuntimeException> {
-            ProjectJdkTable.getInstance().addJdk(newJdk)
-            ModuleRootModificationUtil.updateModel(module) { model: ModifiableRootModel ->
-                model.sdk = newJdk
-            }
-        }
-    }
-
-    private fun deleteSdk() {
-        val oldJdk = ProjectJdkTable.getInstance().findJdk("Doma Test JDK") ?: return
-        WriteAction.runAndWait<RuntimeException> {
-            ProjectJdkTable.getInstance().removeJdk(oldJdk)
-            if (oldJdk is Disposable) {
-                Disposer.dispose(oldJdk)
-            }
-        }
     }
 
     private fun setDirectoryRoot() {
@@ -262,5 +235,9 @@ open class DomaSqlTest : LightJavaCodeInsightFixtureTestCase() {
             "main/java/$packagePath/expression/$fileName",
             file.readText(),
         )
+    }
+
+    companion object {
+        private val SHARED_DESCRIPTOR: LightProjectDescriptor = DomaProjectDescriptor()
     }
 }

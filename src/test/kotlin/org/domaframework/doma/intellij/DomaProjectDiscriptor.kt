@@ -32,7 +32,9 @@
 
 package org.domaframework.doma.intellij
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.ContentEntry
 import com.intellij.openapi.roots.ModifiableRootModel
@@ -41,7 +43,15 @@ import com.intellij.testFramework.IdeaTestUtil
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor
 
 class DomaProjectDescriptor : DefaultLightProjectDescriptor() {
-    override fun getSdk(): Sdk = IdeaTestUtil.getMockJdk21()
+    /**
+     * Reuse a single real JDK created from the running [java.home] across every
+     * test class. The entities under test reference classes such as
+     * java.time.LocalDate and java.util.Optional that the lightweight mock JDK
+     * does not provide, so a real JDK is required. Creating it scans the JDK
+     * home, which is expensive, so the result is cached and shared instead of
+     * being rebuilt in every test's setUp.
+     */
+    override fun getSdk(): Sdk = sharedJdk
 
     override fun configureModule(
         module: Module,
@@ -49,5 +59,17 @@ class DomaProjectDescriptor : DefaultLightProjectDescriptor() {
         contentEntry: ContentEntry,
     ) {
         IdeaTestUtil.setModuleLanguageLevel(module, LanguageLevel.JDK_21)
+    }
+
+    companion object {
+        private val sharedJdk: Sdk by lazy {
+            ApplicationManager.getApplication().runWriteAction<Sdk> {
+                JavaSdk.getInstance().createJdk(
+                    "Doma Test JDK",
+                    System.getProperty("java.home"),
+                    false,
+                )
+            }
+        }
     }
 }
