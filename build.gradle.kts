@@ -87,6 +87,8 @@ dependencies {
 
         bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
 
+        bundledModules(providers.gradleProperty("platformBundledModules").map { it.split(',') })
+
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
 
         pluginVerifier(version = "${libs.pluginVerifier.get().version}")
