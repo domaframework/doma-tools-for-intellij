@@ -60,7 +60,7 @@ class SqlEscapeBlock(
                 }
 
                 else -> {
-                    if (isSaveSpace(parentBlock) || conditionLoopDirective != null)return parentBlock?.indent?.groupIndentLen ?: 1
+                    if (isSaveSpace(parentBlock) || conditionLoopDirective != null) return parentBlock?.indent?.groupIndentLen ?: 1
                     return 1
                 }
             }

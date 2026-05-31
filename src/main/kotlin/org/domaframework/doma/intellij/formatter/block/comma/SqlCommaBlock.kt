@@ -135,10 +135,14 @@ open class SqlCommaBlock(
                 return parentIndentLen.plus(1)
             } else {
                 return when (parent) {
-                    is SqlValuesGroupBlock -> parent.indent.indentLen
+                    is SqlValuesGroupBlock -> {
+                        parent.indent.indentLen
+                    }
+
                     is SqlTableModifySecondGroupBlock -> {
                         parent.indent.indentLen
                     }
+
                     else -> {
                         // No indent after ORDER BY within function parameters
                         val grand = parent.parentBlock

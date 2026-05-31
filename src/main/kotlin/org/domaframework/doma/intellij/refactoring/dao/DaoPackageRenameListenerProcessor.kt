@@ -169,7 +169,9 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
                                     e.printStackTrace()
                                 }
 
-                                else -> throw IncorrectOperationException(e)
+                                else -> {
+                                    throw IncorrectOperationException(e)
+                                }
                             }
                         }
                     }
@@ -180,13 +182,19 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
 
     private fun getPsiPackage(newElement: PsiElement): PsiPackage? =
         when (newElement) {
-            is PsiPackage -> newElement
-            is PsiClass, is PsiJavaFile ->
+            is PsiPackage -> {
+                newElement
+            }
+
+            is PsiClass, is PsiJavaFile -> {
                 JavaDirectoryService
                     .getInstance()
                     .getPackage(newElement.containingFile.containingDirectory)
+            }
 
-            else -> null
+            else -> {
+                null
+            }
         }
 
     private fun getModule(element: PsiElement): Module? =
@@ -204,8 +212,13 @@ class DaoPackageRenameListenerProcessor : RefactoringElementListenerProvider {
                 ModuleUtilCore.findModuleForFile(element.containingFile)
             }
 
-            is PsiDirectory -> element.module
-            else -> null
+            is PsiDirectory -> {
+                element.module
+            }
+
+            else -> {
+                null
+            }
         }
 
     private fun isPackageElement(element: PsiElement): Boolean =

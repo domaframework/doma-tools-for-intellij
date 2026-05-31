@@ -77,7 +77,10 @@ class SqlCustomSpacingBuilder {
         }
 
         when (child1) {
-            null -> return nonSpacing
+            null -> {
+                return nonSpacing
+            }
+
             is SqlWhitespaceBlock -> {
                 val indentLen: Int = child2.indent.indentLen
                 val afterNewLine = child1.getNodeText().substringAfterLast(StringUtil.LINE_SEPARATE, "")

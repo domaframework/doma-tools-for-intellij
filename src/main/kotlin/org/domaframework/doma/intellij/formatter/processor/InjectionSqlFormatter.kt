@@ -221,10 +221,14 @@ class InjectionSqlFormatter(
         val normalizedLines =
             contentLines.map { line ->
                 when {
-                    line.isBlank() -> line
-                    else ->
+                    line.isBlank() -> {
+                        line
+                    }
+
+                    else -> {
                         baseIndent +
                             line
+                    }
                 }
             }
 

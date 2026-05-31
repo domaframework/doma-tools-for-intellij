@@ -33,19 +33,25 @@ class SqlElPrimaryBlock(
     ) {
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
-            SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN ->
+            SqlTypes.LEFT_PAREN, SqlTypes.RIGHT_PAREN -> {
                 SqlElSymbolBlock(child, context)
+            }
 
-            SqlTypes.EL_PRIMARY_EXPR ->
+            SqlTypes.EL_PRIMARY_EXPR -> {
                 SqlElPrimaryBlock(child, context)
+            }
 
-            SqlTypes.COMMA ->
+            SqlTypes.COMMA -> {
                 SqlElCommaBlock(child, context)
+            }
 
-            SqlTypes.EL_NUMBER, SqlTypes.EL_STRING, SqlTypes.BOOLEAN, SqlTypes.EL_NULL ->
+            SqlTypes.EL_NUMBER, SqlTypes.EL_STRING, SqlTypes.BOOLEAN, SqlTypes.EL_NULL -> {
                 SqlLiteralBlock(child, context)
+            }
 
-            else -> SqlUnknownBlock(child, context)
+            else -> {
+                SqlUnknownBlock(child, context)
+            }
         }
 
     override fun getSpacing(

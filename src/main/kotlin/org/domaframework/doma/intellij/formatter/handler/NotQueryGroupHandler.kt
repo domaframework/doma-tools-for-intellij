@@ -112,10 +112,13 @@ object NotQueryGroupHandler {
     ): SqlBlock {
         val prevChild = lastGroup?.childBlocks?.lastOrNull()
         return when {
-            prevChild is SqlAliasBlock || prevChild is SqlTableBlock ->
+            prevChild is SqlAliasBlock || prevChild is SqlTableBlock -> {
                 SqlValuesParamGroupBlock(child, sqlBlockFormattingCtx)
-            else ->
+            }
+
+            else -> {
                 SqlFunctionParamBlock(child, sqlBlockFormattingCtx)
+            }
         }
     }
 

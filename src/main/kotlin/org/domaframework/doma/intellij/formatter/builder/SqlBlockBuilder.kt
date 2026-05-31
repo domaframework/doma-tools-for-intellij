@@ -73,8 +73,7 @@ open class SqlBlockBuilder {
      * but the indentation is aligned with the next block.
      */
     fun updateCommentBlockIndent(nextBlock: SqlBlock) {
-        if (commentBlocks.isNotEmpty() &&
-            nextBlock.parentBlock != null ||
+        if ((commentBlocks.isNotEmpty() && nextBlock.parentBlock != null) ||
             groupTopNodeIndexHistory.size <= 2
         ) {
             var index = 0

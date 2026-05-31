@@ -48,23 +48,29 @@ class SqlElFieldAccessBlock(
 
     override fun getBlock(child: ASTNode): SqlBlock =
         when (child.elementType) {
-            SqlTypes.EL_IDENTIFIER, SqlTypes.EL_ID_EXPR -> SqlElIdentifierBlock(child, context)
+            SqlTypes.EL_IDENTIFIER, SqlTypes.EL_ID_EXPR -> {
+                SqlElIdentifierBlock(child, context)
+            }
 
             SqlTypes.EL_PRIMARY_EXPR -> {
                 SqlElPrimaryBlock(child, context)
             }
 
-            SqlTypes.DOT ->
+            SqlTypes.DOT -> {
                 SqlElDotBlock(child, context)
+            }
 
-            SqlTypes.EL_IDENTIFIER ->
+            SqlTypes.EL_IDENTIFIER -> {
                 SqlElIdentifierBlock(child, context)
+            }
 
-            SqlTypes.EL_PARAMETERS ->
+            SqlTypes.EL_PARAMETERS -> {
                 SqlElParametersBlock(child, context)
+            }
 
-            else ->
+            else -> {
                 SqlUnknownBlock(child, context)
+            }
         }
 
     override fun getSpacing(

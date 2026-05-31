@@ -49,13 +49,18 @@ class InspectionFieldAccessVisitorProcessor(
      */
     fun checkBindVariableDefine(holder: ProblemsHolder) {
         when (val topElementClass = resolveTopElementType(targetFile)) {
-            is DummyPsiParentClass -> return
+            is DummyPsiParentClass -> {
+                return
+            }
+
             null -> {
                 handleNullTopElementClass(holder)
                 return
             }
 
-            else -> checkFieldAccess(topElementClass, holder)
+            else -> {
+                checkFieldAccess(topElementClass, holder)
+            }
         }
     }
 
@@ -65,7 +70,6 @@ class InspectionFieldAccessVisitorProcessor(
     fun getFieldAccessLastPropertyClassType(): PsiType? =
         when (val topElementClass = resolveTopElementType(targetFile)) {
             is DummyPsiParentClass, null -> null
-
             else -> getLastFieldAccess(topElementClass).type
         }
 

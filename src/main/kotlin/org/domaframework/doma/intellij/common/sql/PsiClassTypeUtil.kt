@@ -77,12 +77,14 @@ class PsiClassTypeUtil {
                     when (resolved.qualifiedName) {
                         // If the type is java.util.Optional, return its parameter type if available;
                         // otherwise, return the original daoParamType.
-                        DomaClassName.OPTIONAL.className -> return daoParamType.parameters.firstOrNull()
-                            ?: daoParamType
+                        DomaClassName.OPTIONAL.className -> {
+                            return daoParamType.parameters.firstOrNull()
+                                ?: daoParamType
+                        }
 
                         // For primitive Optional types (e.g., OptionalInt, OptionalDouble),
                         // map them to their corresponding wrapper types (e.g., Integer, Double).
-                        else ->
+                        else -> {
                             optionalTypeMap[resolved.qualifiedName]?.let { optionalType ->
                                 val newType =
                                     PsiType.getTypeByName(
@@ -92,6 +94,7 @@ class PsiClassTypeUtil {
                                     )
                                 return newType
                             }
+                        }
                     }
                 }
             }

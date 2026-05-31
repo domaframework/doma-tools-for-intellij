@@ -63,13 +63,14 @@ class SqlFormatVisitor : PsiRecursiveElementVisitor() {
                     }
                 }
 
-                SqlTypes.BLOCK_COMMENT ->
+                SqlTypes.BLOCK_COMMENT -> {
                     if (
                         element is SqlCustomElCommentExpr &&
                         element.isConditionOrLoopDirective()
                     ) {
                         replaces.add(element)
                     }
+                }
             }
         }
     }

@@ -48,16 +48,21 @@ class SqlElStaticFieldAccessBlock(
                 }
             }
 
-            SqlTypes.EL_CLASS ->
+            SqlTypes.EL_CLASS -> {
                 SqlElClassBlock(child, context, null)
+            }
 
-            SqlTypes.EL_IDENTIFIER, SqlTypes.EL_ID_EXPR, SqlTypes.EL_PRIMARY_EXPR ->
+            SqlTypes.EL_IDENTIFIER, SqlTypes.EL_ID_EXPR, SqlTypes.EL_PRIMARY_EXPR -> {
                 SqlElIdentifierBlock(child, context)
+            }
 
-            SqlTypes.EL_PARAMETERS ->
+            SqlTypes.EL_PARAMETERS -> {
                 SqlElParametersBlock(child, context)
+            }
 
-            else -> SqlUnknownBlock(child, context)
+            else -> {
+                SqlUnknownBlock(child, context)
+            }
         }
 
     override fun getSpacing(

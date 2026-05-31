@@ -80,8 +80,9 @@ class SqlColumnRawGroupBlock(
                 } ?: offset
             }
 
-            else ->
+            else -> {
                 parentBlock?.indent?.groupIndentLen?.plus(1) ?: offset
+            }
         }
 
     override fun isSaveSpace(lastGroup: SqlBlock?): Boolean = !isFirstColumnGroup

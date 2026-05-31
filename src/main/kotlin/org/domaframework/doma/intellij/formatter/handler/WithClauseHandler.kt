@@ -47,7 +47,9 @@ object WithClauseHandler {
                 }
             }
 
-            is SqlWithQuerySubGroupBlock -> return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
+            is SqlWithQuerySubGroupBlock -> {
+                return SqlSubQueryGroupBlock(child, sqlBlockFormattingCtx)
+            }
         }
         return null
     }

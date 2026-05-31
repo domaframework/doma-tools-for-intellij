@@ -24,7 +24,7 @@ import kotlin.test.Ignore
  */
 @Ignore
 class AnnotationOptionParameterInspectionTest : DomaSqlTest() {
-    /**
+    /*
      * Since error highlight tags for annotation options cannot be set in the test data, verify manually.
      * There are no automated test cases, so perform manual checks using the following as a reference.
      *

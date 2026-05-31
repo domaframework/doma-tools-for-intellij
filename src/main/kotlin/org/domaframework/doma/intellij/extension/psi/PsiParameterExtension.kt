@@ -35,7 +35,10 @@ fun PsiParameter.isIgnoreUsageCheck(): Boolean =
                 val clazzType = this.type as? PsiClassType
                 clazzType?.rawType()?.canonicalText == type.className
             }
-            else -> getSuperClassType(type) != null
+
+            else -> {
+                getSuperClassType(type) != null
+            }
         }
     }
 

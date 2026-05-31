@@ -76,11 +76,12 @@ class DaoMethodReturnTypeInspectionVisitor(
                 )
             }
 
-            DomaAnnotationType.MultiInsert ->
+            DomaAnnotationType.MultiInsert -> {
                 MultiInsertReturnTypeCheckProcessor(
                     psiDaoMethod,
                     this.shortName,
                 )
+            }
 
             DomaAnnotationType.Script -> {
                 ScriptReturnTypeCheckProcessor(
@@ -105,6 +106,8 @@ class DaoMethodReturnTypeInspectionVisitor(
                 )
             }
 
-            else -> null
+            else -> {
+                null
+            }
         }
 }

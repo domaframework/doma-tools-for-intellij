@@ -671,7 +671,9 @@ open class SqlFileBlock(
                     }
                 }
 
-                is SqlDataTypeParamBlock -> return SqlCustomSpacingBuilder.nonSpacing
+                is SqlDataTypeParamBlock -> {
+                    return SqlCustomSpacingBuilder.nonSpacing
+                }
             }
         }
 
@@ -681,16 +683,18 @@ open class SqlFileBlock(
             ?.let { return it }
 
         when (childBlock2) {
-            is SqlColumnDefinitionRawGroupBlock ->
+            is SqlColumnDefinitionRawGroupBlock -> {
                 SqlCustomSpacingBuilder()
                     .getSpacingColumnDefinitionRaw(
                         childBlock2,
                     )?.let { return it }
+            }
 
-            is SqlColumnBlock ->
+            is SqlColumnBlock -> {
                 SqlCustomSpacingBuilder()
                     .getSpacingColumnDefinition(childBlock2)
                     ?.let { return it }
+            }
         }
 
         if (childBlock2 is SqlCommaBlock || childBlock2 is SqlColumnRawGroupBlock) {
@@ -715,13 +719,13 @@ open class SqlFileBlock(
         childBlock1: SqlBlock?,
         childBlock2: SqlBlock,
     ): Boolean =
-        childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElSymbolBlock ||
-            childBlock1 is SqlElAtSignBlock && childBlock2 is SqlElSymbolBlock ||
-            childBlock1 is SqlOtherBlock && childBlock2 is SqlElSymbolBlock ||
-            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElAtSignBlock ||
-            childBlock1 is SqlOtherBlock && childBlock2 is SqlOtherBlock ||
-            childBlock1 is SqlElSymbolBlock && childBlock2 is SqlOtherBlock ||
-            childBlock1 !is SqlRightPatternBlock && childBlock1?.isOperationSymbol() == true && childBlock2.isOperationSymbol()
+        (childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElSymbolBlock) ||
+            (childBlock1 is SqlElAtSignBlock && childBlock2 is SqlElSymbolBlock) ||
+            (childBlock1 is SqlOtherBlock && childBlock2 is SqlElSymbolBlock) ||
+            (childBlock1 is SqlElSymbolBlock && childBlock2 is SqlElAtSignBlock) ||
+            (childBlock1 is SqlOtherBlock && childBlock2 is SqlOtherBlock) ||
+            (childBlock1 is SqlElSymbolBlock && childBlock2 is SqlOtherBlock) ||
+            (childBlock1 !is SqlRightPatternBlock && childBlock1?.isOperationSymbol() == true && childBlock2.isOperationSymbol())
 
     override fun isLeaf(): Boolean = false
 

@@ -162,13 +162,17 @@ class SqlBlockRelationBuilder(
                     val block = blockBuilder.getGroupTopNodeIndexHistory()[topKeywordIndex]
                     block.parentBlock to topKeywordIndex
                 }
+
                 // If a top-level keyword is found before a subquery, make the subquery group the parent
                 topKeywordIndex > subGroupIndex -> {
                     val block = blockBuilder.getGroupTopNodeIndexHistory()[subGroupIndex]
                     block to topKeywordIndex
                 }
+
                 // If neither a subquery nor a top-level keyword is found, don't set a parent
-                else -> null to -1
+                else -> {
+                    null to -1
+                }
             }
 
         // Remove top-level keywords from the group list
@@ -189,22 +193,28 @@ class SqlBlockRelationBuilder(
             lastGroupBlock.indent.indentLevel == IndentType.SUB -> {
                 setParentGroups(context) { lastGroupBlock }
             }
+
             lastIndentLevel == childBlock.indent.indentLevel -> {
                 handleSameLevelKeyword(lastGroupBlock, childBlock, context)
             }
+
             lastIndentLevel < childBlock.indent.indentLevel -> {
                 updateGroupBlockParentAndAddGroup(childBlock)
             }
+
             shouldHandleJoinKeyword(lastIndentLevel, childBlock) -> {
                 updateGroupBlockParentAndAddGroup(childBlock)
             }
-            childBlock is SqlTableModifySecondGroupBlock ->
+
+            childBlock is SqlTableModifySecondGroupBlock -> {
                 setParentGroups(context) { history ->
                     history.lastOrNull {
                         it is SqlColumnRawGroupBlock ||
                             it.indent.indentLevel < childBlock.indent.indentLevel
                     }
                 }
+            }
+
             else -> {
                 setParentGroups(context) { history ->
                     getLastGroupKeywordText(history, childBlock) ?: history.lastOrNull()
@@ -289,9 +299,13 @@ class SqlBlockRelationBuilder(
             val lastGroup = history.findLast { it is SqlTopQueryGroupBlock }
             when {
                 lastGroup is SqlUpdateQueryGroupBlock &&
-                    lastGroup.parentBlock is SqlDoGroupBlock ->
+                    lastGroup.parentBlock is SqlDoGroupBlock -> {
                     lastGroup.parentBlock
-                else -> lastGroup
+                }
+
+                else -> {
+                    lastGroup
+                }
             }
         }
     }
