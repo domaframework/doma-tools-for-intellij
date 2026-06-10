@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+## [2.5.1] - 2026-06-10
+
+### Maintenance
+
+- ci: remove redundant version bump from release workflow ([#555])
+- Drop redundant Grammar-Kit steps from release workflow ([#549])
+
+### Dependency Updates
+
+- Update gradle/actions digest to 5e2ebd0 ([#565])
+- Update org.jetbrains.kotlin to v2.4.0 ([#561])
+- Update dependency ch.qos.logback:logback-classic to v1.5.34 ([#559])
+- Update dependency com.pinterest.ktlint:ktlint-cli to v1.8.0 ([#489])
+- Update release-drafter/release-drafter action to v7 ([#526])
+- Update dependency org.jetbrains.qodana to v2026 ([#554])
+- Update plugin spotless to v8.6.0 ([#553])
+- Update Gradle to v9.5.1 ([#552])
+- Update dependency org.jetbrains.intellij.plugins:verifier-cli to v1.405 ([#550])
+
+[#555]:https://github.com/domaframework/doma-tools-for-intellij/pull/555
+[#549]:https://github.com/domaframework/doma-tools-for-intellij/pull/549
+[#565]:https://github.com/domaframework/doma-tools-for-intellij/pull/565
+[#561]:https://github.com/domaframework/doma-tools-for-intellij/pull/561
+[#559]:https://github.com/domaframework/doma-tools-for-intellij/pull/559
+[#489]:https://github.com/domaframework/doma-tools-for-intellij/pull/489
+[#526]:https://github.com/domaframework/doma-tools-for-intellij/pull/526
+[#554]:https://github.com/domaframework/doma-tools-for-intellij/pull/554
+[#553]:https://github.com/domaframework/doma-tools-for-intellij/pull/553
+[#552]:https://github.com/domaframework/doma-tools-for-intellij/pull/552
+[#550]:https://github.com/domaframework/doma-tools-for-intellij/pull/550
+
+
 ## [2.5.0] - 2026-05-30
 
 ### New Features
@@ -667,3 +699,4 @@
 [#102]: https://github.com/domaframework/doma-tools-for-intellij/pull/102
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
 [2.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.4.0...2.5.0
+[2.5.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.5.0...2.5.1
