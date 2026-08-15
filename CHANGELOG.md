@@ -4,12 +4,19 @@
 
 ## [2.5.1] - 2026-08-15
 
+### Bug Fixes
+
+- Fix DAO/SQL navigation on IntelliJ IDEA 2026.2 ([#590])
+- fix: declare intelliLang as a bundled module for IntelliJ Platform 2.16.0 ([#556])
+
 ### Maintenance
 
 - ci: remove redundant version bump from release workflow ([#555])
+- Drop redundant Grammar-Kit steps from release workflow ([#549])
 
 ### Dependency Updates
 
+- Update org.jetbrains.kotlin ([#587])
 - Update dependency org.jetbrains.grammarkit to v2023.3.0.4 ([#586])
 - Update actions/cache digest to caa2961 ([#578])
 - Update codecov/codecov-action action to v7 ([#564])
@@ -38,7 +45,11 @@
 - Update Gradle to v9.5.1 ([#552])
 - Update dependency org.jetbrains.intellij.plugins:verifier-cli to v1.405 ([#550])
 
+[#590]:https://github.com/domaframework/doma-tools-for-intellij/pull/590
+[#556]:https://github.com/domaframework/doma-tools-for-intellij/pull/556
 [#555]:https://github.com/domaframework/doma-tools-for-intellij/pull/555
+[#549]:https://github.com/domaframework/doma-tools-for-intellij/pull/549
+[#587]:https://github.com/domaframework/doma-tools-for-intellij/pull/587
 [#586]:https://github.com/domaframework/doma-tools-for-intellij/pull/586
 [#578]:https://github.com/domaframework/doma-tools-for-intellij/pull/578
 [#564]:https://github.com/domaframework/doma-tools-for-intellij/pull/564
