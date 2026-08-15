@@ -5,6 +5,7 @@ import org.gradle.internal.classpath.Instrumented.systemProperty
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.net.URL
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -45,8 +46,19 @@ grammarKit {
 group = providers.gradleProperty("pluginGroup").get()
 version = providers.gradleProperty("pluginVersion").get()
 
+// IntelliJ Platform 2026.2 ships Java 25 class files, so the compilers have to run on a JDK 25
+// toolchain to be able to read them. The bytecode we emit stays at Java 21, the runtime of the
+// oldest IDE this plugin supports (pluginSinceBuild 252 / IntelliJ IDEA 2025.2).
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
