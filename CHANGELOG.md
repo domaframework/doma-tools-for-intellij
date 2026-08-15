@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [2.5.2] - 2026-08-15
+
+### Dependency Updates
+
+- Update Gradle to v9.7.0 ([#592])
+
+[#592]:https://github.com/domaframework/doma-tools-for-intellij/pull/592
+
+
 ## [2.5.1] - 2026-08-15
 
 ### Bug Fixes
@@ -745,3 +754,4 @@
 [#10]: https://github.com/domaframework/doma-tools-for-intellij/pull/10
 [2.5.0]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.4.0...2.5.0
 [2.5.1]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.5.0...2.5.1
+[2.5.2]: https://github.com/domaframework/doma-tools-for-intellij/compare/2.5.1...2.5.2
