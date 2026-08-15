@@ -15,7 +15,7 @@
  */
 package org.domaframework.doma.intellij.common.util
 
-const val PLUGIN_VERSION = "2.5.1-beta"
+const val PLUGIN_VERSION = "2.5.1"
 
 open class PluginUtil {
     companion object {
