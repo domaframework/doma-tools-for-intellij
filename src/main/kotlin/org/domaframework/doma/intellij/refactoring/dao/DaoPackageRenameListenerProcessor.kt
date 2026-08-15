@@ -34,7 +34,7 @@ import org.domaframework.doma.intellij.common.RESOURCES_META_INF_PATH
 import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.getResourcesFile
-import org.jetbrains.kotlin.idea.base.util.module
+import org.domaframework.doma.intellij.extension.psi.module
 import java.io.IOException
 
 /**

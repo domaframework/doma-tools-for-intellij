@@ -24,7 +24,7 @@ import org.domaframework.doma.intellij.common.dao.getDaoClass
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.extension.getContentRoot
 import org.domaframework.doma.intellij.extension.getPackagePathFromDaoPath
-import org.jetbrains.kotlin.idea.base.util.module
+import org.domaframework.doma.intellij.extension.psi.module
 
 /**
  * Rename DAO class

@@ -41,8 +41,8 @@ import org.domaframework.doma.intellij.extension.getModule
 import org.domaframework.doma.intellij.extension.getResourcesFile
 import org.domaframework.doma.intellij.extension.getSourceRootDir
 import org.domaframework.doma.intellij.extension.psi.DomaAnnotationType
+import org.domaframework.doma.intellij.extension.psi.module
 import org.domaframework.doma.intellij.setting.SqlLanguage
-import org.jetbrains.kotlin.idea.base.util.module
 import java.io.File
 import java.io.IOException
 

@@ -32,7 +32,7 @@ import org.domaframework.doma.intellij.common.isSupportFileType
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
-import org.jetbrains.kotlin.idea.core.util.toPsiFile
+import org.domaframework.doma.intellij.extension.findFile
 import java.awt.event.MouseEvent
 import javax.swing.Icon
 
@@ -65,8 +65,8 @@ class SqlLineMakerProvider : RelatedItemLineMarkerProvider() {
             RelatedItemLineMarkerInfo(
                 identifier,
                 identifier.textRange,
-                getIcon(daoFile.toPsiFile(project)),
-                getToolTipTitle(daoFile.toPsiFile(project)),
+                getIcon(project.findFile(daoFile)),
+                getToolTipTitle(project.findFile(daoFile)),
                 getHandler(daoFile, identifier, file.virtualFile?.nameWithoutExtension ?: ""),
                 GutterIconRenderer.Alignment.RIGHT,
             ) {

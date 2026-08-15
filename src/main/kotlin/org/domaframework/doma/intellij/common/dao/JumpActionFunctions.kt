@@ -18,14 +18,15 @@ package org.domaframework.doma.intellij.common.dao
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
+import com.intellij.util.ExceptionUtil
 import com.intellij.util.PsiNavigateUtil
 import org.domaframework.doma.intellij.common.psi.PsiDaoMethod
 import org.domaframework.doma.intellij.extension.findFile
-import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtNamedFunction
-import org.jetbrains.kotlin.utils.rethrow
+import org.jetbrains.uast.UFile
+import org.jetbrains.uast.toUElementOfType
 
 fun jumpSqlFromDao(
     project: Project,
@@ -41,22 +42,28 @@ fun jumpToDaoMethod(
 ) {
     when (val daoPsiFile = project.findFile(daoFile)) {
         is PsiJavaFile -> getJavaFunctionOffset(daoPsiFile, sqlFileName)
-        is KtFile -> getKotlinFunctions(daoPsiFile, sqlFileName)
+        null -> return
+        else -> getFunctionOffsetByUast(daoPsiFile, sqlFileName)
     }
 }
 
-// TODO Support Kotlin Project
-private fun getKotlinFunctions(
-    file: KtFile,
+/**
+ * Navigate to a DAO method in a non Java source file.
+ *
+ * UAST keeps this language agnostic: the Kotlin plugin contributes its UAST support through an
+ * extension point, so no Kotlin plugin class is referenced from here. That matters because the
+ * Kotlin plugin is only an optional dependency of this plugin.
+ */
+private fun getFunctionOffsetByUast(
+    file: PsiFile,
     targetMethodName: String,
 ) {
+    val uastFile = file.toUElementOfType<UFile>() ?: return
     val method =
-        file.declarations
-            .filterIsInstance<KtNamedFunction>()
-            .find { f -> f.name == targetMethodName }
-    if (method != null) {
-        PsiNavigateUtil.navigate(method)
-    }
+        uastFile.classes
+            .flatMap { clazz -> clazz.methods.asIterable() }
+            .find { m -> m.name == targetMethodName } ?: return
+    PsiNavigateUtil.navigate(method.sourcePsi ?: method.javaPsi)
 }
 
 private fun getJavaFunctionOffset(
@@ -67,7 +74,7 @@ private fun getJavaFunctionOffset(
         val dapMethod = findUseSqlDaoMethod(file, targetMethodName) ?: return
         PsiNavigateUtil.navigate(dapMethod)
     } catch (e: Exception) {
-        rethrow(e)
+        ExceptionUtil.rethrow(e)
     }
 }
 

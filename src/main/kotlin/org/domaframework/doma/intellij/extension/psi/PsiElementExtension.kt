@@ -15,6 +15,8 @@
  */
 package org.domaframework.doma.intellij.extension.psi
 
+import com.intellij.openapi.module.Module
+import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -22,6 +24,16 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.elementType
 import org.domaframework.doma.intellij.psi.SqlTypes
+
+/**
+ * Module this element belongs to.
+ *
+ * The Kotlin plugin offers an identical `PsiElement.module` extension, but it is only an optional
+ * dependency of this plugin, so its classes are not guaranteed to be on the plugin class loader.
+ * Always use this platform-only version instead.
+ */
+val PsiElement.module: Module?
+    get() = ModuleUtilCore.findModuleForPsiElement(this)
 
 fun PsiElement.isNotWhiteSpace(): Boolean = this !is PsiWhiteSpace
 
