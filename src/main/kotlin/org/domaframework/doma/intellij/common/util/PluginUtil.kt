@@ -15,19 +15,15 @@
  */
 package org.domaframework.doma.intellij.common.util
 
-import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.openapi.extensions.PluginId
-
-const val PLUGIN_ID = "org.domaframework.doma.intellij"
 const val PLUGIN_VERSION = "2.5.1-beta"
 
 open class PluginUtil {
     companion object {
-        fun getVersion(): String {
-            val pluginId = PluginId.getId(PLUGIN_ID)
-            return PluginManagerCore.getPlugin(pluginId)?.let {
-                return it.version
-            } ?: PLUGIN_VERSION
-        }
+        /**
+         * IntelliJ 2026.2 marked every `PluginManager` lookup of a plugin descriptor as an internal
+         * API, so the version is read from [PLUGIN_VERSION]. The release build keeps that constant in
+         * sync with the `pluginVersion` Gradle property (see `replaceVersionInPluginUtil`).
+         */
+        fun getVersion(): String = PLUGIN_VERSION
     }
 }
