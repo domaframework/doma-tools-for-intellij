@@ -32,6 +32,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.psi.util.endOffset
 import com.intellij.psi.util.prevLeafs
+import com.intellij.psi.util.startOffset
+import com.intellij.util.ExceptionUtil
 import org.domaframework.doma.intellij.common.util.InjectionSqlUtil.isInjectedSqlFile
 import org.domaframework.doma.intellij.common.util.PluginLoggerUtil
 import org.domaframework.doma.intellij.common.util.StringUtil.LINE_SEPARATE
@@ -40,8 +42,6 @@ import org.domaframework.doma.intellij.formatter.util.SqlKeywordUtil
 import org.domaframework.doma.intellij.formatter.visitor.SqlFormatVisitor
 import org.domaframework.doma.intellij.psi.SqlTypes
 import org.domaframework.doma.intellij.setting.SqlLanguage
-import org.jetbrains.kotlin.psi.psiUtil.startOffset
-import org.jetbrains.kotlin.utils.rethrow
 
 class SqlFormatPreProcessor : PreFormatProcessor {
     data class TextReplacement(
@@ -143,7 +143,7 @@ class SqlFormatPreProcessor : PreFormatProcessor {
 
             return ProcessResult(document, rangeToReformat.grown(visitor.replaces.size))
         } catch (e: Exception) {
-            rethrow(e)
+            ExceptionUtil.rethrow(e)
             return ProcessResult(document, rangeToReformat)
         }
     }

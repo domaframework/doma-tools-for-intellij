@@ -26,10 +26,10 @@ import org.domaframework.doma.intellij.common.sql.directive.collector.FunctionCa
 import org.domaframework.doma.intellij.common.sql.directive.collector.StaticClassPackageCollector
 import org.domaframework.doma.intellij.common.sql.directive.collector.StaticPropertyCollector
 import org.domaframework.doma.intellij.common.util.StringUtil.SINGLE_SPACE
+import org.domaframework.doma.intellij.extension.psi.module
 import org.domaframework.doma.intellij.psi.SqlElClass
 import org.domaframework.doma.intellij.psi.SqlElStaticFieldAccessExpr
 import org.domaframework.doma.intellij.psi.SqlTypes
-import org.jetbrains.kotlin.idea.base.util.module
 
 class StaticDirectiveHandler(
     originalFile: PsiElement,

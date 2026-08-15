@@ -38,7 +38,7 @@ import org.domaframework.doma.intellij.extension.getContentRoot
 import org.domaframework.doma.intellij.extension.getJavaClazz
 import org.domaframework.doma.intellij.extension.getModule
 import org.domaframework.doma.intellij.extension.getSourceRootDir
-import org.jetbrains.kotlin.idea.base.util.module
+import org.domaframework.doma.intellij.extension.psi.module
 
 /**
  * Get DAO method corresponding to SQL file

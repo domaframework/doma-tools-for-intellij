@@ -24,7 +24,6 @@ import com.intellij.psi.PsiElement
 import org.domaframework.doma.intellij.common.psi.PsiPatternUtil
 import org.domaframework.doma.intellij.contributor.sql.provider.SqlParameterCompletionProvider
 import org.domaframework.doma.intellij.setting.SqlLanguage
-import org.jetbrains.kotlin.idea.completion.or
 
 /**
  * Code completion of SQL bind variables with DAO method arguments
@@ -34,37 +33,37 @@ open class SqlCompletionContributor : CompletionContributor() {
     init {
         extend(
             CompletionType.BASIC,
-            PsiPatternUtil
-                .createPattern(PsiComment::class.java)
-                .andOr(
-                    PsiPatternUtil
-                        .createPattern(PsiComment::class.java)
-                        .inFile(
-                            PlatformPatterns
-                                .psiFile()
-                                .withLanguage(SqlLanguage.INSTANCE),
-                        ),
-                    PsiPatternUtil
-                        .createPattern(PsiComment::class.java)
-                        .and(PsiPatternUtil.isMatchFileExtension("java")),
-                )
+            StandardPatterns.or(
+                PsiPatternUtil
+                    .createPattern(PsiComment::class.java)
+                    .andOr(
+                        PsiPatternUtil
+                            .createPattern(PsiComment::class.java)
+                            .inFile(
+                                PlatformPatterns
+                                    .psiFile()
+                                    .withLanguage(SqlLanguage.INSTANCE),
+                            ),
+                        PsiPatternUtil
+                            .createPattern(PsiComment::class.java)
+                            .and(PsiPatternUtil.isMatchFileExtension("java")),
+                    ),
                 // Support for directive elements
-                .or(
-                    PlatformPatterns
-                        .psiElement(PsiElement::class.java)
-                        .andOr(
-                            PsiPatternUtil
-                                .createDirectivePattern()
-                                .inFile(
-                                    PlatformPatterns
-                                        .psiFile()
-                                        .withName(StandardPatterns.string().endsWith(".sql")),
-                                ),
-                            PsiPatternUtil
-                                .createDirectivePattern()
-                                .and(PsiPatternUtil.isMatchFileExtension("java")),
-                        ),
-                ),
+                PlatformPatterns
+                    .psiElement(PsiElement::class.java)
+                    .andOr(
+                        PsiPatternUtil
+                            .createDirectivePattern()
+                            .inFile(
+                                PlatformPatterns
+                                    .psiFile()
+                                    .withName(StandardPatterns.string().endsWith(".sql")),
+                            ),
+                        PsiPatternUtil
+                            .createDirectivePattern()
+                            .and(PsiPatternUtil.isMatchFileExtension("java")),
+                    ),
+            ),
             SqlParameterCompletionProvider(),
         )
     }

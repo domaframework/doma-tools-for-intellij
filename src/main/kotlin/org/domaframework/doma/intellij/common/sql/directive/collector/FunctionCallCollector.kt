@@ -26,7 +26,7 @@ import org.domaframework.doma.intellij.common.config.DomaCompileConfigUtil
 import org.domaframework.doma.intellij.common.helper.ExpressionFunctionsHelper
 import org.domaframework.doma.intellij.common.util.SqlCompletionUtil.createMethodLookupElement
 import org.domaframework.doma.intellij.extension.getJavaClazz
-import org.jetbrains.kotlin.idea.base.util.module
+import org.domaframework.doma.intellij.extension.psi.module
 
 class FunctionCallCollector(
     private val file: PsiFile?,
